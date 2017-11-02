@@ -11,47 +11,47 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSessionEvent;
-import javax.servlet.http.HttpSessionListener;
 
 import com.xboson.been.SessionData;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.util.AES;
 import com.xboson.util.SessionID;
 
 
-public class SessionCluster extends HttpFilter implements HttpSessionListener {
+public class SessionCluster extends HttpFilter {
 	
 	private static final long serialVersionUID = -6654306025872001022L;
 	private static final String cookieName = "xBoson";
+	private static final Log log = LogFactory.create("session");
 	
 	private static byte[] sessionPassword = null;
 	private static int sessionTimeout = 0;
 	
-
-	public void sessionCreated(HttpSessionEvent se) {
-		System.out.println("s Create");
-	}
-
-	
-	public void sessionDestroyed(HttpSessionEvent se) {
-		System.out.println("s Destory");
-	}
-
 	
 	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
 			throws IOException, ServletException {
+		
 		Cookie ck = SessionID.getCookie(cookieName, request);
 		if (ck == null) {
-			ck = new Cookie(cookieName, SessionID.generateSessionId(sessionPassword));
-			ck.setHttpOnly(true);
-			ck.setMaxAge(sessionTimeout);
-			response.addCookie(ck);
+			ck = createCookie(response);
 		} else {
-			SessionID.checkSessionId(sessionPassword, ck.getValue());
+			if (!SessionID.checkSessionId(sessionPassword, ck.getValue()) ) {
+				ck = createCookie(response);
+			}
 		}
 		new SessionData(request, response);
-		System.out.println("Session ID: " + ck.getValue());
+		log.debug("Session ID: " + ck.getValue());
 		chain.doFilter(request, response);
+	}
+	
+	
+	private Cookie createCookie(HttpServletResponse response) throws ServletException {
+		Cookie ck = new Cookie(cookieName, SessionID.generateSessionId(sessionPassword));
+		ck.setHttpOnly(true);
+		ck.setMaxAge(sessionTimeout);
+		response.addCookie(ck);
+		return ck;
 	}
 
 

@@ -46,14 +46,13 @@ public class SessionID {
 	 * 检查 session 是否安全, 错误的 sid 会抛出异常
 	 * @throws ServletException
 	 */
-	public static void checkSessionId(byte[] ps, String sid) throws ServletException {
+	public static boolean checkSessionId(byte[] ps, String sid) throws ServletException {
 		try {
 			byte[] data = Base64.getDecoder().decode(sid);
 			AES.Decode(data, ps);
+			return true;
 		} catch(Exception e) {
-			ServletException t = new ServletException("check session fail");
-			t.addSuppressed(e);
-			throw t;
+			return false;
 		}
 	}
 }
