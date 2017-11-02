@@ -35,7 +35,7 @@ public class UrlMapping implements ServletContextListener {
 		try {
 			XService service = sclass.newInstance();
 			map.put(path, service);
-			log.info("REG service: ", path, " - ", sclass.getName());
+			log.info("REG service: ", path, "-", sclass.getName());
 		} catch(Exception e) {
 			XService fail = new Fail(e);
 			map.put(path, fail);
@@ -64,9 +64,9 @@ public class UrlMapping implements ServletContextListener {
 			String name = x.getClass().getName();
 			try {
 				x.destroy();
-				log.info("Service ", name, " destoryed");
+				log.info("Service", name, "destoryed");
 			} catch(Exception e) {
-				log.info("Destory service", name, "fail:", e.getMessage());
+				log.error("Destory service", name, "fail:", e.getMessage());
 			}
 		}
 		

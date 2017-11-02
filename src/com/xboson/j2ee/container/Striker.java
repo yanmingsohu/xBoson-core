@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.xboson.been.ResponseRoot;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.util.JsonResponse;
 
 /**
@@ -19,6 +21,7 @@ import com.xboson.util.JsonResponse;
 public class Striker extends HttpFilter {
 
 	private static final long serialVersionUID = 8889985807692963369L;
+	private final Log log = LogFactory.create();
 
 	
 	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
@@ -34,6 +37,7 @@ public class Striker extends HttpFilter {
 			response.setStatus(500);
 			ResponseRoot r = new ResponseRoot(e);
 			jr.response(r);
+			log.error(e.getMessage());
 		}
 	}
 }

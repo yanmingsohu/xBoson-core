@@ -9,11 +9,14 @@ import com.xboson.util.Tool;
 public class ConsoleOut implements ILogWriter {
 
 	@Override
-	public void output(Date d, Level l, Object[] msg) {
+	public void output(Date d, Level l, String name, Object[] msg) {
 		StringBuilder buf = new StringBuilder();
+		
 		buf.append(Tool.formatDate(d));
 		buf.append(" [");
 		buf.append(l.toString());
+		buf.append("] [");
+		buf.append(name);
 		buf.append("]");
 		
 		for (int i=0; i<msg.length; ++i) {

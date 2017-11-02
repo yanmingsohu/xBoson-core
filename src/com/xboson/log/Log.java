@@ -8,10 +8,12 @@ public class Log {
 	
 	private Level cl = Level.ALL;
 	private ILogWriter writer;
+	private String name;
 	
 	
-	Log(ILogWriter writer) {
+	Log(ILogWriter writer, String name) {
 		this.writer = writer;
+		this.name = name;
 	}
 	
 
@@ -28,7 +30,7 @@ public class Log {
 		}
 		
 		Date d = new Date();
-		writer.output(d, l, msg);
+		writer.output(d, l, name, msg);
 	}
 	
 	

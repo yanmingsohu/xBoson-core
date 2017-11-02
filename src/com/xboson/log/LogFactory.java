@@ -23,8 +23,23 @@ public class LogFactory {
 	/**
 	 * 创建日志实例, 用于输出日志.
 	 */
+	public static Log create(String name) {
+		return new Log(writer, name);
+	}
+	
+	
+	public static Log create(Class<?> c) {
+		return new Log(writer, c.getName());
+	}
+	
+	
+	/**
+	 * 使用调用该方法的类名作为日志名, 在集成系统中, 始终使用父类的名称.
+	 */
 	public static Log create() {
-		return new Log(writer);
+		Exception e = new Exception();
+		StackTraceElement[] t = e.getStackTrace();
+		return create(t[1].getClassName());
 	}
 	
 	

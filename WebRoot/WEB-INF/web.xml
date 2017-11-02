@@ -30,7 +30,7 @@
   
 	<!-- 日志系统初始化 -->
 	<listener> 
-		<listener-class>com.xboson.log.LogFactory.Init</listener-class>
+		<listener-class>com.xboson.log.LogFactory$Init</listener-class>
 　	</listener>
 
   <!-- 初始化服务路由表 -->

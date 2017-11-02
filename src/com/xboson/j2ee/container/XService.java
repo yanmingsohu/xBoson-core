@@ -7,9 +7,16 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 
 import com.xboson.been.CallData;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 
 
 public abstract class XService {
+	
+	/**
+	 * 输出日志
+	 */
+	protected final Log log = LogFactory.create(XService.this.getClass());
 	
 	/**
 	 * 子类实现该方法, 当服务被调用, 进入该方法中
@@ -22,8 +29,7 @@ public abstract class XService {
 	 * 子类重写该方法, 当服务器终止时调用
 	 */
 	public void destroy() {
-		Class<?> c = XService.this.getClass();
-		System.out.println("Service " + c.getName() + " destory");
+		log.info("destory do nothing.");
 	}
 
 }

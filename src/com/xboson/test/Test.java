@@ -41,6 +41,7 @@ public class Test {
 				t.test();
 			} catch(Exception e) {
 				fail(cl[i].getName() + " " + e.getMessage());
+				e.printStackTrace();
 			}
 		}
 	}

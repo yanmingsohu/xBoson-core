@@ -9,7 +9,7 @@ import java.util.Date;
  */
 public interface ILogWriter {
 
-	void output(Date d, Level l, Object[] msg);
+	void output(Date d, Level l, String name, Object[] msg);
 	
 	void destroy();
 }
