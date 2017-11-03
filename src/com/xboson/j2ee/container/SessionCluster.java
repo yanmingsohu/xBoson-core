@@ -12,11 +12,13 @@ import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.xboson.been.Config;
 import com.xboson.been.SessionData;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.AES;
 import com.xboson.util.SessionID;
+import com.xboson.util.SysConfig;
 
 
 public class SessionCluster extends HttpFilter {
@@ -56,9 +58,8 @@ public class SessionCluster extends HttpFilter {
 
 
 	public void init(FilterConfig filterConfig) throws ServletException {
-		sessionTimeout = 
-			60 * filterConfig.getServletContext().getSessionTimeout();
-		sessionPassword = 
-			AES.aesKey( filterConfig.getInitParameter("session_password") );
+		Config cfg = SysConfig.getInstance().readConfig();
+		sessionTimeout = cfg.sessionTimeout;
+		sessionPassword = AES.aesKey( cfg.sessionPassword );
 	}
 }

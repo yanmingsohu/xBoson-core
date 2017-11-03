@@ -2,17 +2,21 @@
 
 package com.xboson.util;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Tool {
+	
+	private static final ThreadLocal<SimpleDateFormat> 
+					dataformat = new ThreadLocal<SimpleDateFormat>();
 	
 	private Tool() {}
 	
@@ -87,8 +91,15 @@ public class Tool {
 	}
 	
 	
+	/**
+	 * 优化性能, 总是返回完整的日期/时间字符串
+	 */
 	public static String formatDate(Date d) {
-		SimpleDateFormat f = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		SimpleDateFormat f = dataformat.get();
+		if (f == null) {
+			f = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+			dataformat.set(f);
+		}
 		return f.format(d);
 	}
 	
@@ -106,10 +117,8 @@ public class Tool {
 			}
 		} finally {
 			if (close) {
-				try {
-					src.close();
-					dst.close();
-				} catch(Exception e) {}
+				close(src);
+				close(dst);
 			}
 		}
 	}
@@ -127,11 +136,37 @@ public class Tool {
 			}
 			return out;
 		} finally {
-			if (r != null) {
-				try {
-					r.close();
-				} catch(Exception e) {}
-			}
+			close(r);
+		}
+	}
+	
+	
+	public static void close(InputStream i) {
+		try {
+			if (i != null) i.close();
+		} catch(Exception e) {}
+	}
+	
+	
+	public static void close(OutputStream i) {
+		try {
+			if (i != null) i.close();
+		} catch(Exception e) {}
+	}
+	
+	
+	public static void close(Writer w) {
+		try {
+			if (w != null) w.close();
+		} catch(Exception e) {
+		}
+	}
+	
+	
+	public static void close(Reader w) {
+		try {
+			if (w != null) w.close();
+		} catch(Exception e) {
 		}
 	}
 }

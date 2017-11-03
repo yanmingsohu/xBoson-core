@@ -14,6 +14,8 @@ import javax.servlet.http.HttpServletRequest;
 public class SessionID {
 
 	private static final Random r = new SecureRandom();
+	private static final byte[] sign = "J.yanming".getBytes();
+	private static final int sessionLength = 164 + sign.length;
 	
 	
 	/**
@@ -34,10 +36,16 @@ public class SessionID {
 	
 	
 	public static String generateSessionId(final byte[] password) throws ServletException {
-		byte[] bytes = new byte[164];
-		r.nextBytes(bytes);
-		bytes = AES.Encode(bytes, password);
-		String ret = Base64.getEncoder().encodeToString(bytes);
+		byte[] data = new byte[sessionLength];
+		r.nextBytes(data);
+		
+		int begin = data.length - sign.length;
+		for (int i=begin; i<data.length; ++i) {
+			data[i] = sign[i - begin];
+		}
+		
+		data = AES.Encode(data, password);
+		String ret = Base64.getEncoder().encodeToString(data);
 		return ret;
 	}
 	
@@ -49,7 +57,14 @@ public class SessionID {
 	public static boolean checkSessionId(byte[] ps, String sid) throws ServletException {
 		try {
 			byte[] data = Base64.getDecoder().decode(sid);
-			AES.Decode(data, ps);
+			data = AES.Decode(data, ps);
+			
+			int begin = data.length - sign.length;
+			for (int i=begin; i<data.length; ++i) {
+				if (data[i] != sign[i - begin])
+					return false;
+			}
+			
 			return true;
 		} catch(Exception e) {
 			return false;

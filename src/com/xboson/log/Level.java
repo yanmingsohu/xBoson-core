@@ -8,11 +8,11 @@ public class Level {
 	public static final Level DEBUG	= new Level("DEBUG",  5);
 	public static final Level INFO	= new Level(" INFO", 10);
 	public static final Level WARN  = new Level(" WARN", 15);
-	public static final Level ERR	= new Level("ERROR", 20);
+	public static final Level ERR		= new Level("ERROR", 20);
 	public static final Level FATAL	= new Level("FATAL", 25);
 	
-	public static final Level ALL	= new Level("ALL",    0);
-	public static final Level OFF	= new Level("OFF", 9999);
+	public static final Level ALL		= new Level("ALL",    0);
+	public static final Level OFF		= new Level("OFF", 9999);
 
 	
 	private Level(String l, int n) {

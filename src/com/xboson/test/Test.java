@@ -2,6 +2,7 @@
 
 package com.xboson.test;
 
+import com.xboson.log.LogFactory;
 
 /**
  * 通过实现该类, 导入通用测试框架
@@ -49,7 +50,10 @@ public class Test {
 		}
 		if (failcount > 0) {
 			System.out.println("\n\u001b[;31m>>>>>>>>>> Over, Get " + failcount + " fail \u001b[m");
+		} else {
+			System.out.println("\n\u001b[;32m>>>>>>>>>> Over, All Passed \u001b[m");
 		}
+		new LogFactory.Init().contextDestroyed(null);;
 	}
 
 	

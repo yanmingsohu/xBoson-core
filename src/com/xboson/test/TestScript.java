@@ -5,9 +5,6 @@ package com.xboson.test;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;

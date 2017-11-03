@@ -14,6 +14,7 @@ import com.xboson.been.UrlSplit;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.service.Fail;
+import com.xboson.service.ServiceClassList;
 
 
 public class UrlMapping implements ServletContextListener {
@@ -25,8 +26,12 @@ public class UrlMapping implements ServletContextListener {
 	/**
 	 * 随时加入新的服务路由, 做成配置文件会被 hack
 	 */
+	@SuppressWarnings("unchecked")
 	private void init_route() {
-		set(com.xboson.service.Login.class);
+		Class<?>[] cs = ServiceClassList.list;
+		for (int i=0; i<cs.length; ++i) {
+			set((Class<? extends XService>) cs[i]);
+		}
 	}
 	
 	

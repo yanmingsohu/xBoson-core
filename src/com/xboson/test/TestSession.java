@@ -14,7 +14,9 @@ public class TestSession extends Test {
 		String sessionid = SessionID.generateSessionId(ps);
 		msg("Session ID: " + sessionid);
 		
-		SessionID.checkSessionId(ps, sessionid);
+		if (!SessionID.checkSessionId(ps, sessionid)) {
+			throw new Exception("wrong");
+		}
 		
 		if (SessionID.checkSessionId(ps, "f"+sessionid)) {
 			throw new Exception("Fail: not checked bad sessionid");

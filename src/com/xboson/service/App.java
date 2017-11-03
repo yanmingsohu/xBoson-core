@@ -16,6 +16,7 @@ public class App extends XService {
 
 	@Override
 	public int service(CallData data) throws ServletException, IOException {
+		data.json.response("not implement");
 		return 0;
 	}
 

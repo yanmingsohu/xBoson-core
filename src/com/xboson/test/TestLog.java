@@ -18,7 +18,7 @@ public class TestLog extends Test {
 		log.warn("display", "warn", 4);
 		log.fatal("display", "fatal", 5);
 
-		init.setType("ConsoleOut");
+		init.setType("FileAndConsoleOut");
 		
 		LogFactory.setLevel(Level.ERR);
 		log.debug("!!! not display", 11);

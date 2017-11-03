@@ -4,26 +4,12 @@ package com.xboson.log;
 
 import java.util.Date;
 
-import com.xboson.util.Tool;
-
-public class ConsoleOut implements ILogWriter {
+public class ConsoleOut extends OutBase implements ILogWriter {
 
 	@Override
 	public void output(Date d, Level l, String name, Object[] msg) {
 		StringBuilder buf = new StringBuilder();
-		
-		buf.append(Tool.formatDate(d));
-		buf.append(" [");
-		buf.append(l.toString());
-		buf.append("] [");
-		buf.append(name);
-		buf.append("]");
-		
-		for (int i=0; i<msg.length; ++i) {
-			buf.append(' ');
-			buf.append(msg[i]);
-		}
-		
+		format(buf, d, l, name, msg);
 		System.out.println(buf.toString());
 	}
 

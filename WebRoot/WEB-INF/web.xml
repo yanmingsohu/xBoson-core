@@ -21,13 +21,6 @@
                       http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
   version="4.0">
  
-	<context-param>
-		<param-name>LoggerWriter</param-name>
-		<!-- 可用的日志类型: ConsoleOut | -->
-		<param-value>ConsoleOut</param-value>
-	</context-param>
-	
-	
 	<!-- 系统设置初始化 -->
 	<listener> 
 		<listener-class>com.xboson.util.SysConfig$Init</listener-class>
@@ -62,10 +55,6 @@
 		<filter-name>SessionCluster</filter-name>
 		<filter-class>com.xboson.j2ee.container.SessionCluster</filter-class>
 		<async-supported>true</async-supported>
-		<init-param>
-			<param-name>session_password</param-name>
-			<param-value>fdsevbvsx_fdsaf</param-value>
-		</init-param>
 	</filter>
 	
 	<filter-mapping>
@@ -90,11 +79,6 @@
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
 	
-
-	<session-config>
-		<!-- minutes -->
-		<session-timeout>30</session-timeout>
-	</session-config>
 
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>

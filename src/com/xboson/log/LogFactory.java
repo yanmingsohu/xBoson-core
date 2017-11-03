@@ -5,6 +5,8 @@ package com.xboson.log;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import com.xboson.util.SysConfig;
+
 
 public class LogFactory {
 	
@@ -14,6 +16,7 @@ public class LogFactory {
 	
 	static {
 		setLevel(Level.ALL);
+		/** 仅在启动期间保持日志, 启动后立即切换 */
 		writer = new SavedOut();
 	}
 	
@@ -77,11 +80,8 @@ public class LogFactory {
 		
 		public void contextInitialized(ServletContextEvent sce) {
 			try {
-				String type = sce.getServletContext().getInitParameter("LoggerWriter");
+				String type = SysConfig.getInstance().readConfig().loggerWriterType;
 				setType(type);
-			} catch(Exception e) {
-				System.out.println("Init log fail:");
-				e.printStackTrace();
 			} finally {
 				if (writer == null) {
 					writer = new ConsoleOut();
@@ -89,14 +89,17 @@ public class LogFactory {
 			}
 		}
 		
-		public void setType(String type) throws 
-				ClassNotFoundException, 
-				InstantiationException, 
-				IllegalAccessException {
-			Class<?> cl = Class.forName("com.xboson.log." + type);
-			ILogWriter older = writer;
-			writer = (ILogWriter) cl.newInstance();
-			older.destroy(writer);
+		public boolean setType(String type) {
+			try {
+				Class<?> cl = Class.forName("com.xboson.log." + type);
+				ILogWriter older = writer;
+				writer = (ILogWriter) cl.newInstance();
+				older.destroy(writer);
+				return true;
+			} catch(Exception e) {
+				System.out.println("Init log fail: " + e.getMessage());
+			}
+			return false;
 		}
 	}
 }

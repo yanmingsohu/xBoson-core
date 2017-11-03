@@ -7,14 +7,14 @@ public class Config {
 
 	public static final String CONFIG_DIR 	= "/xBoson-config";
 	public static final String CONFIG_FILE 	= "/config.json";
-	public static final String LOG_DIR 		= "/logs";
+	public static final String LOG_DIR 			= "/logs";
 	
 	/** public 能死么 ? */
-	public String configFile			= null;
-	public String configPath			= null;
-	public String logPath				= null;
+	public String configFile				= null;
+	public String configPath				= null;
+	public String logPath						= null;
 	
-	public String loggerWriterType		= null;
+	public String loggerWriterType	= null;
 	public String sessionPassword		= null;
 	public int    sessionTimeout		= 0;
 	
@@ -25,7 +25,7 @@ public class Config {
 	
 	public Config(String home) {
 		configPath	= home + CONFIG_DIR;
-		logPath 	= configPath + LOG_DIR;
+		logPath 		= configPath + LOG_DIR;
 		configFile	= configPath + CONFIG_FILE;
 	}
 	
