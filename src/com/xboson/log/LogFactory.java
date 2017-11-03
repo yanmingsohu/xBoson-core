@@ -14,6 +14,7 @@ public class LogFactory {
 	
 	static {
 		setLevel(Level.ALL);
+		writer = new SavedOut();
 	}
 	
 	
@@ -24,12 +25,15 @@ public class LogFactory {
 	 * 创建日志实例, 用于输出日志.
 	 */
 	public static Log create(String name) {
-		return new Log(writer, name);
+		return new Log(name);
 	}
 	
 	
+	/**
+	 * 创建日志实例, 用于输出日志, 类名作为日志名.
+	 */
 	public static Log create(Class<?> c) {
-		return new Log(writer, c.getName());
+		return new Log(c.getName());
 	}
 	
 	
@@ -66,7 +70,7 @@ public class LogFactory {
 		
 		public void contextDestroyed(ServletContextEvent sce) {
 			if (writer != null) {
-				writer.destroy();
+				writer.destroy(null);
 				writer = null;
 			}
 		}
@@ -90,7 +94,9 @@ public class LogFactory {
 				InstantiationException, 
 				IllegalAccessException {
 			Class<?> cl = Class.forName("com.xboson.log." + type);
+			ILogWriter older = writer;
 			writer = (ILogWriter) cl.newInstance();
+			older.destroy(writer);
 		}
 	}
 }

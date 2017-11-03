@@ -10,7 +10,6 @@ import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.xboson.been.ResponseRoot;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.JsonResponse;
@@ -34,10 +33,10 @@ public class Striker extends HttpFilter {
 			jr = new JsonResponse(request, response);
 			chain.doFilter(request, response);
 		} catch(Throwable e) {
-			response.setStatus(500);
-			ResponseRoot r = new ResponseRoot(e);
-			jr.response(r);
 			log.error(e.getMessage());
+			response.setStatus(500);
+			jr.getRoot().setError(e);
+			jr.response(null);
 		}
 	}
 }

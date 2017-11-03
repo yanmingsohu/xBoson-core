@@ -9,7 +9,14 @@ import java.util.Date;
  */
 public interface ILogWriter {
 
+	/**
+	 * 压入新的日志条目
+	 */
 	void output(Date d, Level l, String name, Object[] msg);
 	
-	void destroy();
+	/**
+	 * 销毁当前日志
+	 * @param repleased - 替换当前输出器的新输出器, 可能为 null
+	 */
+	void destroy(ILogWriter replace);
 }

@@ -1,4 +1,4 @@
-/* CatfoOD 2017年11月2日 下午3:33:52 yanming-sohu@sohu.com Q.412475540 */
+/* CatfoOD 2017年11月3日 上午10:38:36 yanming-sohu@sohu.com Q.412475540 */
 
 package com.xboson.service;
 
@@ -11,12 +11,11 @@ import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 
 
-@XPath("/login")
-public class Login extends XService {
+@XPath("/app")
+public class App extends XService {
 
 	@Override
 	public int service(CallData data) throws ServletException, IOException {
-		data.json.response("Auth work but not implement.");
 		return 0;
 	}
 

@@ -8,6 +8,8 @@ package com.xboson.test;
  */
 public class Test {
 	
+	private static int failcount = 0;
+	
 	/**
 	 * 测试用例列表
 	 */
@@ -19,6 +21,8 @@ public class Test {
 			TestUrl.class,
 			TestTool.class,
 			TestLog.class,
+			TestScript.class,
+			TestConfig.class,
 	};
 	
 
@@ -32,17 +36,19 @@ public class Test {
 	 * 子类重写该方法.
 	 */
 	@SuppressWarnings("rawtypes")
-	public void test() throws Throwable {		
+	public void test() throws Throwable {
 		for (int i=0; i<cl.length; ++i) {
 			try {
 				unit(cl[i].getName());
 				Class c = cl[i];
 				Test t = (Test) c.newInstance();
 				t.test();
-			} catch(Exception e) {
+			} catch(Error e) {
 				fail(cl[i].getName() + " " + e.getMessage());
-				e.printStackTrace();
 			}
+		}
+		if (failcount > 0) {
+			System.out.println("\n\u001b[;31m>>>>>>>>>> Over, Get " + failcount + " fail \u001b[m");
 		}
 	}
 
@@ -54,6 +60,7 @@ public class Test {
 	
 	public static void fail(Object o) {
 		System.out.println("\u001b[;31m  Fail: " + o + "\u001b[m");
+		++failcount;
 	}
 	
 	
@@ -68,10 +75,20 @@ public class Test {
 	
 	
 	public static void ok(boolean o, String msg) {
-		if (o) {
-			success("ok");
-		} else {
-			success("fail: " + msg);
+		if (!o) {
+			throw new RuntimeException(msg);
 		}
+	}
+	
+	
+	public static void memuse() {
+		int mb = 1024*1024;
+		Runtime runtime = Runtime.getRuntime();
+		msg("##### Heap utilization statistics [MB] #####");
+		msg("  Used Memory:" 
+			+ (runtime.totalMemory() - runtime.freeMemory()) / mb);
+		msg("  Free Memory:" + runtime.freeMemory() / mb);
+		msg("  Total Memory:" + runtime.totalMemory() / mb);
+		msg("  Max Memory:" + runtime.maxMemory() / mb);
 	}
 }

@@ -32,7 +32,7 @@ public class MainServlet extends HttpServlet {
 		XService sv = UrlMapping.getService(cd.url);
 		
 		if (sv == null) {
-			throw new ServletException("Not found service");
+			throw new ServletException("Not found service: " + cd.url.getName());
 		}
 		
 		log.info(cd.url.getName(), sv.getClass().getName());

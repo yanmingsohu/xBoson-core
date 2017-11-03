@@ -18,6 +18,7 @@ public class CallData {
 	public final UrlSplit url;
 	public final JsonResponse json;
 	public final SessionData sess;
+	public final ResponseRoot ret;
 	
 	
 	public CallData(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
@@ -26,5 +27,6 @@ public class CallData {
 		this.json = JsonResponse.get(req);
 		this.sess = SessionData.get(req);
 		this.url  = new UrlSplit(req);
+		this.ret  = json.getRoot();
 	}
 }

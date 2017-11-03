@@ -7,12 +7,10 @@ import java.util.Date;
 public class Log {
 	
 	private Level cl = Level.ALL;
-	private ILogWriter writer;
 	private String name;
 	
 	
-	Log(ILogWriter writer, String name) {
-		this.writer = writer;
+	Log(String name) {
 		this.name = name;
 	}
 	
@@ -20,17 +18,9 @@ public class Log {
 	public void logs(Level l, Object[] msg) {
 		if (LogFactory.blocking(l) || cl.blocking(l))
 			return;
-		
-		if (writer == null) {
-			writer = LogFactory.getLogWriter();
-			if (writer == null) {
-				System.out.println("log sys fail");
-				return;
-			}
-		}
-		
+
 		Date d = new Date();
-		writer.output(d, l, name, msg);
+		LogFactory.getLogWriter().output(d, l, name, msg);
 	}
 	
 	

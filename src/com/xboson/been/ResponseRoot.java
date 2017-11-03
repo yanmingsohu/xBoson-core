@@ -5,8 +5,15 @@ package com.xboson.been;
 import com.xboson.util.Tool;
 
 
+/**
+ * 平台应答数据根节点, 数据将被转换为 json
+ */
 public class ResponseRoot {
 
+	/** 为兼容 v1 平台而设置 */
+	@SuppressWarnings("unused")
+	private int ret;
+	
 	private int code;
 	private String msg;
 	private Object data;
@@ -15,6 +22,7 @@ public class ResponseRoot {
 	
 	public ResponseRoot() {
 		code = 0;
+		ret  = 0;
 		msg  = null;
 		data = null;
 	}
@@ -22,10 +30,7 @@ public class ResponseRoot {
 
 	
 	public ResponseRoot(Throwable e) {
-		data = Tool.miniStack(e, 5);
-		datatype = "ErrorStack";
-		code = 500;
-		msg  = e.getMessage();
+		setError(e);
 	}
 	
 
@@ -38,6 +43,7 @@ public class ResponseRoot {
 	
 	public void setCode(int code) {
 		this.code = code;
+		this.ret  = code;
 	}
 
 
@@ -59,9 +65,25 @@ public class ResponseRoot {
 	}
 
 
-	public void setData(Object data) {
+	public void setData(Object data, boolean usedataWithType) {
 		this.data = data;
-		this.datatype = data.getClass().getName();
+		if (usedataWithType) {
+			setDatatype(data.getClass().getName());
+		}
+	}
+	
+	
+	public void setData(Object data) {
+		setData(data, true);
+	}
+	
+	
+	public void setError(Throwable e) {
+		data = Tool.miniStack(e, 5);
+		datatype = "ErrorStack";
+		code = 500;
+		ret  = 500;
+		msg  = e.getMessage();
 	}
 
 	

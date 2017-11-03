@@ -27,6 +27,11 @@
 		<param-value>ConsoleOut</param-value>
 	</context-param>
 	
+	
+	<!-- 系统设置初始化 -->
+	<listener> 
+		<listener-class>com.xboson.util.SysConfig$Init</listener-class>
+　	</listener>
   
 	<!-- 日志系统初始化 -->
 	<listener> 

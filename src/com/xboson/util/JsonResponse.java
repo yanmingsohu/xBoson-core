@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
+import com.xboson.been.ResponseRoot;
 
 
 /**
@@ -19,10 +20,12 @@ import com.squareup.moshi.Moshi.Builder;
 public class JsonResponse {
 	
 	private static final String attrname = "xBoson-JSON-response";
-	private static Builder jsbuilded = new Moshi.Builder();
 	
+	@SuppressWarnings("unused")
 	private HttpServletRequest request;
 	private HttpServletResponse response;
+	private ResponseRoot ret_root;
+	private Builder jsbuilded;
 
 	
 	public JsonResponse(HttpServletRequest request, HttpServletResponse response) throws ServletException {
@@ -33,27 +36,62 @@ public class JsonResponse {
 		this.request = request;
 		this.response = response;
 		
+		jsbuilded = new Moshi.Builder();
+		ret_root = new ResponseRoot();
+	}
+	
+	
+	public JsonResponse() {
+		jsbuilded = new Moshi.Builder();
+		ret_root = new ResponseRoot();
 	}
 	
 	
 	public static JsonResponse get(HttpServletRequest request) throws ServletException {
 		JsonResponse jr = (JsonResponse) request.getAttribute(attrname);
 		if (jr == null) {
-			throw new ServletException("JsonResponse not init");
+			throw new ServletException("JsonResponse not bind to request");
 		}
 		return jr; 
 	}
 	
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	/**
+	 * 将 been 转换为 json 需要 been 的转换适配器, 在这里注册适配器
+	 * @param c -- 适配器的类
+	 */
+	public void regJsonAdapter(Object adapter) {
+		jsbuilded.add(adapter);
+	}
+	
+	
+	/**
+	 * 返回的 ResponseRoot 用于定制返回数据中的属性.
+	 */
+	public ResponseRoot getRoot() {
+		return ret_root;
+	}
+	
+	
+	/**
+	 * 应答客户端
+	 * @param o - 可选的, 快速设置返回数据
+	 * @throws IOException
+	 */
 	public void response(Object o) throws IOException {
 		PrintWriter out = response.getWriter();
-		
-		Moshi moshi = jsbuilded.build();
-		Class c = o.getClass();
-		String str = moshi.adapter(c).toJson(o);
+
+		if (o != null) {
+			ret_root.setData(o, true);
+		}
 		
 		response.setHeader("content-type", "application/json; charset=utf-8");
-		out.write(str);
+		out.write(toString());
+	}
+	
+	
+	public String toString() {
+		Moshi moshi = jsbuilded.build();
+		return moshi.adapter(ResponseRoot.class).toJson(ret_root);
 	}
 }

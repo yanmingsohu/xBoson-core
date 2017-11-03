@@ -26,19 +26,28 @@ public class UrlMapping implements ServletContextListener {
 	 * 随时加入新的服务路由, 做成配置文件会被 hack
 	 */
 	private void init_route() {
-		set("/auth", com.xboson.service.Login.class);
+		set(com.xboson.service.Login.class);
 	}
 	
 	
 	
-	private void set(String path, Class<? extends XService> sclass) {
+	private void set(Class<? extends XService> sclass) {
+		XPath path = sclass.getAnnotation(XPath.class);
+		String pname = null;
+		if (path != null) {
+			pname = path.value();
+		} else {
+			log.error("REG skip: cannot fonund XPath anno on " + sclass);
+			return;
+		}
+		
 		try {
 			XService service = sclass.newInstance();
-			map.put(path, service);
-			log.info("REG service: ", path, "-", sclass.getName());
+			map.put(pname, service);
+			log.info("REG service: ", pname, "-", sclass.getName());
 		} catch(Exception e) {
 			XService fail = new Fail(e);
-			map.put(path, fail);
+			map.put(pname, fail);
 			log.error("REG fail: ", e.getMessage());
 		}
 	}

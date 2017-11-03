@@ -10,7 +10,6 @@ public class TestLog extends Test {
 
 	public void test() throws Exception {
 		LogFactory.Init init = new LogFactory.Init();
-		init.setType("ConsoleOut");
 		
 		Log log = LogFactory.create();
 		log.debug("display debug", 1);
@@ -18,6 +17,8 @@ public class TestLog extends Test {
 		log.error("display error", 3);
 		log.warn("display", "warn", 4);
 		log.fatal("display", "fatal", 5);
+
+		init.setType("ConsoleOut");
 		
 		LogFactory.setLevel(Level.ERR);
 		log.debug("!!! not display", 11);
@@ -27,6 +28,7 @@ public class TestLog extends Test {
 		log.error("!!! not display", 12);
 		log.fatal("display when change level", 7);
 		
+		LogFactory.setLevel(Level.ALL);
 		success("log");
 	}
 }

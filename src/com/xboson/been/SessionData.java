@@ -10,19 +10,19 @@ public class SessionData {
 	
 	private static final String attrname = "xBoson-session-data";
 	
-
-	private HttpServletRequest request;
-	private HttpServletResponse response;
+	
+	public SessionData() {
+	}
 	
 	
-	
+	/**
+	 * 将 this 绑定到 request attribute 上
+	 */
 	public SessionData(HttpServletRequest request, HttpServletResponse response) throws ServletException {
 		if (request.getAttribute(attrname) != null) {
 			throw new ServletException("SessionData is bind to HttpServletRequest");
 		}
 		request.setAttribute(attrname, this);
-		this.request = request;
-		this.response = response;
 	}
 
 	

@@ -15,16 +15,12 @@ public class TestSession extends Test {
 		msg("Session ID: " + sessionid);
 		
 		SessionID.checkSessionId(ps, sessionid);
-		success("Session ID ok.");
 		
-		try {
-			SessionID.checkSessionId(ps, "f"+sessionid);
-			fail("Fail: not check bad sessionid");
-			return;
-		} catch(Exception e) {
-			success("success when check fail, '" + e.getMessage() + "'");
+		if (SessionID.checkSessionId(ps, "f"+sessionid)) {
+			throw new Exception("Fail: not checked bad sessionid");
 		}
 		
+		success("Session ok.");
 	}
 
 }

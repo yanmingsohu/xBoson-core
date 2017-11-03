@@ -29,6 +29,6 @@ public class ConsoleOut implements ILogWriter {
 
 	
 	@Override
-	public void destroy() {
+	public void destroy(ILogWriter replace) {
 	}
 }

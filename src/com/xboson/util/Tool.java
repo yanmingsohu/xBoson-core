@@ -2,6 +2,11 @@
 
 package com.xboson.util;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -85,5 +90,48 @@ public class Tool {
 	public static String formatDate(Date d) {
 		SimpleDateFormat f = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		return f.format(d);
+	}
+	
+	
+	/**
+	 * 复制并关闭文件
+	 * @throws IOException 
+	 */
+	public static void copy(InputStream src, OutputStream dst, boolean close) throws IOException {
+		try {
+			byte[] buff = new byte[1024];
+			int len = 0;
+			while ((len = src.read(buff)) > 0) {
+				dst.write(buff, 0, len);
+			}
+		} finally {
+			if (close) {
+				try {
+					src.close();
+					dst.close();
+				} catch(Exception e) {}
+			}
+		}
+	}
+	
+	
+	public static StringBuilder readFromFile(String filename) throws IOException {
+		FileReader r = null;
+		try {
+			StringBuilder out = new StringBuilder();
+			r = new FileReader(filename);
+			char[] buff = new char[1024];
+			int len = 0;
+			while ((len = r.read(buff)) > 0) {
+				out.append(buff, 0, len);
+			}
+			return out;
+		} finally {
+			if (r != null) {
+				try {
+					r.close();
+				} catch(Exception e) {}
+			}
+		}
 	}
 }
