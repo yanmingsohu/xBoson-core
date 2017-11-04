@@ -3,20 +3,24 @@
 package com.xboson.been;
 
 
+/** 
+ * public 属性能死么 ?! getter/setter 烦不烦.
+ */
 public class Config {
 
 	public static final String CONFIG_DIR 	= "/xBoson-config";
 	public static final String CONFIG_FILE 	= "/config.json";
 	public static final String LOG_DIR 			= "/logs";
 	
-	/** public 能死么 ? */
 	public String configFile				= null;
 	public String configPath				= null;
 	public String logPath						= null;
+	public String home              = null;
 	
 	public String loggerWriterType	= null;
 	public String sessionPassword		= null;
 	public int    sessionTimeout		= 0;
+	public String logLevel					= null;
 	
 	
 	public Config() {
@@ -24,15 +28,14 @@ public class Config {
 	
 	
 	public Config(String home) {
-		configPath	= home + CONFIG_DIR;
-		logPath 		= configPath + LOG_DIR;
-		configFile	= configPath + CONFIG_FILE;
+		setHome(home);
 	}
 	
 	
-	public void copy(Config c) {
-		loggerWriterType = c.loggerWriterType;
-		sessionPassword  = c.sessionPassword;
-		sessionTimeout   = c.sessionTimeout;
+	public void setHome(String home) {
+		this.home		= home;
+		configPath	= home + CONFIG_DIR;
+		logPath 		= configPath + LOG_DIR;
+		configFile	= configPath + CONFIG_FILE;
 	}
 }

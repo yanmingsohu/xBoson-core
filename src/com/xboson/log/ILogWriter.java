@@ -19,4 +19,5 @@ public interface ILogWriter {
 	 * @param repleased - 替换当前输出器的新输出器, 可能为 null
 	 */
 	void destroy(ILogWriter replace);
+	
 }

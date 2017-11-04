@@ -29,7 +29,7 @@ public class Level {
 	/**
 	 * this - 当前日志级别
 	 * @param l - 要检测的日志级别
-	 * @return 允许在当前日志级别显示 l 的日志返回 true
+	 * @return 阻止在当前日志级别显示 l 的日志返回 true
 	 */
 	public boolean blocking(Level l) {
 		return num > l.num;
@@ -37,6 +37,25 @@ public class Level {
 	
 	
 	public void checknull() {
+	}
+	
+	
+	public static Level find(String name) {
+		if (name != null) {
+			switch(name.toUpperCase()) {
+				case "ON": 
+				case "ALL": 	return ALL;
+				case "CLOSE":
+				case "OFF":   return OFF;
+				case "INFO":	return INFO;
+				case "DEBUG":	return DEBUG;
+				case "WARN":  return WARN;
+				case "ERR":
+				case "ERROR": return ERR;
+				case "FATAL": return FATAL;
+			}
+		}
+		return ALL;
 	}
 	
 	

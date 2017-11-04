@@ -66,8 +66,10 @@ public class SysConfig {
 				String str = Tool.readFromFile(config.configFile).toString();
 				Moshi moshi = new Moshi.Builder().build();
 				JsonAdapter<Config> configAdapter = moshi.adapter(Config.class);
+				
 				Config run = configAdapter.fromJson(str);
-				config.copy(run);
+				run.setHome(config.home);
+				config = run;
 				readed = true;
 				log.info("Read Config from", config.configFile);
 			} catch(Exception e) {
@@ -106,11 +108,9 @@ public class SysConfig {
 	
 	
 	static public class Init implements ServletContextListener {
-
 		@Override
 		public void contextDestroyed(ServletContextEvent sce) {
 		}
-
 		@Override
 		public void contextInitialized(ServletContextEvent sce) {
 			SysConfig sys = SysConfig.getInstance();

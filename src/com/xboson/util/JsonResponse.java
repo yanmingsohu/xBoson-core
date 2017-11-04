@@ -3,7 +3,7 @@
 package com.xboson.util;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -79,17 +79,23 @@ public class JsonResponse {
 	 * @throws IOException
 	 */
 	public void response(Object o) throws IOException {
-		PrintWriter out = response.getWriter();
+		OutputStream out = response.getOutputStream();
+		OutputStreamSinkWarp outwarp = new OutputStreamSinkWarp(out);
 
 		if (o != null) {
 			ret_root.setData(o, true);
 		}
 		
+		// !! 需要优化, 中文乱码, PrintWriter 不乱码
 		response.setHeader("content-type", "application/json; charset=utf-8");
-		out.write(toString());
+		Moshi moshi = jsbuilded.build();
+		moshi.adapter(ResponseRoot.class).toJson(outwarp, ret_root);
 	}
 	
 	
+	/**
+	 * 仅用于调试, 不要在生产环境下使用.
+	 */
 	public String toString() {
 		Moshi moshi = jsbuilded.build();
 		return moshi.adapter(ResponseRoot.class).toJson(ret_root);

@@ -5,6 +5,7 @@ package com.xboson.log;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import com.xboson.been.Config;
 import com.xboson.util.SysConfig;
 
 
@@ -80,8 +81,10 @@ public class LogFactory {
 		
 		public void contextInitialized(ServletContextEvent sce) {
 			try {
-				String type = SysConfig.getInstance().readConfig().loggerWriterType;
-				setType(type);
+				Config cfg = SysConfig.getInstance().readConfig();
+				setType(cfg.loggerWriterType);
+				setLevel(Level.find(cfg.logLevel));
+				System.out.println("Log level: " + level);
 			} finally {
 				if (writer == null) {
 					writer = new ConsoleOut();

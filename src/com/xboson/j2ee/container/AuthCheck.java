@@ -12,6 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 
+/**
+ * 验证用户登录状态
+ */
 public class AuthCheck extends HttpFilter {
 
 	private static final long serialVersionUID = 4001436349349397288L;

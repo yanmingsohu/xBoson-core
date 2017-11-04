@@ -35,7 +35,7 @@ public class MainServlet extends HttpServlet {
 			throw new ServletException("Not found service: " + cd.url.getName());
 		}
 		
-		log.info(cd.url.getName(), sv.getClass().getName());
+		log.debug(cd.url.getName(), sv.getClass().getName());
 		sv.service(cd);
 	}
 

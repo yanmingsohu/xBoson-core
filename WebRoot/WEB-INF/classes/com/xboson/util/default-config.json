@@ -1,5 +1,7 @@
 {
+	"configVersion": "1.2",
 	"loggerWriterType": "ConsoleOut",
 	"sessionTimeout": 30,
-	"sessionPassword": "fdsevbvsx_fdsaf"
+	"sessionPassword": "fdsevbvsx_fdsaf",
+	"logLevel": "all"
 }
