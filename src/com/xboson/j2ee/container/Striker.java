@@ -36,7 +36,7 @@ public class Striker extends HttpFilter {
 			log.error(e.getMessage());
 			response.setStatus(500);
 			jr.getRoot().setError(e);
-			jr.response(null);
+			jr.response();
 		}
 	}
 }

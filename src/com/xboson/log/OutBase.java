@@ -22,7 +22,7 @@ public abstract class OutBase implements ILogWriter {
 			
 			for (int i=0; i<msg.length; ++i) {
 				add.append(' ');
-				add.append(msg[i].toString());
+				add.append("" + msg[i]);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();

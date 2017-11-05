@@ -1,6 +1,6 @@
 # 大数据平台 v2
 
-Java 8, Tomcat 9
+Java JDK 8, Tomcat 9
 
 
 # 依赖
@@ -14,7 +14,18 @@ Java 8, Tomcat 9
 		
 # URL 映射约定
 
-/应用路径/app 映射路径/
+get 请求使用标准的 http url 参数.
+
+post 请求忽略 url 参数, 解析 body 中存放的 json.
+
+
+## /app
+
+脚本接口
+
+`/app/机构/模块/API?参数`
+
+当请求参数中有 jsonp=functionname, 则返回 jsonp 格式的数据, 并使用 functionname 来作为回调函数.
 
 
 # 配置文件 
@@ -32,3 +43,7 @@ session 超时时间, 分钟
 ## sessionPassword : String
 
 session 密钥, 集群中所有节点必须相同
+
+## logLevel : String
+
+日志过滤级别: ALL | OFF | DEBUG | INFO | WARN | ERROR | FATAL

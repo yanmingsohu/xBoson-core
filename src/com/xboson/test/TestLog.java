@@ -30,5 +30,6 @@ public class TestLog extends Test {
 		
 		LogFactory.setLevel(Level.ALL);
 		success("log");
+		init.setType("TestOut");
 	}
 }

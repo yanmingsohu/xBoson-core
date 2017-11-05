@@ -2,6 +2,8 @@
 
 package com.xboson.test;
 
+import java.util.Date;
+
 import com.xboson.log.LogFactory;
 
 /**
@@ -10,6 +12,7 @@ import com.xboson.log.LogFactory;
 public class Test {
 	
 	private static int failcount = 0;
+	private static long time = 0;
 	
 	/**
 	 * 测试用例列表
@@ -46,6 +49,7 @@ public class Test {
 				t.test();
 			} catch(Error e) {
 				fail(cl[i].getName() + " " + e.getMessage());
+				e.printStackTrace();
 			}
 		}
 		if (failcount > 0) {
@@ -94,5 +98,16 @@ public class Test {
 		msg("  Free Memory:" + runtime.freeMemory() / mb);
 		msg("  Total Memory:" + runtime.totalMemory() / mb);
 		msg("  Max Memory:" + runtime.maxMemory() / mb);
+	}
+	
+	
+	public static long beginTime() {
+		return time = new Date().getTime();
+	}
+	
+	
+	public static void endTime(String msg) {
+		long u = (new Date().getTime() - time); 
+		msg(msg + " Used Time " + u + "ms");
 	}
 }

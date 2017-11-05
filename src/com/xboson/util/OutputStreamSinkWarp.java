@@ -15,8 +15,7 @@ import okio.Timeout;
 
 
 /**
- * 包装 OutputStream, 在生成 json 时直接写入对客户端的应答, 而不是堆积在内存中. 
- * ! 需要完整测试
+ * 包装 OutputStream, 在生成 json 时直接写入对客户端的应答流, 而不是堆积在内存中.
  * 
  * https://docs.oracle.com/javase/8/docs/api/
  * https://github.com/square/okio/blob/master/okio/src/main/java/okio/Buffer.java
@@ -25,6 +24,7 @@ import okio.Timeout;
 public class OutputStreamSinkWarp implements BufferedSink {
 	
 	private OutputStream writer;
+	private Charset utf8 = Charset.forName("utf8");
 
 
 	public OutputStreamSinkWarp(OutputStream writer) {
@@ -133,7 +133,8 @@ public class OutputStreamSinkWarp implements BufferedSink {
 	@Override
 	public BufferedSink writeHexadecimalUnsignedLong(long i)
 			throws IOException {
-		writeUtf8(new BigDecimal(i).toString()); // !!
+		System.out.println("OutputStreamSinkWarp.writeHexadecimalUnsignedLong() WARN !!!");
+		writeUtf8(new BigDecimal(i).toString());
 		return this;
 	}
 
@@ -198,7 +199,7 @@ public class OutputStreamSinkWarp implements BufferedSink {
 
 	@Override
 	public BufferedSink writeUtf8(String str) throws IOException {
-		writer.write(str.getBytes());
+		writer.write(str.getBytes(utf8));
 		return  this;
 	}
 
@@ -206,7 +207,7 @@ public class OutputStreamSinkWarp implements BufferedSink {
 	@Override
 	public BufferedSink writeUtf8(String str, int beginIndex, int endIndex)
 			throws IOException {
-		writer.write(str.substring(beginIndex, endIndex).getBytes());
+		writer.write(str.substring(beginIndex, endIndex).getBytes(utf8));
 		return this;
 	}
 

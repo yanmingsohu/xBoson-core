@@ -9,8 +9,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.squareup.moshi.Moshi;
-import com.squareup.moshi.Moshi.Builder;
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.been.ResponseRoot;
 
 
@@ -21,29 +20,26 @@ public class JsonResponse {
 	
 	private static final String attrname = "xBoson-JSON-response";
 	
-	@SuppressWarnings("unused")
 	private HttpServletRequest request;
 	private HttpServletResponse response;
 	private ResponseRoot ret_root;
-	private Builder jsbuilded;
+	private JsonAdapter<ResponseRoot> jadapter;
 
 	
 	public JsonResponse(HttpServletRequest request, HttpServletResponse response) throws ServletException {
+		this();
 		if (request.getAttribute(attrname) != null) {
 			throw new ServletException("JsonResponse is bind to HttpServletRequest");
 		}
 		request.setAttribute(attrname, this);
 		this.request = request;
 		this.response = response;
-		
-		jsbuilded = new Moshi.Builder();
-		ret_root = new ResponseRoot();
 	}
 	
 	
 	public JsonResponse() {
-		jsbuilded = new Moshi.Builder();
 		ret_root = new ResponseRoot();
+		jadapter = Tool.getAdapter(ResponseRoot.class);
 	}
 	
 	
@@ -61,7 +57,7 @@ public class JsonResponse {
 	 * @param c -- 适配器的类
 	 */
 	public void regJsonAdapter(Object adapter) {
-		jsbuilded.add(adapter);
+		Tool.regJsonAdapter(adapter);
 	}
 	
 	
@@ -75,21 +71,34 @@ public class JsonResponse {
 	
 	/**
 	 * 应答客户端
-	 * @param o - 可选的, 快速设置返回数据
+	 * @param o - 快速设置返回数据
 	 * @throws IOException
 	 */
 	public void response(Object o) throws IOException {
+		if (o == null) {
+			throw new NullPointerException("parm null");
+		}
+		ret_root.setData(o, true);
+		response();
+	}
+	
+	
+	public void response() throws IOException {
 		OutputStream out = response.getOutputStream();
 		OutputStreamSinkWarp outwarp = new OutputStreamSinkWarp(out);
-
-		if (o != null) {
-			ret_root.setData(o, true);
-		}
 		
-		// !! 需要优化, 中文乱码, PrintWriter 不乱码
-		response.setHeader("content-type", "application/json; charset=utf-8");
-		Moshi moshi = jsbuilded.build();
-		moshi.adapter(ResponseRoot.class).toJson(outwarp, ret_root);
+		String jsonp = request.getParameter("jsonp");
+		
+		if (jsonp == null || jsonp == "false" || jsonp == "0") {
+			response.setHeader("content-type", "application/json; charset=utf-8");
+			jadapter.toJson(outwarp, ret_root);
+		} else {
+			response.setHeader("content-type", "application/javascript; charset=utf-8");
+			outwarp.writeUtf8(jsonp);
+			outwarp.writeUtf8("(");
+			jadapter.toJson(outwarp, ret_root);
+			outwarp.writeUtf8(");");
+		}
 	}
 	
 	
@@ -97,7 +106,6 @@ public class JsonResponse {
 	 * 仅用于调试, 不要在生产环境下使用.
 	 */
 	public String toString() {
-		Moshi moshi = jsbuilded.build();
-		return moshi.adapter(ResponseRoot.class).toJson(ret_root);
+		return Tool.getAdapter(ResponseRoot.class).toJson(ret_root);
 	}
 }

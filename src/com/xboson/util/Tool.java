@@ -13,12 +13,34 @@ import java.io.Writer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
+import com.squareup.moshi.Moshi.Builder;
+
 public class Tool {
 	
 	private static final ThreadLocal<SimpleDateFormat> 
 					dataformat = new ThreadLocal<SimpleDateFormat>();
 	
+	private static Builder jsbuilded;
+	private static Moshi moshi;
+	
 	private Tool() {}
+	
+	static {
+		jsbuilded = new Moshi.Builder();
+		moshi = jsbuilded.build();
+	}
+	
+	
+	public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
+		return moshi.adapter(c);
+	}
+	
+	
+	public static void regJsonAdapter(Object adapter) {
+		jsbuilded.add(adapter);
+	}
 	
 	
 	public static void eq(byte[] a, byte[] b) {

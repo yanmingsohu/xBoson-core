@@ -18,8 +18,9 @@ public class TestJSON extends Test {
 	// 不需要 get/set 就可以 tojson
 	private String a = "aaa";
 	private String[] aa = { "a", "fjdkslafjdsaklf", "你好" };
-	private int i = 1;
+	private int i = 1000;
 	private long l = 2;
+	// private BigDecimal bd = new BigDecimal(-11); 不支持
 	
 	private A ia = new A();
 
@@ -32,7 +33,8 @@ public class TestJSON extends Test {
 	
 	
 	public boolean equals(TestJSON b) {
-		return a.equals(b.a) && i == b.i && l == b.l && ia.b.equals(b.ia.b) && Arrays.equals(aa, b.aa);
+		return a.equals(b.a) && i == b.i && l == b.l && ia.b.equals(b.ia.b) 
+				&& Arrays.equals(aa, b.aa);
 	}
 	
 	
@@ -47,6 +49,82 @@ public class TestJSON extends Test {
 	public void test() throws IOException {
 		been_to_json();
 		outputstream_warp();
+		speed();
+		thread_safe();
+	}
+	
+	
+	public void speed() {
+		int count = 100000;
+		
+		{
+			Moshi moshi = new Moshi.Builder().build();
+			beginTime();
+			for (int i=0; i<count; ++i) {
+				jsonAdapter = moshi.adapter(TestJSON.class);
+				jsonAdapter.toJson(this);
+			}
+			endTime("cache Moshi"); // 100000 Used Time 218ms
+		}
+		
+		{
+			Moshi moshi = new Moshi.Builder().build();
+			jsonAdapter = moshi.adapter(TestJSON.class);
+			beginTime();
+			for (int i=0; i<count; ++i) {
+				jsonAdapter.toJson(this);
+			}
+			endTime("cache adapter"); // 100000 Used Time 156ms
+		}
+		
+		{
+			beginTime();
+			for (int i=0; i<count; ++i) {
+				Moshi moshi = new Moshi.Builder().build();
+				jsonAdapter = moshi.adapter(TestJSON.class);
+				jsonAdapter.toJson(this);
+			}
+			endTime("All Function"); // 100000 Used Time 765ms
+		}
+		
+		success("time test");
+	}
+	
+	
+	public void thread_safe() {
+		final Moshi moshi = new Moshi.Builder().build();
+		final JsonAdapter<TestJSON> jsonAdapter2 = moshi.adapter(TestJSON.class);
+		final String b = jsonAdapter2.toJson(this);
+		
+		final int count = 300000;
+		final int threadc = 10;
+		Thread t[] = new Thread[threadc];
+		
+		for (int c = 0; c<threadc; ++c) {
+			t[c] = new Thread(new Runnable() {
+				public void run() {
+					for (int i=0; i<count; ++i) {
+						jsonAdapter = moshi.adapter(TestJSON.class);
+						String a = jsonAdapter.toJson(TestJSON.this);
+						if (! a.equals(b)) {
+							fail("bad value \n" + a + "\n" + b);
+							System.exit(1);
+						}
+					}
+					msg("over");
+				}
+			});
+			t[c].start();
+		}
+		
+		for (int c = 0; c<threadc; ++c) {
+			try {
+				t[c].join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		success("thread safe");
 	}
 	
 	
@@ -78,11 +156,17 @@ public class TestJSON extends Test {
 		TestJSON aa = jsonAdapter.fromJson(a);
 		TestJSON bb = jsonAdapter.fromJson(b);
 		
-		if (!aa.equals(bb)) {
+		msg(a);
+		
+		if (aa.equals(bb) && aa.equals(this)) {
+			success("output stream warp");
+		} else {
 			throw new IOException("bad:\n" + a + "\n" + b);
 		}
-
-		success("output stream warp");
 	}
 	
+	
+	public static void main(String[] s) throws Exception {
+		new TestJSON().test();
+	}
 }

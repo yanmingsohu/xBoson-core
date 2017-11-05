@@ -3,6 +3,7 @@
 package com.xboson.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 
@@ -13,6 +14,11 @@ public class StringBufferOutputStream extends OutputStream {
 	
 	private byte[] buf = new byte[1024];
 	private int pos = 0;
+	
+	
+	public void write(InputStream src) throws IOException {
+		Tool.copy(src, this, true);
+	}
 
 	
 	@Override

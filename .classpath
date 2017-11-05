@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<accessrules>
+			<accessrule kind="accessible" pattern="**"/>
+		</accessrules>
+	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/J2ee"/>
-	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/moshi-1.5.0.jar"/>
+	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/moshi-1.5.0.jar" sourcepath="D:/javaee-project/moshi-parent-1.5.0/moshi/src"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/moshi-kotlin-1.5.0.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/okio-1.13.0.jar"/>
 	<classpathentry kind="lib" path="WebRoot/WEB-INF/lib/jansi-1.16.jar"/>
