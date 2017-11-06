@@ -45,10 +45,11 @@ try {
   console.error("security fail, Free Use: " + o);
   fail = true;
 } catch(e) {
-  console.info("3 Right", e.stack);
+  console.info("3 Right", e.message);
 }
   
 try {  
+  
   console.log(typeof $ENV, typeof $EXEC, typeof $ARG);
   console.log($ENV, $EXEC, $ARG);
   fail = true;

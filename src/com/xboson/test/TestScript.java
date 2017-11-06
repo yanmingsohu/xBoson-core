@@ -2,6 +2,8 @@
 
 package com.xboson.test;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -14,12 +16,9 @@ import javax.script.ScriptException;
 
 import com.xboson.been.Module;
 import com.xboson.log.LogFactory;
-import com.xboson.script.Application;
-import com.xboson.script.BasicEnvironment;
-import com.xboson.script.IVirtualFileSystem;
-import com.xboson.script.Sandbox;
-import com.xboson.script.SandboxFactory;
-import com.xboson.script.WarpdScript;
+import com.xboson.script.*;
+import com.xboson.script.env.Console;
+import com.xboson.script.env.Path;
 import com.xboson.util.StringBufferOutputStream;
 
 /**
@@ -49,17 +48,26 @@ public class TestScript extends Test {
 	
 	
 	public void application() throws Exception {
-		BasicEnvironment env = new BasicEnvironment();
+		SysModules sysmod = new SysModules();
+		sysmod.regClass("console", Console.class);
+    sysmod.regClass("path", Path.class);
+
+		BasicEnvironment env = new BasicEnvironment(sysmod);
+
 		FixFile vfs = new FixFile();
-		vfs.putfile("/index.js", "./check-safe.js");
-		vfs.putfile("/a.js", "./check-safe.js");
+		vfs.putfile("/a/check-safe.js", "./check-safe.js");
+		vfs.putfile("/a/a.js", "./deep.js");
+    vfs.putfile("/b/b.js", "./deep.js");
 		
 		Application app = new Application(env, vfs);
-		app.run("/index.js");
+		app.run("/a/check-safe.js");
 		success("Application");
 	}
 	
 	
+	/**
+	 * 将测试目录文件映射到虚拟目录
+	 */
 	static public class FixFile implements IVirtualFileSystem {
 		/** <virtual_filename, code> */
 		Map<String, String> map = new HashMap<String, String>();
@@ -70,16 +78,20 @@ public class TestScript extends Test {
 		}
 		
 		@SuppressWarnings("resource")
-		void putfile(String name, String file) throws IOException {
-			InputStream is = getClass().getResourceAsStream(file);
+		void putfile(String virautlname, String codefile) throws IOException {
+			InputStream is = getClass().getResourceAsStream(codefile);
 			StringBufferOutputStream sbos = new StringBufferOutputStream();
 			sbos.write(is);
-			map.put(name, sbos.toString());
+			map.put(virautlname, sbos.toString());
 		}
 
 		@Override
 		public String readFile(String path) throws IOException {
-			return map.get(path);
+			String code = map.get(path);
+			if (code == null) {
+        throw new FileNotFoundException("not found " + path);
+      }
+      return code;
 		}
 
 		@Override
@@ -91,7 +103,7 @@ public class TestScript extends Test {
 	
 	public void hack() throws Exception {
 		Sandbox sandbox = SandboxFactory.create();
-		sandbox.precompile();
+		sandbox.bootstrap();
 		BasicEnvironment env = new BasicEnvironment();
 		env.config(sandbox);
 		sandbox.freezeGlobal();
@@ -172,8 +184,8 @@ public class TestScript extends Test {
 		b.eval(c);
 		a.eval("a = 1;");
 		b.eval("a = 2;");
-		Integer aa = (Integer) a.call("g");
-		Integer bb = (Integer) b.call("g");
+		Integer aa = (Integer) a.getGlobalFunc().invokeFunction("g");
+		Integer bb = (Integer) b.getGlobalFunc().invokeFunction("g");
 		if (aa == 1 && bb == 2) {
 			success("independent sandbox");
 		} else {
@@ -183,7 +195,7 @@ public class TestScript extends Test {
 	
 	
 	public void speedtest() throws ScriptException {
-		InputStream script1 = getClass().getResourceAsStream("./TestScript.js");
+		InputStream script1 = getClass().getResourceAsStream("./test-speed.js");
 		Sandbox s = SandboxFactory.create();
 		s.getBindings().put("console", this);
 		s.eval(script1);

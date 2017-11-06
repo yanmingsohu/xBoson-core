@@ -29,8 +29,9 @@ public class Application implements ICodeRunnner {
 		modcache = new HashMap<String, WarpdScript>();
 		sandbox  = SandboxFactory.create();
 		
-		sandbox.precompile();
+		sandbox.bootstrap();
 		env.config(sandbox);
+		sandbox.bootstrapEnd();
 	}
 	
 	
@@ -44,7 +45,7 @@ public class Application implements ICodeRunnner {
 	 */
 	public Module run(String path) throws IOException, ScriptException {
 		if (path.charAt(0) != '/')
-			throw new IOException("path must begin with '/'");
+			throw new IOException("path must begin with '/' " + path);
 		
 		WarpdScript ws = modcache.get(path);
 		if (ws != null) {
@@ -52,6 +53,10 @@ public class Application implements ICodeRunnner {
 		}
 		
 		String code = vfs.readFile(path);
+		if (code == null) {
+			throw new IOException("get null code " + path);
+		}
+
 		sandbox.setFilename(path);
 		ws = new WarpdScript(sandbox, code);
 		ws.setCodeRunner(this);

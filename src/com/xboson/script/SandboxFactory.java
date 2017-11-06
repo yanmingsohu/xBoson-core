@@ -20,6 +20,7 @@ public class SandboxFactory {
 	private static Log log = LogFactory.create();
 	private static BlockAll blockall = new BlockAll();
 
+
 	/**
 	 * 创建一个独立的沙箱
 	 * @throws ScriptException 

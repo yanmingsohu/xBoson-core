@@ -10,7 +10,7 @@ import java.io.IOException;
 public interface IVirtualFileSystem {
 
 	/**
-	 * 读取路径上的文件, 返回文件内容
+	 * 读取路径上的文件, 返回文件内容, 如果文件不存在应该抛出异常
 	 */
 	public String readFile(String path) throws IOException;
 	

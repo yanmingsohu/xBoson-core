@@ -15,6 +15,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import com.xboson.util.Tool;
+import sun.font.Script;
 
 
 /**
@@ -39,15 +40,6 @@ public class Sandbox {
 		} else {
 			throw new ScriptException("cannot compile");
 		}
-	}
-		
-	
-	public Object precompile() throws ScriptException {
-		if (ispred) return null;
-		ispred = true;
-		setFilename("<boot>");
-		InputStream script1 = getClass().getResourceAsStream("./precomplile.js");
-		return eval(script1);
 	}
 	
 	
@@ -107,11 +99,28 @@ public class Sandbox {
 	public CompiledScript compile(String code) throws ScriptException {
 		return cpl.compile(code);
 	}
-	
-	
-	public Object call(String functionName) throws NoSuchMethodException, ScriptException {
-		Invocable inv = (Invocable) js;
-		return inv.invokeFunction(functionName);
+
+
+	public Invocable getGlobalFunc() {
+		return (Invocable) js;
+	}
+
+
+	public Object bootstrap() throws ScriptException {
+		if (ispred) return null;
+		ispred = true;
+		setFilename("<bootstrap>");
+		InputStream script1 = getClass().getResourceAsStream("./bootstrap.js");
+		return eval(script1);
+	}
+
+
+	public void bootstrapEnd() throws ScriptException {
+		try {
+			getGlobalFunc().invokeFunction("__boot_over");
+		} catch(NoSuchMethodException e) {
+			throw new ScriptException(e);
+		}
 	}
 	
 	

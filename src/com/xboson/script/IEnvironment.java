@@ -5,14 +5,12 @@ package com.xboson.script;
 import javax.script.ScriptException;
 
 /**
+ * 将对象绑定到全局,
  * 每个环境的实例中的数据都是缓存的, 除非创建新的实例, 
  * 否则环境中的变量可能在配置新的沙箱时被修改数据.
  */
-public interface IEnvironment {
-	
-	/**
-	 * 设置 box 的环境
-	 */
-	public void config(Sandbox box) throws ScriptException;
-	
+public interface IEnvironment extends IConfigSandbox {
+
+  ISysModuleProvider getModuleProvider();
+
 }

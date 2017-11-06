@@ -17,6 +17,9 @@ public class StringBufferOutputStream extends OutputStream {
 	
 	
 	public void write(InputStream src) throws IOException {
+		if (src == null) {
+		  throw new NullPointerException("src");
+    }
 		Tool.copy(src, this, true);
 	}
 

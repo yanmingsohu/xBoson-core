@@ -20,13 +20,20 @@ public class BasicEnvironment implements IEnvironment {
 	
 	private Log log = LogFactory.create();
 	private List<IJSObject> objs;
+	private ISysModuleProvider smp;
 
 	
 	public BasicEnvironment() {
+		this(new SysModules());
+	}
+
+
+	public BasicEnvironment(ISysModuleProvider p) {
+		smp = p;
 		objs = new ArrayList<IJSObject>();
-		
+
 		setEnvObjectList(new Class<?>[]{
-			Console.class,
+						Console.class,
 		});
 	}
 	
@@ -58,6 +65,10 @@ public class BasicEnvironment implements IEnvironment {
 			String name = o.env_name();
 			bind.put(name, o);
 		}
+
+		if (smp != null) {
+			smp.config(box);
+		}
 	}
 	
 	
@@ -76,5 +87,10 @@ public class BasicEnvironment implements IEnvironment {
 	protected void finalize() throws Throwable {
 		destory();
 	}
-	
+
+
+	@Override
+	public ISysModuleProvider getModuleProvider() {
+		return smp;
+	}
 }
