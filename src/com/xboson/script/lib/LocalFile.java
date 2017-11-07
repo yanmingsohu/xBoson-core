@@ -1,6 +1,6 @@
 /* CatfoOD 2017年11月5日 下午3:55:15 yanming-sohu@sohu.com Q.412475540 */
 
-package com.xboson.script.env;
+package com.xboson.script.lib;
 
 import java.io.IOException;
 import java.nio.file.FileSystem;

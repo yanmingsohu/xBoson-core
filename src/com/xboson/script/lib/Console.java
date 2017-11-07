@@ -1,6 +1,6 @@
 /* CatfoOD 2017年11月5日 上午11:50:29 yanming-sohu@sohu.com Q.412475540 */
 
-package com.xboson.script.env;
+package com.xboson.script.lib;
 
 import com.xboson.log.Level;
 import com.xboson.log.Log;

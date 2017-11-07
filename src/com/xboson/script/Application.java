@@ -14,7 +14,7 @@ import com.xboson.been.Module;
  * 应用存储在二级目录中, 第一级是模块名, 第二级是接口名
  * 不支持多线程.
  */
-public class Application implements ICodeRunnner {
+public class Application implements ICodeRunner {
 	
 	private Sandbox sandbox;
 	@SuppressWarnings("unused")
@@ -30,7 +30,7 @@ public class Application implements ICodeRunnner {
 		sandbox  = SandboxFactory.create();
 		
 		sandbox.bootstrap();
-		env.config(sandbox);
+		env.config(sandbox, this);
 		sandbox.bootstrapEnd();
 	}
 	

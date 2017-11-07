@@ -10,7 +10,7 @@ import com.xboson.been.CallData;
 import com.xboson.j2ee.container.XService;
 
 /**
- * 服务注册失败占位符
+ * 服务注册失败占位符, 不要注册到服务列表
  */
 public class Fail extends XService {
 	

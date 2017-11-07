@@ -10,6 +10,6 @@ public interface IConfigSandbox {
   /**
    * 配置沙箱
    */
-  public void config(Sandbox box) throws ScriptException;
+  public void config(Sandbox box, ICodeRunner runner) throws ScriptException;
 
 }

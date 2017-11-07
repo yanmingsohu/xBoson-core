@@ -16,7 +16,7 @@ public class WarpdScript {
 	private Sandbox box;
 	private String code;
 	private Module module;
-	private ICodeRunnner crun;
+	private ICodeRunner crun;
 	private CompiledScript cs;
 	
 	
@@ -47,7 +47,7 @@ public class WarpdScript {
 	}
 	
 	
-	public void setCodeRunner(ICodeRunnner crun) {
+	public void setCodeRunner(ICodeRunner crun) {
 		this.crun = crun;
 	}
 }

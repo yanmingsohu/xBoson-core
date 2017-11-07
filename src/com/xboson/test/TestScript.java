@@ -2,7 +2,6 @@
 
 package com.xboson.test;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,8 +16,6 @@ import javax.script.ScriptException;
 import com.xboson.been.Module;
 import com.xboson.log.LogFactory;
 import com.xboson.script.*;
-import com.xboson.script.env.Console;
-import com.xboson.script.env.Path;
 import com.xboson.util.StringBufferOutputStream;
 
 /**
@@ -45,14 +42,14 @@ public class TestScript extends Test {
 		hack();
 		application();
 	}
-	
-	
-	public void application() throws Exception {
-		SysModules sysmod = new SysModules();
-		sysmod.regClass("console", Console.class);
-    sysmod.regClass("path", Path.class);
 
-		BasicEnvironment env = new BasicEnvironment(sysmod);
+
+  /**
+   * 综合测试沙箱的功能和安全性
+   * @throws Exception - 测试失败抛出异常
+   */
+	public void application() throws Exception {
+    IEnvironment env = EnvironmentFactory.createBasic();
 
 		FixFile vfs = new FixFile();
 		vfs.putfile("/a/check-safe.js", "./check-safe.js");
@@ -104,8 +101,8 @@ public class TestScript extends Test {
 	public void hack() throws Exception {
 		Sandbox sandbox = SandboxFactory.create();
 		sandbox.bootstrap();
-		BasicEnvironment env = new BasicEnvironment();
-		env.config(sandbox);
+    IEnvironment env = EnvironmentFactory.createBasic();
+		env.config(sandbox, null);
 		sandbox.freezeGlobal();
 		
 		Object o = null;

@@ -11,7 +11,7 @@ import javax.script.ScriptException;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.script.env.Console;
+
 
 /**
  * 紧创建非常简单的工具类, 方便调试, 含有网络连接的复杂对象环境可以继承该类
@@ -31,10 +31,6 @@ public class BasicEnvironment implements IEnvironment {
 	public BasicEnvironment(ISysModuleProvider p) {
 		smp = p;
 		objs = new ArrayList<IJSObject>();
-
-		setEnvObjectList(new Class<?>[]{
-						Console.class,
-		});
 	}
 	
 	
@@ -56,7 +52,7 @@ public class BasicEnvironment implements IEnvironment {
 	}
 	
 	
-	public void config(Sandbox box) throws ScriptException {
+	public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
 		Bindings bind = box.getBindings();
 		Iterator<IJSObject> it = objs.iterator();
 		
@@ -67,7 +63,7 @@ public class BasicEnvironment implements IEnvironment {
 		}
 
 		if (smp != null) {
-			smp.config(box);
+			smp.config(box, runner);
 		}
 	}
 	

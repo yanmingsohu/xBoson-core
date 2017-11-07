@@ -9,7 +9,7 @@ import javax.script.ScriptException;
 import com.xboson.been.Module;
 
 
-public interface ICodeRunnner {
+public interface ICodeRunner {
 
 	/**
 	 * 通过该方法运行代码

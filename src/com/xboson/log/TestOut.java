@@ -6,17 +6,17 @@ import java.util.Date;
 
 import com.xboson.test.Test;
 
-public class TestOut extends OutBase implements ILogWriter {
+public class TestOut extends ConsoleOut implements ILogWriter {
 
 	@Override
 	public void output(Date d, Level l, String name, Object[] msg) {
-		StringBuilder buf = new StringBuilder();
-		format(buf, d, l, name, msg);
-		Test.msg(buf.toString());
+		System.out.print("    ");
+		super.output(d, l, name, msg);
 	}
 
 	@Override
 	public void destroy(ILogWriter replace) {
+		super.destroy(replace);
 	}
 
 }

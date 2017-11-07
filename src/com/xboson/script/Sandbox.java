@@ -14,6 +14,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
+import com.xboson.script.safe.SafeBinding;
 import com.xboson.util.Tool;
 import sun.font.Script;
 
@@ -118,7 +119,7 @@ public class Sandbox {
 	public void bootstrapEnd() throws ScriptException {
 		try {
 			getGlobalFunc().invokeFunction("__boot_over");
-		} catch(NoSuchMethodException e) {
+    } catch(NoSuchMethodException e) {
 			throw new ScriptException(e);
 		}
 	}
