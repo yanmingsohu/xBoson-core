@@ -104,8 +104,8 @@ public class SysModules implements ISysModuleProvider {
       while (it.hasNext()) {
         String name = it.next();
 
-        box.setFilename("<" + name + ">");
-        WarpdScript ws = new WarpdScript(box, jscode.get(name));
+        String filename = "<" + name + ">";
+        WarpdScript ws = new WarpdScript(box, jscode.get(name), filename);
         ws.setCodeRunner(runner);
         ws.call();
 

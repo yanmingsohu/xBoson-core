@@ -5,12 +5,12 @@ if (__filename.indexOf(__dirname) != 0)
   throw new Error("bad __dirname or __filename");
 
 
-function if_throw_ok(fn, emsg) {
+function if_throw_ok(fn, emsg, showstack) {
   var _throw = 0;
   try {
     fn();
   } catch(e) {
-    _throw = 1;
+    _throw = e;
     emsg += ' - [ ' + e + ' ]';
     // console.log(e.stack)
   }
@@ -18,7 +18,9 @@ function if_throw_ok(fn, emsg) {
   if (!_throw) {
     throw new Error(emsg);
   } else {
-    console.info("OK", emsg || fn.name);
+    var arr = ["OK", emsg || fn.anem];
+    if (showstack) arr.push(_throw.stack);
+    console.info(arr);
   }
 }
 
@@ -151,19 +153,39 @@ if_throw_ok(function() {
   assert.deepEqual({a:1, b:2}, {a:1, b:[1,2]});
 }, 'deepEqual2');
 
-
 if_throw_ok(function() {
   assert.doesNotThrow(function() {
     throw new TypeError('错误信息');
   }, SyntaxError);
 }, 'doesNotThrow() 1');
 
-
 if_throw_ok(function() {
   assert.doesNotThrow(function() {
       throw new TypeError('错误信息');
   }, TypeError);
 }, 'doesNotThrow() 2');
+
+if_throw_ok(function _t() {
+  assert.fail('a', 'e', 'm', 'op', _t);
+}, 'assert.fail');
+
+assert.throws(function() {
+  throw new Error();
+}, Error, 'good');
+
+if_throw_ok(function () {
+  assert.throws(function() {
+    throw new Error();
+  }, TypeError, 'throws');
+}, 'assert.throw');
+
+assert.notStrictEqual(1, 2);
+assert.ok(1);
+assert.notEqual(1, 2);
+assert.notDeepStrictEqual({ a: 1 }, { a: '1' });
+assert.notDeepEqual({ a: 1 }, { a: 2 });
+assert.ifError(0);
+assert.equal(1, '1');
 
 
 // --------------------------------------- path
@@ -177,6 +199,59 @@ assert.eq(path.normalize('/./a\\/../b.js'), '/b.js', 'p4');
 if_throw_ok(function() {
   path.checkSafe('/../a');
 }, "check path safe");
+
+
+// --------------------------------------- events
+
+var Event = require("events");
+var event = new Event();
+
+var tt = 0;
+event.on("a", function() {
+  ++tt;
+  console.debug("event working");
+});
+event.emit('a');
+event.emit('a');
+assert.eq(tt, 2, 'not recv event');
+
+if_throw_ok(function() {
+  event.emit("error", 'throws');
+}, 'error event');
+
+
+// --------------------------------------- buffer
+//var buf1, buf2, buf3;
+//var Buffer = require("buffer").Buffer;
+//
+//buf1 = Buffer.from([1,2,3,"x"]);
+//buf2 = Buffer.from(buf1);
+//buf1[0] = 99;
+//console.debug('N1:', buf1, 'N2:', buf2);
+//assert.notEqual(buf1[0], buf2[0]);
+//
+//buf1 = Buffer.from('ABC');
+//buf2 = Buffer.from('BCD');
+//buf3 = Buffer.from('ABCD');
+//
+//assert.eq(0, buf1.compare(buf1), "buf1 myself");
+//assert.eq(-1, buf1.compare(buf2), "buf1, buf2");
+//assert.eq(-1, buf1.compare(buf3), "buf1, buf3");
+//assert.eq(1, buf2.compare(buf1), "buf2, buf1");
+//assert.eq(1, buf2.compare(buf3), "buf2, buf3");
+//
+//buf1 = Buffer.allocUnsafe(26);
+//buf2 = Buffer.allocUnsafe(26).fill('!');
+//
+//for (var i = 0; i < 26; i++) {
+//  // 97 是 'a' 的十进制 ASCII 值
+//  buf1[i] = i + 97;
+//}
+//
+//buf1.copy(buf2, 8, 16, 20);
+//
+//// 输出: !!!!!!!!qrst!!!!!!!!!!!!!
+//console.log(buf2.toString('ascii', 0, 25));
 
 
 /////////////////////////////////////////////////////////////////////

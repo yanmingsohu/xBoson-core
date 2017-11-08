@@ -57,8 +57,7 @@ public class Application implements ICodeRunner {
 			throw new IOException("get null code " + path);
 		}
 
-		sandbox.setFilename(path);
-		ws = new WarpdScript(sandbox, code);
+		ws = new WarpdScript(sandbox, code, path);
 		ws.setCodeRunner(this);
 		modcache.put(path, ws);
 		
@@ -68,7 +67,6 @@ public class Application implements ICodeRunner {
 		mod.paths = new String[] { "/js_modules" };
 
 		ws.call();
-		mod.loaded = true;
 		
 		return mod;
 	}

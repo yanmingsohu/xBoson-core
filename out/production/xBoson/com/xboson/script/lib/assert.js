@@ -6,8 +6,18 @@ assert.equal = equal;
 assert.deepEqual = deepEqual;
 assert.deepStrictEqual = deepStrictEqual;
 assert.doesNotThrow = doesNotThrow;
+assert.fail = fail;
+assert.ifError = ifError;
+assert.notDeepEqual = notDeepEqual;
+assert.notDeepStrictEqual = notDeepStrictEqual;
+assert.notEqual = notEqual;
+assert.notStrictEqual = notStrictEqual;
+assert.strictEqual = strictEqual;
+assert.throws = throws;
 
 assert.AssertionError = AssertionError;
+
+Object.freeze(assert);
 
 
 function ok(value, message) {
@@ -17,8 +27,15 @@ function ok(value, message) {
 
 
 function equal(a, b, message) {
-  if (a !== b)
+  if (a != b)
     throw new AssertionError(message, a, b, "!=");
+}
+
+
+function strictEqual() {
+  if (actual !== expected) {
+    throw new AssertionError(message, actual, expected, "!==");
+  }
 }
 
 
@@ -66,6 +83,57 @@ function deepStrictEqual(actual, expected, message) {
 }
 
 
+function fail(actual, expected, message, operator, stackStartFunction) {
+  var e = new AssertionError(message, actual, expected, operator);
+  if (stackStartFunction) {
+    // maybe not working.
+    Error.captureStackTrace(e, stackStartFunction);
+  }
+  throw e;
+}
+
+
+function ifError(value) {
+  if (value) {
+    throw value;
+  }
+}
+
+
+function notDeepEqual(actual, expected, message) {
+  try {
+    deepEqual(actual, expected, message);
+  } catch(e) {
+    return;
+  }
+  throw new AssertionError(message, actual, expected, "==");
+}
+
+
+function notDeepStrictEqual(actual, expected, message) {
+  try {
+    deepStrictEqual(actual, expected, message);
+  } catch(e) {
+    return;
+  }
+  throw new AssertionError(message, actual, expected, "===");
+}
+
+
+function notEqual(actual, expected, message) {
+  if (actual == expected) {
+    throw new AssertionError(message, actual, expected, "==");
+  }
+}
+
+
+function notStrictEqual(actual, expected, message) {
+  if (actual === expected) {
+    throw new AssertionError(message, actual, expected, "===");
+  }
+}
+
+
 function doesNotThrow(block, error, message) {
   try {
     block();
@@ -79,12 +147,35 @@ function doesNotThrow(block, error, message) {
 }
 
 
-function arr_eq(a, b) {
-  if (a.length != b.length) return;
-  for (var i=a.length-1; i>=0; --i) {
-    if (a[i] != b[i]) return;
+function throws(block, error, message) {
+  var test = _make_test(error);
+  try {
+    block();
+  } catch(e) {
+    if (test(e)) {
+      return;
+    }
   }
-  return true;
+  throw new AssertionError(message);
+}
+
+
+function _make_test(obj) {
+  var test;
+  if (obj instanceof RegExp) {
+    test = function(e) {
+      return obj.test(e.stack);
+    };
+  } else {
+    test = function(e) {
+      if (e.constructor === obj) {
+        return true;
+      } else {
+        return obj(e) === true;
+      }
+    };
+  }
+  return test;
 }
 
 
@@ -92,12 +183,12 @@ function AssertionError(msg, actual, expected, op) {
   this.name     = 'AssertionError';
   this.actual   = actual;
   this.expected = expected;
-  this.op       = op || '!=';
+  this.operator = op || '!=';
   this.message  = (msg || 'Fail');
 
   if (actual || expected) {
     this.message = this.message
-        + " actual " + (op||'!=') + " expected"
+        + " actual " + (this.operator) + " expected"
         + '\n\t\t  actual: ' + JSON.stringify(actual)
         + '\n\t\texpected: ' + JSON.stringify(expected);
   }

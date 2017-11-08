@@ -16,19 +16,23 @@ public class WarpdScript {
 	private Sandbox box;
 	private String code;
 	private Module module;
-	private ICodeRunner crun;
 	private CompiledScript cs;
+	private String filename;
+  private ICodeRunner crun;
+	private Object warpreturn;
 	
 	
-	WarpdScript(Sandbox box, String code) throws ScriptException {
-		this.box  	= box;
-		this.code 	= code;
-		this.module = new Module();
+	WarpdScript(Sandbox box, String code, String filename) throws ScriptException {
+		this.box  	  = box;
+		this.code 	  = code;
+		this.module   = new Module();
+		this.filename = filename;
 		warp();
 	}
 	
 	
 	private void warp() throws ScriptException {
+	  box.setFilename(filename);
 		cs = box.compile(
 				"__warp_main(function(require, module, __dirname, __filename, exports) {" 
 				+ code 
@@ -38,7 +42,9 @@ public class WarpdScript {
 	
 	public Object call() throws ScriptException {
 		jso = (AbstractJSObject) cs.eval();
-		return jso.call(module, module, crun);
+    warpreturn = jso.call(module, module, crun);
+		module.loaded = true;
+		return warpreturn;
 	}
 	
 		

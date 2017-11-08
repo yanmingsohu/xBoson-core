@@ -1,6 +1,7 @@
 // 通用库/初始化脚本
 "use strict"
 this.global = {};
+this.process = { versions: {} };
 
 
 (function(context) { // 引导代码
@@ -8,15 +9,16 @@ this.global = {};
 var sys_module_provider;
 var pathlib;
 var safe_context = {};
+var Buffer;
 
 
 // 删除所有全局危险对象, 并绑定到内部对象上.
 [
-  '$ENV', '$EXEC', '$ARG',
-  'exit', 'quit',
-  'Java', 'JavaImporter',
-  'Packages', 'eval', 'print',
-  'loadWithNewGlobal', 'load',
+  'exit',     'quit',
+  'Java',     'JavaImporter',
+  'Packages', 'eval',   'print',
+  'loadWithNewGlobal',  'load',
+  '$ENV',     '$EXEC',  '$ARG',
 ].forEach(function(name) {
   safe_context[name] = context[name];
   delete context[name];
@@ -112,6 +114,10 @@ function __warp_main(fn) { // 主函数包装器
 function __set_sys_module_provider(_provider) {
   sys_module_provider = _provider;
   pathlib = _provider.getInstance('path');
+
+  process.binding = function(n) {
+    return _provider.getInstance('sys/' + n);
+  };
 }
 
 

@@ -72,13 +72,18 @@ public class Sandbox {
 	
 	/**
 	 * 将代码包装到函数中, 并且使用 nodejs 语法
-	 * @param code
-	 * @return
-	 * @throws ScriptException
 	 */
-	public WarpdScript warp(String code) throws ScriptException {
-		return new WarpdScript(this, code);
+	public WarpdScript warp(String filename, String code) throws ScriptException {
+		return new WarpdScript(this, code, filename);
 	}
+
+
+  /**
+   * 不指定文件名
+   */
+  public WarpdScript warp(String code) throws ScriptException {
+    return new WarpdScript(this, code, "<warp>");
+  }
 	
 	
 	public Object eval(String code) throws ScriptException {

@@ -13,9 +13,22 @@ public class EnvironmentFactory {
 
   public static IEnvironment createBasic() throws IOException {
     SysModules sysmod = new SysModules();
-    sysmod.regClass("console",  Console.class);
-    sysmod.regClass("path",     Path.class);
-    sysmod.loadLib("assert",    "lib/assert.js");
+
+    sysmod.regClass("console",
+            Console.class);
+    sysmod.regClass("path",
+            Path.class);
+
+    sysmod.loadLib("util",
+            "lib/util.js");
+    sysmod.loadLib("assert",
+            "lib/assert.js");
+    sysmod.loadLib("events",
+            "lib/events.js");
+
+//    sysmod.loadLib("punycode",    "lib/punycode.js");
+//    sysmod.loadLib("url",         "lib/url.js");
+//    sysmod.loadLib("querystring", "lib/querystring.js");
 
     BasicEnvironment env = new BasicEnvironment(sysmod);
     env.setEnvObject(Console.class);

@@ -219,4 +219,13 @@ public class Tool {
         |  (v & 0x000000000000ff00L)  << 40
         |  (v & 0x00000000000000ffL)  << 56;
   }
+
+
+  public static Class<?>[] getClasses(Object[] args) {
+    Class<?>[] classs = new Class<?>[args.length];
+    for (int i=0; i<classs.length; ++i) {
+      classs[i] = args[i].getClass();
+    }
+    return classs;
+  }
 }

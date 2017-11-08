@@ -53,4 +53,9 @@ public class Console extends JSObject {
 		log.logs(Level.FATAL, msg);
 		return this;
 	}
+
+
+	public Console trace(Object ...msg) {
+		return debug(msg);
+	}
 }
