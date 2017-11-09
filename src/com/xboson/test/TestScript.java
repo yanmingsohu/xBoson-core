@@ -19,10 +19,6 @@ import com.xboson.script.*;
 import com.xboson.util.StringBufferOutputStream;
 
 /**
- * 1 秒内调用函数次数
- * NODE js :  9099763.1
- * java js : 36106378.8
- * 
  * https://wiki.openjdk.java.net/display/Nashorn/Nashorn+extensions
  */
 public class TestScript extends Test {
@@ -52,12 +48,9 @@ public class TestScript extends Test {
     IEnvironment env = EnvironmentFactory.createBasic();
 
 		FixFile vfs = new FixFile();
-		vfs.putfile("/a/check-safe.js", "./check-safe.js");
-		vfs.putfile("/a/a.js", "./deep.js");
-    vfs.putfile("/b/b.js", "./deep.js");
 		
 		Application app = new Application(env, vfs);
-		app.run("/a/check-safe.js");
+		app.run("/index.js");
 		success("Application");
 	}
 	
@@ -85,6 +78,15 @@ public class TestScript extends Test {
 		@Override
 		public String readFile(String path) throws IOException {
 			String code = map.get(path);
+			if (code == null) {
+        InputStream is = getClass().getResourceAsStream("./js/" + path);
+        if (is != null) {
+          StringBufferOutputStream sbos = new StringBufferOutputStream();
+          sbos.write(is);
+          code = sbos.toString();
+          map.put(path, code);
+        }
+      }
 			if (code == null) {
         throw new FileNotFoundException("not found " + path);
       }
@@ -189,8 +191,18 @@ public class TestScript extends Test {
 			throw new Exception("sandbox value cross");
 		}
 	}
-	
-	
+
+  /**
+   * 1 秒内调用函数次数, Math.sqrt()
+   * NODE js :  9099763.1
+   * java js : 36106378.8
+   *
+   * 1 秒内调用函数次数, Math.sin(Math.random());
+   * NODE js :  8331048.8
+   * java js : 16194020.9
+   *
+   * @throws ScriptException
+   */
 	public void speedtest() throws ScriptException {
 		InputStream script1 = getClass().getResourceAsStream("./test-speed.js");
 		Sandbox s = SandboxFactory.create();
