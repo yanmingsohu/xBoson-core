@@ -1,5 +1,6 @@
 package com.xboson.script;
 
+import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Console;
 import com.xboson.script.lib.Path;
 
@@ -18,6 +19,8 @@ public class EnvironmentFactory {
             Console.class);
     sysmod.regClass("path",
             Path.class);
+    sysmod.regClass("sys/buffer",
+            Buffer.class);
 
     sysmod.loadLib("util",
             "lib/util.js");
@@ -25,10 +28,12 @@ public class EnvironmentFactory {
             "lib/assert.js");
     sysmod.loadLib("events",
             "lib/events.js");
+    sysmod.loadLib("buffer",
+            "lib/buffer.js");
 
-//    sysmod.loadLib("punycode",    "lib/punycode.js");
-//    sysmod.loadLib("url",         "lib/url.js");
-//    sysmod.loadLib("querystring", "lib/querystring.js");
+    //    sysmod.loadLib("punycode",    "lib/punycode.js");
+    //    sysmod.loadLib("url",         "lib/url.js");
+    //    sysmod.loadLib("querystring", "lib/querystring.js");
 
     BasicEnvironment env = new BasicEnvironment(sysmod);
     env.setEnvObject(Console.class);

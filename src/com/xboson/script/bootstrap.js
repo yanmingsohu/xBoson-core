@@ -2,6 +2,7 @@
 "use strict"
 this.global = {};
 this.process = { versions: {} };
+this.Buffer;
 
 
 (function(context) { // 引导代码
@@ -9,7 +10,6 @@ this.process = { versions: {} };
 var sys_module_provider;
 var pathlib;
 var safe_context = {};
-var Buffer;
 
 
 // 删除所有全局危险对象, 并绑定到内部对象上.
@@ -35,6 +35,7 @@ context.__boot_over = __boot_over;
 function __boot_over() {
   delete context.__set_sys_module_provider;
   delete context.__boot_over;
+  context.Buffer = sys_module_provider.getInstance('buffer').Buffer;
   Object.freeze(context);
 }
 

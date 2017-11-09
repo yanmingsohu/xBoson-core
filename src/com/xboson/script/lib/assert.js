@@ -164,7 +164,7 @@ function _make_test(obj) {
   var test;
   if (obj instanceof RegExp) {
     test = function(e) {
-      return obj.test(e.stack);
+      return obj.test(e.toString());
     };
   } else {
     test = function(e) {
