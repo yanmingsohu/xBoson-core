@@ -6,6 +6,7 @@ import com.xboson.util.Tool;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.Iterator;
 
 /**
@@ -13,7 +14,9 @@ import java.util.Iterator;
  */
 public class Buffer {
 
-  public static String DEFAULT_ENCODING = "utf8";
+  public final static String UTF8 = "utf8";
+  public final static String BASE64 = "base64";
+  public final static String DEFAULT_ENCODING = UTF8;
 
 
   public JsBuffer alloc(int size, int fill, String encoding) {
@@ -79,7 +82,7 @@ public class Buffer {
     }
 
     JsBuffer ret = new JsBuffer(DEFAULT_ENCODING);
-    ret.buf = ByteBuffer.allocateDirect(totalLength);
+    ret.buf = ByteBuffer.allocate(totalLength);
     int pos = 0;
 
     for (int i=0; i<list.length; ++i) {
@@ -120,9 +123,15 @@ public class Buffer {
 
 
   public JsBuffer from(String string, String encoding) {
-    JsBuffer buf = new JsBuffer(encoding);
-    buf.buf = ByteBuffer.wrap(string.getBytes(buf.encoding));
-    return buf;
+    byte[] array;
+    if (encoding.equalsIgnoreCase(BASE64)) {
+      array = Base64.getDecoder().decode(string);
+    } else {
+      array = string.getBytes(Charset.forName(encoding));
+    }
+    JsBuffer ret = new JsBuffer(encoding);
+    ret.buf = ByteBuffer.wrap(array);
+    return ret;
   }
 
 
@@ -167,11 +176,11 @@ public class Buffer {
    */
   public class JsBuffer extends JSObject.Helper {
     private ByteBuffer buf;
-    private Charset encoding;
+    private String encoding;
 
 
     public JsBuffer(String encoding) {
-      this.encoding = Charset.forName(encoding);
+      this.encoding = encoding;
       config(JSObject.ExportsFunction.class);
     }
 
@@ -289,6 +298,8 @@ public class Buffer {
 
 
     public boolean equals(JsBuffer other) {
+      buf.position(0);
+      other.buf.position(0);
       return buf.equals(other.buf);
     }
 
@@ -318,8 +329,8 @@ public class Buffer {
 
 
     public JsBuffer clone() {
-      JsBuffer newbuf = new JsBuffer(encoding.name());
-      newbuf.buf = ByteBuffer.allocateDirect(length());
+      JsBuffer newbuf = new JsBuffer(encoding);
+      newbuf.buf = ByteBuffer.allocate(length());
       for (int i=length()-1; i>=0; --i) {
         newbuf.buf.put(i, buf.get(i));
       }
@@ -351,6 +362,10 @@ public class Buffer {
       byte[] tmp = new byte[length];
       buf.position(begin);
       buf.get(tmp, 0, length);
+
+      if (encoding.equalsIgnoreCase(BASE64)) {
+        return Base64.getEncoder().encodeToString(tmp);
+      }
       return new String(tmp, encoding);
     }
 
@@ -449,7 +464,7 @@ public class Buffer {
     public JsBuffer slice(int start, int end) {
       try {
         byte[] inner = buf.array();
-        JsBuffer ret = new JsBuffer(encoding.name());
+        JsBuffer ret = new JsBuffer(encoding);
         ret.buf = ByteBuffer.wrap(inner, start, end);
 
         return ret;

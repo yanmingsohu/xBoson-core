@@ -148,3 +148,11 @@ assert.eq(buf2.toString(
 buf1[0] = 33;
 assert.eq(buf2.toString(
     'ascii', 0, buf2.length), '!bc', "修改 buf1, buf2 也将改变");
+
+
+//
+// 测试 base64 编码
+//
+var b64str = buf1.toString("base64");
+buf2 = Buffer.from(b64str, 'base64');
+assert(buf1.equals(buf2), "base64 code");

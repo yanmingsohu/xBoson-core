@@ -36,7 +36,7 @@ public class TestScript extends Test {
 //		memoryuse();
 //		closed();
 		hack();
-		application();
+    fullTest();
 	}
 
 
@@ -44,14 +44,14 @@ public class TestScript extends Test {
    * 综合测试沙箱的功能和安全性
    * @throws Exception - 测试失败抛出异常
    */
-	public void application() throws Exception {
+	public void fullTest() throws Exception {
     IEnvironment env = EnvironmentFactory.createBasic();
 
 		FixFile vfs = new FixFile();
 		
 		Application app = new Application(env, vfs);
 		app.run("/index.js");
-		success("Application");
+		success("Full Test");
 	}
 	
 	
