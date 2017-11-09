@@ -31,9 +31,9 @@ public class EnvironmentFactory {
     sysmod.loadLib("buffer",
             "lib/buffer.js");
 
-    //    sysmod.loadLib("punycode",    "lib/punycode.js");
-    //    sysmod.loadLib("url",         "lib/url.js");
-    //    sysmod.loadLib("querystring", "lib/querystring.js");
+//    sysmod.loadLib("punycode",    "lib/punycode.js");
+//    sysmod.loadLib("url",         "lib/url.js");
+//    sysmod.loadLib("querystring", "lib/querystring.js");
 
     BasicEnvironment env = new BasicEnvironment(sysmod);
     env.setEnvObject(Console.class);

@@ -1,6 +1,6 @@
 var assert = require("assert");
 
-assert(require("buffer").Buffer, "Buffer module init");
+assert.eq(require("buffer").Buffer, Buffer, "Buffer module init");
 
 var buf1, buf2, buf3, buf4, buf5, buf6;
 
@@ -27,6 +27,7 @@ buf1 = Buffer.from('ABC');
 buf2 = Buffer.from('BCD');
 buf3 = Buffer.from('ABCD');
 
+
 //
 // 测试 compare
 //
@@ -35,6 +36,7 @@ assert.eq(-1, buf1.compare(buf2), "比较 buf1, buf2");
 assert.eq(-1, buf1.compare(buf3), "比较 buf1, buf3");
 assert.eq(1, buf2.compare(buf1), "比较 buf2, buf1");
 assert.eq(1, buf2.compare(buf3), "比较 buf2, buf3");
+
 
 //
 // 测试 equals
@@ -47,15 +49,10 @@ buf2 = Buffer.alloc(10, 1);
 assert(buf2.equals([1,1,1,1,1, 1,1,1,1,1]),
   '创建一个长度为 10、且用 0x1 填充的 Buffer。');
 
-// 创建一个长度为 10、且未初始化的 Buffer。
-// 这个方法比调用 Buffer.alloc() 更快，
-// 但返回的 Buffer 实例可能包含旧数据，
-// 因此需要使用 fill() 或 write() 重写。
 buf3 = Buffer.allocUnsafe(10);
 assert(buf3.equals([0,0,0,0,0, 0,0,0,0,0]),
-  "服务端程序强制清零");
+  "服务端程序强制清零, 不会创建未初始化的 Buffer");
 
-// 创建一个包含 [0x1, 0x2, 0x3] 的 Buffer。
 buf4 = Buffer.from([1, 2, 3]);
 assert(buf4.equals([0x1, 0x2, 0x3]),
   "创建一个包含 [0x1, 0x2, 0x3] 的 Buffer。");
@@ -68,7 +65,6 @@ buf6 = Buffer.from('tést', 'latin1');
 assert(buf6.equals([0x74, 0xe9, 0x73, 0x74]),
   "创建一个包含 Latin-1 字节 [0x74, 0xe9, 0x73, 0x74] 的 Buffer。");
 
-//console.log(buf1, buf2, buf3, buf4, buf5, buf6);
 
 //
 // 创建两个 Buffer 实例 buf1 与 buf2 ，
@@ -83,8 +79,9 @@ assert.equal(buf2.toString('ascii', 0, 25),
     '!!!!!!!!qrst!!!!!!!!!!!!!',
     "buf1: " + buf1.toString("ascii"));
 
+
 //
-// 例子：创建一个 Buffer ，并拷贝同一 Buffer 中一个区域的数据到另一个重叠的区域。
+// 创建一个 Buffer ，并拷贝同一 Buffer 中一个区域的数据到另一个重叠的区域。
 //
 var buf = Buffer.allocUnsafe(26);
 abc(buf);

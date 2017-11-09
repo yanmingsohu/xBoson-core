@@ -2,6 +2,7 @@
 WebRoot/WEB-INF/classes/pc
 WebRoot/WEB-INF/classes/key
 WebRoot/WEB-INF/classes/*.properties
+WebRoot/WEB-INF/classes/**
 out/**
 Test/**
 

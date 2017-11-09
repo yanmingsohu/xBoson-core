@@ -1,95 +1,98 @@
 var if_throw_ok = require("./util.js").if_throw_ok;
+var assert = require("assert");
 
 
-
-if (typeof safe_context != 'undefined') {
-  throw new Error("get safe_context object");
-}
+assert.eq(typeof safe_context, 'undefined', "safe_context not safe");
+assert.eq(typeof fncontext, 'undefined', 'fncontext not safe');
 
 
+var safe__warp_main = false;
 __warp_main = null;
 __warp_main(function() {
-  console.log("OK __warp_main() not modify");
+  safe__warp_main = true;
 })({}, {});
+assert(safe__warp_main, "__warp_main not safe");
 
 
-if_throw_ok(function() {
+assert.throws(function() {
   crossval = 109;
   if (require('./deep.js').t2() == crossval) {
     throw new Error("!! change sand box context value");
   }
-}, 'not change context val');
+}, /ReferenceError.*crossval/);
 
 
-var a = Math.random();
-global.a = a;
-require('./deep.js').t3(a);
-console.log("OK global is working");
-
-
-if_throw_ok(function() {
+assert.throws(function() {
   var a = require("./deep.js");
   a.terr(10, 'deep exception');
-}, "deep exception");
+}, /Error.*deep exception/);
 
 
-if_throw_ok(function() {
+assert.throws(function() {
   load("foo.js");
-}, "block load()");
+}, /ReferenceError.*load/);
 
 
-if_throw_ok(function() {
+assert.throws(function() {
   var System  = Java.type("java.lang.System");
   console.error("fail:", System);
   fail = true;
-}, "block Java.type function");
+}, /ReferenceError.*Java/);
 
 
-if_throw_ok(function() {
+assert.throws(function() {
   var imports = new JavaImporter(java.util, java.io);
-}, "block JavaImporter()");
+}, /ReferenceError.*JavaImporter/);
   
   
-if_throw_ok(function() {
+assert.throws(function() {
   var r = new java.lang.Runnable() {
       run: function() { print("run"); }
   };
-}, "block new java.lang.Runnable()");
+}, /ReferenceError.*lang/);
 
-  
-if_throw_ok(function() {
+
+assert.throws(function() {
   var o = console.getClass().getResource("/");
-}, "block .getClass()");
+}, /reflection not supported/);
 
 
-if_throw_ok(function() {
-  //console.log(typeof $ENV, typeof $EXEC, typeof $ARG);
-  console.log($ENV, $EXEC, $ARG);
-  fail = true;
-}, "block $ENV, $EXEC, $ARG");
+assert.eq(typeof $ENV, "undefined", "$ENV");
+assert.eq(typeof $EXEC, "undefined", "$EXEC");
+assert.eq(typeof $ARG, "undefined", "$ARG");
 
 
 //if_throw_ok(function() {
 //  var files = `ls -l`;
 //  console.log(files);
 //}, "block ls -l on system process");
-  
 
-if_throw_ok(function() {
+
+assert.throws(function() {
   eval("1+1");
-}, "block eval()");
+}, /ReferenceError.*eval/);
 
 
-if_throw_ok(function() {
+assert.throws(function() {
   exit(99);
+}, /ReferenceError.*exit/);
+
+
+assert.throws(function() {
   quit(98);
-}, "block exit() and quit()");
+}, /ReferenceError.*quit/);
 
 
-if_throw_ok(function() {
+assert.throws(function() {
+  var List = java.util.List;
+}, /ReferenceError.*util/);
+
+
+assert.throws(function() {
+  var JFrame = javax.swing.JFrame;
+}, /ReferenceError.*swing/);
+
+
+assert.throws(function() {
   var Vector = Packages.java.util.Vector;
-  var JFrame = javax.swing.JFrame;  // javax == Packages.javax
-  var List = java.util.List;        // java == Packages.java
-  console.log(JFrame, List)
-}, "block Packages");
-
+}, /ReferenceError.*Packages/);

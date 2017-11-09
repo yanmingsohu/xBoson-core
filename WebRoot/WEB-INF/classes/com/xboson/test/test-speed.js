@@ -5,10 +5,10 @@ var avg = 0;
 
   
 var fn = function() {  
-    return Math.sqrt(35155412);  
-};  
-  
-  
+    return Math.sin(Math.random());
+};
+
+
 while (c<10) {  
     fn();  
     b++;  

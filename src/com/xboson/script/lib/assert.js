@@ -155,8 +155,9 @@ function throws(block, error, message) {
     if (test(e)) {
       return;
     }
+    throw new AssertionError(message, error.toString(), e.toString());
   }
-  throw new AssertionError(message);
+  throw new AssertionError(message, 'throws error', 'not throw');
 }
 
 
@@ -166,6 +167,15 @@ function _make_test(obj) {
     test = function(e) {
       return obj.test(e.toString());
     };
+  } else if (typeof obj == "string") {
+    test = function(e) {
+      return e.toString().indexOf(obj) >= 0;
+    };
+  } else if (obj == null) {
+    test = function(e) {
+      console.warn(e);
+      return true;
+    }
   } else {
     test = function(e) {
       if (e.constructor === obj) {

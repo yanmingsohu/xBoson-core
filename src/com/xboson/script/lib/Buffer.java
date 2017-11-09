@@ -2,16 +2,10 @@ package com.xboson.script.lib;
 
 import com.xboson.script.JSObject;
 import com.xboson.util.Tool;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.internal.objects.NativeArrayBuffer;
-import jdk.nashorn.internal.runtime.arrays.ArrayData;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**

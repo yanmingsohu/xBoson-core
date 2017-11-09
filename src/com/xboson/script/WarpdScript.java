@@ -34,7 +34,8 @@ public class WarpdScript {
 	private void warp() throws ScriptException {
 	  box.setFilename(filename);
 		cs = box.compile(
-				"__warp_main(function(require, module, __dirname, __filename, exports) {" 
+				"__warp_main(function(require, module, __dirname"
+        + ", __filename, exports, console) {"
 				+ code 
 				+ "\n})");
 	}

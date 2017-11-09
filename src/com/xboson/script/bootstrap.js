@@ -52,10 +52,12 @@ function __warp_main(fn) { // 主函数包装器
 		module.exports = {};
 		module.children = [];
 		currmodule = module;
-		
+
+		var console = require('console').create(module.filename);
 		var dirname = get_dirname(module.filename);
-		return fn.call(fncontext,
-		    require, module, dirname, module.filename, module.exports);
+
+		return fn.call(fncontext, require, module,
+		       dirname, module.filename, module.exports, console);
 	}
 
 

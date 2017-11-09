@@ -17,32 +17,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 默认总是冻结的且不可变变量值.
- * 类中的静态方法用于辅助 js 对象与 java 桥接.
+ * 用于辅助 js 对象与 java 对象桥接和转换.
  */
 public abstract class JSObject implements IJSObject {
 
-  public final static JSToJava default_convert = new JSToJava();
-  static {
-    default_convert.add(new PrimitiveConvert(
-            Integer.class, Integer.TYPE));
-    default_convert.add(new PrimitiveConvert(
-            Long.class, Long.TYPE));
-    default_convert.add(new PrimitiveConvert(
-            Boolean.class, Boolean.TYPE));
-    default_convert.add(new PrimitiveConvert(
-            Character.class, Character.TYPE));
-    default_convert.add(new PrimitiveConvert(
-            Byte.class,  Byte.TYPE));
-    default_convert.add(new PrimitiveConvert(
-            Short.class, Short.TYPE));
-    default_convert.add(new PrimitiveConvert(
-            Float.class, Float.TYPE));
-    default_convert.add(new PrimitiveConvert(
-            Double.class, Double.TYPE));
-
-    default_convert.add(new _JSArray());
-  }
 
 	@Override
 	public boolean freeze() {
@@ -66,9 +44,36 @@ public abstract class JSObject implements IJSObject {
 	}
 
 
+///////////////////////////////////////////////////////////////////////////////
+////-- 静态 函数/属性
+///////////////////////////////////////////////////////////////////////////////
+
+  public final static JSToJava default_convert = new JSToJava();
+  static {
+    default_convert.add(new PrimitiveConvert(
+            Integer.class,    Integer.TYPE));
+    default_convert.add(new PrimitiveConvert(
+            Long.class,       Long.TYPE));
+    default_convert.add(new PrimitiveConvert(
+            Boolean.class,    Boolean.TYPE));
+    default_convert.add(new PrimitiveConvert(
+            Character.class,  Character.TYPE));
+    default_convert.add(new PrimitiveConvert(
+            Byte.class,       Byte.TYPE));
+    default_convert.add(new PrimitiveConvert(
+            Short.class,      Short.TYPE));
+    default_convert.add(new PrimitiveConvert(
+            Float.class,      Float.TYPE));
+    default_convert.add(new PrimitiveConvert(
+            Double.class,     Double.TYPE));
+
+    default_convert.add(new _JSArray());
+  }
+
+
   /**
    * 提取 js 传入的 ArrayBuffer 对象的底层存储缓冲区,
-   * 使用了 private 方法, 可能新的 jdk 不兼容.
+   * 反射并调用了 private 方法, 不同的 jdk 版本会不兼容.
    *
    * 测试的 jdk 版本:
    *    build 1.8.0_66-b17
@@ -76,31 +81,34 @@ public abstract class JSObject implements IJSObject {
    * @param jsArrayBuffer ArrayBuffer 对象, 或 Uint16Array.buffer 属性
    * @return ByteBuffer 类型对象
    *
-   * @throws NoSuchMethodException
+   * @throws NoSuchMethodException - 版本不兼容可能抛出
    * @throws InvocationTargetException
    * @throws IllegalAccessException
    */
   public static ByteBuffer getUnderlyingBuffer(Object jsArrayBuffer)
           throws NoSuchMethodException, InvocationTargetException,
           IllegalAccessException {
-
     ScriptObjectMirror sobj = (ScriptObjectMirror) jsArrayBuffer;
 
     if (!sobj.getClassName().equals("ArrayBuffer"))
         throw new ClassCastException("is not ArrayBuffer object");
 
-    Method getScriptObject = sobj.getClass().getDeclaredMethod("getScriptObject");
+    Method getScriptObject = sobj.getClass()
+            .getDeclaredMethod("getScriptObject");
     getScriptObject.setAccessible(true);
-    NativeArrayBuffer nad = (NativeArrayBuffer) getScriptObject.invoke(sobj);
+    NativeArrayBuffer nad
+            = (NativeArrayBuffer) getScriptObject.invoke(sobj);
 
-    Method cloneBuffer = nad.getClass().getDeclaredMethod("getNioBuffer");
+    Method cloneBuffer = nad.getClass()
+            .getDeclaredMethod("getNioBuffer");
     cloneBuffer.setAccessible(true);
     ByteBuffer buf = (ByteBuffer) cloneBuffer.invoke(nad);
 
     return buf;
   }
 
-////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
 ////-- 辅助 接口/类
 ///////////////////////////////////////////////////////////////////////////////
 

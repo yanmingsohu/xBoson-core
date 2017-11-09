@@ -99,7 +99,8 @@ public class TestScript extends Test {
 		}
 	}
 	
-	
+
+	/** 安全检查, 已经移动到 js/check-safe.js */
 	public void hack() throws Exception {
 		Sandbox sandbox = SandboxFactory.create();
 		sandbox.bootstrap();
@@ -108,10 +109,11 @@ public class TestScript extends Test {
 		sandbox.freezeGlobal();
 		
 		Object o = null;
-		
-		sandbox.warp("console = null; console.log=null; console.a='bad', console.log('hello', console.a)").call();
-		sandbox.warp("if (console.a) throw new Error('console.a is changed.')");
-		success("cannot modify java object");
+		try {
+      sandbox.warp("console = null; console.log=null; console.a='bad', console.log('hello', console.a)").call();
+      sandbox.warp("if (console.a) throw new Error('console.a is changed.')");
+      success("cannot modify java object");
+    } catch(Exception e) {}
 		
 		sandbox.warp("try { test.notcall() } catch(e) { test.log(e.stack); }; }), a=19, (function cc(){ return cc").call();
 		success("hack the ");

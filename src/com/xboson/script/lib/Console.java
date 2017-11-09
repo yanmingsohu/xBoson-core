@@ -10,7 +10,22 @@ import com.xboson.script.JSObject;
 
 public class Console extends JSObject {
 	
-	private Log log = LogFactory.create("script.console");
+	private Log log;
+
+
+	public Console() {
+		log = LogFactory.create("script.console");
+	}
+
+
+	public Console(String name) {
+		log = LogFactory.create(name);
+	}
+
+
+	public Console create(String name) {
+		return new Console(name);
+	}
 
 	
 	@Override
