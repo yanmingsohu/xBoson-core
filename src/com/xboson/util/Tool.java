@@ -221,11 +221,53 @@ public class Tool {
   }
 
 
-  public static Class<?>[] getClasses(Object[] args) {
+  /**
+   * 获取对象数组中每个对象的 class
+   * @param args 当函数返回, 元素可能被 convert 改变
+   * @param convert 可以 null, 对每个数组元素做数据转换和类型转换
+   * @return 返回经过转换的 class 数组
+   */
+  public static Class<?>[] getClasses(
+          Object[] args, IConversion<Object, Object> convert) {
     Class<?>[] classs = new Class<?>[args.length];
+
     for (int i=0; i<classs.length; ++i) {
-      classs[i] = args[i].getClass();
+      Object arg = args[i];
+
+      if (convert != null) {
+        Object old = arg;
+        arg        = convert.value(arg);
+        classs[i]  = convert.type(old.getClass());
+        args[i]    = arg;
+      } else {
+        classs[i] = arg.getClass();
+      }
     }
     return classs;
   }
+
+	/**
+	 * 返回 i 做为无符号字节的 16 进制字符串
+	 */
+  public static String ubytehex(byte i) {
+		int ii = Byte.toUnsignedInt(i);
+		return "" + hex(ii >> 4) + hex(ii);
+	}
+
+
+	/**
+	 * 将 (i & 0x0F) 的值转换为 16 进制字符
+	 */
+	public static char hex(Number i) {
+  	int b = 0x0F & i.intValue();
+  	if (b >= 0) {
+      if (b < 10) {
+        return (char) ((int) '0' + b);
+      }
+      if (b < 16) {
+        return (char) ((int) 'A' + (b-10));
+      }
+    }
+		throw new IllegalArgumentException("number on 0-15");
+	}
 }
