@@ -80,3 +80,10 @@ b[1] = 99;
 assert.eq(b[0], 1);
 assert.eq(b[1], 99);
 assert.eq(b[2], 3);
+
+
+//
+// module
+//
+assert.eq(module.filename, __filename, 'filename fail');
+assert(module.paths, 'paths fail');

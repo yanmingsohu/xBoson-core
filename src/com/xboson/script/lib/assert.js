@@ -39,46 +39,56 @@ function strictEqual() {
 }
 
 
-function deepEqual(actual, expected, message) {
-  if (actual == expected)
+function _deep_loop(actual, expected, eqfn) {
+  if (eqfn(actual, expected)) {
     return;
-
-  var a = 0;
-  for (var n in actual) {
-    deepEqual(actual[n], expected[n], message);
-    ++a;
   }
 
-  var b = 0;
-  for (var n in expected) {
-    deepEqual(actual[n], expected[n], message);
-    ++b;
-  }
+  if (actual && expected && actual.constructor == Array
+        && expected.constructor == Array) {
 
-  if (a == 0 && b == 0) {
+    if (actual.length == expected.length) {
+      for (var i=0; i<actual.length; ++i) {
+        if (actual[i] != expected[i]) {
+          throw new AssertionError();
+        }
+      }
+    }
+  } else {
+    var a = 0, b = 0;
+    for (var n in actual) {
+      _deep_loop(actual[n], expected[n], eqfn);
+      ++a;
+    }
+    for (var n in expected) {
+      _deep_loop(actual[n], expected[n], eqfn);
+      ++b;
+    }
+    if (a != b || (a==0 && b==0)) {
+      throw new AssertionError();
+    }
+  }
+}
+
+
+function deepEqual(actual, expected, message) {
+  try {
+    _deep_loop(actual, expected, function(a, b) {
+      return a == b;
+    });
+  } catch(e) {
     throw new AssertionError(message, actual, expected, "!=");
   }
 }
 
 
 function deepStrictEqual(actual, expected, message) {
-  if (actual === expected)
-      return;
-
-  var a = 0;
-  for (var n in actual) {
-    deepStrictEqual(actual[n], expected[n], message);
-    ++a;
-  }
-
-  var b = 0;
-  for (var n in expected) {
-    deepStrictEqual(actual[n], expected[n], message);
-    ++b;
-  }
-
-  if (a == 0 && b == 0) {
-    throw new AssertionError(message, actual, expected, "!==");
+  try {
+    _deep_loop(actual, expected, function(a, b) {
+      return a === b;
+    });
+  } catch(e) {
+    throw new AssertionError(message, actual, expected, "!=");
   }
 }
 

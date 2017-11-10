@@ -13,7 +13,7 @@ public class TestAES extends Test {
 		String ps = "ccccc";
 		byte[] key = AES.aesKey(ps);
 		byte[] data = new byte[300 * 1024];
-		msg("Data length:" + data.length);
+		msg("Data getLength:" + data.length);
 		new Random().nextBytes(data);
 		byte[] datax = AES.Encode(data, key);
 		byte[] en = AES.Decode(datax, key);

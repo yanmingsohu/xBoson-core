@@ -11,6 +11,12 @@ assert.deepEqual({a:1, b:2}, {a:1, b:2}, "deepEqual");
 if_throw_ok(function() {
   assert.deepEqual({a:1, b:2}, {a:1, b:[1,2]});
 }, 'deepEqual2');
+assert.notDeepEqual({a:1, b:2}, {a:1, b:[1,2]});
+
+if_throw_ok(function() {
+  assert.deepEqual({a:1, b:2, c:{a:1}}, {a:1, b:2, c:{a:2}});
+}, 'deepEqual3');
+assert.notDeepEqual({a:1, b:2, c:{a:1}}, {a:1, b:2, c:{a:2}});
 
 if_throw_ok(function() {
   assert.doesNotThrow(function() {

@@ -96,3 +96,8 @@ assert.throws(function() {
 assert.throws(function() {
   var Vector = Packages.java.util.Vector;
 }, /ReferenceError.*Packages/);
+
+
+assert.throws(function() {
+  Buffer.from([]).eval("1+1");
+}, /TypeError.*.*function.*/);

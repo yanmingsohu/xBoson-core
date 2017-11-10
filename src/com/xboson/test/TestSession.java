@@ -9,7 +9,7 @@ public class TestSession extends Test {
 
 	public void test() throws Throwable {
 		byte[] ps = AES.aesKey("abc");
-		msg("length:" + ps.length);
+		msg("getLength:" + ps.length);
 		
 		String sessionid = SessionID.generateSessionId(ps);
 		msg("Session ID: " + sessionid);
