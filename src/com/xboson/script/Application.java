@@ -31,6 +31,7 @@ public class Application implements ICodeRunner {
 		
 		sandbox.bootstrap();
 		env.config(sandbox, this);
+		sandbox.bootstrapEnvReady();
 		sandbox.bootstrapEnd();
 	}
 	

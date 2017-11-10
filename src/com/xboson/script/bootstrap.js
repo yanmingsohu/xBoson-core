@@ -10,6 +10,8 @@ this.Buffer;
 var sys_module_provider;
 var pathlib;
 var safe_context = {};
+var nativeJSON = JSON;
+var MODULE_NAME = '/node_modules';
 
 
 // 删除所有全局危险对象, 并绑定到内部对象上.
@@ -29,11 +31,23 @@ readOnlyAttr(context, '__warp_main', __warp_main);
 rwAttrOnClosed(context, 'javax.script.filename');
 
 context.__set_sys_module_provider = __set_sys_module_provider;
+context.__env_ready = __env_ready;
 context.__boot_over = __boot_over;
+
+
+function __env_ready() {
+  process.binding = function(n) {
+    return sys_module_provider.getInstance('sys/' + n);
+  };
+
+  pathlib = sys_module_provider.getInstance('path');
+  context.JSON = process.binding('json').warp(nativeJSON);
+}
 
 
 function __boot_over() {
   delete context.__set_sys_module_provider;
+  delete context.__env_ready;
   delete context.__boot_over;
   context.Buffer = sys_module_provider.getInstance('buffer').Buffer;
   Object.freeze(context);
@@ -55,6 +69,7 @@ function __warp_main(fn) { // 主函数包装器
 
 		var console = require('console').create(module.filename);
 		var dirname = get_dirname(module.filename);
+		module.paths = get_module_paths(dirname);
 
 		return fn.call(fncontext, require, module,
 		       dirname, module.filename, module.exports, console);
@@ -97,10 +112,10 @@ function __warp_main(fn) { // 主函数包装器
         if (sysmod) {
           return sysmod;
         } else {
-          throw new Error("cannot found sys module '" + path + "'");
+          throw new Error("cannot found module '" + path + "'");
         }
       } else {
-        throw new Error("sys module provider not set");
+        throw new Error("module provider not set");
       }
 	  }
 
@@ -111,16 +126,28 @@ function __warp_main(fn) { // 主函数包装器
 		currmodule.children.push(mod);
 		return mod.exports;
 	}
+
+
+	function get_module_paths(dirname) {
+	  if (!dirname) return [];
+
+	  var ret = [];
+	  if (dirname != '/') {
+      var sp = dirname.split('/');
+      while (sp.length > 1) {
+        ret.push(sp.join('/') + MODULE_NAME);
+        sp.pop();
+      }
+    }
+
+	  ret.push(MODULE_NAME);
+	  return ret;
+	}
 }
 
 
 function __set_sys_module_provider(_provider) {
   sys_module_provider = _provider;
-  pathlib = _provider.getInstance('path');
-
-  process.binding = function(n) {
-    return _provider.getInstance('sys/' + n);
-  };
 }
 
 

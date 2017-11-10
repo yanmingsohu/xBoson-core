@@ -121,6 +121,15 @@ public class Sandbox {
 	}
 
 
+	public void bootstrapEnvReady() throws ScriptException {
+    try {
+      getGlobalFunc().invokeFunction("__env_ready");
+    } catch(NoSuchMethodException e) {
+      throw new ScriptException(e);
+    }
+  }
+
+
 	public void bootstrapEnd() throws ScriptException {
 		try {
 			getGlobalFunc().invokeFunction("__boot_over");
