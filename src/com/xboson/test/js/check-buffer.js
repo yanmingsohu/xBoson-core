@@ -92,12 +92,14 @@ assert.equal(buf.toString('ascii'),
 
 
 //
-// js es5 不支持迭代器协议, 所有使用 java 迭代器语法
+// js es5 不支持迭代器协议, 使用 java 迭代器语法
 //
 var i = 0;
 var iterator = buf.entries();
 while (iterator.hasNext()) {
-  assert.eq(buf[i++], iterator.next(), 'entries index:' + i);
+  var o = iterator.next();
+  assert.deepEqual(o, [i, buf[i]], 'entries index:' + i);
+  ++i;
 }
 
 i = 0;
@@ -156,3 +158,248 @@ assert.eq(buf2.toString(
 var b64str = buf1.toString("base64");
 buf2 = Buffer.from(b64str, 'base64');
 assert(buf1.equals(buf2), "base64 code");
+
+
+//
+// 只读的属性
+//
+buf1.length = 8;
+assert.eq(buf1.length, 26, "Buffer.length must readonly");
+
+
+//
+// toJSON
+//
+var bufstr = JSON.stringify(buf1);
+assert(bufstr, "JSON.stringify return undefined");
+assert.eq(JSON.stringify(buf1), buf1.toJSON(), 'JSON.stringify not working');
+
+var _data = JSON.parse(bufstr);
+assert.eq(_data.type, "Buffer", "type attribute");
+assert.eq(_data.data.length, buf1.length, 'length fail');
+buf3 = Buffer.from(_data.data);
+assert(buf3.equals(buf1), 'bad data from JSON');
+
+
+//
+// 将 buf 解析为一个无符号16/32/64位的整数数组，并且以字节顺序原地进行交换。
+// 如果 buf.length 不是2/4/8的倍数，则抛出 RangeError 错误。
+//
+buf2 = Buffer.from([0x1, 0x2, 0x3, 4, 5, 6, 7, 8, 9]);
+
+assert.throws(function() {
+  buf2.swap16();
+}, /RangeError.*16-bits/);
+
+assert.throws(function() {
+  buf2.swap32();
+}, /RangeError.*32-bits/);
+
+assert.throws(function() {
+  buf2.swap64();
+}, /RangeError.*64-bits/);
+
+buf1 = Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8]);
+buf1.swap16();
+assert(buf1.equals([2,1,4,3,6,5,8,7]), 'swap16()');
+
+buf1 = Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8]);
+buf1.swap32();
+assert(buf1.equals([4,3,2,1,8,7,6,5]), 'swap32()');
+
+buf1 = Buffer.from([0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8]);
+buf1.swap64();
+assert(buf1.equals([8,7,6,5,4,3,2,1]), 'swap64()');
+
+
+//
+// readXxxBE/LE 系列
+//
+buf = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8]);
+
+
+// readDoubleLE / readDoubleBE
+assert.eq(buf.readDoubleLE(0), 5.447603722011605e-270, 'readDoubleLE()');
+assert.eq(buf.readDoubleBE(0), 8.20788039913184e-304, 'readDoubleBE()');
+
+assert.throws(function() {
+  console.log(buf.readDoubleLE(1));
+}, /RangeError.*out/);
+
+
+// readFloatBE
+buf = Buffer.from([1, 2, 3, 4]);
+assert.eq(buf.readFloatBE(0), 2.387939260590663e-38, 'readFloatBE()');
+assert.eq(buf.readFloatLE(0), 1.539989614439558e-36, 'readFloatLE()');
+
+assert.throws(function() {
+  console.log(buf.readFloatLE(1));
+}, /RangeError.*out/);
+
+
+// readInt8
+buf = Buffer.from([-1, 5]);
+assert.eq(buf.readInt8(0), -1, "readInt8");
+assert.eq(buf.readInt8(1), 5, "readInt8");
+
+assert.throws(function() {
+  console.log(buf.readInt8(2));
+}, /RangeError/);
+
+
+// readInt16BE / readInt16LE
+buf = Buffer.from([0, 5]);
+assert.eq(buf.readInt16BE(0), 5, "readInt16BE");
+assert.eq(buf.readInt16LE(0), 1280, "readInt16LE");
+
+assert.throws(function() {
+  buf.readInt16LE(1)
+}, /RangeError/);
+
+
+// readInt32BE / readInt32LE
+buf = Buffer.from([0, 0, 0, 5]);
+assert.eq(buf.readInt32BE(0), 5, "readInt32BE");
+assert.eq(buf.readInt32LE(0), 83886080, "readInt32LE");
+
+assert.throws(function() {
+  buf.readInt32LE(1);
+}, /RangeError/);
+
+
+// readIntBE(offset, byteLength)
+// not implements
+
+
+// readUInt8
+buf = Buffer.from([1, -2]);
+assert.eq(buf.readUInt8(0), 1);
+assert.eq(buf.readUInt8(1), 254);
+
+assert.throws(function() {
+  buf.readUInt8(2)
+}, /RangeError/);
+
+
+// readUInt16BE / readUInt16LE
+buf = Buffer.from([0x12, 0x34, 0x56]);
+
+assert.eq(buf.readUInt16BE(0).toString(16), 1234);
+assert.eq(buf.readUInt16LE(0).toString(16), 3412);
+assert.eq(buf.readUInt16BE(1).toString(16), 3456);
+assert.eq(buf.readUInt16LE(1).toString(16), 5634);
+
+assert.throws(function() {
+  buf.readUInt16LE(2).toString(16);
+}, /RangeError/);
+
+
+// readUInt32BE / readUInt32LE
+buf = Buffer.from([0x12, 0x34, 0x56, 0x78]);
+
+assert.eq(buf.readUInt32BE(0).toString(16), 12345678);
+assert.eq(buf.readUInt32LE(0).toString(16), 78563412);
+
+assert.throws(function() {
+  console.log(buf.readUInt32LE(1).toString(16));
+}, /RangeError/);
+
+
+// readUIntBE(offset, byteLength
+// not implements
+
+
+//
+// write(string...
+//
+buf = Buffer.allocUnsafe(256);
+
+var len = buf.write('\u00bd + \u00bc = \u00be', 0);
+assert.eq(len, 12, "write length");
+assert.eq(buf.toString('utf8', 0, len), "½ + ¼ = ¾", "output string");
+
+
+// writeDoubleBE / writeDoubleLE
+buf = Buffer.allocUnsafe(8);
+
+buf.writeDoubleBE(0xdeadbeefcafebabe, 0);
+assert(buf.equals([0x43, 0xeb, 0xd5, 0xb7, 0xdd, 0xf9, 0x5f, 0xd7]));
+
+buf.writeDoubleLE(0xdeadbeefcafebabe, 0);
+assert(buf.equals([0xd7, 0x5f, 0xf9, 0xdd, 0xb7, 0xd5, 0xeb, 0x43]));
+
+
+// writeFloatLE / writeFloatBE
+buf = Buffer.allocUnsafe(4);
+
+buf.writeFloatBE(0xcafebabe, 0);
+assert(buf.equals([0x4f, 0x4a, 0xfe, 0xbb]));
+
+buf.writeFloatLE(0xcafebabe, 0);
+assert(buf.equals([0xbb, 0xfe, 0x4a, 0x4f]));
+
+
+// writeInt8
+buf = Buffer.allocUnsafe(2);
+
+buf.writeInt8(2, 0);
+buf.writeInt8(-2, 1);
+assert(buf.equals([0x02, 0xFE]));
+
+
+// writeInt16BE / writeInt16LE
+buf = Buffer.allocUnsafe(4);
+
+buf.writeInt16BE(0x0102, 0);
+buf.writeInt16LE(0x0304, 2);
+assert(buf.equals([ 0x1,0x2,0x4,0x3 ]));
+
+
+// writeInt32BE / writeInt32LE
+buf = Buffer.allocUnsafe(8);
+
+buf.writeInt32BE(0x01020304, 0);
+buf.writeInt32LE(0x05060708, 4);
+assert(buf.equals([ 1,2,3,4,8,7,6,5 ]));
+
+
+// writeIntBE(int value, int offset, int byteLength)
+// writeIntLE(int value, int offset, int byteLength)
+// not implement
+
+
+// writeUInt8
+buf = Buffer.allocUnsafe(4);
+
+buf.writeUInt8(0x3, 0);
+buf.writeUInt8(0x4, 1);
+buf.writeUInt8(0x23, 2);
+buf.writeUInt8(0x42, 3);
+assert(buf.equals([3, 4, 0x23, 0x42]));
+
+
+// writeUInt16BE / writeUInt16LE
+buf = Buffer.allocUnsafe(4);
+
+buf.writeUInt16BE(0xdead, 0);
+buf.writeUInt16BE(0xbeef, 2);
+assert(buf.equals([0xde, 0xad, 0xbe, 0xef]), 'writeUInt16BE');
+
+buf.writeUInt16LE(0xdead, 0);
+buf.writeUInt16LE(0xbeef, 2);
+assert(buf.equals([0xad, 0xde, 0xef, 0xbe]), 'writeUInt16LE');
+
+
+// writeUInt32BE / writeUInt32LE
+buf = Buffer.allocUnsafe(4);
+
+buf.writeUInt32BE(0xfeedface, 0);
+assert(buf.equals([0xfe, 0xed, 0xfa, 0xce]));
+
+buf.writeUInt32LE(0xfeedface, 0);
+assert(buf.equals([0xce, 0xfa, 0xed, 0xfe]));
+
+
+// writeUIntBE / writeUIntLE
+// not implement
+

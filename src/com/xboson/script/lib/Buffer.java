@@ -5,6 +5,7 @@ import com.xboson.util.Tool;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.Iterator;
@@ -77,7 +78,7 @@ public class Buffer {
     if (totalLength <= 0) {
       totalLength = 0;
       for (int i=0; i<list.length; ++i) {
-        totalLength += list[i].length();
+        totalLength += list[i].getLength();
       }
     }
 
@@ -87,7 +88,7 @@ public class Buffer {
 
     for (int i=0; i<list.length; ++i) {
       list[i].buf.position(0);
-      int len = list[i].length();
+      int len = list[i].getLength();
       while (len >= 0) {
         ret.buf.put(list[i].buf.get());
         --len;
@@ -182,6 +183,7 @@ public class Buffer {
     public JsBuffer(String encoding) {
       this.encoding = encoding;
       config(JSObject.ExportsFunction.class);
+      config(new JSObject.ExportsAttribute("length"));
     }
 
     @Override
@@ -204,13 +206,14 @@ public class Buffer {
       }
     }
 
-    @Override
-    public Object getMember(String name) {
-      // 属性优先于方法的获取
-      if (name.equals("length")) {
-        return length();
-      }
-      return super.getMember(name);
+
+    public int getLength() {
+      return buf.limit();
+    }
+
+
+    public void setLength(int i) {
+      // System.out.println("Buffer.length = "+ i +", do nothing");
     }
 
 
@@ -223,7 +226,7 @@ public class Buffer {
 
 
     public JsBuffer fill(byte value, int offset) {
-      return fill(value, offset, length() - offset);
+      return fill(value, offset, getLength() - offset);
     }
 
 
@@ -245,12 +248,12 @@ public class Buffer {
 
 
     public JsBuffer fill(String str, int offset) throws UnsupportedEncodingException {
-      return fill(str, offset, length()-offset, DEFAULT_ENCODING);
+      return fill(str, offset, getLength()-offset, DEFAULT_ENCODING);
     }
 
 
     public JsBuffer fill(String str) throws UnsupportedEncodingException {
-      return fill(str.getBytes(DEFAULT_ENCODING)[0], 0, length());
+      return fill(str.getBytes(DEFAULT_ENCODING)[0], 0, getLength());
     }
 
 
@@ -278,7 +281,7 @@ public class Buffer {
 
 
     public int compare(JsBuffer target) {
-      return compare(target, 0, target.length(), 0, length());
+      return compare(target, 0, target.getLength(), 0, getLength());
     }
 
 
@@ -293,7 +296,7 @@ public class Buffer {
 
 
     public int copy(JsBuffer t) {
-      return copy(t, 0, 0, length());
+      return copy(t, 0, 0, getLength());
     }
 
 
@@ -305,7 +308,7 @@ public class Buffer {
 
 
     public boolean equals(Object[] other) {
-      if (other.length != length())
+      if (other.length != getLength())
         return false;
 
       try {
@@ -323,15 +326,10 @@ public class Buffer {
     }
 
 
-    public int length() {
-      return buf.limit();
-    }
-
-
     public JsBuffer clone() {
       JsBuffer newbuf = new JsBuffer(encoding);
-      newbuf.buf = ByteBuffer.allocate(length());
-      for (int i=length()-1; i>=0; --i) {
+      newbuf.buf = ByteBuffer.allocate(getLength());
+      for (int i = getLength()-1; i>=0; --i) {
         newbuf.buf.put(i, buf.get(i));
       }
       return newbuf;
@@ -341,7 +339,7 @@ public class Buffer {
     public String toString() {
       StringBuilder out = new StringBuilder();
       out.append("<Buffer");
-      int len = Math.min(20, length());
+      int len = Math.min(20, getLength());
       buf.position(0);
       while (--len >= 0) {
         out.append(" ");
@@ -349,7 +347,7 @@ public class Buffer {
         out.append(Tool.hex(d >> 4));
         out.append(Tool.hex(d));
       }
-      if (length() > 20) {
+      if (getLength() > 20) {
         out.append(" ..");
       }
       out.append('>');
@@ -372,13 +370,13 @@ public class Buffer {
 
     public String toString(String encoding, int begin)
             throws UnsupportedEncodingException {
-      return toString(encoding, begin, length() - begin);
+      return toString(encoding, begin, getLength() - begin);
     }
 
 
     public String toString(String encoding)
             throws UnsupportedEncodingException {
-      return toString(encoding, 0, length());
+      return toString(encoding, 0, getLength());
     }
 
 
@@ -386,10 +384,10 @@ public class Buffer {
       return new Iterator<Object>() {
         int i = 0;
         public boolean hasNext() {
-          return i < length();
+          return i < getLength();
         }
         public Object next() {
-          return buf.get(i++);
+          return JSObject.createJSArray(i, buf.get(i++));
         }
       };
     }
@@ -399,7 +397,7 @@ public class Buffer {
       return new Iterator<Object>() {
         int i = 0;
         public boolean hasNext() {
-          return i < length();
+          return i < getLength();
         }
         public Object next() {
           return i++;
@@ -409,8 +407,8 @@ public class Buffer {
 
 
     public int indexOf(JsBuffer value, int offset) {
-      int len = length();
-      int vl = value.length();
+      int len = getLength();
+      int vl = value.getLength();
       int vp = 0;
 
       for (int i=offset; i<len; ++i) {
@@ -448,13 +446,48 @@ public class Buffer {
 
     public int indexOf(int _i) {
       final byte b = (byte) _i;
-      int len = length();
+      int len = getLength();
       for (int i=0; i<len; ++i) {
         if (b == buf.get(i)) {
           return i;
         }
       }
       return -1;
+    }
+
+
+    public int lastIndexOf(Object value) {
+      throw new UnsupportedOperationException();
+    }
+
+
+    public boolean includes(String value, int byteOffset, String encoding) {
+      return indexOf(value, byteOffset, encoding) >= 0;
+    }
+
+
+    public boolean includes(String value, int byteOffset) {
+      return indexOf(value, byteOffset) >= 0;
+    }
+
+
+    public boolean includes(String value) {
+      return indexOf(value) >= 0;
+    }
+
+
+    public boolean includes(JsBuffer value, int offset) {
+      return indexOf(value, offset) >= 0;
+    }
+
+
+    public boolean includes(JsBuffer value) {
+      return indexOf(value) >= 0;
+    }
+
+
+    public boolean includes(int c) {
+      return indexOf(c) >= 0;
     }
 
 
@@ -472,6 +505,358 @@ public class Buffer {
         throw new UnsupportedOperationException(
                 "cannot slice() use 'allocUnsafe' create Buffer", e);
       }
+    }
+
+
+    public String toJSON() {
+      byte[] data;
+      if (buf.isDirect()) {
+        data = new byte[getLength()];
+        for (int i=0; i<data.length; ++i) {
+          data[i] = buf.get(i);
+        }
+      } else {
+        data = buf.array();
+      }
+      return "{\"type\":\"Buffer\",\"data\":"
+              + Tool.getAdapter(byte[].class).toJson(data)
+              + "}";
+    }
+
+
+    public JsBuffer swap16() {
+      if (getLength() % 2 != 0 || getLength() < 2) {
+        JSObject.throwJSRangeError(
+                "Buffer size must be a multiple of 16-bits");
+      }
+      int len = getLength();
+      byte t;
+      for (int i=0; i<len; i+=2) {
+        t = buf.get(i);
+        buf.put(i, buf.get(i+1));
+        buf.put(i+1, t);
+      }
+      return this;
+    }
+
+
+    public JsBuffer swap32() {
+      if (getLength() % 4 != 0 || getLength() < 4) {
+        JSObject.throwJSRangeError(
+                "Buffer size must be a multiple of 32-bits");
+      }
+      int len = getLength();
+      byte t;
+      for (int i=0; i<len; i+=4) {
+        t = buf.get(i);
+        buf.put(i, buf.get(i+3));
+        buf.put(i+3, t);
+        t = buf.get(i+1);
+        buf.put(i+1, buf.get(i+2));
+        buf.put(i+2, t);
+      }
+      return this;
+    }
+
+
+    public JsBuffer swap64() {
+      if (getLength() % 8 != 0 || getLength() < 8) {
+        JSObject.throwJSRangeError(
+                "Buffer size must be a multiple of 64-bits");
+      }
+      int len = getLength();
+      byte t;
+      for (int i=0; i<len; i+=8) {
+        t = buf.get(i);
+        buf.put(i, buf.get(i+7));
+        buf.put(i+7, t);
+        t = buf.get(i+1);
+        buf.put(i+1, buf.get(i+6));
+        buf.put(i+6, t);
+        t = buf.get(i+2);
+        buf.put(i+2, buf.get(i+5));
+        buf.put(i+5, t);
+        t = buf.get(i+3);
+        buf.put(i+3, buf.get(i+4));
+        buf.put(i+4, t);
+      }
+      return this;
+    }
+
+
+    public JsBuffer transcode(JsBuffer source, String fromEnc, String toEnc) {
+      throw new UnsupportedOperationException();
+    }
+
+
+    public double readDoubleBE(int offset) {
+      return buf.getDouble(offset);
+    }
+
+
+    public double readDoubleLE(int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        return buf.getDouble(offset);
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+
+    public float readFloatBE(int offset) {
+      return buf.getFloat(offset);
+    }
+
+
+    public double readFloatLE(int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        return buf.getFloat(offset);
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+
+    public byte readInt8(int offset) {
+      return buf.get(offset);
+    }
+
+
+    public short readInt16BE(int offset) {
+      return buf.getShort(offset);
+    }
+
+
+    public short readInt16LE(int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        return buf.getShort(offset);
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+
+    public int readInt32BE(int offset) {
+      return buf.getInt(offset);
+    }
+
+
+    public int readInt32LE(int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        return buf.getInt(offset);
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+
+    public int readIntBE(int offset, int byteLength) {
+      throw new UnsupportedOperationException();
+    }
+
+
+    public int readIntLE(int offset, int byteLength) {
+      throw new UnsupportedOperationException();
+    }
+
+
+    public int readUInt8(int offset) {
+      return Byte.toUnsignedInt(readInt8(offset));
+    }
+
+
+    public int readUInt16BE(int offset) {
+      return Short.toUnsignedInt(readInt16BE(offset));
+    }
+
+
+    public int readUInt16LE(int offset) {
+      return Short.toUnsignedInt(readInt16LE(offset));
+    }
+
+
+    public long readUInt32BE(int offset) {
+      return Integer.toUnsignedLong(readInt32BE(offset));
+    }
+
+
+    public long readUInt32LE(int offset) {
+      return Integer.toUnsignedLong(readInt32LE(offset));
+    }
+
+
+    public long readUIntBE(int offset, int byteLength) {
+      return Integer.toUnsignedLong(readIntBE(offset, byteLength));
+    }
+
+
+    public long readUIntLE(int offset, int byteLength) {
+      return Integer.toUnsignedLong(readIntLE(offset, byteLength));
+    }
+
+
+    public int write(String string, int offset, int length, String encoding) {
+      byte[] bytes = string.getBytes(Charset.forName(encoding));
+      int len = offset + length;
+
+      if (len > getLength()) {
+        len = getLength();
+      }
+      if (len > bytes.length) {
+        len = bytes.length;
+      }
+
+      for (int i=offset; i<len; ++i) {
+        buf.put(i, bytes[i-offset]);
+      }
+      return len - offset;
+    }
+
+
+    public int write(String string, int offset, int length) {
+      return write(string, offset, length, DEFAULT_ENCODING);
+    }
+
+
+    public int write(String string, int offset) {
+      return write(string, offset, getLength(), DEFAULT_ENCODING);
+    }
+
+
+    public int write(String string) {
+      return write(string, 0, getLength(), DEFAULT_ENCODING);
+    }
+
+
+    public int writeDoubleBE(double value, int offset) {
+      buf.putDouble(offset, value);
+      return 8 + offset;
+    }
+
+
+    public int writeDoubleLE(double value, int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        buf.putDouble(offset, value);
+        return 8 + offset;
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+
+    public int writeFloatBE(float value, int offset) {
+      buf.putFloat(offset, value);
+      return 4 + offset;
+    }
+
+
+    public int writeFloatBE(long value, int offset) {
+      return writeFloatBE((float) value, offset);
+    }
+
+
+    public int writeFloatLE(float value, int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        buf.putFloat(offset, value);
+        return 4 + offset;
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+    public int writeFloatLE(long value, int offset) {
+      return writeFloatLE((float) value, offset);
+    }
+
+
+    public int writeInt8(int value, int offset) {
+      buf.put(offset, (byte)value);
+      return 1 + offset;
+    }
+
+
+    public int writeInt16BE(int value, int offset) {
+      buf.putShort(offset, (short) value);
+      return 2 + offset;
+    }
+
+
+    public int writeInt16LE(int value, int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        buf.putShort(offset, (short) value);
+        return 2 + offset;
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+
+    public int writeInt32BE(int value, int offset) {
+      buf.putInt(offset, value);
+      return 4 + offset;
+    }
+
+
+    public int writeInt32LE(int value, int offset) {
+      try {
+        buf.order(ByteOrder.LITTLE_ENDIAN);
+        buf.putInt(offset, value);
+        return 4 + offset;
+      } finally {
+        buf.order(ByteOrder.BIG_ENDIAN);
+      }
+    }
+
+
+    public int writeIntBE(int value, int offset, int byteLength) {
+      throw new UnsupportedOperationException();
+    }
+
+
+    public int writeIntLE(int value, int offset, int byteLength) {
+      throw new UnsupportedOperationException();
+    }
+
+
+    public int writeUInt8(int value, int offset) {
+      return writeInt8(value, offset);
+    }
+
+
+    public int writeUInt16BE(int value, int offset) {
+      return writeInt16BE(value, offset);
+    }
+
+
+    public int writeUInt16LE(int value, int offset) {
+      return writeInt16LE(value, offset);
+    }
+
+
+    public int writeUInt32BE(long value, int offset) {
+      return writeInt32BE((int) value, offset);
+    }
+
+
+    public int writeUInt32LE(long value, int offset) {
+      return writeInt32LE((int) value, offset);
+    }
+
+
+    public int writeUIntBE(int value, int offset, int byteLength) {
+      throw new UnsupportedOperationException();
+    }
+
+
+    public int writeUIntLE(int value, int offset, int byteLength) {
+      throw new UnsupportedOperationException();
     }
   }
 }
