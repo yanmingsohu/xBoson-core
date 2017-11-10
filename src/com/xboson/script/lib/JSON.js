@@ -25,7 +25,7 @@ function warp(_json) {
     var ret = _json.stringify(obj);
     if (ret) return ret;
 
-    if (ret == undefined && typeof obj.toJSON == 'function') {
+    if (obj && ret == undefined && typeof obj.toJSON == 'function') {
       return obj.toJSON();
     }
   }

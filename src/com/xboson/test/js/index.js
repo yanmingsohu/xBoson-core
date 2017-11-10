@@ -19,3 +19,6 @@ require("./check-assert.js");
 require("./check-path.js");
 require("./check-console.js");
 require("./check-buffer.js");
+require("./check-querystring.js");
+require("./check-punycode.js");
+require("./check-url.js");

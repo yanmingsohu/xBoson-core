@@ -23,7 +23,7 @@ public class Buffer {
   public JsBuffer alloc(int size, int fill, String encoding) {
     JsBuffer buf = new JsBuffer(encoding);
     buf.buf = ByteBuffer.allocate(size);
-    buf.fill((byte) fill);
+    if (fill != 0) buf.fill((byte) fill);
     return buf;
   }
 
@@ -39,22 +39,20 @@ public class Buffer {
 
 
   /**
-   * 创建的对象不支持 slice();
+   * allocateDirect 创建的对象不支持 slice();
+   * 所以 allocUnsafe 和 alloc 分配的对象没有区别
+   * @see #alloc
    */
   public JsBuffer allocUnsafe(int size) {
-    JsBuffer buf = new JsBuffer(DEFAULT_ENCODING);
-    buf.buf = ByteBuffer.allocateDirect(size);
-    return buf;
+    return alloc(size, 0, DEFAULT_ENCODING);
   }
 
 
   /**
-   * 创建的对象不支持 slice();
+   * @see #allocUnsafe
    */
   public JsBuffer allocUnsafeSlow(int size) {
-    JsBuffer buf = allocUnsafe(size);
-    buf.fill((byte)0);
-    return buf;
+    return alloc(size, 0, DEFAULT_ENCODING);
   }
 
 
@@ -505,6 +503,11 @@ public class Buffer {
         throw new UnsupportedOperationException(
                 "cannot slice() use 'allocUnsafe' create Buffer", e);
       }
+    }
+
+
+    public JsBuffer slice(int start, double d) {
+      return slice(start, (int) d);
     }
 
 
