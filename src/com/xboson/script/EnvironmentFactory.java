@@ -22,6 +22,8 @@ public class EnvironmentFactory {
     sysmod.regClass("sys/buffer",
             Buffer.class);
 
+    sysmod.loadLib("sys/json",
+            "lib/JSON.js");
     sysmod.loadLib("util",
             "lib/util.js");
     sysmod.loadLib("assert",

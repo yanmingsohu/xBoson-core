@@ -9,9 +9,12 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeArrayBuffer;
+import jdk.nashorn.internal.objects.NativeRangeError;
+import jdk.nashorn.internal.objects.NativeReferenceError;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,6 +49,7 @@ public abstract class JSObject implements IJSObject {
 
 ///////////////////////////////////////////////////////////////////////////////
 ////-- 静态 函数/属性
+////-- 这些算法涉及到 jdk.nashorn 的内部实现
 ///////////////////////////////////////////////////////////////////////////////
 
   public final static JSToJava default_convert = new JSToJava();
@@ -108,6 +112,62 @@ public abstract class JSObject implements IJSObject {
   }
 
 
+  /**
+   * 创建 js 的 Array 对象, 可以提供多个参数作为初始值
+   * @param arg 初始值
+   * @return
+   */
+  public static Object createJSArray(Object ...arg) {
+    return NativeArray.construct(true, null, arg);
+  }
+
+
+  /**
+   * 抛出 js 原生 RangeError 错误
+   */
+  public static void throwJSRangeError(String msg) {
+    NativeRangeError err =
+            NativeRangeError.constructor(true, null, msg);
+
+    if (err.nashornException instanceof RuntimeException) {
+      throw (RuntimeException) err.nashornException;
+    } else {
+      throw new RuntimeException(msg);
+    }
+  }
+
+
+  /**
+   * 转换为 js 原声 RangeError 错误
+   */
+  public static void throwJSRangeError(IndexOutOfBoundsException e) {
+    String msg = e.getMessage();
+    if (msg == null)
+      msg = "Index out of range";
+
+    throwJSRangeError(msg);
+  }
+
+
+  public static void throwJSReferenceError(String msg) {
+    NativeReferenceError err =
+            NativeReferenceError.constructor(true, null, msg);
+
+    if (err.nashornException instanceof RuntimeException) {
+      throw (RuntimeException) err.nashornException;
+    } else {
+      throw new RuntimeException(msg);
+    }
+  }
+
+
+  public static void throwJSReferenceError(Throwable t) {
+    throwJSReferenceError(
+            "[" + t.getClass().getSimpleName()
+            + "] " + t.getMessage());
+  }
+
+
 ///////////////////////////////////////////////////////////////////////////////
 ////-- 辅助 接口/类
 ///////////////////////////////////////////////////////////////////////////////
@@ -132,23 +192,60 @@ public abstract class JSObject implements IJSObject {
   }
 
 
+  /**
+   * 可配置基类, 封装 js 对象特性
+   */
 	static public class Helper extends AbstractJSObject {
     private Map<String, AbstractJSObject>
+            functions = new HashMap<>();
+    private Map<String, ExportsAttribute>
             attributes = new HashMap<>();
 
-    protected void addAttr(String name, AbstractJSObject value) {
-      attributes.put(name, value);
-    }
-
-    protected boolean hasAttr(String name) {
-       return attributes.containsKey(name);
+    /**
+     * 添加js函数属性
+     */
+    protected void addFunction(String name, AbstractJSObject value) {
+      functions.put(name, value);
     }
 
     /**
-     * 如果重写需要调用
+     * 添加的属性映射到 java 的 setter/getter 方法
      */
+    protected void addDynAttr(String name, ExportsAttribute v) {
+      attributes.put(name, v);
+    }
+
+    /**
+     * 指定的属性绑定了函数/动态属性则返回 false
+     */
+    @Override
+    public boolean hasMember(String name) {
+      return functions.containsKey(name)
+              || attributes.containsKey(name);
+    }
+
+    /**
+     * 如果重写需要调用这里
+     */
+    @Override
     public Object getMember(String name) {
-      return attributes.get(name);
+      Object ret = functions.get(name);
+      if (ret != null) {
+        return ret;
+      }
+      ExportsAttribute v = attributes.get(name);
+      if (v != null) {
+        return v.get();
+      }
+      return null;
+    }
+
+    @Override
+    public void setMember(String name, Object value) {
+      ExportsAttribute v = attributes.get(name);
+      if (v != null) {
+        v.set(value);
+      }
     }
 
     /**
@@ -177,51 +274,159 @@ public abstract class JSObject implements IJSObject {
 
   /**
    * 配置 JSObjectHelper, 使导出的公共方法可以被 js 代码调用.
+   * 导出方法符合: public, 非 static, 非继承的.
    */
 	static public class ExportsFunction implements IConfig {
-
     @Override
     public void config(Helper target) {
       Class<?> myself = target.getClass();
-	    Method[] methods = myself.getMethods();
+      Method[] methods = myself.getDeclaredMethods();
 
       for (int i=0; i<methods.length; ++i) {
         Method m = methods[i];
         final String name = m.getName();
 
-        if (target.hasAttr(name))
+        int mod = m.getModifiers();
+        if (Modifier.isPublic(mod) == false || Modifier.isStatic(mod)) {
+          // System.out.println("Skip Export " + name +"(..) on " + myself);
+          continue;
+        }
+
+        if (target.hasMember(name))
           continue;
 
-        AbstractJSObject inv = createFunctionProxy(myself, name);
-        target.addAttr(name, inv);
+        AbstractJSObject inv = new FunctionProxy(myself, name);
+        target.addFunction(name, inv);
       }
+    }
+  }
+
+
+  /**
+   * 包装一个函数作为 js 对象的属性
+   */
+  static public class FunctionProxy extends AbstractJSObject {
+	  private Method method;      // 可以空, 用来确定函数对象
+	  private Object thiz;        // 可以空, 用来保存闭包中的 this
+	  private Class<?> clazz;     // 必须设置
+	  private String methodname;  // 必须设置
+
+    /**
+     * 固定函数代理
+     */
+    public FunctionProxy(Object thiz, Method method) {
+      this.thiz = thiz;
+      this.method = method;
+      this.clazz = thiz.getClass();
+      this.methodname = method.getName();
     }
 
     /**
-     * 创建本类函数的 js 函数代理
-     * @param name 函数名
-     * @return 函数代理
+     * 动态函数代理, 在调用时, 通过函数参数来确定对应的重载函数
      */
-    private AbstractJSObject createFunctionProxy(
-            Class<?> myself, final String name) {
-	    return new AbstractJSObject() {
-        public Object call(Object thiz, Object... args) {
-          try {
-            Method m = myself.getMethod(name,
-                    Tool.getClasses(args, default_convert));
-            return m.invoke(thiz, args);
+    public FunctionProxy(Class<?> clazz, String methodname) {
+      this.thiz = null;
+      this.method = null;
+      this.clazz = clazz;
+      this.methodname = methodname;
+    }
 
-          } catch(InvocationTargetException e) {
-            throw new RuntimeException(e.getCause());
-          } catch(Exception e) {
-            throw new RuntimeException(e);
-          }
+    @Override
+    public Object call(Object thiz, Object... args) {
+      try {
+        Method _m = method;
+        if (_m == null) {
+          _m = clazz.getMethod(methodname,
+                  Tool.getClasses(args, default_convert));
+        }
+        if (thiz == null) {
+          thiz = this.thiz;
+        }
+        return _m.invoke(thiz, args);
+
+      } catch(InvocationTargetException e) {
+        // 函数抛出的原始被 InvocationTargetException 包装
+        Throwable cause = e.getCause();
+
+        if (cause instanceof IndexOutOfBoundsException) {
+          throwJSRangeError((IndexOutOfBoundsException) cause);
+        } else if (cause instanceof RuntimeException) {
+          throw (RuntimeException) cause;
+        } else if (cause == null) {
+          cause = e;
         }
 
-        public boolean isFunction() {
-          return true;
-        }
-      };
+        cause.addSuppressed(new Exception(
+                clazz.getName() + "." + methodname + "(..)"));
+        throwJSReferenceError(cause);
+
+      } catch(NoSuchMethodException | IllegalAccessException e) {
+        throwJSReferenceError(e);
+      }
+      return null;
+    }
+
+    public boolean isFunction() {
+      return true;
+    }
+  }
+
+
+  /**
+   * 在 js 对象上绑定 attrname 属性, 对属性的赋值调用 java 中的
+   * setter 方法, 获取 attrname 属性的值调用 java 中的 getter 方法,
+   * java 中的这个属性是虚拟的, getter/setter 必须完整,
+   * 数据类型通过 getter 方法的返回值来确定;
+   * 每个 ExportsAttribute 只负责一个属性.
+   */
+  static public class ExportsAttribute implements IConfig {
+    private Method getter;
+    private Method setter;
+    private String attrname;
+    private Object thiz;
+
+    /**
+     * 绑定 attrname 属性
+     */
+    public ExportsAttribute(String attrname) {
+      this.attrname = attrname;
+    }
+
+    @Override
+    public void config(Helper target) {
+      try {
+        Class<?> who = target.getClass();
+
+        String uf = Tool.upperFirst(attrname);
+        getter = who.getMethod("get" + uf);
+
+        Class<?>[] setArgs =
+                new Class<?>[]{getter.getReturnType()};
+        setter = who.getMethod("set" + uf, setArgs);
+
+        target.addDynAttr(attrname, this);
+        thiz = target;
+      } catch(Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    public void set(Object o) {
+      try {
+        setter.invoke(thiz, o);
+      } catch (Exception e) {
+        throw new RuntimeException(
+                thiz.getClass() + "." + setter.getName() , e);
+      }
+    }
+
+    public Object get() {
+      try {
+        return getter.invoke(thiz);
+      } catch (Exception e) {
+        throw new RuntimeException(
+                thiz.getClass() + "." + getter.getName() , e);
+      }
     }
   }
 

@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -269,5 +270,13 @@ public class Tool {
       }
     }
 		throw new IllegalArgumentException("number on 0-15");
+	}
+
+
+	/**
+	 * 返回字符串首字母大写的形式
+	 */
+	public static String upperFirst(String n) {
+		return Character.toUpperCase(n.charAt(0)) + n.substring(1);
 	}
 }

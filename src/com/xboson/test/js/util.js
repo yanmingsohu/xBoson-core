@@ -11,7 +11,6 @@ function if_throw_ok(fn, emsg, showstack) {
   } catch(e) {
     _throw = e;
     emsg += ' - [ ' + e + ' ]';
-    // console.log(e.stack)
   }
 
   if (!_throw) {
