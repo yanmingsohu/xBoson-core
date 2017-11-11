@@ -80,6 +80,7 @@ public class Application implements ICodeRunner {
 		WarpdScript ws = modcache.get(path);
 		if (ws != null) {
 			ws.getModule().loaded = false;
+			modcache.remove(path);
 		}
 	}
 }

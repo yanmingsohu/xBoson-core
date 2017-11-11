@@ -13,20 +13,22 @@ public class Test {
 	
 	private static int failcount = 0;
 	private static long time = 0;
+	private static String unitname;
 	
 	/**
 	 * 测试用例列表
 	 */
 	@SuppressWarnings("rawtypes")
 	private static final Class[] cl = new Class[] {
-			TestAES.class,
-			TestSession.class,
-			TestJSON.class,
-			TestUrl.class,
-			TestTool.class,
-			TestLog.class,
-			TestScript.class,
-			TestConfig.class,
+          TestAES.class,
+          TestSession.class,
+          TestJSON.class,
+          TestUrl.class,
+          TestTool.class,
+          TestLog.class,
+          TestScript.class,
+          TestConfig.class,
+          TestEvent.class,
 	};
 	
 
@@ -62,6 +64,7 @@ public class Test {
 
 	
 	public static void success(Object o) {
+	  if (o == null) o = unitname;
 		System.out.println("\u001b[;32m  Success: " + o + "\u001b[m");
 	}
 	
@@ -74,6 +77,7 @@ public class Test {
 	
 	public static void unit(String name) {
 		System.out.println("\u001b[;33m\nTest " + name + "\u001b[m");
+    unitname = name;
 	}
 	
 	
@@ -85,7 +89,9 @@ public class Test {
 	public static void ok(boolean o, String msg) {
 		if (!o) {
 			throw new RuntimeException(msg);
-		}
+		} else {
+		  msg("OK " + msg);
+    }
 	}
 	
 	
