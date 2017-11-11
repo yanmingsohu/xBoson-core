@@ -16,6 +16,7 @@
 
 package com.xboson.test;
 
+import java.io.PrintStream;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
@@ -24,12 +25,15 @@ import java.util.Random;
 
 import com.xboson.init.Touch;
 import com.xboson.log.LogFactory;
+import com.xboson.util.StringBufferOutputStream;
 
 /**
  * 通过实现该类, 导入通用测试框架
  */
 public class Test {
-	
+	private static final String line =
+    ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
+
 	private static int failcount = 0;
 	private static long time = 0;
 	private static String unitname;
@@ -91,23 +95,37 @@ public class Test {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void test() throws Throwable {
+		StringBufferOutputStream strerr = new StringBufferOutputStream();
+		PrintStream buf = new PrintStream(strerr);
+
 		for (int i=0; i<cl.length; ++i) {
 			try {
 				unit(cl[i].getName());
 				Class c = cl[i];
 				Test t = (Test) c.newInstance();
 				t.test();
-			} catch(Error e) {
-				fail(cl[i].getName() + " " + e.getMessage());
-				e.printStackTrace();
+				success();
+			} catch(Throwable e) {
+				fail(cl[i].getName());
+				buf.println("\n" + line);
+				buf.println("####\t" + cl[i].getName());
+				buf.println(line);
+				e.printStackTrace(buf);
 			}
 		}
+
+		// 通知系统进入销毁流程
+		new Touch.Init().contextDestroyed(null);
+
+		// 打印出积累的错误消息
+		System.out.println("\u001b[;31m" + strerr + "\u001b[m");
+
+		// 打印结果
 		if (failcount > 0) {
 			System.out.println("\n\u001b[;31m>>>>>>>>>> Over, Get " + failcount + " fail \u001b[m");
 		} else {
 			System.out.println("\n\u001b[;32m>>>>>>>>>> Over, All Passed \u001b[m");
 		}
-		new Touch.Init().contextDestroyed(null);
 	}
 
 
@@ -125,19 +143,28 @@ public class Test {
 		System.out.println("\u001b[;31m  Fail: " + o + "\u001b[m");
 		++failcount;
 	}
-	
-	
+
+
+	/**
+	 * 开始一条测试用例
+	 */
 	public static void unit(String name) {
 		System.out.println("\u001b[;33m\nTest " + name + "\u001b[m");
     unitname = name;
 	}
-	
-	
+
+
+	/**
+	 * 显示消息
+	 */
 	public static void msg(Object o) {
 		System.out.println("\u001b[;36m    " + o + "\u001b[m");
 	}
-	
-	
+
+
+	/**
+	 * 如果 o == false 则抛出异常
+	 */
 	public static void ok(boolean o, String msg) {
 		if (!o) {
 			throw new RuntimeException(msg);
@@ -147,6 +174,9 @@ public class Test {
 	}
 
 
+	/**
+	 * 如果 a, b 不相同则抛出异常
+	 */
 	public static void eq(Object a, Object b, String msg) {
 	  if (a == b)
 	    return;

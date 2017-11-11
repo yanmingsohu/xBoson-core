@@ -23,14 +23,27 @@ import java.util.Map;
 public class ConsoleOut extends OutBase implements ILogWriter {
 
 	private Map<Level, String> colors = new HashMap<>();
+	private String END_COLOR;
 
 
 	public ConsoleOut() {
-    colors.put(Level.DEBUG,"\u001b[;37m");
-    colors.put(Level.INFO, "\u001b[;39m");
-    colors.put(Level.WARN, "\u001b[;33m");
-    colors.put(Level.ERR,  "\u001b[;31m");
-    colors.put(Level.FATAL,"\u001b[;34m");
+		boolean colorfont = false;
+
+		String encoding = System.getProperty("sun.stderr.encoding");
+		if (encoding != null) {
+			colorfont = !encoding.equals("ms936");
+		} else {
+			colorfont = true;
+		}
+
+		if (colorfont) {
+			colors.put(Level.DEBUG, "\u001b[;37m");
+			colors.put(Level.INFO, "\u001b[;39m");
+			colors.put(Level.WARN, "\u001b[;33m");
+			colors.put(Level.ERR, "\u001b[;31m");
+			colors.put(Level.FATAL, "\u001b[;34m");
+			END_COLOR = "\u001b[m";
+		}
   }
 
 
@@ -40,7 +53,11 @@ public class ConsoleOut extends OutBase implements ILogWriter {
 		format(buf, d, l, name, msg);
 
 		String color = colors.get(l);
-		System.out.println(color + buf.toString() + "\u001b[m");
+		if (color == null) {
+			System.out.println(buf.toString());
+		} else {
+			System.out.println(color + buf.toString() + END_COLOR);
+		}
 	}
 
 	

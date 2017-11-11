@@ -34,7 +34,6 @@ public class TestConfig extends Test {
 		
 		ok(c.sessionPassword.equals("fdsevbvsx_fdsaf"), "bad session ps");
 		ok(c.sessionTimeout == 30, "bad session timeout");
-		success("config ready");
 
 		sys.readDefaultConfig();
 	}

@@ -25,7 +25,6 @@ public class TestTool extends Test {
 		Exception e = create(20);
 //		msg(Tool.allStack(e));
 		msg(Tool.miniStack(e, 5));
-		success("TestTool");
 	}
 	
 	

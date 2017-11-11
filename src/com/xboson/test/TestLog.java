@@ -43,7 +43,7 @@ public class TestLog extends Test {
 		log.fatal("display when change level", 7);
 		
 		LogFactory.setLevel(Level.ALL);
-		success("log");
+
 		lf.setType("TestOut");
 	}
 }

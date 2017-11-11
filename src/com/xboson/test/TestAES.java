@@ -33,7 +33,6 @@ public class TestAES extends Test {
 		byte[] en = AES.Decode(datax, key);
 		
 		Tool.eq(en, data);
-		success("AES ok");
 	}
 
 }

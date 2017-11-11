@@ -35,7 +35,6 @@ public class TestEvent extends Test implements GlobalEvent.GlobalListener {
 
     ok(recv != null, "recive data");
     ok(count == 3, "recive count");
-    success(null);
   }
 
   @Override

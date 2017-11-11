@@ -63,7 +63,6 @@ public class TestScript extends Test {
 		
 		Application app = new Application(env, vfs);
 		app.run("/index.js");
-		success("Full Test");
 	}
 	
 	

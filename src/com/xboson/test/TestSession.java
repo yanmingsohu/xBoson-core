@@ -35,8 +35,6 @@ public class TestSession extends Test {
 		if (SessionID.checkSessionId(ps, "f"+sessionid)) {
 			throw new Exception("Fail: not checked bad sessionid");
 		}
-		
-		success("Session ok.");
 	}
 
 }

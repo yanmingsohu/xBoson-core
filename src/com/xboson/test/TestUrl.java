@@ -31,7 +31,5 @@ public class TestUrl extends Test {
 		
 		if (!url.getLast().equals(b))
 			throw new Exception("last bad");
-			
-		success("URL");
 	}
 }
