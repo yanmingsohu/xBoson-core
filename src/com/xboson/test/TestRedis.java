@@ -51,6 +51,6 @@ public class TestRedis extends Test {
 
   public static void main(String[] a) throws Exception {
     unit("Connect RedisMesmerizer");
-    new TestRedis().test();
+    new TestRedis();
   }
 }

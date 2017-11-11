@@ -18,9 +18,11 @@ package com.xboson.util;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonEncodingException;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.Config;
 import com.xboson.log.Log;
@@ -43,7 +45,20 @@ public class SysConfig {
 		config = new Config(homepath);
 
 		checkConfigFiles();
-		readConfig();
+		readConfig(config.configFile);
+
+		if (!readed) {
+			// 日志处于不可用状态
+			System.out.println("Config read config: " + config.configFile
+							+ " read DEFAULT from " + DEF_CONF_FILE);
+			try {
+				// 尝试读取系统配置文件 (必须可用)
+				readDefaultConfig();
+			} catch(Exception e) {
+				System.out.println("System EXIT: Can not find available configuration, " + e);
+				System.exit(1);
+			}
+		}
 
 		GlobalEvent.me().emit(GlobalEvent.Names.config, config);
 
@@ -78,25 +93,56 @@ public class SysConfig {
 	}
 	
 	
-	public Config readConfig() {
+	public Config readConfig(String config_file) {
 		if (!readed) {
+			String str = null;
 			try {
-				String str = Tool.readFromFile(config.configFile).toString();
-				Moshi moshi = new Moshi.Builder().build();
-				JsonAdapter<Config> configAdapter = moshi.adapter(Config.class);
-				
-				Config run = configAdapter.fromJson(str);
-				run.setHome(config.home);
-				config = run;
-				readed = true;
-				log.info("Read Config from", config.configFile);
+				str = Tool.readFromFile(config_file).toString();
+				setConfigUseJson(str);
+				log.info("Read Config from", config_file);
+
 			} catch(Exception e) {
-				log.error("Read Config", e);
+				System.out.println(str);
+				System.out.println("Read User Config:" + e);
 			}
 		}
 		return config;
 	}
-	
+
+
+	public Config readConfig() {
+		return readConfig(config.configFile);
+	}
+
+
+	public void readDefaultConfig() throws IOException {
+		String str = null;
+		try {
+			InputStream in = getClass().getResourceAsStream(DEF_CONF_FILE);
+			StringBufferOutputStream buf = new StringBufferOutputStream();
+			buf.write(in);
+			str = buf.toString();
+			setConfigUseJson(str);
+			log.info("Read Config from DEFAULT file");
+
+		} catch(IOException e) {
+			System.out.println(str);
+			System.out.println("Read System Inner Config Fail: " + e);
+			throw e;
+		}
+	}
+
+
+	private void setConfigUseJson(String str) throws IOException {
+		Moshi moshi = new Moshi.Builder().build();
+		JsonAdapter<Config> configAdapter = moshi.adapter(Config.class);
+
+		Config run = configAdapter.fromJson(str);
+		run.setHome(config.home);
+		config = run;
+		readed = true;
+	}
+
 	
 	public void checkConfigFiles() {
 		mkdirNotexists(config.configPath);

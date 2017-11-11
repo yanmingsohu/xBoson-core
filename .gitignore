@@ -5,6 +5,7 @@ WebRoot/WEB-INF/classes/*.properties
 WebRoot/WEB-INF/classes/**
 out/**
 Test/**
+.idea/workspace.xml
 
 *.class
 *.zip

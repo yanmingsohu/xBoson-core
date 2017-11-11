@@ -19,6 +19,7 @@ package com.xboson.sleep;
 import com.xboson.been.Config;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.test.Test;
 import com.xboson.util.GlobalEvent;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
@@ -95,7 +96,7 @@ public class RedisMesmerizer extends GlobalEvent.OnExit implements IMesmerizer {
 
   @Override
   public ISleepwalker wake(Class<? extends ISleepwalker> c, String id) {
-    if (c.isAssignableFrom(IBinData.class)) {
+    if (IBinData.class.isAssignableFrom(c)) {
       return bin.wake(c, genid(c, id, "BIN"));
     }
     else {
@@ -115,6 +116,9 @@ public class RedisMesmerizer extends GlobalEvent.OnExit implements IMesmerizer {
     public ISleepwalker wake(Class c, String id) {
       try (Jedis client = jpool.getResource()) {
         String str = client.hget(KEY, id);
+        if (str == null) {
+          throw new Exception("cannot found data " + c + " - " + id);
+        }
         return (ISleepwalker) Tool.getAdapter(c).fromJson(str);
       } catch(Exception e) {
         log.error("wake json", e);
@@ -136,6 +140,7 @@ public class RedisMesmerizer extends GlobalEvent.OnExit implements IMesmerizer {
         oobj.flush();
 
         byte[] out = obyte.toByteArray();
+//        Test.printArr(out);
         client.hset(KEY_BYTE, id.getBytes(), out);
       } catch(Exception e) {
         log.error("sleep bin", e);
@@ -145,7 +150,10 @@ public class RedisMesmerizer extends GlobalEvent.OnExit implements IMesmerizer {
     public IBinData wake(Class c, String id) {
       try (Jedis client = jpool.getResource()) {
         byte[] data = client.hget(KEY_BYTE, id.getBytes());
-
+        if (data == null) {
+          throw new Exception("cannot found data " + c + " - " + id);
+        }
+//        Test.printArr(data);
         ByteArrayInputStream ibyte = new ByteArrayInputStream(data);
         ObjectInputStream iobj = new ObjectInputStream(ibyte);
 

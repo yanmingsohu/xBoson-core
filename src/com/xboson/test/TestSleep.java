@@ -18,8 +18,11 @@ package com.xboson.test;
 
 import com.xboson.sleep.*;
 
+import java.io.Serializable;
+
 
 public class TestSleep extends Test {
+
 
   public void test() {
     {
@@ -31,53 +34,74 @@ public class TestSleep extends Test {
     {
       SleepFactory sf = SleepFactory.me();
       IMesmerizer im = sf.getMesmerizer();
+
+      String id = Test.randomString(10);
+
       JsonData a = new JsonData();
-      a.init();
+      a.change();
+      a.id = id;
       im.sleep(a);
-      JsonData b = (JsonData) im.wake(a.getClass(), "json-data");
-      ok(a.a == b.a, "a");
-      ok(a.b == b.b, "b");
-      ok(a.c == b.c, "c");
-      ok(a.d.equals(b.d), "d");
+      JsonData b = (JsonData) im.wake(a.getClass(), id);
+      eq(a, b, "json data");
+      msg("json data: " + b);
+
+      BinData c = new BinData();
+      c.change();
+      c.id = id;
+      im.sleep(c);
+      BinData d = (BinData) im.wake(c.getClass(), id);
+      eq(c, d, "bin data");
+      msg("bin data: " + d);
     }
   }
 
 
-  static public abstract class TData implements ISleepwalker {
+  static public abstract class TData implements ISleepwalker, Serializable {
     public int a = 1;
     public int b = 2;
     public long c = 3;
     public String d = "fdsa";
+    public String id = null;
 
-    public void init() {
-      a = 10;
-      b = 20;
-      c = 30;
-      d = "xxxxxx";
+    public void change() {
+      a = (int) Math.random() * 100;
+      b = (int) Math.random() * 1000 + 100;
+      c = (int) Math.random() * 10000 + 1000;
+      d = Test.randomString(100);
+    }
+
+    public boolean equals(Object _o) {
+      if (_o instanceof TData) {
+        TData o = (TData) _o;
+        return a == o.a && b == o.b && c == o.c
+                && d.equals(o.d);
+      }
+      return false;
+    }
+
+    public String toString() {
+      return "a=" + a + " b=" + b + " c=" + c + " d=" + d;
     }
   }
 
 
-  static public class JsonData extends TData implements IJsonData {
+  static public class JsonData extends TData implements IJsonData, Serializable {
     @Override
     public String getid() {
-      return "json-data";
+      return id;
     }
   }
 
 
-  static public class BinData extends TData implements IBinData {
+  static public class BinData extends TData implements IBinData, Serializable {
     @Override
     public String getid() {
-      return "bin-data";
+      return id;
     }
   }
 
 
   public static void main(String[] a) throws Throwable {
-    unit("Sleep");
-    new TestSleep().init().test();
-    success();
-    System.exit(0);
+    new TestSleep();
   }
 }

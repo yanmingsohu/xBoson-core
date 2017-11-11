@@ -17,6 +17,7 @@
 package com.xboson.test;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Random;
@@ -32,6 +33,7 @@ public class Test {
 	private static int failcount = 0;
 	private static long time = 0;
 	private static String unitname;
+	private static boolean skipboot;
 	
 	/**
 	 * 测试用例列表
@@ -47,19 +49,40 @@ public class Test {
           TestScript.class,
           TestConfig.class,
           TestEvent.class,
+          TestSleep.class,
 	};
 
 
-	public Test init() {
+	private Test init() {
     Touch.me();
     LogFactory.me().setType("TestOut");
     return this;
   }
+
+
+  public Test() {
+	  if (skipboot) return;
+    init();
+    try {
+      unit(getClass().getName());
+      test();
+      success();
+    } catch(Throwable e) {
+      e.printStackTrace();
+    } finally {
+      System.exit(0);
+    }
+  }
+
+
+  public Test(boolean main) {
+    skipboot = main;
+    init();
+  }
 	
 
 	public static void main(String[] args) throws Throwable {
-		unit("Hello xBoson");
-		new Test().init().test();
+	  new Test(true).test();
 	}
 	
 	
@@ -122,6 +145,17 @@ public class Test {
 		  msg("OK " + msg);
     }
 	}
+
+
+	public static void eq(Object a, Object b, String msg) {
+	  if (a == b)
+	    return;
+	  if (a.equals(b))
+	    return;
+
+	  throw new AssertionError(msg + " not equals\n\tObject: '" + a +
+            "'\n\tObject: '" + b + "'");
+  }
 	
 	
 	public static void memuse() {
@@ -168,5 +202,10 @@ public class Test {
     Random r = new SecureRandom();
     r.nextBytes(buf);
     return buf;
+  }
+
+
+  public static void printArr(byte [] arr) {
+	  msg(Arrays.toString(arr));
   }
 }

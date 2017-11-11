@@ -1,13 +1,13 @@
 {
 	"configVersion": "1.2",
 	"loggerWriterType": "ConsoleOut",
-	"logLevel": "all"
+	"logLevel": "all",
 	"sessionTimeout": 30,
 	"sessionPassword": "fdsevbvsx_fdsaf",
 	"jedispool": {
-		maxTotal: 200,
-		maxIdle: 10,
-		minIdle: 0
+		"maxTotal": 200,
+		"maxIdle": 10,
+		"minIdle": 0
 	},
 	"redis_host": "localhost"
 }

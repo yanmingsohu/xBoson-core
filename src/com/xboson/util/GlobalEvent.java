@@ -97,7 +97,7 @@ public class GlobalEvent {
   }
 
 
-  public class GlobalEventContext extends InitialContext implements EventContext {
+  class GlobalEventContext extends InitialContext implements EventContext {
     private Set<GlobalListener> listeners;
     private String name;
     private Binding oldbind;

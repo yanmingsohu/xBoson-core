@@ -244,6 +244,6 @@ public class TestScript extends Test {
 	
 	
 	public static void main(String[] args) throws Throwable {
-		new TestScript().test();
+		new TestScript();
 	}
 }

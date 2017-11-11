@@ -181,6 +181,6 @@ public class TestJSON extends Test {
 	
 	
 	public static void main(String[] s) throws Exception {
-		new TestJSON().test();
+		new TestJSON();
 	}
 }

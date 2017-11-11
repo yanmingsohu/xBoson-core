@@ -51,6 +51,6 @@ public class TestEvent extends Test implements GlobalEvent.GlobalListener {
 
   public static void main(String[] a) throws Exception {
     unit("Global Event");
-    new TestEvent().test();
+    new TestEvent();
   }
 }

@@ -20,6 +20,7 @@ import java.io.Serializable;
 
 /**
  * 需要休眠的数据实现该接口, 休眠数据为二进制且只能由 java 恢复.
+ * 数据对象必须显示的继承 Serializable 才能工作
  */
 public interface IBinData extends Serializable, ISleepwalker {
 }
