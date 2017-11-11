@@ -17,7 +17,9 @@
 package com.xboson.been;
 
 
-/** 
+import redis.clients.jedis.JedisPoolConfig;
+
+/**
  * public 属性能死么 ?! getter/setter 烦不烦.
  */
 public class Config {
@@ -35,6 +37,9 @@ public class Config {
 	public String sessionPassword		= null;
 	public int    sessionTimeout		= 0;
 	public String logLevel					= null;
+
+	public JedisPoolConfig jedispool;
+	public String redis_host;
 	
 	
 	public Config() {
