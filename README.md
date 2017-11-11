@@ -5,11 +5,14 @@ Java JDK 8, Tomcat 9
 
 # 依赖
 
-(Moshi - moshi-1.5.0.jar)[https://github.com/square/moshi] -- 解析/封装 JSON
-		-- (moshi-kotlin-1.5.jar)
-		-- (okio-1.13.0.jar)
+* (解析/封装 JSON - moshi-1.5.0.jar)[https://github.com/square/moshi]  
+		-- (moshi-kotlin-1.5.jar)  
+		-- (okio-1.13.0.jar)  
 		
-(jansi-1.16.jar)[https://github.com/fusesource/jansi] -- 控制台颜色输出
+* (控制台颜色输出 - jansi-1.16.jar)[https://github.com/fusesource/jansi]  
+
+* (Redis 客户端 - jedis-2.9.0.jar)[https://github.com/xetorthio/jedis]  
+    -- (commons-pool2-2.4.3.jar)  
 	
 		
 # URL 映射约定

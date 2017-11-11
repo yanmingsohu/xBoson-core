@@ -21,19 +21,9 @@
                       http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
   version="4.0">
  
-	<!-- 系统设置初始化 -->
+	<!-- 系统初始化 -->
 	<listener> 
-		<listener-class>com.xboson.util.SysConfig$Init</listener-class>
-　	</listener>
-  
-	<!-- 日志系统初始化 -->
-	<listener> 
-		<listener-class>com.xboson.log.LogFactory$Init</listener-class>
-　	</listener>
-
-  <!-- 初始化服务路由表 -->
-  <listener> 
-		<listener-class>com.xboson.j2ee.container.UrlMapping</listener-class>
+		<listener-class>com.xboson.init.Touch$Init</listener-class>
 　	</listener>
  	
  	

@@ -18,15 +18,13 @@ package com.xboson.util;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import jdk.nashorn.internal.objects.Global;
 
 import javax.naming.Binding;
 import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NamingException;
-import javax.naming.event.EventContext;
-import javax.naming.event.NamingEvent;
-import javax.naming.event.NamingListener;
-import javax.naming.event.ObjectChangeListener;
+import javax.naming.event.*;
 import java.util.*;
 
 /**
@@ -35,22 +33,67 @@ import java.util.*;
  */
 public class GlobalEvent {
 
-  private Log log  = LogFactory.create();
-  private static GlobalEvent instance;
+  /**
+   * 已有的事件列表
+   */
+  public final class Names {
+    /** exit (null) 容器销毁前发出 */
+    public static final String exit = "sys.exit";
+    public static final String config = "sys.config_success";
+    public static final String initialization = "sys.initialization";
+  }
 
+
+  private static GlobalEvent instance;
   static {
     instance = new GlobalEvent();
   }
-
-  private GlobalEvent() {}
-
-
   public static GlobalEvent me() {
-    return instance;
+      return instance;
   }
 
 
+  /**
+   * 事件监听器必须实现该接口
+   */
   public interface GlobalListener extends ObjectChangeListener {
+  }
+
+
+  /**
+   * 监听系统退出的方便实现
+   */
+  static public abstract class OnExit extends GLHandle {
+    public OnExit() {
+      me().on(Names.exit, this);
+    }
+
+    public void objectChanged(NamingEvent namingEvent) {
+      String name = namingEvent.getNewBinding().getName();
+      Log log = LogFactory.create(getClass());
+
+      switch (name) {
+        case Names.exit:
+          exit();
+          log.info("destory on exit");
+          return;
+      }
+    }
+
+    /**
+     * 系统退出时被调用
+     */
+    protected abstract void exit();
+  }
+
+
+  /**
+   * 默认实现
+   */
+  static public abstract class GLHandle implements GlobalListener {
+    public void namingExceptionThrown(NamingExceptionEvent namingExceptionEvent) {
+      System.out.println("GLHandle: " + namingExceptionEvent);
+    }
   }
 
 
@@ -98,16 +141,17 @@ public class GlobalEvent {
 
     void on(GlobalListener listener) {
       listeners.add(listener);
+      // log.debug("ON", name, listener);
     }
 
 
-    void emit(Object data, String dataname, String info) {
+    void emit(Object data, int type, String info) {
       Iterator<GlobalListener> its = listeners.iterator();
 
-      Binding newbind = new Binding(dataname, data);
+      Binding newbind = new Binding(name, data);
 
       NamingEvent event = new NamingEvent(
-              this, NamingEvent.OBJECT_CHANGED,
+              this, type /*NamingEvent.OBJECT_CHANGED*/,
               newbind, oldbind, info);
 
       while (its.hasNext()) {
@@ -115,17 +159,26 @@ public class GlobalEvent {
       }
 
       oldbind = newbind;
+      // log.debug("EMIT", name, data, info);
     }
   }
 
-
+///////////////////////////////////////////////////////////////////////////////
+// 实例对象
 ///////////////////////////////////////////////////////////////////////////////
 
   private Map<String, GlobalEventContext> contexts = new HashMap<>();
+  private Log log  = LogFactory.create();
+
+
+  private GlobalEvent() {
+    log.info("Initialization Success");
+  }
 
 
   /**
    * 监听事件
+   *
    * @param name 事件名称
    * @param listener 监听器对象
    */
@@ -150,6 +203,7 @@ public class GlobalEvent {
 
   /**
    * 删除事件监听器
+   *
    * @param name 事件名称
    * @param listener 监听器对象, 如果 null 则删除所有在 name 上的监听器
    * @return 如果删除了监听器返回 true, 如果监听器不存在返回 false
@@ -179,39 +233,48 @@ public class GlobalEvent {
 
   /**
    * 触发事件
+   *
    * @param name 事件名称
    * @param data 数据
-   * @param dataname 数据名称
+   * @param type 数据名称
    * @param info 扩展描述
    * @return
    */
   public synchronized boolean emit(String name,
                                    Object data,
-                                   String dataname,
+                                   int type,
                                    String info) {
     GlobalEventContext context = contexts.get(name);
     if (context == null || context.listeners.isEmpty())
       return false;
 
-    context.emit(data, dataname, info);
+    context.emit(data, type, info);
     return true;
   }
 
 
   /**
    * [ info = null ]
-   * @see #emit(String, Object, String, String)
+   * @see #emit(String, Object, int, String)
    */
-  public boolean emit(String name, Object data, String dataname) {
-    return emit(name, data, dataname, null);
+  public boolean emit(String name, Object data, int type) {
+    return emit(name, data, type, null);
   }
 
 
   /**
-   * [ dataname = "data", info = null; ]
-   * @see #emit(String, Object, String, String)
+   * [ type = NamingEvent.OBJECT_CHANGED, info = null; ]
+   * @see #emit(String, Object, int, String)
    */
   public boolean emit(String name, Object data) {
-    return emit(name, data, "data", null);
+    return emit(name, data, NamingEvent.OBJECT_CHANGED, null);
+  }
+
+  /**
+   * [ data = null, type = NamingEvent.OBJECT_CHANGED, info = null; ]
+   * @see #emit(String, Object, int, String)
+   */
+  public boolean emit(String name) {
+    return emit(name, null, NamingEvent.OBJECT_CHANGED, null);
   }
 }

@@ -39,8 +39,6 @@ public class TestScript extends Test {
 
 	
 	public TestScript() throws ScriptException {
-		new LogFactory.Init().setType("TestOut");
-		SandboxFactory.version();
 	}
 	
 

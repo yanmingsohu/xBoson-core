@@ -29,14 +29,50 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.service.Fail;
 import com.xboson.service.ServiceClassList;
+import com.xboson.util.GlobalEvent;
 
 
-public class UrlMapping implements ServletContextListener {
+public class UrlMapping extends GlobalEvent.OnExit {
 
 	private static final Map<String, XService> map = new HashMap<String, XService>();
 	private static final Log log = LogFactory.create();
-	
-	
+
+	private static UrlMapping instance;
+	static {
+		instance = new UrlMapping();
+	}
+
+
+	public static UrlMapping me() {
+		return instance;
+	}
+
+
+	private UrlMapping() {
+		init_route();
+		log.info("Initialization Success");
+	}
+
+	@Override
+	protected void exit() {
+		Collection<XService> list = map.values();
+		Iterator<XService> it = list.iterator();
+
+		while (it.hasNext()) {
+			XService x = it.next();
+			String name = x.getClass().getName();
+			try {
+				x.destroy();
+				log.info("Service", name, "destoryed");
+			} catch(Exception e) {
+				log.error("Destory service", name, "fail:", e.getMessage());
+			}
+		}
+
+		map.clear();
+	}
+
+
 	/**
 	 * 随时加入新的服务路由, 做成配置文件会被 hack
 	 */
@@ -80,30 +116,5 @@ public class UrlMapping implements ServletContextListener {
 	public static XService getService(UrlSplit url) {
 		return map.get(url.getName());
 	}
-	
-	
-	@Override
-	public void contextDestroyed(ServletContextEvent sce) {
-		Collection<XService> list = map.values();
-		Iterator<XService> it = list.iterator();
-		
-		while (it.hasNext()) {
-			XService x = it.next();
-			String name = x.getClass().getName();
-			try {
-				x.destroy();
-				log.info("Service", name, "destoryed");
-			} catch(Exception e) {
-				log.error("Destory service", name, "fail:", e.getMessage());
-			}
-		}
-		
-		map.clear();
-	}
 
-	
-	@Override
-	public void contextInitialized(ServletContextEvent sce) {
-		init_route();
-	}
 }

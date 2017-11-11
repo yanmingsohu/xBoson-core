@@ -20,9 +20,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.Config;
@@ -44,10 +41,17 @@ public class SysConfig {
 		initHomePath();
 		readed = false;
 		config = new Config(homepath);
+
+		checkConfigFiles();
+		readConfig();
+
+		GlobalEvent.me().emit(GlobalEvent.Names.config, config);
+
+		log.info("Initialization Success");
 	}
 	
 	
-	public static SysConfig getInstance() {
+	public static SysConfig me() {
 		return instance;
 	}
 	
@@ -87,7 +91,7 @@ public class SysConfig {
 				readed = true;
 				log.info("Read Config from", config.configFile);
 			} catch(Exception e) {
-				log.error("Read Config fail", e.getMessage());
+				log.error("Read Config", e);
 			}
 		}
 		return config;
@@ -118,19 +122,5 @@ public class SysConfig {
 			dir.mkdirs();
 			log.info("Make dir", dirname);
 		}
-	}
-	
-	
-	static public class Init implements ServletContextListener {
-		@Override
-		public void contextDestroyed(ServletContextEvent sce) {
-		}
-		@Override
-		public void contextInitialized(ServletContextEvent sce) {
-			SysConfig sys = SysConfig.getInstance();
-			sys.checkConfigFiles();
-			sys.readConfig();
-		}
-		
 	}
 }

@@ -24,7 +24,7 @@ import com.xboson.util.SysConfig;
 public class TestConfig extends Test {
 
 	public void test() throws IOException {
-		SysConfig sys = SysConfig.getInstance();
+		SysConfig sys = SysConfig.me();
 		msg( sys.getHomePath() );
 		sys.checkConfigFiles();
 		

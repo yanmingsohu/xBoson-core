@@ -16,8 +16,12 @@
 
 package com.xboson.test;
 
+import java.security.SecureRandom;
+import java.util.Base64;
 import java.util.Date;
+import java.util.Random;
 
+import com.xboson.init.Touch;
 import com.xboson.log.LogFactory;
 
 /**
@@ -44,11 +48,18 @@ public class Test {
           TestConfig.class,
           TestEvent.class,
 	};
+
+
+	public Test init() {
+    Touch.me();
+    LogFactory.me().setType("TestOut");
+    return this;
+  }
 	
 
 	public static void main(String[] args) throws Throwable {
 		unit("Hello xBoson");
-		new Test().test();
+		new Test().init().test();
 	}
 	
 	
@@ -73,12 +84,16 @@ public class Test {
 		} else {
 			System.out.println("\n\u001b[;32m>>>>>>>>>> Over, All Passed \u001b[m");
 		}
-		new LogFactory.Init().contextDestroyed(null);;
+		new Touch.Init().contextDestroyed(null);
 	}
+
+
+	public static void success() {
+	  success(unitname);
+  }
 
 	
 	public static void success(Object o) {
-	  if (o == null) o = unitname;
 		System.out.println("\u001b[;32m  Success: " + o + "\u001b[m");
 	}
 	
@@ -130,4 +145,28 @@ public class Test {
 		long u = (new Date().getTime() - time); 
 		msg(msg + " Used Time " + u + "ms");
 	}
+
+
+	/**
+	 * 低效的生成随机字符串, 仅用于测试
+   *
+	 * @deprecated 效率低
+	 * @param byteLength 字节数量
+	 * @return 字符串
+	 */
+	public static String randomString(int byteLength) {
+		byte[] buf = randomBytes(byteLength);
+		return Base64.getEncoder().encodeToString(buf);
+	}
+
+
+  /**
+   * @deprecated 效率低
+   */
+	public static byte[] randomBytes(int byteLength) {
+    byte[] buf = new byte[byteLength];
+    Random r = new SecureRandom();
+    r.nextBytes(buf);
+    return buf;
+  }
 }

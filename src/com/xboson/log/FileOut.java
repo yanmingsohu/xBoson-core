@@ -50,7 +50,7 @@ public class FileOut extends OutBase implements ILogWriter {
 	
 	private File logFile() {
 		SimpleDateFormat f = new SimpleDateFormat(logFileNameFormat);
-		String name = SysConfig.getInstance().readConfig().logPath;
+		String name = SysConfig.me().readConfig().logPath;
 		name += "/" + f.format(new Date()) + "h.log";
 		return new File(name);
 	}

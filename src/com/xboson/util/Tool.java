@@ -25,8 +25,11 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Method;
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
+import java.util.Random;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
@@ -46,8 +49,11 @@ public class Tool {
 		jsbuilded = new Moshi.Builder();
 		moshi = jsbuilded.build();
 	}
-	
-	
+
+
+	/**
+	 * 保证性能和线程安全
+	 */
 	public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
 		return moshi.adapter(c);
 	}
@@ -293,4 +299,5 @@ public class Tool {
 	public static String upperFirst(String n) {
 		return Character.toUpperCase(n.charAt(0)) + n.substring(1);
 	}
+
 }

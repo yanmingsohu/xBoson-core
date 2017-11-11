@@ -43,7 +43,7 @@ public class LocalFile implements IVirtualFileSystem {
 	public LocalFile(String id) throws IOException {
 		this.id = id;
 		this.fs = FileSystems.getDefault();
-		this.base = SysConfig.getInstance().readConfig().configPath;
+		this.base = SysConfig.me().readConfig().configPath;
 		Files.createDirectories(fs.getPath(base, scriptdir, id));
 	}
 

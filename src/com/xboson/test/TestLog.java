@@ -23,7 +23,7 @@ import com.xboson.log.LogFactory;
 public class TestLog extends Test {
 
 	public void test() throws Exception {
-		LogFactory.Init init = new LogFactory.Init();
+		LogFactory lf = LogFactory.me();
 		
 		Log log = LogFactory.create();
 		log.debug("display debug", 1);
@@ -32,7 +32,7 @@ public class TestLog extends Test {
 		log.warn("display", "warn", 4);
 		log.fatal("display", "fatal", 5);
 
-		init.setType("FileAndConsoleOut");
+		lf.setType("FileAndConsoleOut");
 		
 		LogFactory.setLevel(Level.ERR);
 		log.debug("!!! not display", 11);
@@ -44,6 +44,6 @@ public class TestLog extends Test {
 		
 		LogFactory.setLevel(Level.ALL);
 		success("log");
-		init.setType("TestOut");
+		lf.setType("TestOut");
 	}
 }

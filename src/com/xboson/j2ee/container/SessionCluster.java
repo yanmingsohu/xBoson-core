@@ -72,7 +72,7 @@ public class SessionCluster extends HttpFilter {
 
 
 	public void init(FilterConfig filterConfig) throws ServletException {
-		Config cfg = SysConfig.getInstance().readConfig();
+		Config cfg = SysConfig.me().readConfig();
 		sessionTimeout = cfg.sessionTimeout;
 		sessionPassword = AES.aesKey( cfg.sessionPassword );
 	}

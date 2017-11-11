@@ -16,15 +16,14 @@
 
 package com.xboson.log;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
 import com.xboson.been.Config;
+import com.xboson.util.GlobalEvent;
 import com.xboson.util.SysConfig;
 
 
-public class LogFactory {
-	
+public class LogFactory extends GlobalEvent.OnExit {
+
+	private static LogFactory instance;
 	private static Level level;
 	private static ILogWriter writer;
 	
@@ -34,9 +33,38 @@ public class LogFactory {
 		/** 仅在启动期间保持日志, 启动后立即切换 */
 		writer = new SavedOut();
 	}
+
+	public synchronized static LogFactory me() {
+		if (instance == null) {
+			instance = new LogFactory();
+		}
+		return instance;
+	}
 	
 	
-	private LogFactory() {}
+	private LogFactory() {
+		try {
+			Config cfg = SysConfig.me().readConfig();
+			setType(cfg.loggerWriterType);
+			setLevel(Level.find(cfg.logLevel));
+
+			create().info("Initialization Success, Log level", level);
+		} finally {
+			if (writer == null) {
+				writer = new ConsoleOut();
+			}
+		}
+	}
+
+
+	@Override
+	protected void exit() {
+		if (writer != null) {
+			writer.destroy(null);
+			// 保证在退出后仍然可用
+			writer = new ConsoleOut();
+		}
+	}
 	
 
 	/**
@@ -82,41 +110,18 @@ public class LogFactory {
 	static boolean blocking(Level l) {
 		return level.blocking(l);
 	}
-	
-	
-	static public class Init implements ServletContextListener {
-		
-		public void contextDestroyed(ServletContextEvent sce) {
-			if (writer != null) {
-				writer.destroy(null);
-				writer = null;
-			}
+
+
+	public synchronized boolean setType(String type) {
+		try {
+			Class<?> cl = Class.forName("com.xboson.log." + type);
+			ILogWriter older = writer;
+			writer = (ILogWriter) cl.newInstance();
+			older.destroy(writer);
+			return true;
+		} catch(Exception e) {
+			System.out.println("Init log fail: " + e.getMessage());
 		}
-		
-		public void contextInitialized(ServletContextEvent sce) {
-			try {
-				Config cfg = SysConfig.getInstance().readConfig();
-				setType(cfg.loggerWriterType);
-				setLevel(Level.find(cfg.logLevel));
-				System.out.println("Log level: " + level);
-			} finally {
-				if (writer == null) {
-					writer = new ConsoleOut();
-				}
-			}
-		}
-		
-		public boolean setType(String type) {
-			try {
-				Class<?> cl = Class.forName("com.xboson.log." + type);
-				ILogWriter older = writer;
-				writer = (ILogWriter) cl.newInstance();
-				older.destroy(writer);
-				return true;
-			} catch(Exception e) {
-				System.out.println("Init log fail: " + e.getMessage());
-			}
-			return false;
-		}
+		return false;
 	}
 }
