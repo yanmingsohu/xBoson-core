@@ -32,13 +32,6 @@ public class TestEvent extends Test implements GlobalListener {
   private boolean not_recive_when_off = true;
 
 
-  static public class Data {
-    public int a = (int)(Math.random() * 1000);
-    public long b = (long)(Math.random() * 100000);
-    public String name = Test.randomString(10);
-  }
-
-
   public void test() throws Exception {
     GlobalEvent ge = GlobalEvent.me();
     ge.on("test", this);
@@ -46,7 +39,7 @@ public class TestEvent extends Test implements GlobalListener {
 
     send(new Date().toString());
     send("hello.2=" + Math.random());
-    send(new Data());
+    send(new TestData());
 
     ok(recv != null, "recive data");
     ok(count == 3, "recive count");
@@ -57,6 +50,74 @@ public class TestEvent extends Test implements GlobalListener {
     ge.off("test", null);
     ge.emit("test", "not recive");
     ok(not_recive_when_off, "off()");
+
+    ge.off(Names.inner_error,null);
+
+//    test_recv();
+  }
+
+
+  private static String send = "PUBLISH \"/com.xboson.event.GlobalEventContext/recv\" " +
+          "\"{\\\"className\\\":\\\"com.xboson.test.Test$TestData\\\"," +
+          "\\\"data\\\":\\\"{\\\\\\\"a\\\\\\\":957,\\\\\\\"b\\\\\\\":17165," +
+          "\\\\\\\"name\\\\\\\":\\\\\\\"oEp0fi1XiKEA7w==\\\\\\\"}\\\"," +
+          "\\\"from\\\":1,\\\"type\\\":3}\"";
+
+  private static String quit = "PUBLISH \"/com.xboson.event.GlobalEventContext/recv\" " +
+          "\"{\\\"data\\\":\\\"quit\\\",\\\"from\\\":1,\\\"type\\\":3}\"";
+
+
+  void test_recv() throws InterruptedException {
+    msg("命令用来模拟另一个节点发送数据:");
+    red(send);
+    msg("命令可以让进程退出:");
+    red(quit);
+    msg("等待另一个节点或 Redis 客户端发送来数据...");
+
+    WaitRecv _wait = new WaitRecv();
+    GlobalEvent ge = GlobalEvent.me();
+    ge.on("recv", _wait);
+    ge.on(Names.inner_error, _wait);
+
+    Thread t = new Thread(_wait);
+    t.start();
+    t.join();
+  }
+
+
+  /**
+   * 用 redis 客户端发送一条消息, 这里会接收到
+   */
+  class WaitRecv implements GlobalListener, Runnable {
+    boolean over = false;
+
+    @Override
+    public void run() {
+      while (!over) {
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    @Override
+    public void objectChanged(NamingEvent namingEvent) {
+      String name = namingEvent.getNewBinding().getName();
+      Object data = namingEvent.getNewBinding().getObject();
+
+      msg("Recv in Thread "+ name + " " + data);
+      if (data.equals("quit")) {
+        over = true;
+        msg("OK bye !!");
+      }
+    }
+
+    @Override
+    public void namingExceptionThrown(NamingExceptionEvent namingExceptionEvent) {
+      namingExceptionEvent.getException().printStackTrace();
+    }
   }
 
 
@@ -80,6 +141,7 @@ public class TestEvent extends Test implements GlobalListener {
 //            + "\n\t\t\tinfo: " + e.getChangeInfo());
 
     if(name.equals(Names.inner_error) ) {
+      msg("print 'error by error'");
       throw (RuntimeException) b.getObject();
     }
 

@@ -28,24 +28,41 @@ public class EventPackage {
   private static final JsonAdapter<EventPackage>
           ad = Tool.getAdapter(EventPackage.class);
 
-  public String name;
   public Object data;
   public int    type;
   public String info;
   public long   from;
+  public String className;
 
 
-  public EventPackage(String name, Object data, int type, String info, long from) {
-    this.name = name;
-    this.data = data;
+  public EventPackage(Object data, int type, String info, long from) {
     this.type = type;
     this.info = info;
     this.from = from;
+    // 数据被再次编码为 string, 并保留类型
+    this.data = Tool.getAdapter((Class) data.getClass()).toJson(data);
+    this.className = data.getClass().getName();
   }
 
 
   public String tojson() {
     return ad.toJson(this);
+  }
+
+
+  /**
+   * 解析数据并还原为原始类型
+   */
+  public void parseData() {
+    if (className != null && data != null
+            && className.indexOf("com.xboson.") == 0) {
+      try {
+        Class data_class = Class.forName(className);
+        data = Tool.getAdapter(data_class).fromJson(data.toString());
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
 

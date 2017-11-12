@@ -181,6 +181,16 @@ public class Tool {
 	    if (c != null) c.close();
     } catch(Exception e) {}
   }
+
+
+  /**
+   * 等待线程结束后返回
+   */
+  public static void waitOver(Thread t) {
+	  try {
+      if (t != null) t.join();
+    } catch(Exception e) {}
+  }
 	
 	
 	public static short reverseBytesShort(short s) {
@@ -308,5 +318,17 @@ public class Tool {
 
     return ret;
 	}
+
+
+  /**
+   * @see java.lang.Thread#sleep(long)
+   */
+	public static void sleep(long time) {
+    try {
+      Thread.sleep(time);
+    } catch(Exception e) {
+      System.err.println(e);
+    }
+  }
 
 }

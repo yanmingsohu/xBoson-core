@@ -112,7 +112,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
 
     if (channel_name != null) {
       try (Jedis client = RedisMesmerizer.me().open()) {
-        EventPackage ep = new EventPackage(name, data, type, info, id);
+        EventPackage ep = new EventPackage(data, type, info, id);
         client.publish(channel_name, ep.tojson());
       }
     }

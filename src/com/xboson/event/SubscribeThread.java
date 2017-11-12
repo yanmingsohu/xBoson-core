@@ -16,6 +16,8 @@
 
 package com.xboson.event;
 
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
@@ -29,12 +31,16 @@ class SubscribeThread extends JedisPubSub implements Runnable {
   private Thread thread;
   private long mySelfid;
   private Jedis client;
+  private Log log;
+  private boolean running;
 
 
   public SubscribeThread(GlobalEventContext context) {
     this.channel_name = context.getChannelName();
     this.mySelfid = context.getSourceID();
     this.context = context;
+    this.log = LogFactory.create("SubscribeThread::" + channel_name);
+    this.running = true;
   }
 
 
@@ -42,6 +48,7 @@ class SubscribeThread extends JedisPubSub implements Runnable {
     if (thread != null) {
       throw new RuntimeException("donot start again");
     }
+    running = true;
     thread = new Thread(this);
     thread.setDaemon(true);
     thread.start();
@@ -49,18 +56,12 @@ class SubscribeThread extends JedisPubSub implements Runnable {
 
 
   public void destory() {
-    if (client != null) {
-      try {
-        client.quit();
-      } catch(Exception e) {}
-      client = null;
-    }
-    if (thread != null) {
-      try {
-        thread.join();
-      } catch (InterruptedException e) {}
-      thread = null;
-    }
+    running = false;
+    unsubscribe();
+    Tool.waitOver(thread);
+    thread = null;
+    client = null;
+    log.debug("destoryed");
   }
 
 
@@ -68,26 +69,32 @@ class SubscribeThread extends JedisPubSub implements Runnable {
     try {
       EventPackage ep = EventPackage.fromjson(message);
       if (ep.from != mySelfid) {
+        ep.parseData();
         context.emitWithoutCluster(ep.data, ep.type, ep.info);
       }
     } catch (Exception e) {
-      QuickSender.emitError(e, this);
+      log.error("onMessage()", e);
     }
   }
 
 
   @Override
   public void run() {
-    try {
-      client = RedisMesmerizer.me().open();
-      client.subscribe(this, channel_name);
+    while (running) {
+      try {
+        client = RedisMesmerizer.me().open();
+        client.subscribe(this, channel_name);
 
-    } catch(Exception e) {
-      // client 在关闭后, 或 pool 被关闭, 会抛出一个异常, 没什么关系
-      // System.err.println("SubscribeThread STOP " + e.getMessage());
+      } catch (Exception e) {
+        log.debug("STOP", e.getMessage());
+        Tool.sleep(1000);
 
-    } finally {
-      Tool.close(client);
+      } finally {
+        // 必须在这里停止 client
+        Tool.close(client);
+        client = null;
+        running = false;
+      }
     }
   }
 }

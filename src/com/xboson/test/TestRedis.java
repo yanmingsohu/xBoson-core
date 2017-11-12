@@ -45,6 +45,8 @@ public class TestRedis extends Test {
       byte[] c2 = client.get(n);
       ok(Arrays.equals(c1, c2), "bin data");
     }
+
+    pool.destroy();
   }
 
 

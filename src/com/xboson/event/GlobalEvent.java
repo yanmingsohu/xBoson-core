@@ -59,6 +59,7 @@ public class GlobalEvent {
     }
     contexts = null;
     log.info("destoryed");
+    log.info("---------- xBoson system shutdown ----------");
   }
 
 

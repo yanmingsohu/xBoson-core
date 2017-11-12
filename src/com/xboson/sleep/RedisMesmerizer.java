@@ -129,7 +129,6 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         return (ISleepwalker) Tool.getAdapter(c).fromJson(str);
       } catch(Exception e) {
         log.error("wake json", e);
-        e.printStackTrace();
         return null;
       }
     }

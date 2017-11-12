@@ -17,16 +17,19 @@
 package com.xboson.test;
 
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.*;
 
 import com.xboson.init.Touch;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.ISleepwalker;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
 
 /**
- * 通过实现该类, 导入通用测试框架
+ * 通过实现该类, 导入通用测试框架,
+ * 这里的方法都没有考虑性能, 不要再非测试环境中使用.
  */
 public class Test {
 	private static final String line =
@@ -114,6 +117,8 @@ public class Test {
 		} else {
 			System.out.println("\n\u001b[;32m>>>>>>>>>> Over, All Passed \u001b[m");
 		}
+
+    printRunningThread();
 	}
 
 
@@ -128,9 +133,14 @@ public class Test {
 	
 	
 	public static void fail(Object o) {
-		System.out.println("\u001b[;31m  Fail: " + o + "\u001b[m");
+		red("  Fail: " + o);
 		++failcount;
 	}
+
+
+	public static void red(Object o) {
+    System.out.println("\u001b[;31m" + o + "\u001b[m");
+  }
 
 
 	/**
@@ -225,5 +235,80 @@ public class Test {
 
   public static void printArr(byte [] arr) {
 	  msg(Arrays.toString(arr));
+  }
+
+
+  /**
+   * 专门用来测试 JSON 和序列化的数据对象
+   */
+  static public abstract class TData implements ISleepwalker, Serializable {
+    public int a = 1;
+    public int b = 2;
+    public long c = 3;
+    public String d = "fdsa";
+    public String id = null;
+
+    public void change() {
+      a = (int) Math.random() * 100;
+      b = (int) Math.random() * 1000 + 100;
+      c = (int) Math.random() * 10000 + 1000;
+      d = Test.randomString(100);
+    }
+
+    public boolean equals(Object _o) {
+      if (_o instanceof TData) {
+        TData o = (TData) _o;
+        return a == o.a && b == o.b && c == o.c
+                && d.equals(o.d);
+      }
+      return false;
+    }
+
+    public String toString() {
+      return "[ a=" + a + " b=" + b + " c=" + c + " d=" + d + " ]";
+    }
+  }
+
+
+  static public class TestData extends TData {
+    @Override
+    public String getid() {
+      return "null";
+    }
+  }
+
+
+  /**
+   * 打印非守护线程的堆栈
+   */
+  static void printRunningThread() {
+    Map<Thread, StackTraceElement[]> all = Thread.getAllStackTraces();
+    Iterator<Thread> it = all.keySet().iterator();
+    Thread myself = Thread.currentThread();
+    int activeCount = 0;
+
+    StringBufferOutputStream strbuf = new StringBufferOutputStream();
+    PrintStream buf = new PrintStream(strbuf);
+
+    while (it.hasNext()) {
+      Thread t = it.next();
+      buf.println("\u001b[;33m\nThread: " + t + "\u001b[m");
+
+      if (t.getThreadGroup().getName().equals("system") == false
+              && t.isDaemon() == false && t != myself) {
+        StackTraceElement[] ste = all.get(t);
+        for (int i = 0; i < ste.length; ++i) {
+          buf.println("\u001b[;31m\t" + ste[i] + "\u001b[m");
+          ++activeCount;
+        }
+      } else{
+        buf.println("\tSystem or Daemon Thread.");
+      }
+    }
+
+    if (activeCount > 0) {
+      System.out.println("Running Thread: " + activeCount);
+      System.out.println(strbuf);
+    }
   }
 }
