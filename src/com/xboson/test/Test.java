@@ -18,14 +18,12 @@ package com.xboson.test;
 
 import java.io.PrintStream;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 import com.xboson.init.Touch;
 import com.xboson.log.LogFactory;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
 
 /**
  * 通过实现该类, 导入通用测试框架
@@ -37,85 +35,75 @@ public class Test {
 	private static int failcount = 0;
 	private static long time = 0;
 	private static String unitname;
-	private static boolean skipboot;
-	
-	/**
-	 * 测试用例列表
-	 */
-	@SuppressWarnings("rawtypes")
-	private static final Class[] cl = new Class[] {
-          TestAES.class,
-          TestSession.class,
-          TestJSON.class,
-          TestUrl.class,
-          TestTool.class,
-          TestLog.class,
-          TestScript.class,
-          TestConfig.class,
-          TestEvent.class,
-          TestSleep.class,
-	};
+	private static boolean centralized = false;
 
-
-	private Test init() {
-    Touch.me();
-    LogFactory.me().setType("TestOut");
-    return this;
-  }
-
-
-  public Test() {
-	  if (skipboot) return;
-    init();
-    try {
-      unit(getClass().getName());
-      test();
-      success();
-    } catch(Throwable e) {
-      e.printStackTrace();
-    } finally {
-      System.exit(0);
-    }
-  }
-
-
-  public Test(boolean main) {
-    skipboot = main;
-    init();
-  }
 	
 
 	public static void main(String[] args) throws Throwable {
-	  new Test(true).test();
+	  new Test(true);
 	}
-	
+
+
+  public Test() {
+	  if (centralized) return;
+	  _test(new Test[] { this });
+  }
+
+
+  /**
+   * 感知并运行 com.boson.test 包下所有测试用例
+   * @param test_all
+   * @throws Throwable
+   */
+  private Test(boolean test_all) throws Throwable {
+    centralized = true;
+
+    Set<Class> allclass = Tool.findPackage("com.xboson.test");
+    Iterator<Class> it = allclass.iterator();
+    Test[] test = new Test[allclass.size()];
+    int i = 0;
+
+    while (it.hasNext()) {
+      Class c = it.next();
+      test[i] = (Test) c.newInstance();
+      ++i;
+    }
+    _test(test);
+  }
+
 	
 	/**
-	 * 子类重写该方法.
+	 * 子类重写该方法, 并且不要调用
 	 */
-	@SuppressWarnings("rawtypes")
 	public void test() throws Throwable {
+  }
+
+
+	@SuppressWarnings("rawtypes")
+	public final void _test(Test[] cl) {
+    Touch.me();
+    LogFactory.me().setType("TestOut");
+
 		StringBufferOutputStream strerr = new StringBufferOutputStream();
 		PrintStream buf = new PrintStream(strerr);
 
 		for (int i=0; i<cl.length; ++i) {
 			try {
-				unit(cl[i].getName());
-				Class c = cl[i];
-				Test t = (Test) c.newInstance();
+				unit(cl[i].getClass().getName());
+				Test t = cl[i];
 				t.test();
 				success();
 			} catch(Throwable e) {
-				fail(cl[i].getName());
+				fail(cl[i].getClass().getName());
 				buf.println("\n" + line);
-				buf.println("####\t" + cl[i].getName());
+				buf.println("####\t" + cl[i].getClass().getName());
 				buf.println(line);
 				e.printStackTrace(buf);
 			}
 		}
 
 		// 通知系统进入销毁流程
-		new Touch.Init().contextDestroyed(null);
+		Touch.exit();
 
 		// 打印出积累的错误消息
 		System.out.println("\u001b[;31m" + strerr + "\u001b[m");
@@ -178,10 +166,10 @@ public class Test {
 	 * 如果 a, b 不相同则抛出异常
 	 */
 	public static void eq(Object a, Object b, String msg) {
-	  if (a == b)
-	    return;
-	  if (a.equals(b))
-	    return;
+	  if (a == b || a.equals(b)) {
+	    msg("OK " + msg);
+      return;
+    }
 
 	  throw new AssertionError(msg + " not equals\n\tObject: '" + a +
             "'\n\tObject: '" + b + "'");

@@ -16,11 +16,12 @@
 
 package com.xboson.init;
 
+import com.xboson.event.Names;
 import com.xboson.j2ee.container.UrlMapping;
 import com.xboson.log.LogFactory;
 import com.xboson.script.SandboxFactory;
 import com.xboson.sleep.RedisMesmerizer;
-import com.xboson.util.GlobalEvent;
+import com.xboson.event.GlobalEvent;
 import com.xboson.util.SysConfig;
 
 import javax.servlet.ServletContextEvent;
@@ -31,9 +32,10 @@ import javax.servlet.ServletContextListener;
  */
 public final class Touch {
 
-  /**
-   * 初始化对象列表
-   */
+
+/****************************************************************************
+ * 初始化对象列表
+ ***************************************************************************/
   private static void __init__process() {
     GlobalEvent.me();
     SysConfig.me();
@@ -44,9 +46,29 @@ public final class Touch {
   }
 
 
+
+  private static final int S_ZERO   = 0;
+  private static final int S_INITED = 0;
+  private static final int S_EXIT   = 0;
+  private static int state = S_ZERO;
+
+
   public static void me() {
-    GlobalEvent.me().emit(GlobalEvent.Names.initialization);
+    if (state != S_ZERO)
+      throw new RuntimeException("cannot start system");
+
+    GlobalEvent.me().emit(Names.initialization, Touch.class);
     __init__process();
+    state = S_INITED;
+  }
+
+
+  public static void exit() {
+    if (state != S_INITED)
+      throw new RuntimeException("cannot exit system");
+
+    GlobalEvent.me().emit( Names.exit, Touch.class);
+    state = S_EXIT;
   }
 
 
@@ -57,7 +79,7 @@ public final class Touch {
     }
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
-      GlobalEvent.me().emit( GlobalEvent.Names.exit, this);
+      exit();
     }
   }
 }

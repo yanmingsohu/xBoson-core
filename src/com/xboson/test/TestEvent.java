@@ -16,37 +16,84 @@
 
 package com.xboson.test;
 
-import com.xboson.util.GlobalEvent;
+import com.xboson.event.GlobalEvent;
+import com.xboson.event.GlobalListener;
+import com.xboson.event.Names;
+import com.xboson.event.QuickSender;
 
+import javax.naming.Binding;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
+import java.util.Date;
 
-public class TestEvent extends Test implements GlobalEvent.GlobalListener {
+public class TestEvent extends Test implements GlobalListener {
   private Object recv = null;
   private int count = 0;
+  private boolean not_recive_when_off = true;
+
+
+  static public class Data {
+    public int a = (int)(Math.random() * 1000);
+    public long b = (long)(Math.random() * 100000);
+    public String name = Test.randomString(10);
+  }
+
 
   public void test() throws Exception {
     GlobalEvent ge = GlobalEvent.me();
     ge.on("test", this);
+    ge.on(Names.inner_error, this);
 
-    ge.emit("test", "hello");
-    ge.emit("test", "hello1");
-    ge.emit("test", "hello2");
+    send(new Date().toString());
+    send("hello.2=" + Math.random());
+    send(new Data());
 
     ok(recv != null, "recive data");
     ok(count == 3, "recive count");
+
+    QuickSender.emitError(new Exception("yes"), this);
+
+    not_recive_when_off = true;
+    ge.off("test", null);
+    ge.emit("test", "not recive");
+    ok(not_recive_when_off, "off()");
   }
+
+
+  void send(Object data) {
+    GlobalEvent ge = GlobalEvent.me();
+    ge.emit("test", data);
+    eq(recv, data, "recive: " + recv);
+  }
+
 
   @Override
   public void objectChanged(NamingEvent e) {
-    recv = e.getNewBinding();
-    msg("[get event] "+ recv);
+    Binding b = e.getNewBinding();
+    String name = b.getName();
+    Object data = b.getObject();
+    recv = data;
+
+//    msg(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> [get event]"
+//            + "\n\t\t\tname: "+ name
+//            + "\n\t\t\tdata: " + data
+//            + "\n\t\t\tinfo: " + e.getChangeInfo());
+
+    if(name.equals(Names.inner_error) ) {
+      throw (RuntimeException) b.getObject();
+    }
+
+    if ("not recive".equals(data)) {
+      not_recive_when_off = false;
+    }
     ++count;
   }
+
 
   @Override
   public void namingExceptionThrown(NamingExceptionEvent namingExceptionEvent) {
   }
+
 
   public static void main(String[] a) throws Exception {
     unit("Global Event");

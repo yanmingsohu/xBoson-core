@@ -6,44 +6,34 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月2日 下午3:22:04
-// 原始文件路径: xBoson/src/com/xboson/j2ee/container/XService.java
+// 文件创建日期: 17-11-12 上午11:50
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/event/QuickSender.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.container;
-
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
-import com.xboson.been.CallData;
-import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
+package com.xboson.event;
 
 
-public abstract class XService {
-	
-	/**
-	 * 输出日志
-	 */
-	protected final Log log = LogFactory.create(XService.this.getClass());
-	
-	/**
-	 * 子类实现该方法, 当服务被调用, 进入该方法中
-	 * @return 如果没有错误返回 0, 否则返回错误码
-	 */
-	public abstract int service(CallData data) throws ServletException, IOException;
-	
-	
-	/**
-	 * 子类重写该方法, 当服务器终止时调用
-	 */
-	public void destroy() {
-		log.info("default destory().");
-	}
+import javax.naming.event.NamingEvent;
+
+/**
+ * 方便的发出错误消息的工具类,
+ * 既可以使用 GlobalEvent 发出消息, 也可以调用便捷方法.
+ */
+public final class QuickSender {
+
+  private QuickSender() {}
+
+
+  /**
+   * 发出一个系统错误
+   */
+  public static void emitError(Exception e, Object source) {
+    GlobalEvent.me().emit(Names.inner_error, e,
+            NamingEvent.OBJECT_ADDED, source.getClass().getName());
+  }
 
 }

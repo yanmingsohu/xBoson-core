@@ -17,11 +17,11 @@
 package com.xboson.log;
 
 import com.xboson.been.Config;
-import com.xboson.util.GlobalEvent;
+import com.xboson.event.OnExitHandle;
 import com.xboson.util.SysConfig;
 
 
-public class LogFactory extends GlobalEvent.OnExit {
+public class LogFactory extends OnExitHandle {
 
 	private static LogFactory instance;
 	private static Level level;

@@ -21,29 +21,26 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
-
 import com.xboson.been.UrlSplit;
+import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.service.Fail;
 import com.xboson.service.ServiceClassList;
-import com.xboson.util.GlobalEvent;
 
 
-public class UrlMapping extends GlobalEvent.OnExit {
+public class UrlMapping extends OnExitHandle {
 
 	private static final Map<String, XService> map = new HashMap<String, XService>();
-	private static final Log log = LogFactory.create();
-
-	private static UrlMapping instance;
-	static {
-		instance = new UrlMapping();
-	}
+  private static UrlMapping instance;
+	private final Log log = LogFactory.create();
 
 
-	public static UrlMapping me() {
+
+	public synchronized static UrlMapping me() {
+		if (instance == null) {
+      instance = new UrlMapping();
+    }
 		return instance;
 	}
 

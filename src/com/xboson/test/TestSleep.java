@@ -80,7 +80,7 @@ public class TestSleep extends Test {
     }
 
     public String toString() {
-      return "a=" + a + " b=" + b + " c=" + c + " d=" + d;
+      return "[ a=" + a + " b=" + b + " c=" + c + " d=" + d + " ]";
     }
   }
 

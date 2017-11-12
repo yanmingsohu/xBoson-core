@@ -18,6 +18,9 @@ package com.xboson.log;
 
 import java.util.Date;
 
+/**
+ * 推荐使用非 static 变量存储 Log
+ */
 public class Log {
 	
 	private Level cl = Level.ALL;

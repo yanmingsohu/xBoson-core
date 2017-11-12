@@ -16,20 +16,12 @@
 
 package com.xboson.util;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Random;
+import java.util.*;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
@@ -52,7 +44,7 @@ public class Tool {
 
 
 	/**
-	 * 保证性能和线程安全
+	 * 保证性能和线程安全; 返回的适配器可以缓存, 性能更好;
 	 */
 	public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
 		return moshi.adapter(c);
@@ -182,36 +174,13 @@ public class Tool {
 			close(r);
 		}
 	}
-	
-	
-	public static void close(InputStream i) {
-		try {
-			if (i != null) i.close();
-		} catch(Exception e) {}
-	}
-	
-	
-	public static void close(OutputStream i) {
-		try {
-			if (i != null) i.close();
-		} catch(Exception e) {}
-	}
-	
-	
-	public static void close(Writer w) {
-		try {
-			if (w != null) w.close();
-		} catch(Exception e) {
-		}
-	}
-	
-	
-	public static void close(Reader w) {
-		try {
-			if (w != null) w.close();
-		} catch(Exception e) {
-		}
-	}
+
+
+	public static void close(Closeable c) {
+	  try {
+	    if (c != null) c.close();
+    } catch(Exception e) {}
+  }
 	
 	
 	public static short reverseBytesShort(short s) {
@@ -298,6 +267,46 @@ public class Tool {
 	 */
 	public static String upperFirst(String n) {
 		return Character.toUpperCase(n.charAt(0)) + n.substring(1);
+	}
+
+
+	/**
+	 * 获取包下的所有类类型, 排除子包, 排除内部类,
+   *
+   * @deprecated 不推荐在正式代码中使用, 可用于测试
+	 * @param packageName 包名
+	 * @return 即使找不到类, 也会返回空数组
+	 */
+	public static Set<Class> findPackage(String packageName)
+          throws IOException, ClassNotFoundException {
+    Package pk = Package.getPackage(packageName);
+    if (pk == null)
+      throw new RuntimeException("cannot find package: " + packageName);
+
+    String packagePath = packageName.replaceAll("\\.", "/");
+    ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    URL url = loader.getResource(packagePath);
+
+    String fullPath = url.getPath();
+    File[] files = new File(fullPath).listFiles();
+    int prefixLength = fullPath.length() - packageName.length() - 1;
+
+    Set<Class> ret = new HashSet<>();
+
+    for (int i=0; i<files.length; ++i) {
+      File file = files[i];
+      String name = file.toString();
+      name = name.substring(prefixLength);
+
+      if (name.lastIndexOf(".class") == name.length() - 6) {
+        if (name.indexOf('$') >= 0) continue;
+        name = name.substring(0, name.length() - 6);
+        name = name.replaceAll("/|\\\\", ".");
+        ret.add(Class.forName(name));
+      }
+    }
+
+    return ret;
 	}
 
 }

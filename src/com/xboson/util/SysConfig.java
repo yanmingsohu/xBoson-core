@@ -22,17 +22,18 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonEncodingException;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.Config;
+import com.xboson.event.GlobalEvent;
+import com.xboson.event.Names;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
 public class SysConfig {
 	
 	private static final String DEF_CONF_FILE = "./default-config.json";
-	private static final SysConfig instance = new SysConfig();
-	
+	private static SysConfig instance;
+
 	private Log log = LogFactory.create("SysConfig");
 	private String homepath;
 	private Config config;
@@ -60,13 +61,16 @@ public class SysConfig {
 			}
 		}
 
-		GlobalEvent.me().emit(GlobalEvent.Names.config, config);
+		GlobalEvent.me().emit(Names.config, config);
 
 		log.info("Initialization Success");
 	}
 	
 	
-	public static SysConfig me() {
+	public synchronized static SysConfig me() {
+		if (instance == null) {
+			instance = new SysConfig();
+		}
 		return instance;
 	}
 	

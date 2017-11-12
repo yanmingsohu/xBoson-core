@@ -125,7 +125,7 @@ public class TestJSON extends Test {
 							System.exit(1);
 						}
 					}
-					msg("over");
+					msg("Thread safe over " + Thread.currentThread().getId());
 				}
 			});
 			t[c].start();

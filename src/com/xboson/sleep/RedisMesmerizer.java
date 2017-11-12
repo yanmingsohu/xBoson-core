@@ -17,10 +17,9 @@
 package com.xboson.sleep;
 
 import com.xboson.been.Config;
+import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.test.Test;
-import com.xboson.util.GlobalEvent;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
@@ -34,13 +33,10 @@ import java.io.ObjectOutputStream;
 /**
  * 能正确处理 json/bin 类型
  */
-public class RedisMesmerizer extends GlobalEvent.OnExit implements IMesmerizer {
+public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
   private final static String KEY = "RedisMesmerizer.IMesmerizer";
   private static RedisMesmerizer instance;
-  static {
-    instance = new RedisMesmerizer();
-  }
 
   private Log log = LogFactory.create();
   private JedisPool jpool;
@@ -48,7 +44,10 @@ public class RedisMesmerizer extends GlobalEvent.OnExit implements IMesmerizer {
   private BIN bin;
 
 
-  public static RedisMesmerizer me() {
+  public synchronized static RedisMesmerizer me() {
+    if (instance == null) {
+      instance = new RedisMesmerizer();
+    }
     return instance;
   }
 
@@ -60,6 +59,14 @@ public class RedisMesmerizer extends GlobalEvent.OnExit implements IMesmerizer {
     Config config = SysConfig.me().readConfig();
     jpool = new JedisPool(config.jedispool, config.redis_host);
     log.info("Initialization Success");
+  }
+
+
+  /**
+   * 打开 redis 客户端连接, 用完记得关闭
+   */
+  public Jedis open() {
+    return jpool.getResource();
   }
 
 
