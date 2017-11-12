@@ -38,3 +38,4 @@ require("./check-buffer.js");
 require("./check-querystring.js");
 require("./check-punycode.js");
 require("./check-url.js");
+require("./check-uuid.js");

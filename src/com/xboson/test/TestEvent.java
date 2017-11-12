@@ -16,14 +16,19 @@
 
 package com.xboson.test;
 
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.event.GlobalEvent;
 import com.xboson.event.GlobalListener;
 import com.xboson.event.Names;
 import com.xboson.event.QuickSender;
+import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.Tool;
+import redis.clients.jedis.Jedis;
 
 import javax.naming.Binding;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
+import java.io.IOException;
 import java.util.Date;
 
 public class TestEvent extends Test implements GlobalListener {
@@ -49,11 +54,11 @@ public class TestEvent extends Test implements GlobalListener {
     not_recive_when_off = true;
     ge.off("test", null);
     ge.emit("test", "not recive");
-    ok(not_recive_when_off, "off()");
+    ok(not_recive_when_off, "off() remove listener");
 
     ge.off(Names.inner_error,null);
 
-//    test_recv();
+    test_recv();
   }
 
 
@@ -79,6 +84,7 @@ public class TestEvent extends Test implements GlobalListener {
     ge.on("recv", _wait);
     ge.on(Names.inner_error, _wait);
 
+    new SendThread().start();
     Thread t = new Thread(_wait);
     t.start();
     t.join();
@@ -121,6 +127,29 @@ public class TestEvent extends Test implements GlobalListener {
   }
 
 
+  class SendThread extends Thread {
+    public void run() {
+      try (Jedis client = RedisMesmerizer.me().open()) {
+        _send_cmd(send, client);
+        sub("Wait to Send quit..");
+        Tool.sleep(2000);
+        _send_cmd(quit, client);
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+
+    void _send_cmd(String cmd, Jedis client) throws IOException {
+      String[] sp = cmd.split(" ", 3);
+      JsonAdapter<String> ja = Tool.getAdapter(String.class);
+      String ch = ja.fromJson(sp[1]);
+      String data = ja.fromJson(sp[2]);
+
+      client.publish(ch, data);
+    }
+  }
+
+
   void send(Object data) {
     GlobalEvent ge = GlobalEvent.me();
     ge.emit("test", data);
@@ -141,7 +170,7 @@ public class TestEvent extends Test implements GlobalListener {
 //            + "\n\t\t\tinfo: " + e.getChangeInfo());
 
     if(name.equals(Names.inner_error) ) {
-      msg("print 'error by error'");
+      msg("LOG print 'error by error'");
       throw (RuntimeException) b.getObject();
     }
 
@@ -158,7 +187,7 @@ public class TestEvent extends Test implements GlobalListener {
 
 
   public static void main(String[] a) throws Exception {
-    unit("Global Event");
+    sub("Global Event");
     new TestEvent();
   }
 }

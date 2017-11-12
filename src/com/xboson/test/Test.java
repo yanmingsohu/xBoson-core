@@ -127,37 +127,55 @@ public class Test {
   }
 
 	
-	public static void success(Object o) {
-		System.out.println("\u001b[;32m  Success: " + o + "\u001b[m");
+	public static void success(Object ...o) {
+		System.out.println("\u001b[;32m  Success: " + _string(o) + "\u001b[m");
 	}
 	
 	
-	public static void fail(Object o) {
-		red("  Fail: " + o);
+	public static void fail(Object ...o) {
+		red("  Fail: " + _string(o));
 		++failcount;
 	}
 
 
-	public static void red(Object o) {
-    System.out.println("\u001b[;31m" + o + "\u001b[m");
+	public static void red(Object ...o) {
+    System.out.println("\u001b[;31m" + _string(o) + "\u001b[m");
   }
 
 
 	/**
 	 * 开始一条测试用例
 	 */
-	public static void unit(String name) {
+	private static void unit(String name) {
 		System.out.println("\u001b[;33m\nTest " + name + "\u001b[m");
     unitname = name;
 	}
 
 
+	public static void sub(Object ...msg) {
+    System.out.println("\u001b[;35m  " + _string(msg) + "\u001b[m");
+  }
+
+
 	/**
 	 * 显示消息
 	 */
-	public static void msg(Object o) {
-		System.out.println("\u001b[;36m    " + o + "\u001b[m");
+	public static void msg(Object ...o) {
+		System.out.println("\u001b[;36m    " + _string(o) + "\u001b[m");
 	}
+
+
+  public static String _string(Object [] arr) {
+    if (arr == null) return "";
+    if (arr.length == 1) return arr[0].toString();
+
+    StringBuilder out = new StringBuilder();
+    for (int i=0; i<arr.length; ++i) {
+      out.append(arr[i]);
+      out.append(' ');
+    }
+    return out.toString();
+  }
 
 
 	/**
@@ -177,7 +195,6 @@ public class Test {
 	 */
 	public static void eq(Object a, Object b, String msg) {
 	  if (a == b || a.equals(b)) {
-	    msg("OK " + msg);
       return;
     }
 
@@ -203,9 +220,9 @@ public class Test {
 	}
 	
 	
-	public static void endTime(String msg) {
+	public static void endTime(Object ...msg) {
 		long u = (new Date().getTime() - time); 
-		msg(msg + " Used Time " + u + "ms");
+		sub(_string(msg), "Used Time", u, "ms");
 	}
 
 

@@ -19,6 +19,7 @@ package com.xboson.script;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Console;
 import com.xboson.script.lib.Path;
+import com.xboson.script.lib.Uuid;
 
 import java.io.IOException;
 
@@ -37,6 +38,8 @@ public class EnvironmentFactory {
             Path.class);
     sysmod.regClass("sys/buffer",
             Buffer.class);
+    sysmod.regClass("sys/uuid",
+            Uuid.class);
 
     sysmod.loadLib("sys/json",
             "lib/JSON.js");
@@ -52,9 +55,10 @@ public class EnvironmentFactory {
             "lib/querystring.js");
     sysmod.loadLib("punycode",
             "lib/punycode.js");
-
     sysmod.loadLib("url",
             "lib/url.js");
+    sysmod.loadLib("uuid",
+            "lib/uuid.js");
 
     BasicEnvironment env = new BasicEnvironment(sysmod);
     env.setEnvObject(Console.class);
