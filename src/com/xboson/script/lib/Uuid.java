@@ -16,12 +16,14 @@
 
 package com.xboson.script.lib;
 
+import com.xboson.script.JSObject;
+
 import java.nio.ByteBuffer;
 import java.util.Base64;
 import java.util.UUID;
 
 
-public class Uuid {
+public class Uuid extends JSObject {
 
   public static final long HALF = (long)(Long.MAX_VALUE / 2);
   public static final long v1 = 1l << 12;

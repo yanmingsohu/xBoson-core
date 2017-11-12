@@ -61,6 +61,19 @@ public abstract class JSObject implements IJSObject {
 	}
 
 
+  /**
+   * 返回本类的方法列表, 给 js 调用
+   */
+	public String[] getFunctionNames() {
+	  Method[] m = getClass().getDeclaredMethods();
+	  String[] names = new String[m.length];
+	  for (int i=0; i<m.length; ++i) {
+	    names[i] = m[i].getName();
+    }
+	  return names;
+  }
+
+
 ///////////////////////////////////////////////////////////////////////////////
 ////-- 静态 函数/属性
 ////-- 这些算法涉及到 jdk.nashorn 的内部实现

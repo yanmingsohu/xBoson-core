@@ -41,6 +41,8 @@ public class EnvironmentFactory {
     sysmod.regClass("sys/uuid",
             Uuid.class);
 
+    sysmod.loadLib("sys/util",
+            "lib/sysutil.js");
     sysmod.loadLib("sys/json",
             "lib/JSON.js");
     sysmod.loadLib("util",
