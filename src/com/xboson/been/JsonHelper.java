@@ -1,0 +1,112 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2017 本文件属于 xBoson 项目, 该项目由 J.yanming 维护,
+// 本文件和项目的全部权利由 [荆彦铭] 和 [王圣波] 个人所有, 如有对本文件或项目的任何修改,
+// 必须通知权利人; 该项目非开源项目, 任何将本文件和项目未经权利人同意而发行给第三方
+// 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
+// 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
+//
+// 文件创建日期: 17-11-13 上午9:51
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/JsonHelper.java
+// 授权说明版本: 1.1
+//
+// [ J.yanming - Q.412475540 ]
+//
+////////////////////////////////////////////////////////////////////////////////
+
+package com.xboson.been;
+
+import com.xboson.test.Test;
+import com.xboson.util.Tool;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+
+/**
+ * 帮助对象 json 化,
+ * 该实现尽可能不增加子类的内存负担
+ */
+public abstract class JsonHelper implements IBean, IJson {
+
+  public final static int F_MOD =
+          Modifier.STATIC | Modifier.FINAL | Modifier.NATIVE;
+
+  /**
+   * 别名: moshi 使用这样的命名
+   * 该方法不需要重写, 只要重写 toJSON 即可.
+   */
+  public final String toJson() {
+    return toJSON();
+  }
+
+
+  /**
+   * 可以正确处理深层对象
+   */
+  @Override
+  public String toJSON() {
+    return Tool.getAdapter((Class) this.getClass()).toJson(this);
+  }
+
+
+  /**
+   * 如果属性是一个复杂对象, 该对象无法正确还原, 只能以字符串的形式存储;
+   * 子类通常重写该方法, 并首先调用该默认方法, 再提取属性的字符串来还原对象.
+   */
+  @Override
+  public void fromJSON(Object o) {
+    try {
+      if (o instanceof String) {
+        fromJSON((String) o);
+      } else if (o instanceof Map) {
+        fromJSON((Map) o);
+      } else {
+        throw new RuntimeException("unknow type " + o.getClass());
+      }
+    } catch(RuntimeException e) {
+      throw e;
+    } catch(Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+
+  private void fromJSON(String str) throws Exception {
+    Object other = Tool.getAdapter((Class) this.getClass()).fromJson(str);
+    Field[] fs = this.getClass().getDeclaredFields();
+
+    for (int i=0; i<fs.length; ++i) {
+      Field f = fs[i];
+
+      if ((f.getModifiers() & F_MOD) != 0)
+        continue;
+
+      f.setAccessible(true);
+      Object v = f.get(other);
+      f.set(this, v);
+    }
+  }
+
+
+  private void fromJSON(Map map) throws Exception {
+    Set names = map.keySet();
+    Iterator it = names.iterator();
+    Class c = this.getClass();
+
+    while (it.hasNext()) {
+      String name = (String) it.next();
+      Test.msg("ccccccccccccc", c, name);
+      Field f = c.getField(name);
+
+      if ((f.getModifiers() & F_MOD) != 0)
+        continue;
+
+      f.setAccessible(true);
+      f.set(this, map.get(name));
+    }
+  }
+}
