@@ -44,7 +44,8 @@ public class Tool {
 
 
 	/**
-	 * 保证性能和线程安全; 返回的适配器可以缓存, 性能更好;
+	 * 保证性能和线程安全;
+	 * moshi 内部已经对适配器做了缓存.
 	 */
 	public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
 		return moshi.adapter(c);

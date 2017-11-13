@@ -16,10 +16,9 @@
 
 package com.xboson.been;
 
-import java.util.Map;
 
 /**
- * 可以转换为 json 字符串, 从字符串恢复为对象
+ * 可以转换为 json 字符串
  */
 public interface IJson extends IBean {
 
@@ -28,10 +27,5 @@ public interface IJson extends IBean {
    */
   String toJSON();
 
-
-  /**
-   * 从 json 字符串恢复数据
-   */
-  void fromJSON(Object obj);
 
 }

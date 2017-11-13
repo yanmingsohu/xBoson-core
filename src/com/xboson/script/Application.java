@@ -17,12 +17,14 @@
 package com.xboson.script;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.script.ScriptException;
 
 import com.xboson.been.Module;
+import com.xboson.fs.IVirtualFileSystem;
 
 /**
  * 应用存储在二级目录中, 第一级是模块名, 第二级是接口名
@@ -67,12 +69,12 @@ public class Application implements ICodeRunner {
 			return ws.getModule();
 		}
 		
-		String code = vfs.readFile(path);
-		if (code == null) {
+		ByteBuffer buf = vfs.readFile(path);
+		if (buf == null) {
 			throw new IOException("get null code " + path);
 		}
 
-		ws = new WarpdScript(sandbox, code, path);
+		ws = new WarpdScript(sandbox, buf, path);
 		ws.setCodeRunner(this);
 		modcache.put(path, ws);
 		

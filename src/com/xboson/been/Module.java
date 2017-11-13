@@ -18,7 +18,7 @@ package com.xboson.been;
 
 import com.xboson.util.Tool;
 
-public class Module {
+public class Module implements IBean {
 	public String 	id;
 	public String 	filename;
 	public Object   children;

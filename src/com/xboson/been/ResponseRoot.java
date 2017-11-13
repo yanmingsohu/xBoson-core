@@ -20,9 +20,10 @@ import com.xboson.util.Tool;
 
 
 /**
- * 平台应答数据根节点, 数据将被转换为 json
+ * 平台应答数据根节点, 数据将被转换为 json,
+ * 并不需要考虑在从 json 字符串返回对象.
  */
-public class ResponseRoot {
+public class ResponseRoot extends JsonHelper {
 
 	/** 为兼容 v1 平台而设置 */
 	@SuppressWarnings("unused")
@@ -109,4 +110,18 @@ public class ResponseRoot {
 	public void setDatatype(String datatype) {
 		this.datatype = datatype;
 	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof ResponseRoot) {
+			ResponseRoot r = (ResponseRoot) o;
+			return code == r.code
+							&& msg != null && msg.equals(r.msg)
+							&& datatype != null && datatype.equals(r.datatype)
+							&& data != null && data.equals(r.data);
+		}
+		return false;
+	}
+
 }

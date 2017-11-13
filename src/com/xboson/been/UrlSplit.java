@@ -24,7 +24,9 @@ import javax.servlet.http.HttpServletRequest;
  * 	 name = /a
  *   last = /b/c
  */
-public class UrlSplit {
+public class UrlSplit implements IBean {
+
+  private static final String DEFAULT_ERR = "cannot split null string url.";
 	
 	/** url 中的首个路径 */
 	private String name;
@@ -35,39 +37,62 @@ public class UrlSplit {
 	public UrlSplit(HttpServletRequest req) {
 		String cp = req.getContextPath();
 		String rq = req.getRequestURI();
-		split( rq.substring(cp.length(), rq.length()) );
+		split( rq.substring(cp.length(), rq.length()), DEFAULT_ERR );
 	}
 	
 	
+	public UrlSplit(String s, String errmsg) {
+		split(s, errmsg);
+	}
+
+
 	public UrlSplit(String s) {
-		split(s);
-	}
-	
-	
-	public void split(String s) {
+	  this(s, DEFAULT_ERR);
+  }
+
+
+	/**
+	 * 这会改变自身的数据, 并返回 name
+	 */
+	public String split(String s, String errMessage) {
 		if (s == null) 
-			throw new RuntimeException("cannot split null string url.");
-		
-		int a = 0;
-		if (s.charAt(0) == '/') a = 1;
-		a = s.indexOf('/', a);
-		
-		if (a >= 0) {
-			name = s.substring(0, a);
-			last = s.substring(a, s.length());
-		} else {
-			name = s;
-			last = null;
-		}
+			throw new RuntimeException(errMessage);
+
+		try {
+      int a = 0;
+      if (s.charAt(0) == '/') a = 1;
+      a = s.indexOf('/', a);
+
+      if (a >= 0) {
+        name = s.substring(0, a);
+        last = s.substring(a, s.length());
+      } else {
+        name = s;
+        last = null;
+      }
+      return name;
+    } catch(Exception e) {
+		  throw new RuntimeException(errMessage, e);
+    }
 	}
+
+
+	public String next(String errMessage) {
+	  return split(last, errMessage);
+  }
 	
 	
 	/**
 	 * 将 last 再次拆分
 	 */
 	public UrlSplit sub() {
-		return new UrlSplit(last);
+		return new UrlSplit(last, DEFAULT_ERR);
 	}
+
+
+	public UrlSplit sub(String errmsg) {
+	  return new UrlSplit(last, errmsg);
+  }
 	
 	
 	public String toString() {

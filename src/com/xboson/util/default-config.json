@@ -9,5 +9,6 @@
 		"maxIdle": 10,
 		"minIdle": 0
 	},
-	"redis_host": "localhost"
+	"redis_host": "localhost",
+	"debugService": false
 }

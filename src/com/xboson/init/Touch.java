@@ -17,6 +17,7 @@
 package com.xboson.init;
 
 import com.xboson.event.Names;
+import com.xboson.fs.FileSystemFactory;
 import com.xboson.j2ee.container.UrlMapping;
 import com.xboson.log.LogFactory;
 import com.xboson.script.SandboxFactory;
@@ -43,6 +44,7 @@ public final class Touch {
     UrlMapping.me();
     RedisMesmerizer.me();
     SandboxFactory.version();
+    FileSystemFactory.me();
   }
 
 

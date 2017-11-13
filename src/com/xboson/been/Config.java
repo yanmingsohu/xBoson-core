@@ -22,7 +22,7 @@ import redis.clients.jedis.JedisPoolConfig;
 /**
  * public 属性能死么 ?! getter/setter 烦不烦.
  */
-public class Config {
+public class Config implements IBean {
 
 	public static final String CONFIG_DIR 	= "/xBoson-config";
 	public static final String CONFIG_FILE 	= "/config.json";
@@ -37,6 +37,7 @@ public class Config {
 	public String sessionPassword		= null;
 	public int    sessionTimeout		= 0;
 	public String logLevel					= null;
+	public boolean debugService     = false;
 
 	public JedisPoolConfig jedispool;
 	public String redis_host;

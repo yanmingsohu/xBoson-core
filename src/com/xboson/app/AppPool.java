@@ -6,32 +6,43 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月5日 下午2:32:09
-// 原始文件路径: xBoson/src/com/xboson/script/IVirtualFileSystem.java
+// 文件创建日期: 17-11-13 上午11:50
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/AppPool.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.script;
+package com.xboson.app;
 
-import java.io.IOException;
+import javax.servlet.ServletException;
 
-/**
- * 每个机构的每个应用都有一个虚拟文件系统 
- */
-public interface IVirtualFileSystem {
+public class AppPool {
 
-	/**
-	 * 读取路径上的文件, 返回文件内容, 如果文件不存在应该抛出异常
-	 */
-	public String readFile(String path) throws IOException;
-	
-	
-	/**
-	 * 返回文件系统的id, 不同机构的id不同
-	 */
-	public String getID();
-	
+
+  /**
+   * 从应用池获取应用实例, 不检查权限
+   *
+   * @param org 机构 id
+   * @param app 应用 id
+   * @return 返回启动的应用实例, 但不负责启动
+   */
+  public OrgApp getAppFromOrg(String org, String app) {
+    return null;
+  }
+
+
+  /**
+   * 将 app 在 org 机构上启动
+   *
+   * @param org
+   * @param app
+   * @throws ServletException 出现任何错误都会抛出异常, 否则应用成功启动
+   */
+  public void bootApp(String org, String app) throws ServletException {
+    throw new UnsupportedOperationException("bootapp.....");
+  }
+
+
 }

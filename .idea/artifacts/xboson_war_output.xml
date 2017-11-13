@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="xboson war output">
+    <output-path>$PROJECT_DIR$/out/artifacts/xboson_war_output</output-path>
+    <root id="archive" name="xboson.war">
+      <element id="dir-copy" path="$PROJECT_DIR$/WebRoot" />
+    </root>
+  </artifact>
+</component>

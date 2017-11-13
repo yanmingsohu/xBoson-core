@@ -16,14 +16,10 @@
 
 package com.xboson.been;
 
-import com.xboson.test.Test;
 import com.xboson.util.Tool;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -54,59 +50,25 @@ public abstract class JsonHelper implements IBean, IJson {
 
 
   /**
-   * 如果属性是一个复杂对象, 该对象无法正确还原, 只能以字符串的形式存储;
-   * 子类通常重写该方法, 并首先调用该默认方法, 再提取属性的字符串来还原对象.
+   * 输出所有属性, 方便调试
    */
-  @Override
-  public void fromJSON(Object o) {
-    try {
-      if (o instanceof String) {
-        fromJSON((String) o);
-      } else if (o instanceof Map) {
-        fromJSON((Map) o);
-      } else {
-        throw new RuntimeException("unknow type " + o.getClass());
-      }
-    } catch(RuntimeException e) {
-      throw e;
-    } catch(Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-
-  private void fromJSON(String str) throws Exception {
-    Object other = Tool.getAdapter((Class) this.getClass()).fromJson(str);
+  public String toString() {
+    StringBuilder out = new StringBuilder();
     Field[] fs = this.getClass().getDeclaredFields();
+    out.append(this.getClass());
 
     for (int i=0; i<fs.length; ++i) {
       Field f = fs[i];
-
-      if ((f.getModifiers() & F_MOD) != 0)
-        continue;
-
       f.setAccessible(true);
-      Object v = f.get(other);
-      f.set(this, v);
+      out.append("\n\t");
+      out.append(f.getName());
+      out.append(" - ");
+      try {
+        out.append(f.get(this));
+      } catch (IllegalAccessException e) {
+        out.append(e.getMessage());
+      }
     }
-  }
-
-
-  private void fromJSON(Map map) throws Exception {
-    Set names = map.keySet();
-    Iterator it = names.iterator();
-    Class c = this.getClass();
-
-    while (it.hasNext()) {
-      String name = (String) it.next();
-      Test.msg("ccccccccccccc", c, name);
-      Field f = c.getField(name);
-
-      if ((f.getModifiers() & F_MOD) != 0)
-        continue;
-
-      f.setAccessible(true);
-      f.set(this, map.get(name));
-    }
+    return out.toString();
   }
 }

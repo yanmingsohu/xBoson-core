@@ -6,47 +6,46 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月2日 下午3:22:04
-// 原始文件路径: xBoson/src/com/xboson/j2ee/container/XService.java
+// 文件创建日期: 2017年11月5日 下午2:32:09
+// 原始文件路径: xBoson/src/com/xboson/script/IVirtualFileSystem.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.container;
+package com.xboson.fs;
 
 import java.io.IOException;
-
-import javax.servlet.ServletException;
-
-import com.xboson.been.CallData;
-import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
-
+import java.nio.ByteBuffer;
 
 /**
- * 可以多线程重入
+ * 每个机构的每个应用都有一个虚拟文件系统,
+ * 这个接口对文件整个进行操作, 不适合大文件, 但适合脚本应用文件.
  */
-public abstract class XService {
-	
-	/**
-	 * 输出日志
-	 */
-	protected final Log log = LogFactory.create(XService.this.getClass());
-	
-	/**
-	 * 子类实现该方法, 当服务被调用, 进入该方法中
-	 * @return 如果没有错误返回 0, 否则返回错误码
-	 */
-	public abstract int service(CallData data) throws ServletException, IOException;
-	
-	
-	/**
-	 * 子类重写该方法, 当服务器终止时调用
-	 */
-	public void destroy() {
-		log.info("default destory().");
-	}
+public interface IVirtualFileSystem {
 
+	/**
+	 * 读取路径上的文件, 返回文件内容, 如果文件不存在应该抛出异常
+	 */
+	public ByteBuffer readFile(String path) throws IOException;
+
+
+  /**
+   * 读取文件属性
+   */
+	public FileAttr readAttribute(String path) throws IOException;
+	
+	
+	/**
+	 * 返回文件系统的id, 不同机构的id不同
+	 */
+	public String getID();
+
+
+  /**
+   * 返回文件系统类型
+   */
+	public String getType();
+	
 }

@@ -23,6 +23,8 @@ import com.xboson.been.Module;
 
 import jdk.nashorn.api.scripting.AbstractJSObject;
 
+import java.nio.ByteBuffer;
+
 
 public class WarpdScript {
 
@@ -42,6 +44,11 @@ public class WarpdScript {
 		this.module   = new Module();
 		this.filename = filename;
 		warp();
+	}
+
+
+	WarpdScript(Sandbox box, ByteBuffer code, String filename) throws ScriptException {
+		this(box, new String(code.array()), filename);
 	}
 	
 	

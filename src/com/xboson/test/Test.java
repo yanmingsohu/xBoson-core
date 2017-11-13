@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.*;
 
+import com.xboson.been.JsonHelper;
 import com.xboson.init.Touch;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.ISleepwalker;
@@ -258,17 +259,18 @@ public class Test {
   /**
    * 专门用来测试 JSON 和序列化的数据对象
    */
-  static public abstract class TData implements ISleepwalker, Serializable {
-    public int a = 1;
-    public int b = 2;
-    public long c = 3;
-    public String d = "fdsa";
-    public String id = null;
+  static public abstract class TData extends JsonHelper
+					implements ISleepwalker, Serializable {
+    public int a = 0;
+    public int b = 0;
+    public long c = 0;
+    public String d = "not_init";
+    public String id = "not_init_id";
 
     public void change() {
-      a = (int) Math.random() * 100;
-      b = (int) Math.random() * 1000 + 100;
-      c = (int) Math.random() * 10000 + 1000;
+      a = (int) (Math.random() * 100);
+      b = (int) (Math.random() * 1000 + 100);
+      c = (int) (Math.random() * 10000 + 1000);
       d = Test.randomString(100);
     }
 
@@ -327,5 +329,27 @@ public class Test {
       System.out.println("Running Thread: " + activeCount);
       System.out.println(strbuf);
     }
+  }
+
+
+  /**
+   * 抛出异常才认为是正确的行为
+   */
+  static public abstract class Throws {
+    /**
+     * 正确运行时抛出 _throws 类型的异常
+     */
+    public Throws(Class<? extends Throwable>  _throws) {
+      try {
+        run();
+      } catch(Throwable t) {
+        if (_throws.isAssignableFrom(t.getClass())) {
+          msg("OK, cache", t);
+          return;
+        }
+      }
+      throw new RuntimeException("cannot throw Throwable: " + _throws);
+    }
+    public abstract void run() throws Throwable;
   }
 }

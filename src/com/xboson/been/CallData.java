@@ -25,7 +25,7 @@ import com.xboson.util.JsonResponse;
 /**
  * 全部属性公共不可变方法
  */
-public class CallData {
+public class CallData implements IBean {
 
 	public final HttpServletRequest req;
 	public final HttpServletResponse resp; 

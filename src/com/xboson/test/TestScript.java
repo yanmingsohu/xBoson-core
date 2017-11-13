@@ -16,21 +16,20 @@
 
 package com.xboson.test;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Iterator;
-import java.util.Map;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
 import com.xboson.been.Module;
-import com.xboson.log.LogFactory;
+import com.xboson.fs.FileSystemFactory;
+import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.LocalFileSystem;
 import com.xboson.script.*;
-import com.xboson.util.StringBufferOutputStream;
 
 /**
  * https://wiki.openjdk.java.net/display/Nashorn/Nashorn+extensions
@@ -59,57 +58,21 @@ public class TestScript extends Test {
 	public void fullTest() throws Exception {
     IEnvironment env = EnvironmentFactory.createBasic();
 
-		FixFile vfs = new FixFile();
+    String fsid = "test";
+    URL basepath = this.getClass().getResource("./js/");
+    msg("Base path:", basepath);
+
+		FileSystemFactory fsf = FileSystemFactory.me();
+		fsf.addLocalFileSystem(basepath, fsid);
+		IVirtualFileSystem vfs = fsf.open(fsid);
+
+		Object attr = vfs.readAttribute("/index.js");
+		msg("File Attribute:", attr);
 		
 		Application app = new Application(env, vfs);
 		app.run("/index.js");
 	}
-	
-	
-	/**
-	 * 将测试目录文件映射到虚拟目录
-	 */
-	static public class FixFile implements IVirtualFileSystem {
-		/** <virtual_filename, code> */
-		Map<String, String> map = new HashMap<String, String>();
-		public FixFile() {}
-		
-		void putcode(String name, String code) {
-			map.put(name, code);
-		}
-		
-		@SuppressWarnings("resource")
-		void putfile(String virautlname, String codefile) throws IOException {
-			InputStream is = getClass().getResourceAsStream(codefile);
-			StringBufferOutputStream sbos = new StringBufferOutputStream();
-			sbos.write(is);
-			map.put(virautlname, sbos.toString());
-		}
 
-		@Override
-		public String readFile(String path) throws IOException {
-			String code = map.get(path);
-			if (code == null) {
-        InputStream is = getClass().getResourceAsStream("./js/" + path);
-        if (is != null) {
-          StringBufferOutputStream sbos = new StringBufferOutputStream();
-          sbos.write(is);
-          code = sbos.toString();
-          map.put(path, code);
-        }
-      }
-			if (code == null) {
-        throw new FileNotFoundException("not found " + path);
-      }
-      return code;
-		}
-
-		@Override
-		public String getID() {
-			return "FIX";
-		}
-	}
-	
 
 	/** 安全检查, 已经移动到 js/check-safe.js */
 	public void hack() throws Exception {

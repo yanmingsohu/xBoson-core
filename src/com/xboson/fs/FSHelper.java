@@ -6,23 +6,26 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-11 上午11:51
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/sleep/IBinData.java
+// 文件创建日期: 17-11-13 下午3:11
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/FSHelper.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.sleep;
+package com.xboson.fs;
 
-import com.xboson.been.IBean;
 
-import java.io.Serializable;
+public abstract class FSHelper implements IVirtualFileSystem {
 
-/**
- * 需要休眠的数据实现该接口, 休眠数据为二进制且只能由 java 恢复.
- * 数据对象必须显示的继承 Serializable 才能工作
- */
-public interface IBinData extends Serializable, ISleepwalker, IBean {
+  public String getType() {
+    return this.getClass().getName();
+  }
+
+
+  public String getID() {
+    return getType();
+  }
+
 }

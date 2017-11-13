@@ -20,17 +20,46 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import com.xboson.app.AppPool;
+import com.xboson.app.OrgApp;
 import com.xboson.been.CallData;
+import com.xboson.been.UrlSplit;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
+import com.xboson.test.Test;
 
 
 @XPath("/app")
 public class App extends XService {
 
+  private static final String PATH_FOTMAT
+          = "Path format: /app/{app id}/{org id}/{module id}/{api name}";
+
+	private AppPool app_pool;
+
+
+	public App() {
+	  app_pool = new AppPool();
+  }
+
+
 	@Override
 	public int service(CallData data) throws ServletException, IOException {
-		data.json.response("应用待实现..");
+    UrlSplit sp = data.url.sub(PATH_FOTMAT);
+    String appid = sp.getName();
+	  String orgid = sp.next("org id fail, " + PATH_FOTMAT);
+    String modid = sp.next("mod id fail, " + PATH_FOTMAT);
+    String api = sp.next("api name fail, " + PATH_FOTMAT);
+
+    log.debug("appid:", appid, "orgid:", orgid, "modid:", modid, api);
+
+	  OrgApp app = app_pool.getAppFromOrg(orgid, appid);
+	  if (app == null) {
+      app_pool.bootApp(orgid, appid);
+      app = app_pool.getAppFromOrg(orgid, appid);
+    }
+    app.call(modid, api);
+
 		return 0;
 	}
 

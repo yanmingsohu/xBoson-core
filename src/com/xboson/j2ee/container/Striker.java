@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.JsonResponse;
+import com.xboson.util.SysConfig;
 
 /**
  * 抓住所有异常, 编码转换, 等初始化操作
@@ -34,10 +35,19 @@ import com.xboson.util.JsonResponse;
 public class Striker extends HttpFilter {
 
 	private static final long serialVersionUID = 8889985807692963369L;
-	private final Log log = LogFactory.create();
+	private Log log;
+	private boolean debug;
 
-	
-	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
+
+	@Override
+	public void init() throws ServletException {
+		super.init();
+		log = LogFactory.create();
+		debug = SysConfig.me().readConfig().debugService;
+	}
+
+
+	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
 		response.setCharacterEncoding("utf8");
 		request.setCharacterEncoding("utf8");
@@ -49,7 +59,11 @@ public class Striker extends HttpFilter {
 		} catch(Throwable e) {
 			log.error(e.getMessage());
 			response.setStatus(500);
-			jr.getRoot().setError(e);
+			if (debug) {
+        jr.getRoot().setError(e);
+      } else {
+			  jr.getRoot().setData(e.getLocalizedMessage());
+      }
 			jr.response();
 		}
 	}

@@ -28,7 +28,7 @@ import com.xboson.been.ResponseRoot;
 
 
 /**
- * 专门返回 json 数据
+ * 专门返回 json 数据, 并不需要考虑在从 json 字符串返回对象.
  */
 public class JsonResponse {
 	
@@ -120,6 +120,11 @@ public class JsonResponse {
 	 * 仅用于调试, 不要在生产环境下使用.
 	 */
 	public String toString() {
-		return Tool.getAdapter(ResponseRoot.class).toJson(ret_root);
+		return ret_root.toString();
 	}
+
+
+	public String toJSON() {
+	  return ret_root.toJSON();
+  }
 }

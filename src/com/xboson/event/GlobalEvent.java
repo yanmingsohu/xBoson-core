@@ -131,6 +131,10 @@ public class GlobalEvent {
   public synchronized boolean emit(
             String name, Object data, int type, String info) {
 
+    if (contexts == null) {
+      throw new IllegalAccessError("The system is offline");
+    }
+
     GlobalEventContext context = contexts.get(name);
     if (context == null || context.getListeners().isEmpty())
       return false;
