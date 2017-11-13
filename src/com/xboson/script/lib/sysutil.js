@@ -2,6 +2,7 @@ module.exports = {
   warpObject   : warpObject,
   warpFunction : warpFunction,
 };
+Object.freeze(module.exports);
 
 
 //

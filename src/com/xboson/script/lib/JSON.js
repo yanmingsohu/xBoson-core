@@ -18,6 +18,7 @@
 module.exports = {
   warp : warp,
 };
+Object.freeze(module.exports);
 
 //
 // 包装原始 JSON 对象, 实现 java 对象的 json 化.

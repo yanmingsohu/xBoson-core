@@ -749,3 +749,5 @@ exports._errnoException = function(err, syscall, original) {
   e.syscall = syscall;
   return e;
 };
+
+Object.freeze(exports);

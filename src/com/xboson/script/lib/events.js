@@ -481,3 +481,5 @@ function arrayClone(arr, i) {
     copy[i] = arr[i];
   return copy;
 }
+
+Object.freeze(module.exports);

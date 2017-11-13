@@ -18,3 +18,4 @@ module.exports = {
   Buffer : require("sys/buffer"),
 };
 
+Object.freeze(module.exports);
