@@ -16,10 +16,13 @@
 
 package com.xboson.been;
 
+import java.sql.SQLException;
+
+
 /**
  * 异常基础类, 不需要特别捕获
  */
-public class XBosonException extends RuntimeException implements IBean {
+public class XBosonException extends RuntimeException implements IBean, IXBosonException {
 
   public XBosonException() {
     super();
@@ -41,4 +44,70 @@ public class XBosonException extends RuntimeException implements IBean {
     super(s, throwable, b, b1);
   }
 
+
+  /**
+   * 参数为空则抛出异常
+   */
+  static public class NullParamException extends XBosonException {
+    /**
+     * @param paramName 参数的完成名字, 如: "String paramName"
+     */
+    public NullParamException(String paramName) {
+      super("The Function parameter \"" + paramName + "\" can not be NULL");
+    }
+  }
+
+
+  /**
+   * 方法暂时没有实现, 抛出这个异常
+   */
+  static public class NotImplements extends XBosonException {
+    public NotImplements() {
+      super("The Function/Method is not implemented yet");
+    }
+    /**
+     * @param fname 函数的完整名字
+     */
+    public NotImplements(String fname) {
+      super("The " + fname + "() is not implemented yet");
+    }
+  }
+
+
+  /**
+   * sql 执行错误抛出的异常
+   */
+  static public class XSqlException extends XBosonException {
+    public XSqlException(SQLException sqle) {
+      super(sqle);
+    }
+    /**
+     * @param whatDoing 正在做什么导致的错误
+     */
+    public XSqlException(String whatDoing, SQLException sqle) {
+      super(whatDoing, sqle);
+    }
+    public XSqlException(String whatDoing, Throwable sqle) {
+      super(whatDoing, sqle);
+    }
+  }
+
+
+  /**
+   * 当寻找的资源/对象不存在时抛出的异常
+   */
+  static public class NotExist extends XBosonException {
+    /**
+     * @param whatThing 什么东西找不到
+     */
+    public NotExist(String whatThing, SQLException sqle) {
+      super(whatThing, sqle);
+    }
+    /**
+     * @param whatThing 什么东西找不到
+     */
+    public NotExist(String whatThing) {
+      super(whatThing);
+    }
+  }
 }

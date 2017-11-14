@@ -26,6 +26,9 @@ import java.util.*;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
+import com.xboson.been.XBosonException;
+import com.xboson.test.Test;
+
 
 public class Tool {
 	
@@ -283,6 +286,7 @@ public class Tool {
 
 	/**
 	 * 获取包下的所有类类型, 排除子包, 排除内部类,
+	 * java bug: 如果没有访问过这个包, 无法在 findPackage 中查找
    *
    * @deprecated 不推荐在正式代码中使用, 可用于测试
 	 * @param packageName 包名
@@ -292,7 +296,7 @@ public class Tool {
           throws IOException, ClassNotFoundException {
     Package pk = Package.getPackage(packageName);
     if (pk == null)
-      throw new RuntimeException("cannot find package: " + packageName);
+      throw new XBosonException.NotExist("cannot find package: " + packageName);
 
     String packagePath = packageName.replaceAll("\\.", "/");
     ClassLoader loader = Thread.currentThread().getContextClassLoader();

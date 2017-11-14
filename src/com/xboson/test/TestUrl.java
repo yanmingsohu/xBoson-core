@@ -20,16 +20,73 @@ import com.xboson.been.UrlSplit;
 
 public class TestUrl extends Test {
 
+  final String a = "/xboson";
+  final String b = "/app/{app id}/{org id}/{module id}/{api name}";
+
+
 	public void test() throws Exception {
-		String a = "/xboson";
-		String b = "/api/a/b/c";
-		UrlSplit url = new UrlSplit(a + b);
-		msg(url);
-		
-		if (!url.getName().equals(a))
-			throw new Exception("name bad");
-		
-		if (!url.getLast().equals(b))
-			throw new Exception("last bad");
+    test1();
+    test2();
+	}
+
+
+	public void test2() {
+	  sub("Test url without slash");
+
+    UrlSplit url = new UrlSplit("/a/b/c");
+    msg("All:", url);
+    url.withoutSlash(true);
+    msg("without slash:", url);
+
+    eq(url.getName(), "a", "bad");
+    eq(url.next(), "b", "bad");
+    eq(url.next(), "c", "bad");
+
+    new Throws(UrlSplit.URLParseExcption.class) {
+      @Override
+      public void run() throws Throwable {
+        url.next();
+      }
+    };
+  }
+
+
+	public void test1() {
+	  sub("Test url normal");
+
+    UrlSplit url = new UrlSplit(a + b);
+    msg("All:", url);
+
+    eq(url.getName(), a, "name bad");
+    eq(url.getLast(), b, "last bad");
+
+    String n = url.next();
+    eq(n, "/app", "next fail");
+    msg("next:", n);
+
+    n = url.next();
+    msg("next:", n);
+
+    n = url.next();
+    eq(n, "/{org id}", "next fail");
+    msg("next:", n);
+
+    n = url.next();
+    msg("next:", n);
+
+    n = url.next();
+    msg("next:", n);
+
+    new Throws(UrlSplit.URLParseExcption.class) {
+      @Override
+      public void run() throws Throwable {
+        url.next();
+      }
+    };
+  }
+
+
+	public static void main(String[] a) {
+		new TestUrl();
 	}
 }

@@ -30,8 +30,9 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
 public class SysConfig {
-	
-	private static final String DEF_CONF_FILE = "./default-config.json";
+
+	public static final String CONF_FILE_NAME = "default-config.json";
+	private static final String DEF_CONF_FILE = "./"+ CONF_FILE_NAME;
 	private static SysConfig instance;
 
 	private Log log = LogFactory.create("SysConfig");
@@ -106,8 +107,8 @@ public class SysConfig {
 				log.info("Read Config from", config_file);
 
 			} catch(Exception e) {
-				System.out.println(str);
-				System.out.println("Read User Config:" + e);
+        System.err.println("Config file context: " + str);
+				System.err.println("Read User Config:" + e);
 			}
 		}
 		return config;
@@ -129,9 +130,9 @@ public class SysConfig {
 			setConfigUseJson(str);
 			log.info("Read Config from DEFAULT file");
 
-		} catch(IOException e) {
-			System.out.println(str);
-			System.out.println("Read System Inner Config Fail: " + e);
+		} catch(Exception e) {
+			System.err.println("Config file context: " + str);
+			System.err.println("Read System Inner Config Fail: " + e);
 			throw e;
 		}
 	}

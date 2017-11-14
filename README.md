@@ -3,7 +3,7 @@
 Java JDK 8, Tomcat 9
 
 
-# 依赖
+# JAR 依赖
 
 * (解析/封装 JSON - moshi-1.5.0.jar)[https://github.com/square/moshi]  
 		-- (moshi-kotlin-1.5.jar)  
@@ -13,7 +13,15 @@ Java JDK 8, Tomcat 9
 
 * (Redis 客户端 - jedis-2.9.0.jar)[https://github.com/xetorthio/jedis]  
     -- (commons-pool2-2.4.3.jar)  
-	
+    
+* (数据库驱动)
+    -- (mysql-connector-java-5.1.44-bin.jar)[https://dev.mysql.com/downloads/connector/j/]
+    -- (db2jcc4.jar)[http://www-01.ibm.com/support/docview.wss?uid=swg21363866]
+    -- (mssql-jdbc-6.2.2.jre8.jar)[https://docs.microsoft.com/en-us/sql/connect/sql-connection-libraries]
+    -- (ojdbc7.jar)[http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html]
+    -- (mpp-connector-java-8.3.81.51-build-53.2-bin.jar)[华三数据库]
+    -- (inspur11-jdbc.jar)[浪潮数据库]
+    -- (h2-1.4.196.jar)[http://h2database.com/html/main.html]
 		
 # URL 映射约定
 

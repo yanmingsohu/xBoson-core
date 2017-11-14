@@ -25,6 +25,8 @@ import com.xboson.util.Tool;
  */
 public class ResponseRoot extends JsonHelper {
 
+  private static NameCache<Class> namecache = new NameCache<>();
+
 	/** 为兼容 v1 平台而设置 */
 	@SuppressWarnings("unused")
 	private int ret;
@@ -83,7 +85,7 @@ public class ResponseRoot extends JsonHelper {
 	public void setData(Object data, boolean usedataWithType) {
 		this.data = data;
 		if (usedataWithType) {
-			setDatatype(data.getClass().getName());
+			setDatatype(data.getClass());
 		}
 	}
 	
@@ -110,6 +112,18 @@ public class ResponseRoot extends JsonHelper {
 	public void setDatatype(String datatype) {
 		this.datatype = datatype;
 	}
+
+
+	public void setDatatype(Class cl) {
+	  if (cl == null)
+	    throw new XBosonException.NullParamException("Class cl");
+
+    datatype = namecache.get(cl);
+    if (datatype == null) {
+      datatype = NameCache.formatClassName(cl);
+      namecache.put(cl, datatype);
+    }
+  }
 
 
 	@Override

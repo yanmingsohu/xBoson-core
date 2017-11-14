@@ -16,6 +16,8 @@
 
 package com.xboson.init;
 
+import com.xboson.auth.AuthFactory;
+import com.xboson.db.DbmsFactory;
 import com.xboson.event.Names;
 import com.xboson.fs.FileSystemFactory;
 import com.xboson.j2ee.container.UrlMapping;
@@ -45,6 +47,8 @@ public final class Touch {
     RedisMesmerizer.me();
     SandboxFactory.version();
     FileSystemFactory.me();
+    AuthFactory.me();
+    DbmsFactory.me();
   }
 
 

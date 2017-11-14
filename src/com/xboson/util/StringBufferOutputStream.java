@@ -19,10 +19,12 @@ package com.xboson.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * 字符串缓冲区输入流, 用流的方式写入字符串, toString() 获取结果
+ * 字符串缓冲区输入流, 用流的方式写入字符串,
+ * toString()/toBuffer() 获取结果
  */
 public class StringBufferOutputStream extends OutputStream {
 	
@@ -49,5 +51,10 @@ public class StringBufferOutputStream extends OutputStream {
 	
 	public String toString() {
 		return new String(buf, 0, pos);
+	}
+
+
+	public ByteBuffer toBuffer() {
+		return ByteBuffer.wrap(buf, 0, pos);
 	}
 }

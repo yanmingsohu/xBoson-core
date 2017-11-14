@@ -17,6 +17,7 @@
 package com.xboson.been;
 
 
+import com.xboson.db.DBPoolConfig;
 import redis.clients.jedis.JedisPoolConfig;
 
 /**
@@ -27,6 +28,8 @@ public class Config implements IBean {
 	public static final String CONFIG_DIR 	= "/xBoson-config";
 	public static final String CONFIG_FILE 	= "/config.json";
 	public static final String LOG_DIR 			= "/logs";
+
+	public String configVersion     = "1.3";
 	
 	public String configFile				= null;
 	public String configPath				= null;
@@ -41,6 +44,7 @@ public class Config implements IBean {
 
 	public JedisPoolConfig jedispool;
 	public String redis_host;
+	public DBPoolConfig dbpool;
 	
 	
 	public Config() {

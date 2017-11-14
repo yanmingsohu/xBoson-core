@@ -33,8 +33,8 @@ import com.xboson.util.Tool;
  * 这里的方法都没有考虑性能, 不要再非测试环境中使用.
  */
 public class Test {
-	private static final String line =
-    ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
+	public static final String line =
+">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
 
 	private static int failcount = 0;
 	private static long time = 0;
@@ -153,6 +153,10 @@ public class Test {
 	}
 
 
+  /**
+   * 一个测试用例中的子项测试
+   * @param msg
+   */
 	public static void sub(Object ...msg) {
     System.out.println("\u001b[;35m  " + _string(msg) + "\u001b[m");
   }
@@ -202,9 +206,12 @@ public class Test {
 	  throw new AssertionError(msg + " not equals\n\tObject: '" + a +
             "'\n\tObject: '" + b + "'");
   }
-	
-	
-	public static void memuse() {
+
+
+  /**
+   * 显示内存状态
+   */
+  public static void memuse() {
 		int mb = 1024*1024;
 		Runtime runtime = Runtime.getRuntime();
 		msg("##### Heap utilization statistics [MB] #####");
@@ -214,16 +221,23 @@ public class Test {
 		msg("  Total Memory:" + runtime.totalMemory() / mb);
 		msg("  Max Memory:" + runtime.maxMemory() / mb);
 	}
-	
-	
+
+
+  /**
+   * 设定开始时间
+   */
 	public static long beginTime() {
 		return time = new Date().getTime();
 	}
-	
-	
-	public static void endTime(Object ...msg) {
+
+
+  /**
+   * 用设定的开始时间和调用此函数的结束时间, 计算使用时间
+   */
+	public static long endTime(Object ...msg) {
 		long u = (new Date().getTime() - time); 
 		sub(_string(msg), "Used Time", u, "ms");
+		return u;
 	}
 
 
@@ -236,7 +250,7 @@ public class Test {
 	 */
 	public static String randomString(int byteLength) {
 		byte[] buf = randomBytes(byteLength);
-		return Base64.getEncoder().encodeToString(buf);
+		return Base64.getEncoder().withoutPadding().encodeToString(buf);
 	}
 
 
@@ -256,9 +270,7 @@ public class Test {
   }
 
 
-  /**
-   * 专门用来测试 JSON 和序列化的数据对象
-   */
+
   static public abstract class TData extends JsonHelper
 					implements ISleepwalker, Serializable {
     public int a = 0;
@@ -289,6 +301,9 @@ public class Test {
   }
 
 
+  /**
+   * 专门用来测试 JSON 和序列化的数据对象
+   */
   static public class TestData extends TData {
     @Override
     public String getid() {

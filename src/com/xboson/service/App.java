@@ -45,11 +45,14 @@ public class App extends XService {
 
 	@Override
 	public int service(CallData data) throws ServletException, IOException {
-    UrlSplit sp = data.url.sub(PATH_FOTMAT);
+    UrlSplit sp = data.url.clone();
+    sp.setErrorMessage(PATH_FOTMAT);
+    sp.withoutSlash(true);
+
     String appid = sp.getName();
-	  String orgid = sp.next("org id fail, " + PATH_FOTMAT);
-    String modid = sp.next("mod id fail, " + PATH_FOTMAT);
-    String api = sp.next("api name fail, " + PATH_FOTMAT);
+	  String orgid = sp.next();
+    String modid = sp.next();
+    String api = sp.next();
 
     log.debug("appid:", appid, "orgid:", orgid, "modid:", modid, api);
 

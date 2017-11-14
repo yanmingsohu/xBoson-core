@@ -47,6 +47,8 @@ public class Checker extends JSObject {
           'a', 'b', 'c', 'd', 'e', 'f',
   };
 
+  private final static String NULLSTR = "";
+
   private final static Set<Character> _uuid = new HashSet<>();
   private final static Set<Character> _symbol = new HashSet<>();
   private final static Set<Character> _base64 = new HashSet<>();
@@ -109,6 +111,10 @@ public class Checker extends JSObject {
 
 
   public void check(String arg, Set<Character> table, String errmsg) {
+    if (arg == null || arg.trim().equals(NULLSTR)) {
+      throw new CheckException(errmsg, arg + " cannot be NULL");
+    }
+
     final int len = arg.length();
     for (int i=0; i<len; ++i) {
       char c = arg.charAt(i);

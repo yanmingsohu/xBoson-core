@@ -26,6 +26,7 @@ public class TestChecker extends Test {
     Uuid u = new Uuid();
 
 
+    sub("Test uuid checker");
     beginTime();
     for (int i=0; i<1000; ++i) {
       c.uuid(u.v1(), "uuid bad");
@@ -33,6 +34,7 @@ public class TestChecker extends Test {
     endTime("uuid checked");
 
 
+    sub("Test base64 checker");
     beginTime();
     for (int i=0; i<1000; ++i) {
       c.base64url(u.zip(), "base64 url bad");

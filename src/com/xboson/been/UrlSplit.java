@@ -26,77 +26,115 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class UrlSplit implements IBean {
 
-  private static final String DEFAULT_ERR = "cannot split null string url.";
+  private static final String DEFAULT_ERR
+          = "url parse is complete, no more parameters.";
 	
 	/** url 中的首个路径 */
 	private String name;
 	/** url 中的后续路径 */
 	private String last;
+	private String errMsg = DEFAULT_ERR;
+	private boolean withoutSlash = false;
 
 
 	public UrlSplit(HttpServletRequest req) {
 		String cp = req.getContextPath();
 		String rq = req.getRequestURI();
-		split( rq.substring(cp.length(), rq.length()), DEFAULT_ERR );
+		split( rq.substring(cp.length(), rq.length()) );
 	}
 	
 	
-	public UrlSplit(String s, String errmsg) {
-		split(s, errmsg);
-	}
-
-
 	public UrlSplit(String s) {
-	  this(s, DEFAULT_ERR);
+		split(s);
+	}
+
+
+	private UrlSplit() {}
+
+
+  public void setErrorMessage(String errMsg) {
+	  this.errMsg = errMsg;
+  }
+
+
+  public UrlSplit clone() {
+	  UrlSplit _clone = new UrlSplit();
+    _clone.name = name;
+    _clone.last = last;
+    _clone.errMsg = errMsg;
+    _clone.withoutSlash = withoutSlash;
+	  return _clone;
+  }
+
+
+  /**
+   * 返回的 name 中不含有开头的 '/' 符号则设置为 true
+   * @param isit
+   */
+  public void withoutSlash(final boolean isit) {
+	  if (isit != withoutSlash) {
+	    if (withoutSlash) {
+	      name = "/" + name;
+	      if (last != null) last = "/" + last;
+      } else {
+	      name = name.substring(1);
+        if (last != null) last = last.substring(1);
+      }
+    }
+    withoutSlash = isit;
   }
 
 
 	/**
+   * 使用最靠近左面的 '/' 切分 s, 前部分放入 name, 后部分放入 last
 	 * 这会改变自身的数据, 并返回 name
+   *
+   * @throws URLParseExcption
 	 */
-	public String split(String s, String errMessage) {
+	String split(String s) {
 		if (s == null) 
-			throw new RuntimeException(errMessage);
+			throw new URLParseExcption(errMsg);
 
 		try {
-      int a = 0;
-      if (s.charAt(0) == '/') a = 1;
+		  //
+		  // 一段时间之后肯定看不懂...
+      //
+      int a = 0, w = 0;
+      int w2 = withoutSlash ? 1 : 0;
+
+      if (s.charAt(0) == '/') {
+        a = 1;
+        w = w2;
+      } else {
+        w = 0;
+      }
       a = s.indexOf('/', a);
 
       if (a >= 0) {
-        name = s.substring(0, a);
-        last = s.substring(a, s.length());
+        name = s.substring(w, a);
+        last = s.substring(a+w2, s.length());
       } else {
         name = s;
         last = null;
       }
       return name;
     } catch(Exception e) {
-		  throw new RuntimeException(errMessage, e);
+		  throw new URLParseExcption(errMsg, e);
     }
 	}
 
 
-	public String next(String errMessage) {
-	  return split(last, errMessage);
-  }
-	
-	
-	/**
-	 * 将 last 再次拆分
-	 */
-	public UrlSplit sub() {
-		return new UrlSplit(last, DEFAULT_ERR);
-	}
-
-
-	public UrlSplit sub(String errmsg) {
-	  return new UrlSplit(last, errmsg);
+  /**
+   * 将 name 清除, 拆分 last 为新的 name/last,
+   * 这会改变自身数据.
+   */
+	public String next() {
+	  return split(last);
   }
 	
 	
 	public String toString() {
-		return name + " : " + last;
+		return "[" + name + " + " + last + "]";
 	}
 	
 	
@@ -108,4 +146,17 @@ public class UrlSplit implements IBean {
 	public String getLast() {
 		return last;
 	}
+
+
+  /**
+   * 当路径无法继续拆分, 会抛出这个异常
+   */
+	public class URLParseExcption extends XBosonException {
+    public URLParseExcption(String s) {
+      super(s);
+    }
+    public URLParseExcption(String s, Throwable throwable) {
+      super(s, throwable);
+    }
+  }
 }
