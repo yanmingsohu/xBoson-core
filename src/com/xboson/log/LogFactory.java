@@ -17,15 +17,27 @@
 package com.xboson.log;
 
 import com.xboson.been.Config;
+import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
 import com.xboson.util.SysConfig;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Date;
+import java.util.Properties;
 
 
 public class LogFactory extends OnExitHandle {
 
+  public static final String FILE = "log.level.properties";
+
 	private static LogFactory instance;
 	private static Level level;
 	private static ILogWriter writer;
+	private static Properties config = new Properties();
+	private String filepath;
 	
 	
 	static {
@@ -44,11 +56,18 @@ public class LogFactory extends OnExitHandle {
 	
 	private LogFactory() {
 		try {
-			Config cfg = SysConfig.me().readConfig();
-			setType(cfg.loggerWriterType);
-			setLevel(Level.find(cfg.logLevel));
+      Config cfg = SysConfig.me().readConfig();
+      setType(cfg.loggerWriterType);
+      setLevel(Level.find(cfg.logLevel));
 
-			create().info("Initialization Success, Log level", level);
+      filepath = cfg.configPath + "/" + FILE;
+      try (InputStream in = new FileInputStream(filepath)) {
+        config.load(in);
+      }
+
+      create().info("Initialization Success, Log level", level);
+    } catch(Exception e) {
+		  System.err.println("LogFactory::INIT " + e);
 		} finally {
 			if (writer == null) {
 				writer = new ConsoleOut();
@@ -59,19 +78,46 @@ public class LogFactory extends OnExitHandle {
 
 	@Override
 	protected void exit() {
+	  if (config != null) {
+	    try (OutputStream out = new FileOutputStream(filepath)) {
+	      config.store(out, "LogFactory Config From xBoson.");
+      } catch(Exception e) {
+        System.err.println("LogFactory::EXIT " + e);
+      }
+    }
+
 		if (writer != null) {
 			writer.destroy(null);
 			// 保证在退出后仍然可用
 			writer = new ConsoleOut();
 		}
 	}
+
+
+	protected static void changeLevel(Log log) {
+    synchronized (config) {
+      config.setProperty(log.getName(), log.getLevel().getName());
+    }
+  }
 	
 
 	/**
 	 * 创建日志实例, 用于输出日志.
 	 */
 	public static Log create(String name) {
-		return new Log(name);
+	  if (name == null)
+	    throw new XBosonException.NullParamException("String name");
+
+	  Log log = new Log(name);
+	  synchronized (config) {
+      String level = config.getProperty(name);
+      if (level != null) {
+        log.setLevel(Level.find(level));
+      } else {
+        changeLevel(log);
+      }
+    }
+		return log;
 	}
 	
 	
@@ -79,7 +125,7 @@ public class LogFactory extends OnExitHandle {
 	 * 创建日志实例, 用于输出日志, 类名作为日志名.
 	 */
 	public static Log create(Class<?> c) {
-		return new Log(c.getName());
+		return create(c.getName());
 	}
 	
 	

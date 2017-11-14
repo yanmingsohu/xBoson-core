@@ -38,6 +38,11 @@ public class Level {
 	public String toString() {
 		return str;
 	}
+
+
+	public String getName() {
+		return str;
+	}
 	
 	
 	/**

@@ -47,6 +47,17 @@ public class Log {
 	public void setLevel(Level l) {
 		l.checknull();
 		cl = l;
+		LogFactory.changeLevel(this);
+	}
+
+
+	Level getLevel() {
+		return cl;
+	}
+
+
+	String getName() {
+		return name;
 	}
 	
 	

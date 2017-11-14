@@ -46,9 +46,26 @@ post 请求忽略 url 参数, 解析 body 中存放的 json.
 
   `/HOME/xBoson-config/config.json`
   
-日志配置文件生成在:
+日志级别配置文件生成在:
 
-  `/HOME/xBoson-config/log.config.prop`
+  `/HOME/xBoson-config/log.level.properties`
+  
+  
+## 日志级别配置文件:
+
+  日志级别配置使用 properties 属性表, 每个配置一行.
+  每行表示一个类或命名服务的日志级别, 允许单独配置每个类的级别,
+  日志的最终级别是全局级别与类级别中最小的.
+
+```properties
+#LogFactory Config From xBoson.
+#Tue Nov 14 21:13:11 CST 2017
+
+com.xboson.event.GlobalEvent=ALL
+Event\:\:sys.error=ALL
+com.xboson.j2ee.container.UrlMapping=ALL
+/check-env.js=ALL
+```
   
   
 ## 系统配置字段说明:
@@ -56,7 +73,6 @@ post 请求忽略 url 参数, 解析 body 中存放的 json.
   配置文件使用 json 格式, 注意字符串使用引号包围, 最后元素的结尾不能有 '.' 符号,
   一下的注释使用 /* */ 包围, 但是 json 格式并不支持注释的使用, 所以不要复制到配置文件中.
   
-
 ```json
 {
     /* 配置文件版本号, 随着系统升级而升级 */

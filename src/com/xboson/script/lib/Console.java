@@ -39,7 +39,11 @@ public class Console extends JSObject {
 
 
 	public Console create(String name) {
-		return new Console(name);
+		if (name != null) {
+			return new Console(name);
+		} else {
+			return new Console();
+		}
 	}
 
 	
