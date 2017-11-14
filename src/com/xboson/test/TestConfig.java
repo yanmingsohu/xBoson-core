@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import com.squareup.moshi.JsonWriter;
 import com.xboson.been.Config;
 import com.xboson.db.DBPoolConfig;
+import com.xboson.util.DefaultConfig;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import okio.Buffer;
@@ -51,8 +52,6 @@ public class TestConfig extends Test {
 		
 		//ok(c.sessionPassword.equals("fdsevbvsx_fdsaf"), "bad session ps");
 		ok(c.sessionTimeout == 30, "bad session timeout");
-
-		sys.readDefaultConfig();
 	}
 
 
@@ -68,84 +67,12 @@ public class TestConfig extends Test {
     jsonWriter.setIndent("  ");
 
     Config c = new Config();
-    default_config(c);
+    DefaultConfig.setto(c);
     Tool.getAdapter(Config.class).toJson(jsonWriter, c);
 
     byte[] bytes = buffer.readByteArray();
     System.out.println(new String(bytes));
     System.out.println(line);
-
-    URL url = getClass().getResource("/com/xboson/util");
-
-    File f = new File(url.getFile() +"/"+ SysConfig.CONF_FILE_NAME);
-    if (f.exists()) {
-      msg("The config file", f, "is exists");
-    } else {
-      FileOutputStream out = new FileOutputStream(f);
-      out.write(bytes);
-      out.close();
-      sub("Write to", f);
-    }
-  }
-
-
-  /**
-   * 默认配置文件设置
-   */
-  public void default_config(Config c) {
-    c.loggerWriterType = "ConsoleOut";
-    c.logLevel = "all";
-    c.sessionTimeout = 30;
-    c.sessionPassword = randomString(20);
-    c.redis_host = "localhost";
-    c.debugService =  false;
-
-    JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
-    j.setMaxIdle(10);
-    j.setMinIdle(0);
-    j.setMaxTotal(200);
-
-    DBPoolConfig d = c.dbpool = new DBPoolConfig();
-
-    //
-    // 允许创建资源的最大数量,默认值 8,-1 代表无数量限制
-    //
-    d.setMaxTotal(2000);
-
-    //
-    // 默认值 true ,当资源耗尽时,是否阻塞等待获取资源
-    //
-    d.setBlockWhenExhausted(true);
-
-    //
-    // 获取资源时的等待时间,单位毫秒.当 blockWhenExhausted 配置为 true 时,
-    // 此值有效. -1 代表无时间限制,一直阻塞直到有可用的资源.
-    //
-    d.setMaxWaitMillis(3000);
-
-    //
-    // 默认值 false ,当设置为true时,每次从池中获取资源时都会调用
-    // factory.validateObject() 方法
-    //
-    d.setTestOnBorrow(true);
-    d.setTestOnCreate(false);
-    d.setTestOnReturn(false);
-
-    //
-    // 回收资源线程的执行周期,单位毫秒.默认值 -1 ,-1 表示不启用线程回收资源
-    //
-    d.setTimeBetweenEvictionRunsMillis((long)(1 * 3600e3));
-
-    //
-    // 设置为 true 时,当回收策略返回false时,
-    // 则调用 factory.activateObject()和factory.validateObject()
-    //
-    d.setTestWhileIdle(true);
-
-    //
-    // 资源回收线程执行一次回收操作,回收资源的数量.默认值 3,
-    //
-    d.setNumTestsPerEvictionRun(99);
   }
 
 

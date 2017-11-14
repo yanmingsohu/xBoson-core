@@ -30,6 +30,7 @@ import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingListener;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 
@@ -51,7 +52,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
 
   public GlobalEventContext(String name) throws NamingException {
     super(true);
-    this.listeners = new HashSet<>();
+    this.listeners = new LinkedHashSet<>();
     this.name = name;
     this.id = (long)(Long.MAX_VALUE / 2.0 * Math.random());
     this.log = LogFactory.create("Event::" + name);

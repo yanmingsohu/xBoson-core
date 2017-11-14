@@ -22,17 +22,18 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.Config;
 import com.xboson.event.GlobalEvent;
 import com.xboson.event.Names;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import okio.Buffer;
+
 
 public class SysConfig {
 
-	public static final String CONF_FILE_NAME = "default-config.json";
-	private static final String DEF_CONF_FILE = "./"+ CONF_FILE_NAME;
 	private static SysConfig instance;
 
 	private Log log = LogFactory.create("SysConfig");
@@ -46,20 +47,14 @@ public class SysConfig {
 		readed = false;
 		config = new Config(homepath);
 
+    DefaultConfig.setto(config);
 		checkConfigFiles();
 		readConfig(config.configFile);
 
 		if (!readed) {
 			// 日志处于不可用状态
-			System.out.println("Config read config: " + config.configFile
-							+ " read DEFAULT from " + DEF_CONF_FILE);
-			try {
-				// 尝试读取系统配置文件 (必须可用)
-				readDefaultConfig();
-			} catch(Exception e) {
-				System.out.println("System EXIT: Can not find available configuration, " + e);
-				System.exit(1);
-			}
+			System.out.println("System Config Fail, exit() !");
+			System.exit(1);
 		}
 
 		GlobalEvent.me().emit(Names.config, config);
@@ -120,29 +115,16 @@ public class SysConfig {
 	}
 
 
-	public void readDefaultConfig() throws IOException {
-		String str = null;
-		try {
-			InputStream in = getClass().getResourceAsStream(DEF_CONF_FILE);
-			StringBufferOutputStream buf = new StringBufferOutputStream();
-			buf.write(in);
-			str = buf.toString();
-			setConfigUseJson(str);
-			log.info("Read Config from DEFAULT file");
-
-		} catch(Exception e) {
-			System.err.println("Config file context: " + str);
-			System.err.println("Read System Inner Config Fail: " + e);
-			throw e;
-		}
-	}
-
-
 	private void setConfigUseJson(String str) throws IOException {
 		Moshi moshi = new Moshi.Builder().build();
 		JsonAdapter<Config> configAdapter = moshi.adapter(Config.class);
 
 		Config run = configAdapter.fromJson(str);
+		if (config.configVersion.compareTo(run.configVersion) > 0) {
+		  log.warn("Configuration files need to be upgraded",
+              run.configVersion, "<", config.configVersion);
+    }
+
 		run.setHome(config.home);
 		config = run;
 		readed = true;
@@ -156,10 +138,20 @@ public class SysConfig {
 		
 		if (!cfile.exists()) {
 			try {
-				log.info("Copy config file", DEF_CONF_FILE, "=>", cfile);
-				InputStream in = getClass().getResourceAsStream(DEF_CONF_FILE);
-				FileOutputStream out = new FileOutputStream(cfile);
-				Tool.copy(in, out, true);
+				log.info("Generate config file", cfile);
+
+        final Buffer buffer = new Buffer();
+        final JsonWriter jsonWriter = JsonWriter.of(buffer);
+        jsonWriter.setIndent("  ");
+
+        Tool.getAdapter(Config.class).toJson(jsonWriter, config);
+
+				try (FileOutputStream out = new FileOutputStream(cfile)) {
+          out.write(buffer.readByteArray());
+        }
+
+        // 如果配置文件是程序生成的, 则认为配置已经读取完成.
+        readed = true;
 			} catch(Exception e) {
 				log.error(e.getMessage());
 			}
