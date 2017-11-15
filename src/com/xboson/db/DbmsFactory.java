@@ -157,6 +157,8 @@ public class DbmsFactory extends OnExitHandle {
     } catch(Exception e) {
       log.error("open fail", e);
       throw new XBosonException.XSqlException("open connection", e);
+    } finally {
+      config.clearPassword();
     }
   }
 

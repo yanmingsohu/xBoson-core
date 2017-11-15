@@ -17,6 +17,10 @@
 package com.xboson.log;
 
 
+/**
+ * 枚举的局限太多, 麻烦,
+ * 该对象的实例可以直接比较 '=='
+ */
 public class Level {
 
 	public static final Level DEBUG	= new Level("DEBUG",  5);
@@ -27,6 +31,9 @@ public class Level {
 	
 	public static final Level ALL		= new Level("ALL",    0);
 	public static final Level OFF		= new Level("OFF", 9999);
+
+	/** 当 Log 的等级设置为继承, 则使用全局配置 */
+	public static final Level INHERIT = new Level("INHERIT", -1);
 
 	
 	private Level(String l, int n) {
@@ -63,15 +70,16 @@ public class Level {
 		if (name != null) {
 			switch(name.toUpperCase()) {
 				case "ON": 
-				case "ALL": 	return ALL;
+				case "ALL": 	  return ALL;
 				case "CLOSE":
-				case "OFF":   return OFF;
-				case "INFO":	return INFO;
-				case "DEBUG":	return DEBUG;
-				case "WARN":  return WARN;
+				case "OFF":     return OFF;
+				case "INFO":	  return INFO;
+				case "DEBUG":	  return DEBUG;
+				case "WARN":    return WARN;
 				case "ERR":
-				case "ERROR": return ERR;
-				case "FATAL": return FATAL;
+				case "ERROR":   return ERR;
+				case "FATAL":   return FATAL;
+        case "INHERIT": return INHERIT;
 			}
 		}
 		return ALL;

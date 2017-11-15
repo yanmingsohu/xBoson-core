@@ -16,14 +16,27 @@
 
 package com.xboson.test;
 
+import com.xboson.fs.watcher.INotify;
+import com.xboson.fs.watcher.IWatcher;
+import com.xboson.fs.watcher.LocalDirWatcher;
 import com.xboson.util.Tool;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.WatchEvent;
 import java.util.Set;
 
 
 public class TestTool extends Test {
 
-	public void test() throws Throwable {
+  public void test() throws Throwable {
+    tool();
+    local_file_watcher();
+  }
+
+
+	public void tool() throws Throwable {
 		Exception e = create(20);
 //		msg(Tool.allStack(e));
 		msg(Tool.miniStack(e, 5));
@@ -31,6 +44,32 @@ public class TestTool extends Test {
 		Set<Class> all = Tool.findPackage("com.xboson.test");
 		msg("Tool.findPackage: " + all);
 	}
+
+
+	public void local_file_watcher() throws Throwable {
+    LocalDirWatcher lfw = LocalDirWatcher.me();
+    Path p = Paths.get(
+            "C:\\Users\\jym\\xBoson-config\\");
+
+    final Thread curr = Thread.currentThread();
+
+
+    IWatcher w = lfw.watchAll(p, new INotify() {
+      public void nofify(String basename, String filename, WatchEvent event,
+                         WatchEvent.Kind kind) throws IOException {
+        msg(kind, basename, filename, event.count());
+        curr.interrupt();
+      }
+
+      public void remove(String basename) {
+        msg("removed", basename);
+      }
+    });
+
+
+    red("Wait for DIR change:", p);
+    Tool.sleep(10 * 1000);
+  }
 	
 	
 	public Exception create(int i) {

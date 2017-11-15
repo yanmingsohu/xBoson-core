@@ -94,7 +94,11 @@ public class LogFactory extends OnExitHandle {
 	}
 
 
-	protected static void changeLevel(Log log) {
+  /**
+   * 调用该方法, 通知工厂 Log 的级别被改变, 工厂会对改变做记录
+   * @param log 级别被改变的实例
+   */
+	static void changeLevel(Log log) {
     synchronized (config) {
       config.setProperty(log.getName(), log.getLevel().getName());
     }
@@ -110,9 +114,9 @@ public class LogFactory extends OnExitHandle {
 
 	  Log log = new Log(name);
 	  synchronized (config) {
-      String level = config.getProperty(name);
-      if (level != null) {
-        log.setLevel(Level.find(level));
+      String levelname = config.getProperty(name);
+      if (levelname != null) {
+        log.setLevel(Level.find(levelname));
       } else {
         changeLevel(log);
       }
@@ -123,6 +127,7 @@ public class LogFactory extends OnExitHandle {
 	
 	/**
 	 * 创建日志实例, 用于输出日志, 类名作为日志名.
+   * @see #create(String)
 	 */
 	public static Log create(Class<?> c) {
 		return create(c.getName());
@@ -131,6 +136,7 @@ public class LogFactory extends OnExitHandle {
 	
 	/**
 	 * 使用调用该方法的类名作为日志名, 在集成系统中, 始终使用父类的名称.
+   * @see #create(String)
 	 */
 	public static Log create() {
 		Exception e = new Exception();
@@ -143,6 +149,9 @@ public class LogFactory extends OnExitHandle {
 	 * 设置当前日志级别
 	 */
 	public static void setLevel(Level l) {
+		if (l == Level.INHERIT) {
+		  throw new XBosonException("Global level can not be set to inherit");
+    }
 		l.checknull();
 		level = l;
 	}

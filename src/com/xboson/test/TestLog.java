@@ -24,8 +24,10 @@ public class TestLog extends Test {
 
 	public void test() throws Exception {
 		LogFactory lf = LogFactory.me();
+		msg("This is SHOW: 1,2,3,4,5,6,7");
 		
 		Log log = LogFactory.create();
+		log.setLevel(Level.ALL);
 		log.debug("display debug", 1);
 		log.info("display info", 2);
 		log.error("display error", 3);
@@ -33,7 +35,8 @@ public class TestLog extends Test {
 		log.fatal("display", "fatal", 5);
 
 		lf.setType("FileAndConsoleOut");
-		
+
+    log.setLevel(Level.INHERIT);
 		LogFactory.setLevel(Level.ERR);
 		log.debug("!!! not display", 11);
 		log.error("display when set level", 6);
@@ -46,4 +49,9 @@ public class TestLog extends Test {
 
 		lf.setType("TestOut");
 	}
+
+
+	public static void main(String[] s) {
+	  new TestLog();
+  }
 }

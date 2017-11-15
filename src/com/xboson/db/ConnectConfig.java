@@ -113,6 +113,11 @@ public final class ConnectConfig extends JsonHelper {
   }
 
 
+  public void clearPassword() {
+    this.password = null;
+  }
+
+
   private void __computer_hashcode() {
     __hashcode = ('/'+ host +'/'+ dbname +'/'+ username).hashCode();
   }
@@ -161,5 +166,22 @@ public final class ConnectConfig extends JsonHelper {
             +'@'+ username
             +'/'+ dbname +'/'+ database
             +"]";
+  }
+
+
+  /**
+   * 该方法不会复制 password
+   */
+  @Override
+  protected ConnectConfig clone() {
+    ConnectConfig cc = new ConnectConfig();
+    cc.database = database;
+    cc.dbname = dbname;
+    cc.dbid = dbid;
+    cc.username = username;
+    cc.port = port;
+    cc.host = host;
+    cc.__hashcode = __hashcode;
+    return cc;
   }
 }

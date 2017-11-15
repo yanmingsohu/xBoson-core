@@ -36,7 +36,7 @@ public class ConnectionProxy extends AutoCloseableProxy<Connection> {
                          ConnectConfig config) {
     super(original);
     this.pool = pool;
-    this.config = config;
+    this.config = config.clone();
   }
 
 

@@ -22,32 +22,38 @@ import java.util.Date;
  * 推荐使用非 static 变量存储 Log
  */
 public class Log {
-	
-	private Level cl = Level.ALL;
+
+  /**
+   * 如果是继承的, 则使用全局级别, 否则使用日志自己的级别
+   */
+	private Level cl = Level.INHERIT;
 	private String name;
 	
 	
 	Log(String name) {
 		this.name = name;
 	}
-	
 
-	public void logs(Level l, Object[] msg) {
-		if (LogFactory.blocking(l) || cl.blocking(l))
-			return;
+
+  /**
+   * 改变当前实例的日志级别
+   */
+  public void setLevel(final Level l) {
+    l.checknull();
+    cl = l;
+    LogFactory.changeLevel(this);
+  }
+
+
+	public void logs(final Level l, Object[] msg) {
+		if (cl == Level.INHERIT) {
+		  if (LogFactory.blocking(l)) return;
+    } else if (cl.blocking(l)) {
+		  return;
+    }
 
 		Date d = new Date();
 		LogFactory.getLogWriter().output(d, l, name, msg);
-	}
-	
-	
-	/**
-	 * 改变当前实例的日志级别
-	 */
-	public void setLevel(Level l) {
-		l.checknull();
-		cl = l;
-		LogFactory.changeLevel(this);
 	}
 
 

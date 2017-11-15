@@ -26,7 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 用来打开文件系统
+ * 这是一个文件系统的汇聚, 可以来自本地磁盘/网络磁盘/DB表/Redis缓存,
+ * 凡是注册过的文件系统, 都可以再通过 open 打开.
  */
 public class FileSystemFactory {
 

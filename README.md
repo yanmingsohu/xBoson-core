@@ -55,17 +55,28 @@ post 请求忽略 url 参数, 解析 body 中存放的 json.
 
   日志级别配置使用 properties 属性表, 每个配置一行.
   每行表示一个类或命名服务的日志级别, 允许单独配置每个类的级别,
-  日志的最终级别是全局级别与类级别中最小的.
+  如果是继承的, 则使用全局级别, 否则使用日志自己的级别.
 
 ```properties
 #LogFactory Config From xBoson.
 #Tue Nov 14 21:13:11 CST 2017
 
 com.xboson.event.GlobalEvent=ALL
-Event\:\:sys.error=ALL
-com.xboson.j2ee.container.UrlMapping=ALL
-/check-env.js=ALL
+Event\:\:sys.error=OFF
+com.xboson.j2ee.container.UrlMapping=DEBUG
+/check-env.js=INHERIT
 ```
+
+日志级别可选项:
+
+  * INHERIT | 该级别不能配置给全局, 给日志实例配置该属性, 则使用全局设置的级别.
+  * ALL     | 显示全部日志
+  * OFF     | 禁止全部日志
+  * DEBUG   | 以下日志都启用
+  * INFO    | 以下日志都启用
+  * WARN    | 以下日志都启用
+  * ERROR   | 以下日志都启用
+  * FATAL   | 以下日志都启用
   
   
 ## 系统配置字段说明:
@@ -78,7 +89,7 @@ com.xboson.j2ee.container.UrlMapping=ALL
     /* 配置文件版本号, 随着系统升级而升级 */
   "configVersion": "1.3",
   
-    /* 日志过滤级别: ALL | OFF | DEBUG | INFO | WARN | ERROR | FATAL */
+    /* 全局默认日志过滤级别: ALL | OFF | DEBUG | INFO | WARN | ERROR | FATAL */
   "logLevel": "all",
     /* 日志输出类型, 可选的: ConsoleOut | FileOut | FileAndConsoleOut */
   "loggerWriterType": "ConsoleOut",
