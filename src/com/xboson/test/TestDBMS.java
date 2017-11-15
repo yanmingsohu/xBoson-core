@@ -79,7 +79,7 @@ public class TestDBMS extends Test {
     ResultSetMetaData meta = rs.getMetaData();
     StringBuilder out = new StringBuilder("\n");
     final int cc = meta.getColumnCount();
-    final String name = "[ TABLE -"+ meta.getTableName(1) +" ]";
+    final String name = "[ TABLE - "+ meta.getTableName(1) +" ]";
 
     for (int i=1; i<=cc; ++i) {
       out.append(meta.getColumnLabel(i));

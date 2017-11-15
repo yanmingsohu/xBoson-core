@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-14 上午8:23
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/auth/User.java
+// 文件创建日期: 17-11-15 下午3:32
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/auth/IAAction.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,14 +16,9 @@
 
 package com.xboson.auth;
 
-import com.xboson.been.IBean;
-import com.xboson.been.JsonHelper;
+/**
+ * 用来描述正在做什么, 权限系统依据此行为检查权限.
+ */
+public interface IAAction {
 
-
-public class User extends JsonHelper implements IBean, IAWho {
-  public String id;
-  public String name;
-  public String password;
-  public String org;
-  public String group;
 }
