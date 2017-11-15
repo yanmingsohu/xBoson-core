@@ -125,7 +125,7 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
     "numTestsPerEvictionRun": 99,
     "softMinEvictableIdleTimeMillis": -1,
       /* 默认值 false ,当设置为true时, 每次从池中获取资源时都会调用
-         validateObject() 方法*/
+         validateObject() 方法, 考虑提升性能可以关闭 */
     "testOnBorrow": true,
     "testOnCreate": false,
     "testOnReturn": false,

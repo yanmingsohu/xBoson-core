@@ -30,7 +30,7 @@ public final class DefaultConfig {
   public static void setto(Config c) {
     c.configVersion     = "1.3.1";
     c.loggerWriterType  = "ConsoleOut";
-    c.logLevel          = "all";
+    c.logLevel          = "info";
     c.sessionTimeout    = 30;
     c.sessionPassword   = Test.randomString(20);
     c.redis_host        = "localhost";
@@ -46,7 +46,7 @@ public final class DefaultConfig {
     d.setBlockWhenExhausted(true);
     d.setMaxWaitMillis(3000);
     d.setTestOnBorrow(true);
-    d.setTestOnCreate(false);
+    d.setTestOnCreate(true);
     d.setTestOnReturn(false);
     d.setTimeBetweenEvictionRunsMillis((long)(1 * 3600e3));
     d.setTestWhileIdle(true);

@@ -19,7 +19,10 @@ package com.xboson.db;
 import com.xboson.util.AutoCloseableProxy;
 import org.apache.commons.pool2.KeyedObjectPool;
 
+import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -29,6 +32,7 @@ public class ConnectionProxy extends AutoCloseableProxy<Connection> {
 
   private KeyedObjectPool<ConnectConfig, Connection> pool;
   private ConnectConfig config;
+  private List<AutoCloseable> closelist;
 
 
   public ConnectionProxy(KeyedObjectPool<ConnectConfig, Connection> pool,
@@ -37,11 +41,34 @@ public class ConnectionProxy extends AutoCloseableProxy<Connection> {
     super(original);
     this.pool = pool;
     this.config = config.clone();
+    this.closelist = new ArrayList<>();
   }
 
 
   @Override
   protected void doClose(Connection original, Object proxy) throws Exception {
     pool.returnObject(config, original);
+
+    for (AutoCloseable obj : closelist) {
+      try {
+        obj.close();
+      } catch(Exception e) {}
+    }
+  }
+
+
+  /**
+   * 拦截 Connection 返回的对象, 比如 Statement
+   * 在关闭时一起关闭
+   */
+  @Override
+  public Object invoke(Object proxy, Method method, Object[] args)
+          throws Throwable {
+
+    Object ret = super.invoke(proxy, method, args);
+    if (ret instanceof AutoCloseable) {
+      closelist.add((AutoCloseable) ret);
+    }
+    return ret;
   }
 }

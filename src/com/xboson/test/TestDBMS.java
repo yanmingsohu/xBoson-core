@@ -33,6 +33,7 @@ public class TestDBMS extends Test {
   public void test() throws Throwable {
     db = DbmsFactory.me();
     db.registeringDefaultDriver();
+
     mysql();
   }
 
@@ -58,13 +59,18 @@ public class TestDBMS extends Test {
 
   public void query(ConnectConfig cc, String sql) throws SQLException {
     beginTime();
+    Statement stat = null;
     try (Connection conn = db.open(cc)) {
       endTime("Open Connection");
       beginTime();
-      Statement stat = conn.createStatement();
+      stat = conn.createStatement();
       ResultSet set = stat.executeQuery(sql);
       show(set);
       endTime("Query", sql);
+    } finally {
+      if (stat != null) {
+        ok(stat.isClosed(), "Statement closed yet");
+      }
     }
   }
 

@@ -23,6 +23,7 @@ import com.xboson.been.JsonHelper;
  * 该类的经过专门设计, 只为连接池判断是否是一个连接而提供,
  * equals() 并不是每个字段判断相等,
  * hashCode() 仅在特殊时期有效.
+ * 在数据库连接成功后应该调用 clearPassword() 保证系统安全.
  */
 public final class ConnectConfig extends JsonHelper {
 

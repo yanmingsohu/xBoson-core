@@ -105,16 +105,16 @@ public class DbmsFactory extends OnExitHandle {
       return;
     }
 
-      while (it.hasNext()) {
-        Class c = it.next();
-        try {
-          IDriver dr = (IDriver) c.newInstance();
-          Class.forName(dr.driverClassName());
-          registering(dr);
-        } catch(Exception e) {
-          log.error("Register DBMS Driver", e);
-        }
+    while (it.hasNext()) {
+      Class c = it.next();
+      try {
+        IDriver dr = (IDriver) c.newInstance();
+        Class.forName(dr.driverClassName());
+        registering(dr);
+      } catch(Exception e) {
+        log.error("Register DBMS Driver", e);
       }
+    }
   }
 
 
@@ -157,8 +157,6 @@ public class DbmsFactory extends OnExitHandle {
     } catch(Exception e) {
       log.error("open fail", e);
       throw new XBosonException.XSqlException("open connection", e);
-    } finally {
-      config.clearPassword();
     }
   }
 

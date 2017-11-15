@@ -64,11 +64,11 @@ public class ConnectPoolFactory implements
   @Override
   public void destroyObject(ConnectConfig key, PooledObject<Connection> p)
           throws Exception {
-    log.debug("Destory", p, key);
     Connection c = p.getObject();
     if (!c.isClosed()) {
       c.close();
     }
+    log.debug("Destory", p, key);
   }
 
 
@@ -80,15 +80,17 @@ public class ConnectPoolFactory implements
    */
   @Override
   public boolean validateObject(ConnectConfig key, PooledObject<Connection> p) {
+    boolean ret = false;
     try {
       Connection c = p.getObject();
       if (!c.isClosed()) {
-        return c.isValid(VALIDATE_TIMEOUT);
+        ret = c.isValid(VALIDATE_TIMEOUT);
       }
     } catch (SQLException e) {
       log.debug("Validate Fail", p, key, e);
     }
-    return false;
+    log.debug("Validate", p, key, ret);
+    return ret;
   }
 
 
@@ -103,7 +105,12 @@ public class ConnectPoolFactory implements
   public void activateObject(ConnectConfig key, PooledObject<Connection> p)
           throws Exception {
     Connection c = p.getObject();
-    c.setAutoCommit(false);
+    c.setAutoCommit(true);
+
+    if (key.database != null) {
+      c.setCatalog(key.database);
+    }
+    log.debug("Activate", p, key);
   }
 
 
@@ -115,12 +122,10 @@ public class ConnectPoolFactory implements
   public void passivateObject(ConnectConfig key, PooledObject<Connection> p)
           throws Exception {
     Connection c = p.getObject();
-    c.commit();
-    c.setAutoCommit(false);
-
-    if (key.database != null) {
-      c.setCatalog(key.database);
+    if (!c.getAutoCommit()) {
+      c.commit();
     }
+    c.setAutoCommit(false);
     log.debug("Passivate", p, key);
   }
 }
