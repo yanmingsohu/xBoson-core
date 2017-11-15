@@ -26,15 +26,22 @@ import java.sql.*;
 
 public class TestDBMS extends Test {
 
+  public final static int MAX_RESULT_LINE = 50;
   public final static int SHOW_RESULT_LINE = 3;
-  private DbmsFactory db;
+
+  protected DbmsFactory db;
 
 
   public void test() throws Throwable {
+    init_db();
+    mysql();
+  }
+
+
+  public void init_db() throws Throwable {
+    sub("init DBMS factory");
     db = DbmsFactory.me();
     db.registeringDefaultDriver();
-
-    mysql();
   }
 
 
@@ -51,25 +58,37 @@ public class TestDBMS extends Test {
     IDriver dr = db.getDriver(cc);
     eq(dr.getClass(), Mysql.class, "mysql driver");
 
-    query(cc, "select * from sys_eeb_detail");
-    query(cc, "select * from sys_eeb_run_conf");
-    query(cc, "select * from sys_eeb_statistics");
+    int rl = SHOW_RESULT_LINE;
+    query(cc, "select * from sys_eeb_detail limit ?", rl);
+    query(cc, "select * from sys_eeb_run_conf limit ?", rl);
+    query(cc, "select * from sys_eeb_statistics limit ?", rl);
   }
 
 
-  public void query(ConnectConfig cc, String sql) throws SQLException {
+  public void query(ConnectConfig cc, String sql, Object ...bindParam)
+          throws SQLException {
     beginTime();
-    Statement stat = null;
+    PreparedStatement stat = null;
+    ResultSet set = null;
+
     try (Connection conn = db.open(cc)) {
       endTime("Open Connection");
       beginTime();
-      stat = conn.createStatement();
-      ResultSet set = stat.executeQuery(sql);
+      stat = conn.prepareStatement(sql);
+
+      for (int i =1; i<=bindParam.length; ++i) {
+        stat.setObject(i, bindParam[i-1]);
+      }
+
+      set = stat.executeQuery();
       show(set);
-      endTime("Query", sql);
     } finally {
+      endTime("Query", sql);
       if (stat != null) {
         ok(stat.isClosed(), "Statement closed yet");
+      }
+      if (set != null) {
+        ok(set.isClosed(), "ResultSet closed yet");
       }
     }
   }
@@ -90,7 +109,7 @@ public class TestDBMS extends Test {
     sub(out);
     out.setLength(0);
 
-    int showline = SHOW_RESULT_LINE;
+    int showline = MAX_RESULT_LINE;
 
     while (rs.next()) {
       for (int c = 1; c <= cc; ++c) {

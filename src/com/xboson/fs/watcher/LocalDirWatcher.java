@@ -123,7 +123,8 @@ public class LocalDirWatcher implements Runnable {
         key = ws.take();
         InnerData d = map.get(key);
         if (d == null) {
-          key.cancel();
+          // 多线程的时候 ConcurrentHashMap 反应迟钝
+          //key.cancel();
           continue;
         }
 
