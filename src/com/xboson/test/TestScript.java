@@ -19,7 +19,10 @@ package com.xboson.test;
 import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -30,6 +33,8 @@ import com.xboson.fs.FileSystemFactory;
 import com.xboson.fs.IVirtualFileSystem;
 import com.xboson.fs.LocalFileSystem;
 import com.xboson.script.*;
+import com.xboson.util.StringBufferOutputStream;
+
 
 /**
  * https://wiki.openjdk.java.net/display/Nashorn/Nashorn+extensions
@@ -48,6 +53,7 @@ public class TestScript extends Test {
 //		closed();
 		hack();
     fullTest();
+//    t10000();
 	}
 
 
@@ -149,6 +155,47 @@ public class TestScript extends Test {
 		}
 		memuse();
 	}
+
+
+  /**
+   * 创建应用的完整运行环境(包括初始化和引导), 一个运行环境就可以运行一个应用,
+   * 一个应用包含所有接口.
+   *
+   * 创建到 450 个环境消耗时间  Used Time 39483 ms
+   * ##### Heap utilization statistics [MB] #####
+   *    Used Memory:1300
+   *    Free Memory:744
+   *    Total Memory:2045
+   *    Max Memory:3620
+   */
+	public void t10000() throws Exception {
+		final int count = 500;
+		final int showc = (int)(count / 10);
+
+		msg("创建", count, "个完整运行时环境, 测试内存");
+
+		IEnvironment env = EnvironmentFactory.createBasic();
+
+		String fsid = "test";
+		FileSystemFactory fsf = FileSystemFactory.me();
+    URL basepath = this.getClass().getResource("./js/");
+		fsf.addLocalFileSystem(basepath, fsid);
+		IVirtualFileSystem vfs = fsf.open(fsid);
+
+		List<Application> appList = new ArrayList<>(count);
+    beginTime();
+
+		for (int i=0; i<count; ++i) {
+      Application app = new Application(env, vfs);
+      app.run("/null.js");
+      appList.add(app);
+
+      if (i % showc == 0) {
+        endTime("\n创建到", i, "个环境消耗时间");
+        memuse();
+      }
+		}
+	}
 	
 	
 	public void independent_sandbox() throws Exception {
@@ -168,6 +215,7 @@ public class TestScript extends Test {
 		}
 	}
 
+
   /**
    * 1 秒内调用函数次数, Math.sqrt()
    * NODE js :  9099763.1
@@ -179,11 +227,17 @@ public class TestScript extends Test {
    *
    * @throws ScriptException
    */
-	public void speedtest() throws ScriptException {
+	public void speedtest() throws Exception {
 		InputStream script1 = getClass().getResourceAsStream("./test-speed.js");
 		Sandbox s = SandboxFactory.create();
 		s.getBindings().put("console", this);
-		s.eval(script1);
+    StringBufferOutputStream buf = new StringBufferOutputStream();
+    buf.write(script1);
+    String code = buf.toString();
+
+    for (int cc=0; cc<10; ++cc) {
+      s.eval(code);
+    }
 	}
 	
 	

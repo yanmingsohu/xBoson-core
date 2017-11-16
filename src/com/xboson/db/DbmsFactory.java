@@ -124,7 +124,7 @@ public class DbmsFactory extends OnExitHandle {
    *
    * @param config host, dbname, username 属性必须有效
    */
-  Connection openWithoutPool(ConnectConfig config) throws SQLException {
+  public Connection openWithoutPool(ConnectConfig config) throws SQLException {
     if (config == null)
       throw new XBosonException.NullParamException("ConnectConfig config");
 

@@ -22,6 +22,8 @@ import com.xboson.db.IDriver;
 import com.xboson.db.driver.Mysql;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class TestDBMS extends Test {
@@ -35,6 +37,7 @@ public class TestDBMS extends Test {
   public void test() throws Throwable {
     init_db();
     mysql();
+    t10000();
   }
 
 
@@ -45,15 +48,21 @@ public class TestDBMS extends Test {
   }
 
 
-  public void mysql() throws Throwable {
-    sub("Mysql");
-
+  public ConnectConfig localdb() {
     ConnectConfig cc = new ConnectConfig();
     cc.setDbname("mysql");
     cc.setDatabase("eeb");
     cc.setHost("localhost");
     cc.setUsername("root");
     cc.setPassword("root");
+    return cc;
+  }
+
+
+  public void mysql() throws Throwable {
+    sub("Mysql");
+
+    ConnectConfig cc = localdb();
 
     IDriver dr = db.getDriver(cc);
     eq(dr.getClass(), Mysql.class, "mysql driver");
@@ -127,6 +136,59 @@ public class TestDBMS extends Test {
       sub("... More lines ... ", name, "\n");
     } else {
       sub(name, "\n");
+    }
+  }
+
+
+  /**
+   * 压力测试
+   *
+   * 创建到数据库的硬链接, 用获取的链接执行一个简单查询,
+   * 然后放入列表并且不释放任何资源.
+   * (win7 系统限制 1910 个 mysql 链接)
+   *
+   * 创建到 1260 个链接消耗时间  Used Time 3337 ms
+   * ##### Heap utilization statistics [MB] #####
+   *    Used Memory:139
+   *    Free Memory:287
+   *    Total Memory:427
+   *    Max Memory:3620
+   *
+   * 查询一个万行表保留1000行数据
+   * 创建到 1170 个链接消耗时间  Used Time 8501 ms
+   * ##### Heap utilization statistics [MB] #####
+   *    Used Memory:729
+   *    Free Memory:369
+   *    Total Memory:1099
+   *    Max Memory:3620
+   */
+  public void t10000() throws Throwable {
+    final int count = 1300;
+    final int showc = (int)(count / 10);
+
+    msg("创建", count, "个 mysql 硬链接来测试内存.");
+    msg("");
+
+    DbmsFactory df = DbmsFactory.me();
+    ConnectConfig cc = localdb();
+
+    List<Connection> connList = new ArrayList<>(count);
+    beginTime();
+    int i = 0;
+
+    try {
+      for (i = 0; i < count; ++i) {
+        Connection conn = df.openWithoutPool(cc);
+        Statement s = conn.createStatement();
+        s.execute("select * from sys_eeb_detail limit 1000");
+        connList.add(conn); // do not close
+        if (i % showc == 0) {
+          endTime("\n创建到", i, "个链接消耗时间");
+          memuse();
+        }
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("创建第"+ i +"个链接时发生异常", e);
     }
   }
 

@@ -14,6 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 var a = Date.now();
 var b = 0;  
 var c = 0;  
@@ -38,3 +39,30 @@ while (c<10) {
 }  
   
 console.log('avg 1s use', avg/c, 'counts');  
+*/
+
+
+
+// nodejs 代码
+var start = Date.now();
+
+var _i = 10000;
+var _j = 100;
+
+var i = _i;
+var j = _j;
+while (j>0) {
+  while (i>0) {
+    //sys.randomNumber(6);
+//    Math.random();
+    --i;
+  }
+  --j;
+  i = _i;
+}
+
+var end = Date.now();
+var elapsedMillis = end - start;
+
+console.log("循环了" + (_j*_i), "count");
+console.log("使用了", elapsedMillis + " ms");
