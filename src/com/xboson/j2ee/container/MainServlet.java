@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebInitParam;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -29,13 +31,15 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
 
+//@WebServlet(name="main", urlPatterns="/*",
+//        loadOnStartup=1, asyncSupported=false)
 public class MainServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 5854315900895352428L;
-	private final Log log = LogFactory.create("route");
+	private final Log log = LogFactory.create();
 
-	
-	/**
+
+  /**
 	 * 参数通过 URL 传递
 	 */
 	@Override

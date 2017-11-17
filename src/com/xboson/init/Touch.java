@@ -48,7 +48,7 @@ public final class Touch {
     SandboxFactory.version();
     FileSystemFactory.me();
     AuthFactory.me();
-    DbmsFactory.me();
+    DbmsFactory.me().registeringDefaultDriver();
   }
 
 
@@ -59,7 +59,7 @@ public final class Touch {
   private static int state = S_ZERO;
 
 
-  public static void me() {
+  public synchronized static void me() {
     if (state != S_ZERO)
       throw new RuntimeException("cannot start system");
 
@@ -69,7 +69,7 @@ public final class Touch {
   }
 
 
-  public static void exit() {
+  public synchronized static void exit() {
     if (state != S_INITED)
       throw new RuntimeException("cannot exit system");
 

@@ -304,7 +304,9 @@ public class Tool {
 
     String fullPath = url.getPath();
     File[] files = new File(fullPath).listFiles();
-    int prefixLength = fullPath.length() - packageName.length() - 1;
+
+    String tmp = fullPath.replaceAll("/|\\\\", ".");
+    int prefixLength = tmp.indexOf(packageName) -1;
 
     Set<Class> ret = new HashSet<>();
 
@@ -334,6 +336,11 @@ public class Tool {
     } catch(Exception e) {
       System.err.println(e);
     }
+  }
+
+
+  public static boolean isNulStr(String s) {
+	  return s == null || s.trim().length() == 0;
   }
 
 }

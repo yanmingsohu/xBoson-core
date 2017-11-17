@@ -102,6 +102,7 @@ public class DbmsFactory extends OnExitHandle {
       it = cl.iterator();
     } catch(Exception e) {
       log.error("registeringDefaultDriver", e);
+      e.printStackTrace();
       return;
     }
 
@@ -188,7 +189,7 @@ public class DbmsFactory extends OnExitHandle {
 
     if (config.dbname != null) {
       dr = namemap.get(config.dbname);
-      if (config.dbid == null) {
+      if (dr != null && config.dbid == null) {
         config.setDbid(dr.id());
       }
     }
@@ -198,8 +199,13 @@ public class DbmsFactory extends OnExitHandle {
       config.setDbname(dr.name());
     }
 
-    if (dr == null)
-      throw new XBosonException.NullParamException("config.dbname[dbid]");
+    if (dr == null) {
+      if (namemap.size() <= 0) {
+        throw new XBosonException("no db driver");
+      }
+      throw new XBosonException.NullParamException(
+              "config.dbname[dbid] " + config);
+    }
 
     return dr;
   }

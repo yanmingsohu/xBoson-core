@@ -78,6 +78,15 @@ public final class ConnectConfig extends JsonHelper {
   }
 
 
+  public int getIntPort(int defaultValue) {
+    try {
+      return Integer.parseInt(port);
+    } catch(Exception e) {
+      return defaultValue;
+    }
+  }
+
+
   public void setPort(String port) {
     this.port = port;
   }

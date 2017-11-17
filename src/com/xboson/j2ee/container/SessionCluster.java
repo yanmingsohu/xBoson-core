@@ -21,6 +21,7 @@ import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +36,7 @@ import com.xboson.util.SessionID;
 import com.xboson.util.SysConfig;
 
 
+//@WebFilter(urlPatterns="/*")
 public class SessionCluster extends HttpFilter {
 	
 	private static final long serialVersionUID = -6654306025872001022L;

@@ -20,60 +20,11 @@
   xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
                       http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
   version="4.0">
- 
-	<!-- 系统初始化 -->
-	<listener> 
-		<listener-class>com.xboson.init.Touch$Init</listener-class>
-　	</listener>
- 	
- 	
- 	<!-- 抓住所有异常, 编码转换, json 转换等 -->
- 	<filter>
-		<filter-name>Striker</filter-name>
-		<filter-class>com.xboson.j2ee.container.Striker</filter-class>
-		<async-supported>true</async-supported>
-	</filter>
-	
-	<filter-mapping>
-		<filter-name>Striker</filter-name>
-		<url-pattern>/*</url-pattern>
-	</filter-mapping>
-	
-	
-	<!-- Session 集群 -->
-	<filter>
-		<filter-name>SessionCluster</filter-name>
-		<filter-class>com.xboson.j2ee.container.SessionCluster</filter-class>
-		<async-supported>true</async-supported>
-	</filter>
-	
-	<filter-mapping>
-		<filter-name>SessionCluster</filter-name>
-		<url-pattern>/*</url-pattern>
-	</filter-mapping>
-	
 
-	<servlet>
-		<servlet-name>main</servlet-name>
-		<servlet-class>com.xboson.j2ee.container.MainServlet</servlet-class>
-		<init-param>
-			<param-name>db-type</param-name>
-			<param-value>filesystem</param-value>
-		</init-param>
-		<load-on-startup>1</load-on-startup>
-		<async-supported>true</async-supported>
-	</servlet>
 
-	<servlet-mapping>
-		<servlet-name>main</servlet-name>
-		<url-pattern>/*</url-pattern>
-	</servlet-mapping>
-	
+	<listener>
+		<listener-class>com.xboson.init.Startup</listener-class>
+	</listener>
 
-	<welcome-file-list>
-		<welcome-file>index.html</welcome-file>
-		<welcome-file>index.htm</welcome-file>
-		<welcome-file>index.jsp</welcome-file>
-	</welcome-file-list>
 
 </web-app>

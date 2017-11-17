@@ -17,6 +17,7 @@
 package com.xboson.been;
 
 
+import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -29,12 +30,15 @@ public class Config implements IBean {
 	public static final String CONFIG_FILE 	= "/config.json";
 	public static final String LOG_DIR 			= "/logs";
 
-	public String configVersion     = "1.3";
+	public String configVersion     = "1.3.2";
 	
 	public String configFile				= null;
 	public String configPath				= null;
 	public String logPath						= null;
 	public String home              = null;
+
+	public String rootUserName      = null;
+	public String rootPassword			= null;
 	
 	public String loggerWriterType	= null;
 	public String sessionPassword		= null;
@@ -43,8 +47,9 @@ public class Config implements IBean {
 	public boolean debugService     = false;
 
 	public JedisPoolConfig jedispool;
-	public String redis_host;
 	public DBPoolConfig dbpool;
+	public ConnectConfig db;
+	public ConnectConfig redis;
 	
 	
 	public Config() {

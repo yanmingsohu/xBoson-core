@@ -17,6 +17,7 @@
 package com.xboson.sleep;
 
 import com.xboson.been.Config;
+import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -36,6 +37,7 @@ import java.io.ObjectOutputStream;
 public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
   private final static String KEY = "RedisMesmerizer.IMesmerizer";
+  private final static int TIMEOUT = 3000;
   private static RedisMesmerizer instance;
 
   private Log log = LogFactory.create();
@@ -57,7 +59,23 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     bin = new BIN();
 
     Config config = SysConfig.me().readConfig();
-    jpool = new JedisPool(config.jedispool, config.redis_host);
+    ConnectConfig redis = config.redis;
+    String ps = redis.getPassword();
+    int port = redis.getIntPort(6379);
+
+    if (redis == null) {
+      jpool = new JedisPool(
+              config.jedispool, "localhost");
+    }
+    else if (Tool.isNulStr(ps)) {
+      jpool = new JedisPool(
+              config.jedispool, redis.getHost(), port, TIMEOUT);
+    }
+    else {
+      jpool = new JedisPool(
+              config.jedispool, redis.getHost(), port, TIMEOUT, ps);
+    }
+
     log.info("Initialization Success");
   }
 

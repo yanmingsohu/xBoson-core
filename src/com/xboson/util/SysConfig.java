@@ -137,24 +137,30 @@ public class SysConfig {
 		File cfile = new File(config.configFile);
 		
 		if (!cfile.exists()) {
-			try {
-				log.info("Generate config file", cfile);
+			generateDefaultConfigFile(config);
+		}
+	}
 
-        final Buffer buffer = new Buffer();
-        final JsonWriter jsonWriter = JsonWriter.of(buffer);
-        jsonWriter.setIndent("  ");
 
-        Tool.getAdapter(Config.class).toJson(jsonWriter, config);
+	public void generateDefaultConfigFile(Config config) {
+		try {
+			File cfile = new File(config.configFile);
+			log.info("Generate config file", cfile);
 
-				try (FileOutputStream out = new FileOutputStream(cfile)) {
-          out.write(buffer.readByteArray());
-        }
+			final Buffer buffer = new Buffer();
+			final JsonWriter jsonWriter = JsonWriter.of(buffer);
+			jsonWriter.setIndent("  ");
 
-        // 如果配置文件是程序生成的, 则认为配置已经读取完成.
-        readed = true;
-			} catch(Exception e) {
-				log.error(e.getMessage());
+			Tool.getAdapter(Config.class).toJson(jsonWriter, config);
+
+			try (FileOutputStream out = new FileOutputStream(cfile)) {
+				out.write(buffer.readByteArray());
 			}
+
+			// 如果配置文件是程序生成的, 则认为配置已经读取完成.
+			readed = true;
+		} catch(Exception e) {
+			log.error(e.getMessage());
 		}
 	}
 	

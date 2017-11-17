@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.xboson.been.Config;
+import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.test.Test;
 import redis.clients.jedis.JedisPoolConfig;
@@ -33,8 +34,9 @@ public final class DefaultConfig {
     c.logLevel          = "info";
     c.sessionTimeout    = 30;
     c.sessionPassword   = Test.randomString(20);
-    c.redis_host        = "localhost";
     c.debugService      =  false;
+    c.rootUserName      = "root";
+    c.rootPassword      = null;
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
     j.setMaxIdle(10);
@@ -51,6 +53,14 @@ public final class DefaultConfig {
     d.setTimeBetweenEvictionRunsMillis((long)(1 * 3600e3));
     d.setTestWhileIdle(true);
     d.setNumTestsPerEvictionRun(-1);
+
+    ConnectConfig db = c.db = new ConnectConfig();
+    db.setHost("localhost");
+
+    ConnectConfig redis = c.redis = new ConnectConfig();
+    redis.setHost("localhost");
+    redis.setPort("6379");
+    redis.setPassword("");
   }
 
 

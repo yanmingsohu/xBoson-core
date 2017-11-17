@@ -49,7 +49,7 @@ public class TestDS extends TestDBMS {
 
 
   /**
-   * 连接的是上海阿里的数据库, 有效期到 18 年
+   * 连接的是上海阿里的数据库, 有效期到 2018 年
    */
   public void connect_config() throws Throwable {
     sub("Init connect config");
@@ -63,7 +63,7 @@ public class TestDS extends TestDBMS {
     cc.setPassword("dalianzhirong321_A");
 
     try (Connection conn = db.open(cc)) {
-      conn.createStatement().execute("select 1");
+      conn.createStatement().execute("Select 1");
     }
   }
 

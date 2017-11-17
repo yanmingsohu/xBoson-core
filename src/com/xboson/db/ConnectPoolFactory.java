@@ -33,7 +33,7 @@ import java.sql.SQLException;
 public class ConnectPoolFactory implements
         KeyedPooledObjectFactory<ConnectConfig, Connection> {
 
-  public final static int VALIDATE_TIMEOUT = 1500; //ms
+  public final static int VALIDATE_TIMEOUT = 3500; //ms
 
   private DbmsFactory dbms;
   private Log log;
