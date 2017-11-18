@@ -6,21 +6,42 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-13 上午9:50
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/IBean.java
+// 文件创建日期: 17-11-18 下午1:07
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/Hex.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.been;
-
-import java.io.Serializable;
-
+package com.xboson.util;
 
 /**
- * 所有数据对象实现该接口
+ * 字节数组 16 进制字符串转换
  */
-public interface IBean extends Serializable {
+public class Hex {
+
+  private static final char[] hexUpCode = "0123456789ABCDEF".toCharArray();
+  private static final char[] hexLoCode = "0123456789abcdef".toCharArray();
+
+
+  public static String lowerHex(byte[] b) {
+    return toHex(b, hexLoCode);
+  }
+
+
+  public static String upperHex(byte[] b) {
+    return toHex(b, hexUpCode);
+  }
+
+
+  public static String toHex(byte[] bytes, char[] map) {
+    char[] ch = new char[ bytes.length * 2 ];
+    for (int i=0; i<bytes.length; ++i) {
+      byte b = bytes[i];
+      ch[  i<<1    ] = map[ b >> 4 & 15 ];
+      ch[ (i<<1)+1 ] = map[ b & 15 ];
+    }
+    return new String(ch);
+  }
 }

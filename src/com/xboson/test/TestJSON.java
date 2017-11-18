@@ -18,13 +18,11 @@ package com.xboson.test;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Arrays;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
-import com.xboson.been.JsonHelper;
 import com.xboson.been.ResponseRoot;
-import com.xboson.util.JsonResponse;
+import com.xboson.j2ee.container.XResponse;
 import com.xboson.util.OutputStreamSinkWarp;
 import com.xboson.util.StringBufferOutputStream;
 
@@ -125,7 +123,7 @@ public class TestJSON extends Test {
 	
 	
 	public void been_to_json() throws IOException {		
-		JsonResponse ret = new JsonResponse();
+		XResponse ret = new XResponse();
 		ResponseRoot root = ret.getRoot();
 
     TestData src = new TestData();

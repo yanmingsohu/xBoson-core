@@ -33,6 +33,7 @@ import java.io.ObjectOutputStream;
 
 /**
  * 能正确处理 json/bin 类型
+ * 如果收到 sleep 发出的异常, 可能是实例内部类无法正确序列化导致的.
  */
 public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
@@ -164,7 +165,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         oobj.flush();
 
         byte[] out = obyte.toByteArray();
-//        Test.printArr(out);
+        // Test.printArr(out);
         client.hset(KEY_BYTE, id.getBytes(), out);
       } catch(Exception e) {
         log.error("sleep bin", e);
@@ -177,7 +178,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         if (data == null) {
           throw new Exception("cannot found data " + c + " - " + id);
         }
-//        Test.printArr(data);
+        // Test.printArr(data);
         ByteArrayInputStream ibyte = new ByteArrayInputStream(data);
         ObjectInputStream iobj = new ObjectInputStream(ibyte);
 

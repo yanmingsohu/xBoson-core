@@ -16,6 +16,7 @@
 
 package com.xboson.test;
 
+import com.xboson.been.XBosonException;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
@@ -41,6 +42,7 @@ public class TestTool extends Test {
     tool();
     local_file_watcher();
     // uri_object();
+    red(new XBosonException("test").getMessage());
   }
 
 

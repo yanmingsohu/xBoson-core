@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月1日 上午11:29:58
-// 原始文件路径: xBoson/src/com/xboson/j2ee/container/AuthCheck.java
+// 文件创建日期: 17-11-18 下午5:55
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/container/IXResponse.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,29 +16,26 @@
 
 package com.xboson.j2ee.container;
 
-import java.io.IOException;
+import com.xboson.been.ResponseRoot;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import java.io.IOException;
 
 
 /**
- * 验证用户登录状态
+ * 对应答方式的封装
  */
-public class AuthCheck extends HttpFilter {
+public interface IXResponse {
 
-	private static final long serialVersionUID = 4001436349349397288L;
+  /**
+   * 将应答数据 ret_root 输出到 response
+   * @param request
+   * @param response
+   * @param ret_root
+   * @throws IOException
+   */
+  void response(HttpServletRequest request, HttpServletResponse response,
+                ResponseRoot ret_root) throws IOException;
 
-	
-	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
-			throws IOException, ServletException {
-		HttpSession session = request.getSession();
-		System.out.println("Auth Filter " + session.getId());
-		
-		chain.doFilter(request, response);
-	}
 }

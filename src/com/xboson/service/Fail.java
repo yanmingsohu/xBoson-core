@@ -42,7 +42,7 @@ public class Fail extends XService {
 
 
 	@Override
-	public int service(CallData data) throws ServletException, IOException {
+	public void service(CallData data) throws ServletException, IOException {
 		throw err;
 	}
 }

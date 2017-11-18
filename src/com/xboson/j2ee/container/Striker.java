@@ -20,14 +20,14 @@ import java.io.IOException;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.xboson.been.ResponseRoot;
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.JsonResponse;
 import com.xboson.util.SysConfig;
 
 /**
@@ -53,19 +53,33 @@ public class Striker extends HttpFilter {
 			throws IOException, ServletException {
 		response.setCharacterEncoding("utf8");
 		request.setCharacterEncoding("utf8");
-		JsonResponse jr = null;
+		XResponse jr = null;
 		
 		try {
-			jr = new JsonResponse(request, response);
+			jr = new XResponse(request, response);
 			chain.doFilter(request, response);
+
 		} catch(Throwable e) {
+		  e.printStackTrace();
 			log.error(e.getMessage());
-			response.setStatus(500);
+      response.setStatus(500);
+
+      ResponseRoot ret = jr.getRoot();
 			if (debug) {
-        jr.getRoot().setError(e);
+        ret.setError(e);
       } else {
-			  jr.getRoot().setData(e.getLocalizedMessage());
+        ret.setData(e.getMessage());
       }
+
+      do {
+        e = e.getCause();
+        if (e instanceof XBosonException) {
+          XBosonException xe = (XBosonException) e;
+          ret.setCode(xe.getCode());
+          break;
+        }
+      } while(e != null);
+
 			jr.response();
 		}
 	}

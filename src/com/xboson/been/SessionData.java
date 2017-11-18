@@ -16,13 +16,26 @@
 
 package com.xboson.been;
 
+import com.xboson.sleep.IBinData;
+
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class SessionData implements IBean {
+
+/**
+ * Session 不是动态数据, 属性都是固定的
+ */
+public class SessionData implements IBean, IBinData {
 	
-	private static final String attrname = "xBoson-session-data";
+	public static final String attrname = "xBoson-session-data";
+
+  public LoginUser login_user;
+  public String id;
+
+  public long loginTime;
+  public long endTime;
 	
 	
 	public SessionData() {
@@ -32,12 +45,16 @@ public class SessionData implements IBean {
 	/**
 	 * 将 this 绑定到 request attribute 上
 	 */
-	public SessionData(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-		if (request.getAttribute(attrname) != null) {
-			throw new ServletException("SessionData is bind to HttpServletRequest");
-		}
-		request.setAttribute(attrname, this);
+	public SessionData(Cookie ck, int sessionTimeoutMinute) {
+	  this.id = ck.getValue();
+	  this.loginTime = System.currentTimeMillis();
+	  this.endTime = this.loginTime + sessionTimeoutMinute * 60 * 1000;
 	}
+
+
+	public boolean isTimeout() {
+	  return endTime - System.currentTimeMillis() < 0;
+  }
 
 	
 	public static SessionData get(HttpServletRequest request) throws ServletException {
@@ -47,4 +64,10 @@ public class SessionData implements IBean {
 		}
 		return sd;
 	}
+
+
+  @Override
+  public String getid() {
+    return id;
+  }
 }

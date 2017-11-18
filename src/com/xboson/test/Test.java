@@ -148,7 +148,7 @@ public class Test {
 
 
 	/**
-	 * 开始一条测试用例
+	 * 开始一条测试用例, 原先是 public, 现在使用 sub 来替换.
 	 */
 	private static void unit(String name) {
 		System.out.println("\u001b[;33m\nTest " + name + "\u001b[m");
@@ -206,8 +206,8 @@ public class Test {
       return;
     }
 
-	  throw new AssertionError(msg + " not equals\n\tObject: '" + a +
-            "'\n\tObject: '" + b + "'");
+	  throw new AssertionError(msg + " not equals\n\tObject 1: '" + a +
+            "'\n\tObject 2: '" + b + "'");
   }
 
 

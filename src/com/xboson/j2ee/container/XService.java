@@ -26,7 +26,7 @@ import com.xboson.log.LogFactory;
 
 
 /**
- * 可以多线程重入
+ * 可以多线程重入服务实现, 默认总是需要验证.
  */
 public abstract class XService {
 	
@@ -37,9 +37,8 @@ public abstract class XService {
 	
 	/**
 	 * 子类实现该方法, 当服务被调用, 进入该方法中
-	 * @return 如果没有错误返回 0, 否则返回错误码
 	 */
-	public abstract int service(CallData data) throws ServletException, IOException;
+	public abstract void service(CallData data) throws Exception;
 	
 	
 	/**
@@ -47,6 +46,14 @@ public abstract class XService {
 	 */
 	public void destroy() {
 		log.info("default destory().");
+	}
+
+
+	/**
+	 * 需要登录验证返回 true
+	 */
+	public boolean needLogin() {
+		return true;
 	}
 
 }

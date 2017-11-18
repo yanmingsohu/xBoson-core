@@ -73,13 +73,13 @@ public class TestDBMS extends Test {
   }
 
 
-  public void query(ConnectConfig cc, String sql, Object ...bindParam)
+  public static void query(ConnectConfig cc, String sql, Object ...bindParam)
           throws SQLException {
     beginTime();
     PreparedStatement stat = null;
     ResultSet set = null;
 
-    try (Connection conn = db.open(cc)) {
+    try (Connection conn = DbmsFactory.me().open(cc)) {
       endTime("Open Connection");
       beginTime();
       stat = conn.prepareStatement(sql);
@@ -102,7 +102,7 @@ public class TestDBMS extends Test {
   }
 
 
-  public void show(ResultSet rs) throws SQLException {
+  public static void show(ResultSet rs) throws SQLException {
     ResultSetMetaData meta = rs.getMetaData();
     StringBuilder out = new StringBuilder("\n");
     final int cc = meta.getColumnCount();

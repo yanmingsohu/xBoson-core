@@ -17,6 +17,7 @@
 package com.xboson.script.lib;
 
 import com.xboson.script.JSObject;
+import com.xboson.util.Hex;
 
 import java.nio.ByteBuffer;
 import java.util.Base64;
@@ -85,13 +86,7 @@ public class Uuid extends JSObject {
    */
   public String ds(UUID id) {
     byte[] bytes = getBytes(id);
-    StringBuilder out = new StringBuilder();
-    for (int i=0; i<16; ++i) {
-      int d = Byte.toUnsignedInt(bytes[i]);
-      if (d < 0x10) out.append('0');
-      out.append(Integer.toHexString(d));
-    }
-    return out.toString();
+    return Hex.lowerHex(bytes);
   }
 
 

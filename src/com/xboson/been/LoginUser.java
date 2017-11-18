@@ -24,11 +24,20 @@ import com.xboson.been.JsonHelper;
 public class LoginUser extends JsonHelper implements IBean, IAWho {
   public String pid;        // uuid
   public String userid;     // 就是用户登录 name, 唯一
-  public String password;   // 算法 ??
+  public String password;   // 密码
+  public String password_dt;
+  public String tel;
+  public String email;
 
 
   @Override
   public String identification() {
     return pid;
+  }
+
+
+  @Override
+  public boolean isRoot() {
+    return false;
   }
 }

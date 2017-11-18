@@ -48,6 +48,9 @@ public class Startup implements ServletContextListener {
   }
 
 
+  /**
+   * 系统安装
+   */
   private void install(ServletContext sc) {
     ServletRegistration.Dynamic install =
             sc.addServlet("install",
@@ -62,6 +65,9 @@ public class Startup implements ServletContextListener {
   }
 
 
+  /**
+   * 系统启动
+   */
   void system_startup(ServletContext sc) {
     Touch.me();
 

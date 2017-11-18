@@ -42,7 +42,7 @@ public class Config implements IBean {
 	
 	public String loggerWriterType	= null;
 	public String sessionPassword		= null;
-	public int    sessionTimeout		= 0;
+	public int    sessionTimeout		= 0; // 分钟
 	public String logLevel					= null;
 	public boolean debugService     = false;
 

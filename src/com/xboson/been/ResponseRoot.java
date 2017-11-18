@@ -20,8 +20,8 @@ import com.xboson.util.Tool;
 
 
 /**
- * 平台应答数据根节点, 数据将被转换为 json,
- * 并不需要考虑在从 json 字符串返回对象.
+ * 平台应答数据根节点, 最终数据将被转换;
+ * (并不需要考虑反向转换)
  */
 public class ResponseRoot extends JsonHelper {
 
@@ -29,7 +29,7 @@ public class ResponseRoot extends JsonHelper {
 
 	/** 为兼容 v1 平台而设置 */
 	@SuppressWarnings("unused")
-	private int ret;
+	private String ret;
 	
 	private int code;
 	private String msg;
@@ -39,7 +39,7 @@ public class ResponseRoot extends JsonHelper {
 	
 	public ResponseRoot() {
 		code = 0;
-		ret  = 0;
+		ret  = "0";
 		msg  = null;
 		data = null;
 	}
@@ -60,7 +60,7 @@ public class ResponseRoot extends JsonHelper {
 	
 	public void setCode(int code) {
 		this.code = code;
-		this.ret  = code;
+		this.ret  = Integer.toString(code);
 	}
 
 
@@ -98,9 +98,8 @@ public class ResponseRoot extends JsonHelper {
 	public void setError(Throwable e) {
 		data = Tool.miniStack(e, 5);
 		datatype = "ErrorStack";
-		code = 500;
-		ret  = 500;
 		msg  = e.getMessage();
+    setCode(500);
 	}
 
 	

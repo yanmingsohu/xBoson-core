@@ -90,13 +90,13 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   "configVersion": "1.3.1",
   
     /* 全局默认日志过滤级别: ALL | OFF | DEBUG | INFO | WARN | ERROR | FATAL */
-  "logLevel": "all",
+  "logLevel": "INFO",
     /* 日志输出类型, 可选的: ConsoleOut | FileOut | FileAndConsoleOut */
   "loggerWriterType": "ConsoleOut",
     /* session 密钥, 集群中所有节点必须相同 */
   "sessionPassword": "/gWMJ+cbYOixLiuElBV7Vxll3sM",
     /* session 超时时间, 分钟 */
-  "sessionTimeout": 30,
+  "sessionTimeout": 24 * 60,
     /* HTTP 服务接口, 是否输出错误堆栈 */
   "debugService": false,
   

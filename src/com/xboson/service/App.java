@@ -44,7 +44,7 @@ public class App extends XService {
 
 
 	@Override
-	public int service(CallData data) throws ServletException, IOException {
+	public void service(CallData data) throws ServletException, IOException {
     UrlSplit sp = data.url.clone();
     sp.setErrorMessage(PATH_FOTMAT);
     sp.withoutSlash(true);
@@ -62,8 +62,6 @@ public class App extends XService {
       app = app_pool.getAppFromOrg(orgid, appid);
     }
     app.call(modid, api);
-
-		return 0;
 	}
 
 }

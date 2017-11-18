@@ -26,7 +26,8 @@
         <section>
           平台即将上线, 请稍等片刻,
           稍后请用超级管理员登录.<br/>
-          <a href="<%=request.getServletContext().getContextPath() %>">点击这里进入首页</a>
+          <a href="<%=request.getServletContext().getContextPath() %>">
+            点击这里进入首页</a>
         </section>
 
         <section class='red'>

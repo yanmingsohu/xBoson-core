@@ -23,6 +23,8 @@ import java.sql.SQLException;
  * 异常基础类, 不需要特别捕获
  */
 public class XBosonException extends RuntimeException implements IBean, IXBosonException {
+  protected int code = 500;
+
 
   public XBosonException() {
     super();
@@ -32,16 +34,39 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
     super(s);
   }
 
+  public XBosonException(String s, int code) {
+    super(s);
+    setCode(code);
+  }
+
   public XBosonException(String s, Throwable throwable) {
     super(s, throwable);
   }
 
+  public XBosonException(String s, XBosonException throwable) {
+    super(s, throwable);
+    setCode(throwable.code);
+  }
+
   public XBosonException(Throwable throwable) {
-    super(throwable);
+    super(throwable.getMessage(), throwable);
+  }
+
+  public XBosonException(XBosonException o) {
+    super(o.getMessage(), o);
+    setCode(o.code);
   }
 
   protected XBosonException(String s, Throwable throwable, boolean b, boolean b1) {
     super(s, throwable, b, b1);
+  }
+
+  public int getCode() {
+    return code;
+  }
+
+  void setCode(int c) {
+    code = c;
   }
 
 
@@ -54,6 +79,7 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
      */
     public NullParamException(String paramName) {
       super("The Function parameter \"" + paramName + "\" can not be NULL");
+      setCode(1);
     }
   }
 
@@ -64,12 +90,14 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
   static public class NotImplements extends XBosonException {
     public NotImplements() {
       super("The Function/Method is not implemented yet");
+      setCode(4);
     }
     /**
      * @param fname 函数的完整名字
      */
     public NotImplements(String fname) {
       super("The " + fname + "() is not implemented yet");
+      setCode(4);
     }
   }
 
@@ -108,6 +136,17 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
      */
     public NotExist(String whatThing) {
       super(whatThing);
+    }
+  }
+
+
+  /**
+   * 当参数无效时抛出这个异常
+   */
+  static public class BadParameter extends XBosonException {
+    public BadParameter(String pname, String cause) {
+      super("Parameter: '" + pname + "' fail, " + cause);
+      setCode(2);
     }
   }
 }

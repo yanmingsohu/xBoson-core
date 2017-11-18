@@ -18,9 +18,13 @@ package com.xboson.test;
 
 import com.xboson.auth.*;
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.db.SqlResult;
+import com.xboson.util.Password;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.ResultSet;
 
 
 public class TestAuth extends Test {
@@ -30,6 +34,47 @@ public class TestAuth extends Test {
   public void test() throws Throwable {
     cc = TestDS.connect_config();
     framework();
+    password();
+    sql_reader();
+  }
+
+
+  public void sql_reader() throws Throwable {
+    String code = SqlReader.read("login.sql");
+    ok(code != null, "read 'login.sql'");
+
+    code = SqlReader.read("login");
+    ok(code != null, "read 'login'");
+
+    String[] parmbind = new String[] {"attewfdsafdsaf", "", ""};
+    try (SqlResult sr = SqlReader.query("login.sql", cc, parmbind)) {
+      ResultSet rs = sr.getResult();
+      TestDBMS.show(rs);
+    }
+  }
+
+
+  public void password() throws Throwable {
+    sub("Encode password");
+    // userid
+    String userid = "attewfdsafdsaf";
+    // password
+    String pstrue = "enw8dcnvczkhfd";
+    // 加密的 password
+    String psword = "D8D1BEB36B1F49238F0FFE376E11E1739570B99F095FEDCA7CC9864C6B358602";
+    // 密码修改时间（password_dt）
+    String date = "2017-11-18 10:48:32.0";
+
+    String ps = Password.v1(userid, Password.md5(pstrue), date);
+    eq(psword, ps, "encode password");
+    msg(ps);
+    msg(Password.md5("111111"));
+
+    beginTime();
+    for (int i=0; i<100000; ++i) {
+      Password.v1(userid, pstrue, date);
+    }
+    endTime("100000 count encode password");
   }
 
 
@@ -66,6 +111,9 @@ public class TestAuth extends Test {
     Who(String id) { this.id = id; }
     public String identification() {
       return "/" + id;
+    }
+    public boolean isRoot() {
+      return false;
     }
   }
 

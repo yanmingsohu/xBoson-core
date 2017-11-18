@@ -20,6 +20,7 @@ import com.xboson.been.Config;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
@@ -97,7 +98,7 @@ public class Install extends HttpServlet {
             msg = "重复密码错误";
           } else {
             config.rootUserName = un;
-            config.rootPassword = up;
+            config.rootPassword = Password.v1(un, Password.md5(up));
             step = 3;
           }
           break;
@@ -201,6 +202,9 @@ public class Install extends HttpServlet {
         break;
 
       case 100:
+        if (!restart_server(req, resp)) {
+          msg = "您需要手动重启 Servlet 容器..";
+        }
         page = "restarting.jsp";
         break;
     }

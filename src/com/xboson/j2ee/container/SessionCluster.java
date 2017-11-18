@@ -31,6 +31,7 @@ import com.xboson.been.Config;
 import com.xboson.been.SessionData;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.AES;
 import com.xboson.util.SessionID;
 import com.xboson.util.SysConfig;
@@ -41,33 +42,68 @@ public class SessionCluster extends HttpFilter {
 	
 	private static final long serialVersionUID = -6654306025872001022L;
 	private static final String cookieName = "xBoson";
-	private static final Log log = LogFactory.create("session");
 	
 	private static byte[] sessionPassword = null;
-	private static int sessionTimeout = 0;
-	
+	private static int sessionTimeout = 0; // 分钟
+
+  private final Log log = LogFactory.create();
+
 	
 	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
 			throws IOException, ServletException {
 		
 		Cookie ck = SessionID.getCookie(cookieName, request);
+    SessionData sd = null;
+
 		if (ck == null) {
+		  //
+		  // 第一次访问, 创建 cookie
+      //
 			ck = createCookie(response);
 		} else {
+		  //
+      // 验证 cookie 的值是否是平台生成
+      //
 			if (!SessionID.checkSessionId(sessionPassword, ck.getValue()) ) {
+			  //
+        // 错误的 cookie 加密, 则生成全新的 cookie
+        //
+			  log.debug("Bad Session id:", ck.getValue());
 				ck = createCookie(response);
-			}
+			} else {
+			  //
+        // 尝试从 redis 还原数据
+        //
+        sd = (SessionData) RedisMesmerizer.me()
+                .wake(SessionData.class, ck.getValue());
+        //
+        // 超时则重建数据
+        //
+        if (sd != null && sd.isTimeout()) {
+          sd = null;
+        }
+      }
 		}
-		new SessionData(request, response);
+
+		if (sd == null) {
+      sd = new SessionData(ck, sessionTimeout);
+    }
+
+		request.setAttribute(SessionData.attrname, sd);
 		log.debug("Session ID: " + ck.getValue());
-		chain.doFilter(request, response);
-	}
+
+		try {
+      chain.doFilter(request, response);
+    } finally {
+      RedisMesmerizer.me().sleep(sd);
+    }
+  }
 	
 	
 	private Cookie createCookie(HttpServletResponse response) throws ServletException {
 		Cookie ck = new Cookie(cookieName, SessionID.generateSessionId(sessionPassword));
 		ck.setHttpOnly(true);
-		ck.setMaxAge(sessionTimeout);
+		ck.setMaxAge(sessionTimeout * 60);
 		response.addCookie(ck);
 		return ck;
 	}

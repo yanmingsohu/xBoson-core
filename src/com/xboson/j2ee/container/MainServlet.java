@@ -17,26 +17,32 @@
 package com.xboson.j2ee.container;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebInitParam;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
 
-//@WebServlet(name="main", urlPatterns="/*",
-//        loadOnStartup=1, asyncSupported=false)
 public class MainServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 5854315900895352428L;
 	private final Log log = LogFactory.create();
+
+
+	private void checkLoging(CallData cd) {
+	  if (cd.sess.login_user == null) {
+	    throw new XBosonException("please login");
+    }
+    if (cd.sess.login_user.pid == null) {
+      throw new XBosonException("invaild login state");
+    }
+  }
 
 
   /**
@@ -52,21 +58,29 @@ public class MainServlet extends HttpServlet {
 		if (sv == null) {
 			throw new ServletException("Not found service: " + cd.url.getName());
 		}
-		
-		log.debug(cd.url.getName(), sv.getClass().getName());
-		sv.service(cd);
+
+		if (sv.needLogin()) {
+      checkLoging(cd);
+    }
+
+    log.debug(cd.url.getName(), sv.getClass().getName());
+
+		try {
+      sv.service(cd);
+
+      if (!cd.xres.isResponsed()) {
+        cd.xres.response("unknow return", 999);
+      }
+    } catch(Exception e) {
+		  throw new XBosonException(e);
+    }
 	}
 
-	
-	/**
-	 * 参数在 body 中, 类型为 json, 不接受任何 URL 参数.
-	 */
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
-		PrintWriter out = resp.getWriter();
-		out.append("Post is work");
-		out.close();
+		doGet(req, resp);
 	}
 
 }

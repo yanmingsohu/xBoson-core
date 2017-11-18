@@ -32,7 +32,7 @@ public final class DefaultConfig {
     c.configVersion     = "1.3.1";
     c.loggerWriterType  = "ConsoleOut";
     c.logLevel          = "info";
-    c.sessionTimeout    = 30;
+    c.sessionTimeout    = 24 * 60;
     c.sessionPassword   = Test.randomString(20);
     c.debugService      =  false;
     c.rootUserName      = "root";

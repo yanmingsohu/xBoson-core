@@ -16,6 +16,8 @@
 
 package com.xboson.util;
 
+import com.xboson.been.XBosonException;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,11 +32,16 @@ public class StringBufferOutputStream extends OutputStream {
 	
 	private byte[] buf = new byte[1024];
 	private int pos = 0;
-	
-	
+
+
+	/**
+	 * 将输入流中的所有数据写入缓冲区, 该函数返回后, src 被关闭.
+	 * @param src
+	 * @throws IOException
+	 */
 	public void write(InputStream src) throws IOException {
 		if (src == null) {
-		  throw new NullPointerException("src");
+		  throw new XBosonException.NullParamException("InputStream src");
     }
 		Tool.copy(src, this, true);
 	}

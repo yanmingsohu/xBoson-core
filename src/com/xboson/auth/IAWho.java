@@ -28,4 +28,10 @@ public interface IAWho {
    */
   String identification();
 
+
+  /**
+   * 是根用户返回 true, 根用户不受任何权限制约.
+   */
+  boolean isRoot();
+
 }

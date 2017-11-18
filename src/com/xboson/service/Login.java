@@ -16,22 +16,117 @@
 
 package com.xboson.service;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
 import com.xboson.been.CallData;
+import com.xboson.been.Config;
+import com.xboson.been.LoginUser;
+import com.xboson.been.XBosonException;
+import com.xboson.db.ConnectConfig;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
+import com.xboson.util.Password;
+import com.xboson.util.SysConfig;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 
 @XPath("/login")
 public class Login extends XService {
 
+
+  /**
+   * TODO: 需要检查登录攻击, 失败次数, 验证图片
+   * password 参数必须已经 md5 后传入接口.
+   */
 	@Override
-	public int service(CallData data) throws ServletException, IOException {
-		data.json.response("Auth work but not implement.");
-		return 0;
+	public void service(CallData data) throws Exception {
+	  if (data.sess.login_user != null && data.sess.login_user.userid != null) {
+      data.xres.response("Already logged in", 1002);
+      return;
+    }
+
+    final String md5ps  = data.getString("password", 6, 40);
+    final String userid = data.getString("userid",   4, 50);
+
+    Config cf = SysConfig.me().readConfig();
+    LoginUser lu = checkRoot(cf, userid, md5ps);
+
+    if (lu == null) {
+      lu = searchUser(userid, md5ps, cf.db);
+      if (lu == null) {
+        data.xres.response("用户不存在", 1014);
+        return;
+      }
+    }
+
+    data.sess.login_user = lu;
+    lu.password = null;
+    data.xres.response("login success");
 	}
 
+
+	private LoginUser searchUser(String userid, String md5ps, ConnectConfig db)
+          throws SQLException {
+    //
+    // 把 userid 分别假设为 userid/tel/email 查出哪个算哪个
+    //
+    String[] parmbind = new String[] {userid, userid, userid};
+    LoginUser lu = null;
+
+    try (SqlResult sr = SqlReader.query("login.sql", db, parmbind)) {
+      ResultSet rs = sr.getResult();
+      while (rs.next()) {
+        int c = rs.getInt("c");
+        if (c == 1) {
+          lu              = new LoginUser();
+          lu.pid          = rs.getString("pid");
+          lu.userid       = rs.getString("userid");
+          lu.password     = rs.getString("password");
+          lu.password_dt  = rs.getString("password_dt");
+          lu.tel          = rs.getString("tel");
+          lu.email        = rs.getString("email");
+          break;
+        }
+      }
+    }
+
+    if (lu != null) {
+      final String ps = Password.v1(lu.userid, md5ps, lu.password_dt);
+      if (!ps.equals(lu.password)) {
+        throw new XBosonException("用户名或密码错误", 1001);
+      }
+    }
+
+    return lu;
+  }
+
+
+  private Root checkRoot(Config cf, String nm, String md5ps) {
+	  if (!cf.rootUserName.equals(nm))
+	    return null;
+
+    final String cps = Password.v1(nm, md5ps);
+    if (!cps.equals(cf.rootPassword)) {
+      return null;
+    }
+
+    Root root = new Root();
+    root.userid = nm;
+    return root;
+  }
+
+
+	@Override
+	public boolean needLogin() {
+		return false;
+	}
+
+
+	static private final class Root extends LoginUser {
+	  public boolean isRoot() {
+	    return true;
+    }
+  }
 }

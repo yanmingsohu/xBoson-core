@@ -51,7 +51,7 @@ public class TestConfig extends Test {
 		msg(c.configPath);
 		
 		//ok(c.sessionPassword.equals("fdsevbvsx_fdsaf"), "bad session ps");
-		ok(c.sessionTimeout == 30, "bad session timeout");
+		ok(c.sessionTimeout > 0, "session timeout");
 	}
 
 

@@ -20,27 +20,64 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.xboson.util.JsonResponse;
+import com.xboson.j2ee.container.XResponse;
+
 
 /**
- * 全部属性公共不可变方法
+ * 全部属性公共不可变; 提供参数获取的便捷方法并检查格式.
  */
 public class CallData implements IBean {
 
 	public final HttpServletRequest req;
 	public final HttpServletResponse resp; 
 	public final UrlSplit url;
-	public final JsonResponse json;
+	public final XResponse xres;
 	public final SessionData sess;
 	public final ResponseRoot ret;
 	
 	
-	public CallData(HttpServletRequest req, HttpServletResponse resp) throws ServletException {
+	public CallData(HttpServletRequest req, HttpServletResponse resp)
+					throws ServletException {
 		this.req  = req;
 		this.resp = resp;
-		this.json = JsonResponse.get(req);
+		this.xres = XResponse.get(req);
 		this.sess = SessionData.get(req);
 		this.url  = new UrlSplit(req);
-		this.ret  = json.getRoot();
+		this.ret  = xres.getRoot();
 	}
+
+
+  /**
+   * 获取 http 参数的方法, 当参数不在或不符合条件时抛出 msg 指定的异常,
+   * 在计算长度之前, 会删除参数的首尾空格.
+   *
+   * @param name 参数名
+   * @param min 最小长度, >= min, 如果 min == 0 则允许参数不存在.
+   * @param max 最大长度, < max
+   * @return 返回这个参数
+   */
+	public String getString(String name, int min, int max) {
+	  String v = req.getParameter(name);
+	  if (v == null) {
+	    if (min <= 0) {
+	      return v;
+      } else {
+        throw new XBosonException.BadParameter(
+                name, "Can not be null");
+      }
+    }
+
+    v = v.trim();
+	  final int len = v.length();
+	  if (len < min) {
+	    throw new XBosonException.BadParameter(
+              name,"length is greater than " + min);
+    }
+    if (len >= max) {
+      throw new XBosonException.BadParameter(
+              name,"length is less than " + max);
+    }
+    return v;
+  }
+
 }

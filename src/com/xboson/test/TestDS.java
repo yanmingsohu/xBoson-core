@@ -31,6 +31,7 @@ public class TestDS extends TestDBMS {
 
 
   public void test() throws Throwable {
+    cc = connect_config();
     init_db();
     connect_config();
     tables();
