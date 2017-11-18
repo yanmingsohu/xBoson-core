@@ -83,9 +83,15 @@ public class Startup implements ServletContextListener {
             sc.addServlet("main",
                     com.xboson.j2ee.container.MainServlet.class);
 
+    ServletRegistration.Dynamic ui =
+            sc.addServlet("ui",
+                    com.xboson.ui.UIEngineServlet.class);
+
 
     striker.addMappingForUrlPatterns(null, false, "/*");
     session.addMappingForUrlPatterns(null, false, "/*");
+
+    ui.addMapping("/ui/*");
 
     main.addMapping("/*");
     main.setLoadOnStartup(1);

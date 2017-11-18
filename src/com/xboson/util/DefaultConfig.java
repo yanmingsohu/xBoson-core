@@ -20,6 +20,7 @@ import com.xboson.been.Config;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.test.Test;
+import com.xboson.ui.LocalFileMapping;
 import redis.clients.jedis.JedisPoolConfig;
 
 
@@ -37,6 +38,9 @@ public final class DefaultConfig {
     c.debugService      =  false;
     c.rootUserName      = "root";
     c.rootPassword      = null;
+
+    c.uiProviderClass   = LocalFileMapping.class.getName();
+    c.uiUrl             = "/ui";
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
     j.setMaxIdle(10);

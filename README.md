@@ -113,6 +113,10 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   "rootUserName": "root",
   "rootPassword": "111111",
   
+    /* ui 获取方式, 有缓冲区代理以及本地目录, 两种模式, 同一个集群中只有一个本地目录模式 */
+  "uiProviderClass": "com.xboson.ui.LocalFileMapping",
+  "uiUrl": "",
+  
   /* 数据库连接池的设置 */
   "dbpool": {
       /* 默认值 true ,当资源耗尽时,是否阻塞等待获取资源 */

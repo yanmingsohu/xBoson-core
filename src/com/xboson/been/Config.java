@@ -46,6 +46,9 @@ public class Config implements IBean {
 	public String logLevel					= null;
 	public boolean debugService     = false;
 
+	public String uiProviderClass   = null;
+	public String uiUrl             = null;
+
 	public JedisPoolConfig jedispool;
 	public DBPoolConfig dbpool;
 	public ConnectConfig db;
