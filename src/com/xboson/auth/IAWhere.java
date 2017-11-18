@@ -17,9 +17,17 @@
 package com.xboson.auth;
 
 /**
- * 用来描述在哪; 比如在菜单管理中; 在数据库连接池中;
- * 或者在访问某个资源的对象中;
+ * 该接口实现需要切实的实施权限检查
  */
 public interface IAWhere {
+
+  /**
+   * 在当前位置应用 who 对资源 res 的权限检查
+   * 如果检查通过立即返回 true, 否则抛出异常或返回 false
+   *
+   * @param who 访问资源的主体
+   * @param res 被访问的资源
+   */
+  boolean apply(IAWho who, IAResource res);
 
 }

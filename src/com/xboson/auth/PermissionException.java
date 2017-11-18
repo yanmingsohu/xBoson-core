@@ -24,4 +24,35 @@ import com.xboson.been.XBosonException;
  */
 public class PermissionException extends XBosonException {
 
+  public PermissionException() {
+    super();
+  }
+
+
+  public PermissionException(String s) {
+    super(s);
+  }
+
+
+  public PermissionException(String s, Throwable throwable) {
+    super(s, throwable);
+  }
+
+
+  public PermissionException(Throwable throwable) {
+    super(throwable);
+  }
+
+
+  public PermissionException(IAWho who, IAWhere where, IAResource res) {
+    super("Who:" + who.identification()
+            + ";\n Where: " + where
+            + ";\n Resource: " + res.toURI()
+         );
+  }
+
+
+  protected PermissionException(String s, Throwable throwable, boolean b, boolean b1) {
+    super(s, throwable, b, b1);
+  }
 }

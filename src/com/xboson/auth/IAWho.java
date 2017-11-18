@@ -22,4 +22,10 @@ package com.xboson.auth;
  */
 public interface IAWho {
 
+  /**
+   * 该方法返回非 null 的唯一身份识别码, 否则认为识别失败;
+   * 该方法直接抛出的任何异常都导致认证失败.
+   */
+  String identification();
+
 }
