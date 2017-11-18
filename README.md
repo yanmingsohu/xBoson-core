@@ -5,13 +5,16 @@ Java JDK 8, Tomcat 9, Servlet 4.0,
 
 # JAR 依赖
 
-* (解析/封装 JSON - moshi-1.5.0.jar)[https://github.com/square/moshi]  
+* (解析/封装 JSON)
+    -- (moshi-1.5.0.jar)[https://github.com/square/moshi]  
 		-- (moshi-kotlin-1.5.jar)  
 		-- (okio-1.13.0.jar)  
 		
-* (控制台颜色输出 - jansi-1.16.jar)[https://github.com/fusesource/jansi]  
+* (控制台颜色输出)
+    -- (jansi-1.16.jar)[https://github.com/fusesource/jansi]  
 
-* (Redis 客户端 - jedis-2.9.0.jar)[https://github.com/xetorthio/jedis]  
+* (Redis 客户端)
+    -- (jedis-2.9.0.jar)[https://github.com/xetorthio/jedis]  
     -- (commons-pool2-2.4.3.jar)  
     
 * (数据库驱动)
@@ -22,6 +25,12 @@ Java JDK 8, Tomcat 9, Servlet 4.0,
     -- (mpp-connector-java-8.3.81.51-build-53.2-bin.jar)[华三数据库]
     -- (inspur11-jdbc.jar)[浪潮数据库]
     -- (h2-1.4.196.jar)[http://h2database.com/html/main.html]
+    
+* (XML 转换)
+    -- (xstream-1.4.10-java7.jar)[http://hmkcode.com/xstream-java-object-xml/]
+    -- (xmlpull-1.1.3.1.jar)
+    -- (xpp3_min-1.1.4c.jar)
+
 		
 # URL 映射约定
 

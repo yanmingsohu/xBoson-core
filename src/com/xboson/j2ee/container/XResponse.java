@@ -17,17 +17,14 @@
 package com.xboson.j2ee.container;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.squareup.moshi.JsonAdapter;
 import com.xboson.been.ResponseRoot;
 import com.xboson.been.XBosonException;
-import com.xboson.util.OutputStreamSinkWarp;
-import com.xboson.util.Tool;
+import com.xboson.j2ee.resp.ResponseTypes;
 
 
 /**

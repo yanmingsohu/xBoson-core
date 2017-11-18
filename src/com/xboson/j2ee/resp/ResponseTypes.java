@@ -14,9 +14,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.container;
+package com.xboson.j2ee.resp;
 
 import com.xboson.been.XBosonException;
+import com.xboson.j2ee.container.IXResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,6 +35,7 @@ public final class ResponseTypes {
 
   static {
     types.put("json", new JsonResponse());
+    types.put("xml",  new XmlResponse());
   }
 
 

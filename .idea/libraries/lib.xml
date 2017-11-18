@@ -6,9 +6,15 @@
       <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/jansi-1.16.jar!/" />
       <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/moshi-1.5.0.jar!/" />
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
+      <root url="jar://$PROJECT_DIR$/../.tomcat9/lib/catalina.jar!/" />
+      <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
+    </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" type="SOURCES" />
   </library>
 </component>

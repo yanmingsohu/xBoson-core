@@ -72,12 +72,12 @@ public class Striker extends HttpFilter {
       }
 
       do {
-        e = e.getCause();
         if (e instanceof XBosonException) {
           XBosonException xe = (XBosonException) e;
           ret.setCode(xe.getCode());
           break;
         }
+        e = e.getCause();
       } while(e != null);
 
 			jr.response();
