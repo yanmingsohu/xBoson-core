@@ -1,6 +1,6 @@
 # 大数据平台 v2
 
-Java JDK 8, Tomcat 9
+Java JDK 8, Tomcat 9, Servlet 4.0,
 
 
 # JAR 依赖
@@ -87,20 +87,22 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 ```json
 {
     /* 配置文件版本号, 随着系统升级而升级 */
-  "configVersion": "1.3",
+  "configVersion": "1.3.1",
   
     /* 全局默认日志过滤级别: ALL | OFF | DEBUG | INFO | WARN | ERROR | FATAL */
   "logLevel": "all",
     /* 日志输出类型, 可选的: ConsoleOut | FileOut | FileAndConsoleOut */
   "loggerWriterType": "ConsoleOut",
-    /* redis 所在主机 */
-  "redis_host": "localhost",
     /* session 密钥, 集群中所有节点必须相同 */
   "sessionPassword": "/gWMJ+cbYOixLiuElBV7Vxll3sM",
     /* session 超时时间, 分钟 */
   "sessionTimeout": 30,
     /* HTTP 服务接口, 是否输出错误堆栈 */
   "debugService": false,
+  
+    /* 超级管理员用户名以及密码*/
+  "rootUserName": "root",
+  "rootPassword": "111111",
   
   /* 数据库连接池的设置 */
   "dbpool": {
@@ -157,6 +159,26 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
     "testOnReturn": false,
     "testWhileIdle": true,
     "timeBetweenEvictionRunsMillis": 30000
+  },
+  
+  /* 平台核心数据库连接配置 */
+  "db": {
+      /* DBMS 类型 */
+    "dbname": "mysql",
+    "host": "localhost",
+    "port": "3306",
+    "username": "root",
+    "password": "root",
+      /* 保存一些表的集合的名称 */
+    "database": "test",
+    "dbid": 1
+  },
+  
+  /* 平台核心 redis 连接配置 */
+  "redis": {
+    "host": "localhost",
+    "password": "",
+    "port": ""
   }
 }
 ```

@@ -19,12 +19,19 @@ package com.xboson.test;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
+import java.util.Date;
 import java.util.Set;
 
 
@@ -33,6 +40,34 @@ public class TestTool extends Test {
   public void test() throws Throwable {
     tool();
     local_file_watcher();
+    // uri_object();
+  }
+
+
+  /**
+   * URI 是轻量对象, 可以大量使用
+   *
+   * create URI object 40000  Used Time 171 ms
+   * ##### Heap utilization statistics [MB] #####
+   *    Used Memory:35
+   *    Free Memory:209
+   *    Total Memory:245
+   *    Max Memory:3620
+   */
+  public void uri_object() throws URISyntaxException {
+    final int c= 50000;
+    final int p = c / 5;
+
+    URI[] arr = new URI[c];
+    beginTime();
+
+    for (int i=0; i<c; ++i) {
+      arr[i] = new URI("test://", "localhost", "/TestTool");
+      if (i % p == 0) {
+        endTime("create URI object", i);
+        memuse();
+      }
+    }
   }
 
 
@@ -48,27 +83,37 @@ public class TestTool extends Test {
 
 	public void local_file_watcher() throws Throwable {
     LocalDirWatcher lfw = LocalDirWatcher.me();
-    Path p = Paths.get(
-            "C:\\Users\\jym\\xBoson-config\\");
+    String base = SysConfig.me().readConfig().configPath;
+    Path p = Paths.get(base);
 
-    final Thread curr = Thread.currentThread();
-
+    final boolean[] sw = new boolean[1];
 
     IWatcher w = lfw.watchAll(p, new INotify() {
       public void nofify(String basename, String filename, WatchEvent event,
                          WatchEvent.Kind kind) throws IOException {
         msg(kind, basename, filename, event.count());
-        curr.interrupt();
+        sw[0] = true;
       }
-
       public void remove(String basename) {
         msg("removed", basename);
       }
     });
 
 
-    red("Wait for DIR change:", p);
-    Tool.sleep(10 * 1000);
+    msg("Wait for DIR change:", p);
+    Tool.sleep(1 * 1000);
+
+    File testfile = new File(base + "/test_file.txt");
+    FileWriter fw = new FileWriter(testfile);
+    fw.write("Test file watcher\n");
+    fw.write(lfw.getClass().toString());
+    fw.write('\n');
+    String str = new Date().toString();
+    fw.write(str);
+    fw.close();
+
+    Tool.sleep(1 * 1000);
+    ok(sw[0], "Received a file change notification");
   }
 	
 	

@@ -17,6 +17,7 @@
 package com.xboson.test;
 
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.DbmsFactory;
 
 import java.sql.Connection;
 
@@ -51,8 +52,9 @@ public class TestDS extends TestDBMS {
   /**
    * 连接的是上海阿里的数据库, 有效期到 2018 年
    */
-  public void connect_config() throws Throwable {
+  public static ConnectConfig connect_config() throws Throwable {
     sub("Init connect config");
+    ConnectConfig cc;
 
     cc = new ConnectConfig();
     cc.setDbname("mysql");
@@ -62,9 +64,11 @@ public class TestDS extends TestDBMS {
     cc.setUsername("connuser");
     cc.setPassword("dalianzhirong321_A");
 
-    try (Connection conn = db.open(cc)) {
+    try (Connection conn = DbmsFactory.me().open(cc)) {
       conn.createStatement().execute("Select 1");
     }
+
+    return cc;
   }
 
   public static void main(String[] s) {

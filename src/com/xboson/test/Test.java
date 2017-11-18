@@ -131,8 +131,11 @@ public class Test {
 	public static void success(Object ...o) {
 		System.out.println("\u001b[;32m  Success: " + _string(o) + "\u001b[m");
 	}
-	
-	
+
+
+  /**
+   * 提示失败消息, 并使失败计数 +1;
+   */
 	public static void fail(Object ...o) {
 		red("  Fail: " + _string(o));
 		++failcount;

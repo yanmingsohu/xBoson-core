@@ -44,6 +44,7 @@ public class Startup implements ServletContextListener {
 
 
   public void contextDestroyed(ServletContextEvent sce) {
+    Touch.exit();
   }
 
 

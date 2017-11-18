@@ -168,7 +168,7 @@ public final class ConnectConfig extends JsonHelper {
     return __hashcode;
   }
 
-  private int __hashcode = 0;
+  private transient int __hashcode = 0;
 
 
   public String toString() {

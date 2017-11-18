@@ -117,7 +117,7 @@ public class TestJSON extends Test {
 			try {
 				t[c].join();
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				fail(c, t[c], "interrupted");
 			}
 		}
 		success("thread safe");

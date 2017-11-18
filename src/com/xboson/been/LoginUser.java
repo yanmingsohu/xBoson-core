@@ -6,43 +6,29 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-13 上午11:50
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/AppPool.java
+// 文件创建日期: 17-11-14 上午8:23
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/auth/LoginUser.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.app;
+package com.xboson.been;
 
-import javax.servlet.ServletException;
+import com.xboson.auth.IAWho;
+import com.xboson.been.IBean;
+import com.xboson.been.JsonHelper;
 
-public class AppPool {
+
+public class LoginUser extends JsonHelper implements IBean, IAWho {
+  public String pid;        // uuid
+  public String userid;     // 就是用户登录 name, 唯一
+  public String password;   // 算法 ??
 
 
-  /**
-   * 从应用池获取应用实例, 不检查权限
-   *
-   * @param org 机构 id
-   * @param app 应用 id
-   * @return 返回启动的应用实例, 但不负责启动
-   */
-  public OrgApp getAppFromOrg(String org, String app) {
-    return null;
+  @Override
+  public String identification() {
+    return pid;
   }
-
-
-  /**
-   * 将 app 在 org 机构上启动
-   *
-   * @param org
-   * @param app
-   * @throws ServletException 出现任何错误都会抛出异常, 否则应用成功启动
-   */
-  public void bootApp(String org, String app) throws ServletException {
-    throw new UnsupportedOperationException("boot app.....");
-  }
-
-
 }

@@ -74,6 +74,8 @@ public class SysConfig {
 	private void initHomePath() {
 		homepath = System.getenv("HOME");
 		if (homepath != null) return;
+    homepath = System.getProperty("user.home");
+    if (homepath != null) return;
 		homepath = System.getenv("HOMEPATH");
 		if (homepath != null) return;
 		homepath = System.getenv("APPDATA");
@@ -83,6 +85,7 @@ public class SysConfig {
 		homepath = System.getenv("ALLUSERSPROFILE");
 		
 		if (homepath == null) {
+			System.err.println(System.getProperties());
 			throw new RuntimeException("Cannot init HOME path");
 		}
 	}
@@ -103,7 +106,7 @@ public class SysConfig {
 
 			} catch(Exception e) {
         System.err.println("Config file context: " + str);
-				System.err.println("Read User Config:" + e);
+				System.err.println("Read LoginUser Config:" + e);
 			}
 		}
 		return config;

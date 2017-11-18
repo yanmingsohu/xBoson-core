@@ -37,14 +37,13 @@ public class TestDBMS extends Test {
   public void test() throws Throwable {
     init_db();
     mysql();
-    t10000();
+//    t10000();
   }
 
 
   public void init_db() throws Throwable {
     sub("init DBMS factory");
     db = DbmsFactory.me();
-    db.registeringDefaultDriver();
   }
 
 
