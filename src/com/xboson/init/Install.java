@@ -17,198 +17,100 @@
 package com.xboson.init;
 
 import com.xboson.been.Config;
-import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
+import com.xboson.init.install.HttpData;
+import com.xboson.init.install.IStep;
+import com.xboson.init.install.step.Welcome;
+import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
-import redis.clients.jedis.Jedis;
 
 import javax.servlet.FilterChain;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.sql.Connection;
-import java.util.Date;
-
-import static com.xboson.init.Startup.INIT_FILE;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
 
 
 public class Install extends HttpServlet {
 
-  private static final String PAGE_PATH = "/WEB-INF/install-page/";
+  public static final String PAGE_PATH = "/WEB-INF/install-page/";
+  public static final String NULSTR = "";
 
+  private List<IStep> steps;
   private Config config;
   private int step = 0;
+  private Log log;
 
 
   public Install() {
     config = SysConfig.me().readConfig();
     LogFactory.me().setType("ConsoleOut");
     DbmsFactory.me().registeringDefaultDriver();
+    steps = new ArrayList<>();
+    log = LogFactory.create();
+
+    Package p = Welcome.class.getPackage();
+    try {
+      Iterator<Class> it = Tool.findPackage(p).iterator();
+      while (it.hasNext()) {
+        Class c = it.next();
+        if (IStep.class.isAssignableFrom(c)) {
+          IStep step = (IStep) c.newInstance();
+          steps.add(step);
+          log.info("Get Install step: ", c);
+        }
+      }
+
+      steps.sort(new Comparator<IStep>() {
+        public int compare(IStep a, IStep b) {
+          return a.order() - b.order();
+        }
+      });
+
+    } catch(Exception e) {
+      e.printStackTrace();
+    }
   }
 
 
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
 
-    String page = null;
     req.setCharacterEncoding("utf8");
     resp.setCharacterEncoding("utf8");
-    ServletContext sc = req.getServletContext();
-    String msg = "";
 
+    HttpData hd = new HttpData(req, resp, config);
     String next = req.getParameter("next");
-    //
-    // 请求进入下一个步骤, 验证参数
-    //
+    IStep is = steps.get(step);
+
     if (next != null) {
-      switch (step) {
-        case 0:
-          if (req.getParameter("begin_config") != null) {
-            step = 1;
-          }
-          break;
-
-        case 1:
-          String copyright = req.getParameter("copyright");
-          if ("yes".equals(copyright)) {
-            step = 2;
-          } else {
-            msg = "您必须接受版权条款方可继续";
-          }
-          break;
-
-        case 2:
-          String un = req.getParameter("rootUserName");
-          String up = req.getParameter("rootPassword");
-          String p2 = req.getParameter("again");
-          if (un == null || un.length()<4) {
-            msg = "用户名不能小于4个字符";
-          } else if (up == null || up.length()<6) {
-            msg = "密码不能小于6个字符";
-          } else if (!up.equals(p2)) {
-            msg = "重复密码错误";
-          } else {
-            config.rootUserName = un;
-            config.rootPassword = Password.v1(un, Password.md5(up));
-            step = 3;
-          }
-          break;
-
-        case 3:
-          config.db.setHost(req.getParameter("host"));
-          config.db.setPort(req.getParameter("port"));
-          config.db.setDbname(req.getParameter("dbname"));
-          config.db.setUsername(req.getParameter("username"));
-          config.db.setPassword(req.getParameter("password"));
-          config.db.setDatabase(req.getParameter("database"));
-
-          try (Connection conn = DbmsFactory.me().openWithoutPool(config.db)) {
-            step = 4;
-          } catch(Exception e) {
-            msg = e.getMessage();
-          }
-          break;
-
-        case 4:
-          ConnectConfig redis = config.redis;
-          redis.setHost(req.getParameter("rhost"));
-          redis.setPort(req.getParameter("rport"));
-          redis.setPassword(req.getParameter("rpassword"));
-
-          try (Jedis jc = new Jedis(redis.getHost(),
-                  redis.getIntPort(6379))) {
-            if (!Tool.isNulStr(redis.getPassword())) {
-              jc.auth(redis.getPassword());
-            }
-            jc.ping();
-            step = 99;
-          } catch(Exception e) {
-            msg = e.getMessage();
-            e.printStackTrace();
-          }
-          break;
-
-        case 99:
-          String cjson = Tool.getAdapter(Config.class).toJson(config);
-          req.setAttribute("configstr", cjson);
-          String act = req.getParameter("act");
-
-          if ("reconfig".equals(act)) {
-            step = 0;
-          }
-          else if ("restart".equals(act)) {
-            File init_file = new File(config.configPath + INIT_FILE);
-            FileWriter w = new FileWriter(init_file);
-            w.write(new Date().toString());
-            w.close();
-
-            SysConfig.me().generateDefaultConfigFile(config);
-            msg = "系统即将重启...";
-            step = 100;
-          }
-          else {
-            msg = "请选择一个操作";
-          }
-          break;
-
-        case 100:
-          if (!restart_server(req, resp)) {
-            msg = "您需要手动重启 Servlet 容器..";
-          }
-          break;
+      if (is.gotoNext(hd)) {
+        ++step;
       }
     }
 
-    //
-    // 检查当前安装步骤, 然后返回对应的页面
-    //
-    switch(step) {
-      default:
-        page = "_building_.jsp";
-        break;
-
-      case 0:
-        req.setAttribute("j2ee_info", sc.getServerInfo());
-        page = "welcome.jsp";
-        break;
-
-      case 1:
-        page = "copyright.jsp";
-        break;
-
-      case 2:
-        page = "root.jsp";
-        break;
-
-      case 3:
-        page = "db.jsp";
-        break;
-
-      case 4:
-        page = "redis.jsp";
-        break;
-
-      case 99:
-        page = "success.jsp";
-        break;
-
-      case 100:
-        if (!restart_server(req, resp)) {
-          msg = "您需要手动重启 Servlet 容器..";
-        }
-        page = "restarting.jsp";
-        break;
+    if (hd.reset) {
+      step = 0;
     }
 
+    is = steps.get(step);
+    if (is == null) step = 0;
+
+    log.info("Run install Step:", is.getClass(), "#", is.order());
+    String page = is.getPage(hd);
+    String msg = hd.msg == null ? NULSTR : hd.msg;
+
+    if (page == null) {
+      page = "_building_.jsp";
+    }
 
     //
     // 页面通过变量传递配置
@@ -226,11 +128,9 @@ public class Install extends HttpServlet {
   }
 
 
-  private boolean restart_server(HttpServletRequest req, HttpServletResponse resp) {
-    return false;
-  }
-
-
+  /**
+   * 将地址重映射到安装步骤上
+   */
   static public class InstallFilter extends HttpFilter {
     protected void doFilter(HttpServletRequest request,
                             HttpServletResponse response, FilterChain chain)

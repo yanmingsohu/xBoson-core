@@ -91,7 +91,7 @@ public class Startup implements ServletContextListener {
     striker.addMappingForUrlPatterns(null, false, "/*");
     session.addMappingForUrlPatterns(null, false, "/*");
 
-    ui.addMapping("/ui/*");
+    ui.addMapping("/face/*");
 
     main.addMapping("/*");
     main.setLoadOnStartup(1);
