@@ -36,8 +36,6 @@ Java JDK 8, Tomcat 9, Servlet 4.0,
 
 get 请求使用标准的 http url 参数.
 
-post 请求忽略 url 参数, 解析 body 中存放的 json.
-
 
 ## /app
 
@@ -49,13 +47,18 @@ post 请求忽略 url 参数, 解析 body 中存放的 json.
 并使用 functionname 来作为回调函数.
 
 
-## 格式参数, "$format"
+### 特殊参数, "$format"
 
 平台接口接收该参数来改变输出数据的格式. 
 
   * 'json' 返回 json 格式的参数, 默认值.
   * 'xml' 返回 xml 格式的参数.
   * 'jsonp' 同时必须提供 cb 参数.
+  
+  
+## /face/*
+
+画面接口, GET 读取文件, POST 上传文件(需要权限), DEL 删除文件.
 
 
 # 配置文件 

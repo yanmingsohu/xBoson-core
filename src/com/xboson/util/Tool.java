@@ -27,6 +27,7 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
 import com.xboson.been.XBosonException;
+import com.xboson.log.LogFactory;
 import com.xboson.test.Test;
 
 
@@ -183,7 +184,9 @@ public class Tool {
 	public static void close(Closeable c) {
 	  try {
 	    if (c != null) c.close();
-    } catch(Exception e) {}
+    } catch(Exception e) {
+			LogFactory.create().debug(e);
+		}
   }
 
 
@@ -193,7 +196,9 @@ public class Tool {
   public static void waitOver(Thread t) {
 	  try {
       if (t != null) t.join();
-    } catch(Exception e) {}
+    } catch(Exception e) {
+			LogFactory.create().debug(e);
+		}
   }
 	
 	
@@ -285,19 +290,36 @@ public class Tool {
 
 
 	/**
-	 * 获取包下的所有类类型, 排除子包, 排除内部类,
-	 * java bug: 如果没有访问过这个包, 无法在 findPackage 中查找
-   *
+	 * @see #findPackage(Package)
    * @deprecated 不推荐在正式代码中使用, 可用于测试
 	 * @param packageName 包名
 	 * @return 即使找不到类, 也会返回空数组
 	 */
 	public static Set<Class> findPackage(String packageName)
-          throws IOException, ClassNotFoundException {
+					throws IOException, ClassNotFoundException {
     Package pk = Package.getPackage(packageName);
     if (pk == null)
-      throw new XBosonException.NotExist("cannot find package: " + packageName);
+      throw new XBosonException.NotExist(
+              "cannot find package: " + packageName);
 
+    return findPackage(pk);
+	}
+
+
+  /**
+   * 获取包下的所有类类型, 排除子包, 排除内部类,
+   * java bug: 如果没有访问过这个包, 无法在 findPackage 中查找
+   *
+   * @deprecated 不推荐在正式代码中使用, 可用于测试
+   * @param pk 包
+   * @return 即使找不到类, 也会返回空数组
+   */
+	public static Set<Class> findPackage(Package pk)
+          throws IOException, ClassNotFoundException {
+    if (pk == null)
+      throw new XBosonException.NullParamException("Package pk");
+
+    String packageName = pk.getName();
     String packagePath = packageName.replaceAll("\\.", "/");
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
     URL url = loader.getResource(packagePath);
@@ -334,7 +356,7 @@ public class Tool {
     try {
       Thread.sleep(time);
     } catch(Exception e) {
-      System.err.println(e);
+      LogFactory.create().debug(e);
     }
   }
 

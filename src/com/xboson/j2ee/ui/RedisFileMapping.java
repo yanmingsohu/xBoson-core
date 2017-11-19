@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-18 下午8:29
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/ui/RedisProxy.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/ui/RedisFileMapping.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -17,9 +17,34 @@
 package com.xboson.j2ee.ui;
 
 /**
- * 所有文件都从 redis 中获取, 集群中除了一个本地文件模式的节点,
- * 其他节点都是 redis 模式.
+ * redis 文件模式.
+ *
+ * 读取: 从 redis 缓存中读取文件, 如果文件不存在则返回 404, 即使本地文件存在.
+ * 写入: 判断 redis 中保存的文件修改时间, 条件允许则保存文件; 写入结束后,
+ *      将修改记录加入消息队列
  */
-public class RedisProxy implements IUIFileProvider {
+public class RedisFileMapping implements IUIFileProvider {
 
+  @Override
+  public byte[] readFile(String path) {
+    return new byte[0];
+  }
+
+
+  @Override
+  public long modifyTime(String path) {
+    return 0;
+  }
+
+
+  @Override
+  public void makeDir(String path) {
+
+  }
+
+
+  @Override
+  public void writeFile(String path, byte[] bytes) {
+
+  }
 }

@@ -29,6 +29,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 
+/**
+ * 当操作成功返回 http 状态 200, 文件找不到返回 404,
+ * 操作失败返回 500 并且设置 http 头域 Error-Message 包含错误消息字符串.
+ */
 public class UIEngineServlet extends HttpServlet {
 
   private IUIFileProvider file_provider;
@@ -80,5 +84,11 @@ public class UIEngineServlet extends HttpServlet {
           throws ServletException, IOException {
     UrlSplit url = new UrlSplit(req);
     log.warn("DELETE file ", url.getLast());
+  }
+
+
+  @Override
+  protected long getLastModified(HttpServletRequest req) {
+    return super.getLastModified(req);
   }
 }
