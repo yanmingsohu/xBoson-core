@@ -7,15 +7,19 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-18 下午8:29
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/ui/IUIFileProvider.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/ui/RedisProxy.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.ui;
+package com.xboson.j2ee.ui;
 
-public interface IUIFileProvider {
+/**
+ * 所有文件都从 redis 中获取, 集群中除了一个本地文件模式的节点,
+ * 其他节点都是 redis 模式.
+ */
+public class RedisProxy implements IUIFileProvider {
 
 }

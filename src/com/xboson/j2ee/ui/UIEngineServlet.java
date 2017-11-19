@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.ui;
+package com.xboson.j2ee.ui;
 
 import com.xboson.been.UrlSplit;
 import com.xboson.log.Log;
