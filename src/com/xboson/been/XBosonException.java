@@ -145,7 +145,7 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
    */
   static public class BadParameter extends XBosonException {
     public BadParameter(String pname, String cause) {
-      super("Parameter: '" + pname + "' fail, " + cause);
+      super("Parameter: '" + pname + "' invalid, " + cause);
       setCode(2);
     }
   }

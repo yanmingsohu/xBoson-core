@@ -17,6 +17,7 @@
 package com.xboson.j2ee.container;
 
 import java.io.IOException;
+import java.io.Writer;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -60,9 +61,18 @@ public class Striker extends HttpFilter {
 			chain.doFilter(request, response);
 
 		} catch(Throwable e) {
-		  e.printStackTrace();
 			log.error(e.getMessage());
       response.setStatus(500);
+
+      //
+			// 初始化失败的情况
+			//
+      if (jr == null) {
+      	Writer out = response.getWriter();
+      	out.write("System Fail:\n");
+      	out.write(e.getMessage());
+      	return;
+			}
 
       ResponseRoot ret = jr.getRoot();
 			if (debug) {

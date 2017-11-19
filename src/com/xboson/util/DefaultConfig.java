@@ -20,7 +20,7 @@ import com.xboson.been.Config;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.test.Test;
-import com.xboson.ui.LocalFileMapping;
+import com.xboson.j2ee.ui.LocalFileMapping;
 import redis.clients.jedis.JedisPoolConfig;
 
 

@@ -31,7 +31,6 @@ import java.io.OutputStream;
 public class JsonResponse implements IXResponse {
 
   private static final String MIME_JSON = "application/json; charset=utf-8";
-  private static final String MIME_JS   = "application/javascript; charset=utf-8";
 
   private final JsonAdapter<ResponseRoot> jadapter;
 
@@ -48,18 +47,8 @@ public class JsonResponse implements IXResponse {
     OutputStream out = response.getOutputStream();
     OutputStreamSinkWarp outwarp = new OutputStreamSinkWarp(out);
 
-    String jsonp = request.getParameter("jsonp");
-
-    if (jsonp == null || jsonp == "false" || jsonp == "0") {
-      response.setHeader("content-type", MIME_JSON);
-      jadapter.toJson(outwarp, ret_root);
-    } else {
-      response.setHeader("content-type", MIME_JS);
-      outwarp.writeUtf8(jsonp);
-      outwarp.writeUtf8("(");
-      jadapter.toJson(outwarp, ret_root);
-      outwarp.writeUtf8(");");
-    }
+    response.setHeader("content-type", MIME_JSON);
+    jadapter.toJson(outwarp, ret_root);
   }
 
 }

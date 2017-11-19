@@ -28,12 +28,13 @@ import com.xboson.j2ee.resp.ResponseTypes;
 
 
 /**
- * 专门返回 xres 数据, 并不需要考虑在从 xres 字符串返回对象.
- * 'jsonp' 当请求中有该参数时, 进行 jsonp 应答.
+ * 对应答数据的转换器, 默认应答格式为 json, 当参数中有 '$format'
+ * 则使用该参数指定的应答格式.
  */
 public class XResponse {
 	
-	private static final String attrname  = "xBoson-X-response";
+	private static final String attrname   = "xBoson-X-response";
+	private static final String attrformat = "$format";
 	
 	private HttpServletRequest request;
 	private HttpServletResponse response;
@@ -51,12 +52,18 @@ public class XResponse {
 		request.setAttribute(attrname, this);
 		this.request = request;
 		this.response = response;
+
+		String format = request.getParameter(attrformat);
+		if (format != null) {
+      this.res_impl = ResponseTypes.get(format);
+    } else {
+      this.res_impl = ResponseTypes.get();
+    }
 	}
 	
 	
 	public XResponse() {
 		this.ret_root = new ResponseRoot();
-    this.res_impl = ResponseTypes.get();
 	}
 	
 	

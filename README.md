@@ -49,6 +49,15 @@ post 请求忽略 url 参数, 解析 body 中存放的 json.
 并使用 functionname 来作为回调函数.
 
 
+## 格式参数, "$format"
+
+平台接口接收该参数来改变输出数据的格式. 
+
+  * 'json' 返回 json 格式的参数, 默认值.
+  * 'xml' 返回 xml 格式的参数.
+  * 'jsonp' 同时必须提供 cb 参数.
+
+
 # 配置文件 
 
 系统配置文件将生成在:
@@ -114,7 +123,7 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   "rootPassword": "111111",
   
     /* ui 获取方式, 有缓冲区代理以及本地目录, 两种模式, 同一个集群中只有一个本地目录模式 */
-  "uiProviderClass": "com.xboson.ui.LocalFileMapping",
+  "uiProviderClass": "com.xboson.j2ee.ui.LocalFileMapping",
   "uiUrl": "",
   
   /* 数据库连接池的设置 */

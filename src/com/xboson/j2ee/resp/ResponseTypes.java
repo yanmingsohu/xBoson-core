@@ -33,9 +33,13 @@ public final class ResponseTypes {
   private static final Map<String, IXResponse> types = new HashMap<>();
   private static final String default_type = "json";
 
+  /**
+   * 支持列表
+   */
   static {
-    types.put("json", new JsonResponse());
-    types.put("xml",  new XmlResponse());
+    types.put("json",  new JsonResponse());
+    types.put("xml",   new XmlResponse());
+    types.put("jsonp", new JsonPaddingResp());
   }
 
 

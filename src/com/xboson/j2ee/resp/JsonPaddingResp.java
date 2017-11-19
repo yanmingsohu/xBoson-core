@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-18 下午7:47
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/resp/XmlResponse.java
+// 文件创建日期: 17-11-19 上午7:32
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/resp/JsonPaddingResp.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,35 +16,32 @@
 
 package com.xboson.j2ee.resp;
 
-import com.thoughtworks.xstream.XStream;
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.been.ResponseRoot;
 import com.xboson.j2ee.container.IXResponse;
+import com.xboson.util.OutputStreamSinkWarp;
+import com.xboson.util.Tool;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.OutputStream;
 
 
 /**
- * 已经开启了自动注解检查, 在做数据转换到 xml 时, 对象/属性上的注解会起作用
- *
- * @see com.thoughtworks.xstream.annotations.XStreamAlias 类别名 / 属性别名
- * @see com.thoughtworks.xstream.annotations.XStreamAsAttribute 转换为标签属性
- * @see com.thoughtworks.xstream.annotations.XStreamImplicit 集合类型展开
+ * 对于 jsonp 格式, 参数中必须有 "cb" 这个参数, 该参数作为 padding 函数.
+ * 如果为提供该参数, 则使用 "cb" 这个函数.
  */
-public class XmlResponse implements IXResponse {
+public class JsonPaddingResp implements IXResponse {
 
-  private static final String MIME_XML = "application/xml; charset=utf-8";
-  private static final String XML_HEAD =
-          "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
+  private static final String MIME_JS = "application/javascript; charset=utf-8";
+  private static final String FN_NAME = "cb";
 
-  private final XStream xs;
+  private final JsonAdapter<ResponseRoot> jadapter;
 
 
-  public XmlResponse() {
-    xs = new XStream();
-    xs.autodetectAnnotations(true);
+  public JsonPaddingResp() {
+    jadapter = Tool.getAdapter(ResponseRoot.class);
   }
 
 
@@ -52,9 +49,19 @@ public class XmlResponse implements IXResponse {
   public void response(HttpServletRequest request, HttpServletResponse response,
                        ResponseRoot ret_root) throws IOException {
 
-    response.setHeader("content-type", MIME_XML);
-    Writer out = response.getWriter();
-    out.write(XML_HEAD);
-    xs.toXML(ret_root, out);
+    OutputStream out = response.getOutputStream();
+    OutputStreamSinkWarp outwarp = new OutputStreamSinkWarp(out);
+
+    String fnname = request.getParameter(FN_NAME);
+    if (fnname == null) {
+      fnname = FN_NAME;
+    }
+
+    response.setHeader("content-type", MIME_JS);
+    outwarp.writeUtf8(fnname);
+    outwarp.writeUtf8("(");
+    jadapter.toJson(outwarp, ret_root);
+    outwarp.writeUtf8(");");
   }
+
 }

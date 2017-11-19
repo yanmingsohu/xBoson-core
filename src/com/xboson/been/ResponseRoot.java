@@ -16,6 +16,7 @@
 
 package com.xboson.been;
 
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.xboson.util.Tool;
 
 
@@ -23,6 +24,7 @@ import com.xboson.util.Tool;
  * 平台应答数据根节点, 最终数据将被转换;
  * (并不需要考虑反向转换)
  */
+@XStreamAlias("response-root")
 public class ResponseRoot extends JsonHelper {
 
   private static NameCache<Class> namecache = new NameCache<>();
