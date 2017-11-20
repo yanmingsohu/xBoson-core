@@ -52,6 +52,8 @@ public class Path {
           b = i;
         } else if (b-a == 2) {
           buf.pollLast();
+        } else if (a == b) {
+          b = i;
         } else {
           b = -1;
         }

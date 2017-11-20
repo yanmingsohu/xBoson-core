@@ -64,4 +64,9 @@ public class StringBufferOutputStream extends OutputStream {
 	public ByteBuffer toBuffer() {
 		return ByteBuffer.wrap(buf, 0, pos);
 	}
+
+
+	public byte[] toBytes() {
+	  return Arrays.copyOf(buf, pos);
+	}
 }
