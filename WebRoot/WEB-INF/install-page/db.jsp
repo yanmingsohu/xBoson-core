@@ -34,10 +34,12 @@
 
           <table>
           <tr>
-            <td>DB地址:</td><td><input name="host" value="${ param.host }" /></td>
+            <td>DB地址:</td><td><input name="host" value="${ param.host }" />
+              <a href='#' val='localhost' setto='[name=host]'>(localhost)</a></td>
           </tr><tr>
             <td> DB端口: </td>
-            <td><input name="port" value="${ param.port }" /> (3306)</td>
+            <td><input name="port" value="${ param.port }"/>
+              <a href='#' val='3306' setto='[name=port]'>(3306)</a></td>
           </tr><tr>
             <td> DB类型: </td><td>
               <select name='dbname'>
@@ -45,7 +47,9 @@
               </select>
               </td>
           </tr><tr>
-            <td> DB用户: </td><td><input name="username" value="${ param.username }"/></td>
+            <td> DB用户: </td><td><input name="username" value="${ param.username }"/>
+              <a href='#' val='root' setto='[name=username]'>(root)</a>
+            </td>
           </tr><tr>
             <td> DB密码: </td><td><input name="password" 
               value="${ param.password }" type="password" /></td>

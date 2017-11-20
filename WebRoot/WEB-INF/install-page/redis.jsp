@@ -34,10 +34,14 @@
           <table>
           <tr>
             <td>地址:</td>
-            <td><input name="rhost" value="${ param.rhost }" /></td>
+            <td><input name="rhost" value="${ param.rhost }" />
+              <a href='#' val='localhost' setto='[name=rhost]'>(localhost)</a></td>
+            </td>
           </tr><tr>
             <td>端口: </td>
-            <td><input name="rport" value="${ param.rport }" /> (6379)</td>
+            <td><input name="rport" value="${ param.rport }" />
+              <a href='#' val='6379' setto='[name=rport]'>(6379)</a>
+            </td>
           </tr><tr>
             <td> DB密码: </td>
             <td><input name="rpassword" 
