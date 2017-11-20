@@ -17,13 +17,19 @@
 package com.xboson.j2ee.ui;
 
 import com.xboson.been.Config;
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
+import java.io.OutputStreamWriter;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 
 
 /**
@@ -34,8 +40,9 @@ import java.nio.file.attribute.BasicFileAttributes;
  * 读取: 比较本地文件和 redis 文件修改日期, 相同返回 redis, 否则做同步后返回最新文件.
  * 写入: 更新本地文件后更新 redis 文件, 不发送任何通知.
  */
-public class LocalFileMapping implements IUIFileProvider {
+public class LocalFileMapping implements IUIFileProvider, IFileModify {
 
+  private RedisBase rb;
   private String basepath;
   private Log log;
 
@@ -44,47 +51,99 @@ public class LocalFileMapping implements IUIFileProvider {
     Config cf = SysConfig.me().readConfig();
     this.basepath = cf.uiUrl;
     this.log = LogFactory.create();
+    this.rb = new RedisBase();
+    rb.startModifyReciver(this);
+    SynchronizeFiles.start();
   }
 
 
   /**
    * 保证返回的文件一定在 basepath 的子目录中.
+   * 返回文件的本地目录
    */
-  private Path normalize(String path) {
-    return Paths.get(basepath, Paths.get(path).normalize().toString());
+  public Path normalize(String path) {
+    return Paths.get(basepath, path);
   }
 
 
   @Override
   public byte[] readFile(String path) throws IOException {
-    Path file = normalize(path);
-    return Files.readAllBytes(file);
+    Path local_file = normalize(path);
+    long local = Files.getLastModifiedTime(local_file).toMillis();
+    long redis = rb.getModifyTime(path);
+    byte[] ret;
+
+    if (local == redis) {
+      ret = rb.readFile(path);
+    }
+    if (local > redis) {
+      if (Files.isDirectory(local_file)) {
+        throw new XBosonException.ISDirectory(local_file);
+      }
+      ret = Files.readAllBytes(local_file);
+      rb.writeFile(path, ret);
+      rb.writeModifyTime(path, local);
+    }
+    else /* local < redis */ {
+      ret = rb.readFile(path);
+      Files.write(local_file, ret);
+      Files.setLastModifiedTime(local_file, FileTime.fromMillis(redis));
+    }
+    return ret;
   }
 
 
   @Override
   public long modifyTime(String path) {
-    Path file = normalize(path);
     try {
-      BasicFileAttributes attr = Files.readAttributes(file, BasicFileAttributes.class);
-      return attr.lastModifiedTime().toMillis();
-    } catch (IOException e) {
-      log.error("Get modify time fail,", e);
+      Path local_file = normalize(path);
+      long local = Files.getLastModifiedTime(local_file).toMillis();
+      long redis = rb.getModifyTime(path);
+      return local >= redis ? local : redis;
+    } catch(IOException e) {
+      return -1;
     }
-    return -1;
   }
 
 
   @Override
-  public void makeDir(String path) throws IOException {
-    Path file = normalize(path);
-    Files.createDirectories(file);
+  public void makeDir(String path) {
+    try {
+      Path file = normalize(path);
+      Files.createDirectories(file);
+    } catch (Exception e) {
+      log.error("Make dir", e);
+    }
   }
 
 
   @Override
   public void writeFile(String path, byte[] bytes) throws IOException {
-    Path file = normalize(path);
-    Files.write(file, bytes);
+    Path local_file = normalize(path);
+    long modified_time = System.currentTimeMillis();
+    Files.write(local_file, bytes);
+    Files.setLastModifiedTime(local_file, FileTime.fromMillis(modified_time));
+    rb.writeFile(path, bytes);
+    rb.writeModifyTime(path, modified_time);
   }
+
+
+  /**
+   * 来自 redis 的文件变通通知, 用远程文件覆盖本地文件
+   * @param file 改动的文件路径
+   */
+  @Override
+  public void modify(String file) {
+    try {
+      long mt = rb.getModifyTime(file);
+      byte[] content = rb.readFile(file);
+      Path local_file = normalize(file);
+      Files.write(local_file, content);
+      Files.setLastModifiedTime(local_file, FileTime.fromMillis(mt));
+    } catch(Exception e) {
+      log.error("Received modification:", e);
+    }
+  }
+
+
 }

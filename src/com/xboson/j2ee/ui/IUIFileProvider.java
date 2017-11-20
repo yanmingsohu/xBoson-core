@@ -20,14 +20,16 @@ import java.io.IOException;
 
 
 /**
- * 对 ui 文件的操作, 接口尽可能简单, 每个属性都是分离的
+ * 对 ui 文件的操作, 接口尽可能简单, 每个属性都是分离的.
+ * 所有的路径参数已经规范化, 不包含任何 "/./" 和 "/../", 并且使用 unix 分隔符,
+ * 路径为 ui 虚拟目录, 跟目录应该包含 'ui' 't' 'web' 'lib' 等目录
  */
 public interface IUIFileProvider {
 
   /**
    * 读取文件内容
    *
-   * @param path 路径可以包含 '/../'.
+   * @param path 路径
    * @return 文件的字节内容, 文件不存在返回 null
    */
   byte[] readFile(String path) throws IOException;
@@ -36,7 +38,7 @@ public interface IUIFileProvider {
   /**
    * 文件的最后修改时间
    *
-   * @param path 路径可以包含 '/../'.
+   * @param path 路径
    * @return 文件修改时间, 毫秒; 如果文件不存在返回 -1.
    */
   long modifyTime(String path);
@@ -45,17 +47,18 @@ public interface IUIFileProvider {
   /**
    * 创建目录, 如果上级目录是不存在的, 在必要时会自动生成这些目录
    *
-   * @param path 路径可以包含 '/../'.
+   * @param path 路径
    */
   void makeDir(String path) throws IOException;
 
 
   /**
    * 修改文件/创建文件, 同时会改变文件的修改时间;
-   * 如果文件的路径中包含不存在的目录, 必要时会自动生成这些目录
+   * 如果文件的路径中包含不存在的目录, 必要时会自动生成这些目录.
    *
-   * @param path 文件路径, 路径可以包含 '/../'.
+   * @param path 文件
    * @param bytes 文件内容.
+   * @throws IOException
    */
   void writeFile(String path, byte[] bytes) throws IOException;
 }

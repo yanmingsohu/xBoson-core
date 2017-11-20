@@ -16,6 +16,9 @@
 
 package com.xboson.j2ee.ui;
 
+import java.io.IOException;
+
+
 /**
  * redis 文件模式.
  *
@@ -25,26 +28,36 @@ package com.xboson.j2ee.ui;
  */
 public class RedisFileMapping implements IUIFileProvider {
 
+  private RedisBase rb;
+
+
+  public RedisFileMapping() {
+    rb = new RedisBase();
+  }
+
+
   @Override
-  public byte[] readFile(String path) {
-    return new byte[0];
+  public byte[] readFile(String path) throws IOException {
+    return rb.readFile(path);
   }
 
 
   @Override
   public long modifyTime(String path) {
-    return 0;
+    return rb.getModifyTime(path);
   }
 
 
   @Override
-  public void makeDir(String path) {
-
+  public void makeDir(String path) throws IOException {
+    rb.sendCreateDirNotice(path);
   }
 
 
   @Override
-  public void writeFile(String path, byte[] bytes) {
-
+  public void writeFile(String path, byte[] bytes) throws IOException {
+    rb.writeFile(path, bytes);
+    rb.writeModifyTime(path, System.currentTimeMillis());
+    rb.sendModifyNotice(path);
   }
 }

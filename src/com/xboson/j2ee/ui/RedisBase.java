@@ -16,16 +16,13 @@
 
 package com.xboson.j2ee.ui;
 
-import com.xboson.event.OnExitHandle;
+import com.xboson.event.*;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
-import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
 
 /**
@@ -34,11 +31,14 @@ import java.util.List;
  */
 public class RedisBase {
 
+  public static final char PREFIX_FILE  = '|';
+  public static final char PREFIX_DIR   = '?';
+
   public static final String QUEUE_NAME   = "XB.UI.File.ChangeQueue";
   public static final String CONTENT_NAME = "XB.UI.File.Content";
   public static final String MODIFY_NAME  = "XB.UI.File.ModifyTime";
+
   public static final byte[] CONTENT_ARR  = CONTENT_NAME.getBytes();
-  public static final int QUEUE_TIMEOUT   = 5; // 秒
 
   private Log log;
 
@@ -59,11 +59,11 @@ public class RedisBase {
 
 
   /**
-   * 用当前时间作为文件修改时间, 内容值为 毫秒
+   * 写入文件修改日期
    */
-  public void writeModifyTime(String path) {
+  public void writeModifyTime(String path, long file_modify_time) {
     try (Jedis client = RedisMesmerizer.me().open()) {
-      String time = Long.toHexString(System.currentTimeMillis());
+      String time = Long.toHexString(file_modify_time);
       client.hset(MODIFY_NAME, path, time);
     }
   }
@@ -82,8 +82,11 @@ public class RedisBase {
   public long getModifyTime(String path) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       String time = client.hget(MODIFY_NAME, path);
-      return Long.parseLong(time, 16);
+      if (time != null) {
+        return Long.parseLong(time, 16);
+      }
     }
+    return -1;
   }
 
 
@@ -92,58 +95,25 @@ public class RedisBase {
    */
   public void sendModifyNotice(String path) {
     try (Jedis client = RedisMesmerizer.me().open()) {
-      client.rpush(QUEUE_NAME, path);
+      client.rpush(QUEUE_NAME, PREFIX_FILE + path);
+    }
+  }
+
+
+  public void sendCreateDirNotice(String dir) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      client.rpush(QUEUE_NAME, PREFIX_DIR + dir);
     }
   }
 
 
   /**
-   * 打开一个文件修改监听器, 返回线程已经启动并在系统销毁时终止,
-   * 如果监听器函数抛出异常, 监听器线程也会终止.
+   * 打开一个文件修改监听器, 并尝试启动一个文件修改事件队列.
    */
-  public Thread startModifyReciver(IFileModify fm) {
-    ModifyThread mt = new ModifyThread(fm);
-    Thread t = new Thread(mt);
-    t.start();
-    return t;
+  public FileModifyHandle startModifyReciver(IFileModify fm) {
+    UIEventMigrationThread.start();
+    return new FileModifyHandle(fm);
   }
 
 
-  public class ModifyThread extends OnExitHandle implements Runnable {
-    IFileModify fm;
-    boolean running;
-    Thread myself;
-
-
-    ModifyThread(IFileModify fm) {
-      this.fm = fm;
-      this.running = true;
-    }
-
-
-    public void run() {
-      myself = Thread.currentThread();
-      log.info("ModifyThread start", myself);
-
-      try (Jedis client = RedisMesmerizer.me().open()) {
-        while (running) {
-          //
-          // 在队列上等待 QUEUE_TIMEOUT 秒后返回
-          //
-          List<String> ret = client.brpop(QUEUE_TIMEOUT, QUEUE_NAME);
-          if (ret.size() == 2) {
-            fm.modify(ret.get(1));
-          }
-        }
-      }
-    }
-
-
-    @Override
-    protected void exit() {
-      running = false;
-      log.debug("ModifyThread wait over...", QUEUE_TIMEOUT +"s");
-      Tool.waitOver(myself);
-    }
-  }
 }

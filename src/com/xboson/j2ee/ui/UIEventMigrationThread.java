@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-19 上午11:41
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/ui/IFileModify.java
+// 文件创建日期: 17-11-20 上午10:59
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/ui/UIEventMigrationThread.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,22 +16,29 @@
 
 package com.xboson.j2ee.ui;
 
+import com.xboson.event.EventQueueMigrationThread;
+import com.xboson.event.Names;
+
+
 /**
- * 仅对 ui 模块使用的文件通知器
+ * ui 文件修改消息线程封装, 每个应用只运行一个线程.
+ *
+ * @see EventQueueMigrationThread
  */
-public interface IFileModify {
+public final class UIEventMigrationThread {
 
-  /**
-   * 文件改动时被通知
-   * @param file 改动的文件路径
-   */
-  void modify(String file);
+  private static EventQueueMigrationThread mt;
 
 
-  /**
-   * 当目录被创建时调用
-   * @param dirname 目录路径
-   */
-  void makeDir(String dirname);
+  private UIEventMigrationThread() {
+  }
 
+
+  public synchronized static EventQueueMigrationThread start() {
+    if (mt == null || mt.isRunning() == false) {
+      mt = new EventQueueMigrationThread(
+              RedisBase.QUEUE_NAME, Names.ui_file_change);
+    }
+    return mt;
+  }
 }
