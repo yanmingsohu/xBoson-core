@@ -106,8 +106,8 @@ public class GlobalEvent {
         contexts.remove(name);
         return true;
       } else {
-        Set<GlobalListener> ls =context.getListeners();
-        boolean ret = ls.remove(name);
+        Set<GlobalListener> ls = context.getListeners();
+        boolean ret = ls.remove(listener);
         if (ls.isEmpty()) {
           context.destory();
           contexts.remove(name);

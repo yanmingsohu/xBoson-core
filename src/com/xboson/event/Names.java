@@ -51,4 +51,13 @@ public final class Names {
    */
   public static final String inner_error = "sys.error";
 
+  /**
+   * c(String filename, null)
+   * ui 文件修改消息, 由于离线的本地文件节点在上线后, 需要知道在线文件的修改记录
+   * 所以该消息的离线队列由 RedisBase 相关线程维护
+   *
+   * @see com.xboson.j2ee.ui.RedisBase
+   */
+  public static final String ui_file_change = "ui.file.change";
+
 }

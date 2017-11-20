@@ -16,6 +16,7 @@
 
 package com.xboson.event;
 
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
@@ -28,10 +29,7 @@ import javax.naming.NamingException;
 import javax.naming.event.EventContext;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingListener;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 
 class GlobalEventContext extends InitialContext implements EventContext {
@@ -52,7 +50,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
 
   public GlobalEventContext(String name) throws NamingException {
     super(true);
-    this.listeners = new LinkedHashSet<>();
+    this.listeners = Collections.synchronizedSet(new LinkedHashSet<>());
     this.name = name;
     this.id = (long)(Long.MAX_VALUE / 2.0 * Math.random());
     this.log = LogFactory.create("Event::" + name);
@@ -99,9 +97,10 @@ class GlobalEventContext extends InitialContext implements EventContext {
 
 
   void on(GlobalListener listener) {
-    synchronized (listeners) {
-      listeners.add(listener);
-    }
+    if (listener == null)
+      throw new XBosonException.NullParamException("GlobalListener listener");
+
+    listeners.add(listener);
   }
 
 
@@ -124,23 +123,21 @@ class GlobalEventContext extends InitialContext implements EventContext {
    * 只在系统内部发出消息
    */
   void emitWithoutCluster(Object data, int type, String info) {
-    synchronized (listeners) {
-      Iterator<GlobalListener> its = listeners.iterator();
+    Iterator<GlobalListener> its = listeners.iterator();
 
-      Binding newbind = new Binding(name, data);
-      NamingEvent event = new NamingEvent(
-              this, type, newbind, oldbind, info);
-      oldbind = newbind;
+    Binding newbind = new Binding(name, data);
+    NamingEvent event = new NamingEvent(
+            this, type, newbind, oldbind, info);
+    oldbind = newbind;
 
-      while (its.hasNext()) {
-        try {
-          its.next().objectChanged(event);
-        } catch (Exception err) {
-          if (skip_error) {
-            log.warn("skip error by error");
-          } else {
-            QuickSender.emitError(err, this);
-          }
+    while (its.hasNext()) {
+      try {
+        its.next().objectChanged(event);
+      } catch (Exception err) {
+        if (skip_error) {
+          log.warn("skip error by error");
+        } else {
+          QuickSender.emitError(err, this);
         }
       }
     }
