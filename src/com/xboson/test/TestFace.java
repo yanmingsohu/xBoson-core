@@ -16,17 +16,19 @@
 
 package com.xboson.test;
 
-import com.xboson.j2ee.ui.IFileModify;
-import com.xboson.j2ee.ui.IUIFileProvider;
-import com.xboson.j2ee.ui.LocalFileMapping;
-import com.xboson.j2ee.ui.RedisBase;
+import com.xboson.j2ee.ui.*;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.util.Tool;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 
+/**
+ * 如果有其他的集群节点连接了 redis, 测试会失败
+ */
 public class TestFace extends Test {
 
   private String path;
@@ -34,15 +36,43 @@ public class TestFace extends Test {
 
 
   public void test() throws Throwable {
-    path = "/../ui/paas/login.html";
+    path = "/ui/paas/login.html";
     LogFactory.setLevel(Level.ALL);
     testLocal();
     test_redis_base();
+    local_and_redis();
+  }
+
+
+  public void local_and_redis() throws Throwable {
+    sub("Write use redis, read from local");
+
+    LocalFileMapping local = new LocalFileMapping();
+    RedisFileMapping redis = new RedisFileMapping();
+
+    String test_dir = "/test/";
+    String test_file = test_dir + "/a.js";
+    byte[] content = randomString(100).getBytes();
+    redis.makeDir("/test/");
+    redis.writeFile(test_file, content);
+    Tool.sleep(1000);
+
+    byte[] r = local.readFile(test_file);
+    ok(Arrays.equals(content, r), "content");
+
+    Path p = local.normalize(test_file);
+    byte[] r2 = Files.readAllBytes(p);
+    ok(Arrays.equals(content, r2), "from fs");
+    msg("content:", new String(r2));
+
+    Files.delete(local.normalize(test_file));
+    Files.delete(local.normalize(test_dir));
   }
 
 
   public void testLocal() throws Throwable {
     sub("Local file system");
+
     IUIFileProvider local = new LocalFileMapping();
     content = local.readFile(path);
     String s = new String(content);
@@ -52,6 +82,8 @@ public class TestFace extends Test {
 
 
   public void test_redis_base() throws Throwable {
+    sub("Test UI Redis base");
+
     RedisBase rb = new RedisBase();
     rb.writeFile(path, content);
     byte[] rbyte = rb.readFile(path);
@@ -60,17 +92,20 @@ public class TestFace extends Test {
     final Thread curr = Thread.currentThread();
     final boolean[] check = new boolean[1];
 
-    rb.startModifyReciver(new IFileModify() {
+    FileModifyHandle fmh = rb.startModifyReciver(new IFileModify() {
       public void modify(String file) {
         eq(path, file, "recive modify notice");
         check[0] = true;
-        curr.interrupt();
+        curr.interrupt(); // 中断 标记1 的休眠.
+      }
+      public void makeDir(String dirname) {
       }
     });
 
     rb.sendModifyNotice(path);
-    Tool.sleep(10000);
-    ok(check[0], "recive modify message");
+    Tool.sleep(10000); // 标记1
+    ok(check[0], "waiting message");
+    fmh.removeModifyListener();
   }
 
 

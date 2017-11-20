@@ -23,6 +23,7 @@ import java.util.*;
 
 import com.xboson.been.JsonHelper;
 import com.xboson.init.Touch;
+import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.ISleepwalker;
 import com.xboson.util.StringBufferOutputStream;
@@ -87,6 +88,7 @@ public class Test {
 	public final void _test(Test[] cl) {
     Touch.me();
     LogFactory.me().setType("TestOut");
+    LogFactory.setLevel(Level.ALL);
 
 		StringBufferOutputStream strerr = new StringBufferOutputStream();
 		PrintStream buf = new PrintStream(strerr);

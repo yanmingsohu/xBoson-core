@@ -17,17 +17,17 @@
 package com.xboson.been;
 
 import com.xboson.sleep.IBinData;
+import com.xboson.sleep.ITimeout;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 
 /**
  * Session 不是动态数据, 属性都是固定的
  */
-public class SessionData implements IBean, IBinData {
+public class SessionData implements IBean, IBinData, ITimeout {
 	
 	public static final String attrname = "xBoson-session-data";
 

@@ -48,6 +48,7 @@ public class Config implements IBean {
 
 	public String uiProviderClass   = null;
 	public String uiUrl             = null;
+	public boolean uiListDir        = false;
 
 	public JedisPoolConfig jedispool;
 	public DBPoolConfig dbpool;

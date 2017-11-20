@@ -34,7 +34,6 @@ import com.xboson.util.SysConfig;
 /**
  * 抓住所有异常, 编码转换, 等初始化操作
  */
-//@WebFilter(urlPatterns="/*")
 public class Striker extends HttpFilter {
 
 	private static final long serialVersionUID = 8889985807692963369L;
@@ -75,10 +74,16 @@ public class Striker extends HttpFilter {
 			}
 
       ResponseRoot ret = jr.getRoot();
+      e.printStackTrace();
 			if (debug) {
         ret.setError(e);
       } else {
-        ret.setData(e.getMessage());
+			  String msg = e.getMessage();
+			  if (msg != null) {
+          ret.setData(e.getMessage());
+        } else {
+			    ret.setData(e.toString());
+        }
       }
 
       do {

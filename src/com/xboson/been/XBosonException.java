@@ -16,6 +16,7 @@
 
 package com.xboson.been;
 
+import java.nio.file.Path;
 import java.sql.SQLException;
 
 
@@ -147,6 +148,21 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
     public BadParameter(String pname, String cause) {
       super("Parameter: '" + pname + "' invalid, " + cause);
       setCode(2);
+    }
+  }
+
+
+  /**
+   * 调用打开文件的函数的路径是一个目录时抛出异常
+   */
+  static public class ISDirectory extends XBosonException {
+    private Path path;
+    public ISDirectory(Path path) {
+      super(path + " is directory");
+      this.path = path;
+    }
+    public Path getPath() {
+      return path;
     }
   }
 }

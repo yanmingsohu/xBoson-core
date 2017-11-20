@@ -34,6 +34,10 @@ import java.io.ObjectOutputStream;
 /**
  * 能正确处理 json/bin 类型
  * 如果收到 sleep 发出的异常, 可能是实例内部类无法正确序列化导致的.
+ *
+ * @see IBinData 二进制持久化, 适合 java 对象
+ * @see IJsonData json 字符串持久化
+ * @see ITimeout 持久化超时
  */
 public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
@@ -145,7 +149,17 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         if (str == null) {
           throw new Exception("cannot found data " + c + " - " + id);
         }
-        return (ISleepwalker) Tool.getAdapter(c).fromJson(str);
+
+        ISleepwalker obj = (ISleepwalker) Tool.getAdapter(c).fromJson(str);
+
+        if (obj instanceof ITimeout) {
+          ITimeout to = (ITimeout) obj;
+          if (to.isTimeout()) {
+            client.hdel(KEY, id);
+          }
+        }
+
+        return obj;
       } catch(Exception e) {
         log.error("wake json", e);
         return null;
@@ -165,7 +179,6 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         oobj.flush();
 
         byte[] out = obyte.toByteArray();
-        // Test.printArr(out);
         client.hset(KEY_BYTE, id.getBytes(), out);
       } catch(Exception e) {
         log.error("sleep bin", e);
@@ -174,15 +187,24 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
     public IBinData wake(Class c, String id) {
       try (Jedis client = jpool.getResource()) {
-        byte[] data = client.hget(KEY_BYTE, id.getBytes());
+        byte[] bid  = id.getBytes();
+        byte[] data = client.hget(KEY_BYTE, bid);
         if (data == null) {
           throw new Exception("cannot found data " + c + " - " + id);
         }
-        // Test.printArr(data);
+
         ByteArrayInputStream ibyte = new ByteArrayInputStream(data);
         ObjectInputStream iobj = new ObjectInputStream(ibyte);
 
-        return (IBinData) iobj.readObject();
+        IBinData obj = (IBinData) iobj.readObject();
+        if (obj instanceof ITimeout) {
+          ITimeout to = (ITimeout) obj;
+          if (to.isTimeout()) {
+            client.hdel(KEY_BYTE, bid);
+          }
+        }
+
+        return obj;
       } catch(Exception e) {
         log.error("wake bin", e);
         return null;
