@@ -109,7 +109,8 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
       byte[] body = Files.readAllBytes(local_path);
       rb.writeFile(vpath, body);
       rb.writeModifyTime(vpath, local);
-    } else if (local < redis) {
+    }
+    else if (local < redis) {
       byte[] body = rb.readFile(vpath);
       Files.write(local_path, body);
       Files.setLastModifiedTime(local_path, FileTime.fromMillis(redis));

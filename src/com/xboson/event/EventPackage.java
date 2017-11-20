@@ -54,8 +54,11 @@ public class EventPackage {
    * 解析数据并还原为原始类型
    */
   public void parseData() {
-    if (className != null && data != null
-            && className.indexOf("com.xboson.") == 0) {
+    //
+    // 为安全而过滤了包名, 但是这并不起作用, 反而增加了麻烦
+    // && className.indexOf("com.xboson.") == 0
+    //
+    if (className != null && data != null) {
       try {
         Class data_class = Class.forName(className);
         data = Tool.getAdapter(data_class).fromJson(data.toString());
