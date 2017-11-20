@@ -64,9 +64,9 @@ public interface IUIFileProvider {
 
 
   /**
-   * 文件被删除
+   * 删除文件
    *
    * @param file
    */
-  void delete(String file);
+  void deleteFile(String file);
 }

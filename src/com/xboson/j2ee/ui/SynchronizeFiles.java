@@ -59,15 +59,15 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   private Log log;
   private Path base;
   private Path virtual;
-  private int files;
-  private int d = 1;
+  private int files = 0;
+  private int dirs  = 0;
+  private int d     = 50;
 
 
   private SynchronizeFiles(String base) {
     this.base = Paths.get(base);
-    this.log = LogFactory.create();
-    this.files = 0;
-    this.rb = new RedisBase();
+    this.log  = LogFactory.create();
+    this.rb   = new RedisBase();
   }
 
 
@@ -79,7 +79,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
     } catch (IOException e) {
       log.error(e);
     }
-    log.info("over");
+    log.info("Sync Over,", files, "files and", dirs, "directorys.");
     t = null;
   }
 
@@ -88,6 +88,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   public FileVisitResult preVisitDirectory(
           Path path, BasicFileAttributes basicFileAttributes)
           throws IOException {
+    ++dirs;
     return FileVisitResult.CONTINUE;
   }
 

@@ -129,6 +129,13 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
 
 
   @Override
+  public void deleteFile(String file) {
+    delete(file);
+    rb.deleteFile(file);
+  }
+
+
+  @Override
   public void writeFile(String path, byte[] bytes) throws IOException {
     Path local_file = normalize(path);
     long modified_time = System.currentTimeMillis();

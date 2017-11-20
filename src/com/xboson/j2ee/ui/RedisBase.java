@@ -16,7 +16,6 @@
 
 package com.xboson.j2ee.ui;
 
-import com.xboson.event.*;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
@@ -27,8 +26,9 @@ import java.io.IOException;
 
 
 /**
- * redis 的底层操作,
- * 所有的参数都不做任何前置处理, 调用者需要保证参数正确.
+ * redis 的底层操作, 没有目录的概念;
+ * 所有的参数都不做任何前置处理, 调用者需要保证参数正确;
+ * 特别是路径参数必须规范化并统一使用 unix 风格路径字符串.
  */
 public class RedisBase {
 

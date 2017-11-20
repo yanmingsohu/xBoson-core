@@ -17,28 +17,31 @@
 package com.xboson.j2ee.ui;
 
 /**
- * 仅对 ui 模块使用的文件通知器
+ * 仅对 ui 模块使用的文件通知器, 当其他节点对文件有操作,
+ * 会通过网络将消息发送到本地文件系统, 通过该接口接收这些消息.
+ *
+ * @see FileModifyHandle
  */
 public interface IFileModify {
 
   /**
-   * 文件改动时被通知
-   * @param file 改动的文件路径
+   * 通知文件改动或创建
+   * @param vfile 改动的文件路径
    */
-  void modify(String file);
+  void modify(String vfile);
 
 
   /**
-   * 当目录被创建时调用
-   * @param dirname 目录路径
+   * 通知目录被创建
+   * @param vdirname 目录路径
    */
-  void makeDir(String dirname);
+  void makeDir(String vdirname);
 
 
   /**
-   * 当文件被删除时调用
-   * @param file
+   * 通知文件被删除
+   * @param vfile 删除的文件路径
    */
-  void delete(String file);
+  void delete(String vfile);
 
 }

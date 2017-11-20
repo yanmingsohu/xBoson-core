@@ -63,7 +63,7 @@ public class RedisFileMapping implements IUIFileProvider {
 
 
   @Override
-  public void delete(String file) {
+  public void deleteFile(String file) {
     rb.deleteFile(file);
     rb.sendDeleteNotice(file);
   }
