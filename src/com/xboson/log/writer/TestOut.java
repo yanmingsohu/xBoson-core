@@ -14,11 +14,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.log;
+package com.xboson.log.writer;
 
 import java.util.Date;
 
-import com.xboson.test.Test;
+import com.xboson.log.ILogWriter;
+import com.xboson.log.Level;
+
 
 public class TestOut extends ConsoleOut implements ILogWriter {
 

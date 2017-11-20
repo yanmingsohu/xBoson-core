@@ -14,7 +14,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.log;
+package com.xboson.log.writer;
+
+import com.xboson.log.ILogWriter;
+import com.xboson.log.Level;
 
 import java.util.Date;
 import java.util.Deque;

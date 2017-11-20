@@ -14,7 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.log;
+package com.xboson.log.writer;
+
+import com.xboson.log.ILogWriter;
+import com.xboson.log.Level;
+import com.xboson.log.OutBase;
 
 import java.util.Date;
 import java.util.HashMap;

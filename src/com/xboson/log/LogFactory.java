@@ -19,13 +19,14 @@ package com.xboson.log;
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
+import com.xboson.log.writer.ConsoleOut;
+import com.xboson.log.writer.SavedOut;
 import com.xboson.util.SysConfig;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Date;
 import java.util.Properties;
 
 
@@ -123,6 +124,11 @@ public class LogFactory extends OnExitHandle {
     }
 		return log;
 	}
+
+
+	public static Log create(Class c, String name) {
+		return create(c.getName() + "::" + name);
+	}
 	
 	
 	/**
@@ -167,9 +173,9 @@ public class LogFactory extends OnExitHandle {
 	}
 
 
-	public synchronized boolean setType(String type) {
+	public synchronized boolean setType(String type_name) {
 		try {
-			Class<?> cl = Class.forName("com.xboson.log." + type);
+			Class<?> cl = Class.forName("com.xboson.log.writer." + type_name);
 			ILogWriter older = writer;
 			writer = (ILogWriter) cl.newInstance();
 			older.destroy(writer);

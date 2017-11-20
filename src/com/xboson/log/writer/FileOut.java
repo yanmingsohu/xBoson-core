@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.log;
+package com.xboson.log.writer;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -24,6 +24,9 @@ import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.xboson.log.ILogWriter;
+import com.xboson.log.Level;
+import com.xboson.log.OutBase;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
