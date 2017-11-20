@@ -38,6 +38,7 @@ public class Tool {
 	
 	private static Builder jsbuilded;
 	private static Moshi moshi;
+	private static com.xboson.script.lib.Path p = new com.xboson.script.lib.Path();
 	
 	private Tool() {}
 	
@@ -363,6 +364,15 @@ public class Tool {
 
   public static boolean isNulStr(String s) {
 	  return s == null || s.trim().length() == 0;
+  }
+
+
+  /**
+   * 使用 unix 风格规范化路径
+   * @see com.xboson.script.lib.Path#normalize(String)
+   */
+  public static String normalize(String path) {
+	  return p.normalize(path);
   }
 
 }

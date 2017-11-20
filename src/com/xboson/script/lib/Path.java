@@ -43,10 +43,7 @@ public class Path {
 
     for (i=0; i<s.length(); ++i) {
       ch = s.charAt(i);
-      if (ch == '\\') {
-        continue;
-      }
-      else if (ch == '/') {
+      if (ch == '/' || ch == '\\') {
         if (b == -1) {
           buf.addLast(s.substring(a, i));
           b = i;
@@ -74,7 +71,15 @@ public class Path {
     StringBuilder out = new StringBuilder();
     Iterator<String> it = buf.iterator();
     while (it.hasNext()) {
-      out.append( it.next() );
+      String sub = it.next();
+      if (sub.length() > 0 && sub.charAt(0) == '\\') {
+        out.append('/');
+        if (sub.length() > 1) {
+          out.append(sub, 1, sub.length());
+        }
+      } else {
+        out.append(sub);
+      }
     }
     return out.toString();
   }

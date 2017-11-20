@@ -34,4 +34,11 @@ public interface IFileModify {
    */
   void makeDir(String dirname);
 
+
+  /**
+   * 当文件被删除时调用
+   * @param file
+   */
+  void delete(String file);
+
 }

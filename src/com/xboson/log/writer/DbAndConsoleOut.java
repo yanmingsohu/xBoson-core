@@ -20,19 +20,32 @@ import com.xboson.log.ILogWriter;
 import com.xboson.log.Level;
 import com.xboson.log.OutBase;
 
+import java.io.IOException;
 import java.util.Date;
 
 
 public class DbAndConsoleOut extends OutBase implements ILogWriter {
 
+  private DbOut db;
+  private ConsoleOut cons;
+
+
+  public DbAndConsoleOut() {
+    db = new DbOut();
+    cons = new ConsoleOut();
+  }
+
+
   @Override
   public void output(Date d, Level l, String name, Object[] msg) {
-
+    cons.output(d, l, name, msg);
+    db.output(d, l, name, msg);
   }
 
 
   @Override
   public void destroy(ILogWriter replace) {
-
+    cons.destroy(replace);
+    db.destroy(replace);
   }
 }

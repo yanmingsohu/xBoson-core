@@ -61,4 +61,12 @@ public interface IUIFileProvider {
    * @throws IOException
    */
   void writeFile(String path, byte[] bytes) throws IOException;
+
+
+  /**
+   * 文件被删除
+   *
+   * @param file
+   */
+  void delete(String file);
 }

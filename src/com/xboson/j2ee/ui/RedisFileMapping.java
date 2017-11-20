@@ -60,4 +60,11 @@ public class RedisFileMapping implements IUIFileProvider {
     rb.writeModifyTime(path, System.currentTimeMillis());
     rb.sendModifyNotice(path);
   }
+
+
+  @Override
+  public void delete(String file) {
+    rb.deleteFile(file);
+    rb.sendDeleteNotice(file);
+  }
 }

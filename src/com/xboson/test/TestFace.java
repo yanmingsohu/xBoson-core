@@ -41,6 +41,13 @@ public class TestFace extends Test {
     testLocal();
     test_redis_base();
     local_and_redis();
+    test_sync_files();
+  }
+
+
+  public void test_sync_files() {
+    SynchronizeFiles.start("/down1/web4node/public");
+    SynchronizeFiles.join();
   }
 
 
@@ -92,13 +99,11 @@ public class TestFace extends Test {
     final Thread curr = Thread.currentThread();
     final boolean[] check = new boolean[1];
 
-    FileModifyHandle fmh = rb.startModifyReciver(new IFileModify() {
+    FileModifyHandle fmh = rb.startModifyReciver(new NullModifyListener() {
       public void modify(String file) {
         eq(path, file, "recive modify notice");
         check[0] = true;
         curr.interrupt(); // 中断 标记1 的休眠.
-      }
-      public void makeDir(String dirname) {
       }
     });
 
@@ -106,6 +111,19 @@ public class TestFace extends Test {
     Tool.sleep(10000); // 标记1
     ok(check[0], "waiting message");
     fmh.removeModifyListener();
+  }
+
+
+  abstract class NullModifyListener implements IFileModify {
+    @Override
+    public void modify(String file) {
+    }
+    @Override
+    public void makeDir(String dirname) {
+    }
+    @Override
+    public void delete(String file) {
+    }
   }
 
 

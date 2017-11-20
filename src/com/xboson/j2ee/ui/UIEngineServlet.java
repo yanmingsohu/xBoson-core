@@ -22,11 +22,10 @@ import com.xboson.been.XBosonException;
 import com.xboson.j2ee.html.HtmlBuilder;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.script.lib.Path;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import javax.activation.FileTypeMap;
-import javax.activation.MimeType;
 import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -49,7 +48,6 @@ public class UIEngineServlet extends HttpServlet {
 
   private IUIFileProvider file_provider;
   private Log log;
-  private Path ptool;
   private FileTypeMap mime;
   private String baseurl;
   /** 当该配置为 true, 用户打开的路径是目录则返回目录内文件列表 */
@@ -60,7 +58,6 @@ public class UIEngineServlet extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     this.log = LogFactory.create();
-    this.ptool = new Path();
     this.mime = new MimetypesFileTypeMap(getClass().getResourceAsStream(MIME_FILE));
     this.baseurl = config.getServletContext().getContextPath() + MY_URL;
 
@@ -92,7 +89,7 @@ public class UIEngineServlet extends HttpServlet {
       return null;
     }
 
-    String path = ptool.normalize(last);
+    String path = Tool.normalize(last);
     if (path.equals("/")) return null;
     return path;
   }

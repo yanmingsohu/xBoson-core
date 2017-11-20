@@ -25,14 +25,20 @@ import java.util.Date;
 
 public class DbOut extends OutBase implements ILogWriter {
 
+
+  public DbOut() {
+    throw new UnsupportedOperationException();
+  }
+
+
   @Override
   public void output(Date d, Level l, String name, Object[] msg) {
-
+    throw new UnsupportedOperationException();
   }
 
 
   @Override
   public void destroy(ILogWriter replace) {
-
+    throw new UnsupportedOperationException();
   }
 }

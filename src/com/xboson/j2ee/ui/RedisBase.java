@@ -21,6 +21,7 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Transaction;
 
 import java.io.IOException;
 
@@ -33,6 +34,7 @@ public class RedisBase {
 
   public static final char PREFIX_FILE  = '|';
   public static final char PREFIX_DIR   = '?';
+  public static final char PREFIX_DEL   = '>';
 
   public static final String QUEUE_NAME   = "XB.UI.File.ChangeQueue";
   public static final String CONTENT_NAME = "XB.UI.File.Content";
@@ -90,6 +92,16 @@ public class RedisBase {
   }
 
 
+  public void deleteFile(String path) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      Transaction t = client.multi();
+      client.hdel(CONTENT_ARR, path.getBytes());
+      client.hdel(MODIFY_NAME, path);
+      t.exec();
+    }
+  }
+
+
   /**
    * 向队列发送文件修改通知
    */
@@ -103,6 +115,13 @@ public class RedisBase {
   public void sendCreateDirNotice(String dir) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       client.rpush(QUEUE_NAME, PREFIX_DIR + dir);
+    }
+  }
+
+
+  public void sendDeleteNotice(String dir) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      client.rpush(QUEUE_NAME, PREFIX_DEL + dir);
     }
   }
 

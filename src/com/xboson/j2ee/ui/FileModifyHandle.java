@@ -55,8 +55,12 @@ public class FileModifyHandle extends GLHandle {
       case RedisBase.PREFIX_FILE:
         fm.modify(file);
         return;
+
+      case RedisBase.PREFIX_DEL:
+        fm.delete(file);
+        return;
     }
-    getLog().error("Unreachable message:", mark_file);
+    getLog().error("Unreachable message:", mark_file, "[" + mark + "]");
   }
 
 

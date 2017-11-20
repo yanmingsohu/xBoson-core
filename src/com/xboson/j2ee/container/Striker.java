@@ -74,7 +74,6 @@ public class Striker extends HttpFilter {
 			}
 
       ResponseRoot ret = jr.getRoot();
-      e.printStackTrace();
 			if (debug) {
         ret.setError(e);
       } else {

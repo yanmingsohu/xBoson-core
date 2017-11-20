@@ -24,7 +24,7 @@ import java.util.Deque;
 import java.util.LinkedList;
 
 /**
- * 记录日志, 直到被取代时, 将所有日志发送给取代者
+ * 在内存中记录日志, 直到被取代时, 将所有日志发送给取代者
  */
 public class SavedOut implements ILogWriter {
 	

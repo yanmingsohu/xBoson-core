@@ -53,7 +53,7 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
     this.log = LogFactory.create();
     this.rb = new RedisBase();
     rb.startModifyReciver(this);
-    SynchronizeFiles.start();
+    SynchronizeFiles.start(basepath);
   }
 
 
@@ -113,6 +113,17 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
       Files.createDirectories(file);
     } catch (Exception e) {
       log.error("Make dir", e);
+    }
+  }
+
+
+  @Override
+  public void delete(String file) {
+    Path local_file = normalize(file);
+    try {
+      Files.deleteIfExists(local_file);
+    } catch (IOException e) {
+      log.error("Delete", e);
     }
   }
 
