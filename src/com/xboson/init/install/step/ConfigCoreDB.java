@@ -16,9 +16,12 @@
 
 package com.xboson.init.install.step;
 
+import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
+import com.xboson.db.IDriver;
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
+import com.xboson.util.Tool;
 
 import java.sql.Connection;
 
@@ -33,17 +36,42 @@ public class ConfigCoreDB implements IStep {
 
   @Override
   public boolean gotoNext(HttpData data) {
-    data.cf.db.setHost(data.req.getParameter("host"));
-    data.cf.db.setPort(data.req.getParameter("port"));
-    data.cf.db.setDbname(data.req.getParameter("dbname"));
-    data.cf.db.setUsername(data.req.getParameter("username"));
-    data.cf.db.setPassword(data.req.getParameter("password"));
-    data.cf.db.setDatabase(data.req.getParameter("database"));
+    ConnectConfig db = data.cf.db;
+    db.setHost(data.req.getParameter("host"));
+    db.setPort(data.req.getParameter("port"));
+    db.setDbname(data.req.getParameter("dbname"));
+    db.setUsername(data.req.getParameter("username"));
+    db.setPassword(data.req.getParameter("password"));
+    db.setDatabase("");
 
-    try (Connection conn = DbmsFactory.me().openWithoutPool(data.cf.db)) {
+    String catalog = data.req.getParameter("database");
+    if (Tool.isNulStr(catalog)) {
+      data.msg = "必须指定 database/catalog/schema 名称";
+      return false;
+    }
+
+    String createdb = data.req.getParameter("createdb");
+    boolean autocreate = createdb != null && "1".equals(createdb);
+
+    try (Connection conn = DbmsFactory.me().openWithoutPool(db)) {
+      try {
+        conn.setCatalog(catalog);
+      } catch (Exception e) {
+        if (!autocreate)
+          throw e;
+
+        IDriver d = DbmsFactory.me().getDriver(db);
+        String sql = d.createCatalog(catalog);
+        conn.createStatement().execute(sql);
+
+        data.msg = "创建了 " + catalog;
+        return false;
+      }
+      db.setDatabase(catalog);
       return true;
     } catch(Exception e) {
       data.msg = e.getMessage();
+      e.printStackTrace();
     }
     return false;
   }

@@ -59,6 +59,10 @@ table {
   margin-left: 20px;
 }
 
+select {
+  width: 295px;
+}
+
 #left {
   background-color: #fff;
   height: 100%;

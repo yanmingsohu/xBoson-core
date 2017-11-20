@@ -33,6 +33,9 @@
           <div>DB: <%=c.db.getDbname() %> 
             / <%=c.db.getHost() %> / <%=c.db.getDatabase() %></div>
           <div>Redis: <%=c.redis.getHost() %> / <%=c.redis.getPort() %></div>
+          <div>Log Level: <%=c.logLevel %> </div>
+          <div>UI 目录: <%=c.uiUrl %> </div>
+          <div>UI 目录列表: <%=c.uiListDir %> </div>
         </section>
 
         <form method="POST">

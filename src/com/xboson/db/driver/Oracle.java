@@ -18,9 +18,10 @@ package com.xboson.db.driver;
 
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDriver;
+import com.xboson.db.NullDriver;
 
 
-public class Oracle implements IDriver {
+public class Oracle extends NullDriver implements IDriver {
 
   @Override
   public String driverClassName() {
@@ -58,5 +59,11 @@ public class Oracle implements IDriver {
   @Override
   public String nowSql() {
     return "SELECT SYSDATE _now_ FROM DUAL";
+  }
+
+
+  @Override
+  public String createCatalog(String name) {
+    return "Create Tablespace " + name;
   }
 }

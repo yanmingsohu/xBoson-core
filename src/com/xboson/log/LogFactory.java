@@ -156,7 +156,8 @@ public class LogFactory extends OnExitHandle {
 	 */
 	public static void setLevel(Level l) {
 		if (l == Level.INHERIT) {
-		  throw new XBosonException("Global level can not be set to inherit");
+		  l = Level.ALL;
+      System.err.println("Global level can not be set to inherit");
     }
 		l.checknull();
 		level = l;

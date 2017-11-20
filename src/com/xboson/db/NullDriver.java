@@ -26,4 +26,9 @@ public abstract class NullDriver implements IDialect, IDriver {
     return "select now() _now_";
   }
 
+
+  public String createCatalog(String name) {
+    throw new UnsupportedOperationException("createCatalog");
+  }
+
 }

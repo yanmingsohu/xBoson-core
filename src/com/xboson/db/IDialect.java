@@ -26,4 +26,11 @@ public interface IDialect {
    */
   String nowSql();
 
+
+  /**
+   * 返回创建 Catalog 的 sql 文, 没有参数绑定.
+   * Catalog 在 mysql 中是 schema, 在 oracle 中是表空间.
+   */
+  String createCatalog(String name);
+
 }

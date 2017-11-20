@@ -54,4 +54,10 @@ public class Mysql extends NullDriver implements IDriver {
   public int port() {
     return 3306;
   }
+
+
+  @Override
+  public String createCatalog(String name) {
+    return "CREATE DATABASE `" + name + "`";
+  }
 }

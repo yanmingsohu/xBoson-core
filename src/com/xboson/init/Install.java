@@ -92,8 +92,12 @@ public class Install extends HttpServlet {
     IStep is = steps.get(step);
 
     if (next != null) {
-      if (is.gotoNext(hd)) {
-        ++step;
+      try {
+        if (is.gotoNext(hd)) {
+          ++step;
+        }
+      } catch(Exception e) {
+        hd.msg = e.getMessage();
       }
     }
 

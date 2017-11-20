@@ -60,4 +60,10 @@ public class SqlServer extends NullDriver implements IDriver {
   public String nowSql() {
     return "select getdate() _now_";
   }
+
+
+  @Override
+  public String createCatalog(String name) {
+    return "CREATE DATABASE " + name;
+  }
 }
