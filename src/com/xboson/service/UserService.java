@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 2017年11月2日 下午3:33:52
-// 原始文件路径: xBoson/src/com/xboson/service/Login.java
+// 原始文件路径: xBoson/src/com/xboson/service/UserService.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,10 +16,7 @@
 
 package com.xboson.service;
 
-import com.xboson.been.CallData;
-import com.xboson.been.Config;
-import com.xboson.been.LoginUser;
-import com.xboson.been.XBosonException;
+import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
@@ -28,22 +25,32 @@ import com.xboson.j2ee.container.XService;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 
-@XPath("/login")
-public class Login extends XService {
+@XPath("/user")
+public class UserService extends XService {
+
+  private static final String MSG
+          = "Provide sub-service name '/user/[sub service]'";
+
+
+  public void service(CallData data) throws Exception {
+    subService(data, MSG);
+  }
 
 
   /**
    * TODO: 需要检查登录攻击, 失败次数, 验证图片
    * password 参数必须已经 md5 后传入接口.
    */
-	@Override
-	public void service(CallData data) throws Exception {
-	  if (data.sess.login_user != null && data.sess.login_user.userid != null) {
-      data.xres.response("Already logged in", 1002);
+	public void login(CallData data) throws Exception {
+	  if (isLogin(data)) {
+      data.xres.responseMsg("用户已经登录", 1002);
       return;
     }
 
@@ -51,20 +58,49 @@ public class Login extends XService {
     final String userid = data.getString("userid",   4, 50);
 
     Config cf = SysConfig.me().readConfig();
-    LoginUser lu = checkRoot(cf, userid, md5ps);
+    LoginUser lu = searchUser(userid, md5ps, cf.db);
 
     if (lu == null) {
-      lu = searchUser(userid, md5ps, cf.db);
-      if (lu == null) {
-        data.xres.response("用户不存在", 1014);
-        return;
-      }
+      data.xres.responseMsg("用户不存在", 1014);
+      return;
+    }
+    if (! "1".equals(lu.status)) {
+      data.xres.responseMsg("用户已锁定", 1007);
+      return;
     }
 
     data.sess.login_user = lu;
     lu.password = null;
-    data.xres.response("login success");
+    data.ret.openid = lu.userid;
+    data.xres.responseMsg("成功登录系统", 0);
 	}
+
+
+	public void logout(CallData data) throws Exception {
+    if (!isLogin(data)) {
+      data.xres.responseMsg("未登录", 1000);
+      return;
+    }
+
+    data.sess.login_user = null;
+    data.xres.responseMsg("已登出", 0);
+  }
+
+
+	public void getuserorg(CallData data) throws Exception {
+	  if (!isLogin(data)) {
+	    data.xres.responseMsg("未登录", 1000);
+	    return;
+    }
+
+    Config cf = SysConfig.me().readConfig();
+    try (SqlResult sr = SqlReader.query(
+            "user0003", cf.db, data.sess.login_user.pid) )
+    {
+      data.ret.result = sr.resultToList();
+      data.xres.response();
+    }
+  }
 
 
 	private LoginUser searchUser(String userid, String md5ps, ConnectConfig db)
@@ -87,6 +123,7 @@ public class Login extends XService {
           lu.password_dt  = rs.getString("password_dt");
           lu.tel          = rs.getString("tel");
           lu.email        = rs.getString("email");
+          lu.status       = rs.getString("status");
           break;
         }
       }
@@ -103,18 +140,9 @@ public class Login extends XService {
   }
 
 
-  private Root checkRoot(Config cf, String nm, String md5ps) {
-	  if (!cf.rootUserName.equals(nm))
-	    return null;
-
-    final String cps = Password.v1(nm, md5ps);
-    if (!cps.equals(cf.rootPassword)) {
-      return null;
-    }
-
-    Root root = new Root();
-    root.userid = nm;
-    return root;
+  private boolean isLogin(CallData data) {
+    return data.sess.login_user != null
+            && data.sess.login_user.userid != null;
   }
 
 
@@ -124,6 +152,9 @@ public class Login extends XService {
 	}
 
 
+  /**
+   * 没用上...
+   */
 	static private final class Root extends LoginUser {
 	  public boolean isRoot() {
 	    return true;

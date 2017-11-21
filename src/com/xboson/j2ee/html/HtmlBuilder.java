@@ -73,6 +73,7 @@ public class HtmlBuilder {
 
     html.write("</table><section class='right'>");
     html.write(new Date().toString());
+    html.write("<hr/> J.yanming");
     html.write("</section></html>");
     html.flush();
   }
@@ -83,8 +84,9 @@ public class HtmlBuilder {
     html.write("body { padding: 50px } ");
     html.write("table {} ");
     html.write("td { border-bottom:1px solid #888; padding: 3px 30px; } ");
-    html.write("section { padding: 50px 0 } ");
-    html.write(".right { text-align: right; } ");
+    html.write("section { margin: 50px 0 } ");
+    html.write(".right { text-align: right; color: #1e1140 } ");
+    html.write("hr { border: 1px dashed  #9e971d; border-top:0; margin: 1px;} ");
     html.write("</style>");
   }
 

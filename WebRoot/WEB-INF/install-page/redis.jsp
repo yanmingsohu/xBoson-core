@@ -43,7 +43,7 @@
               <a href='#' val='6379' setto='[name=rport]'>(6379)</a>
             </td>
           </tr><tr>
-            <td> DB密码: </td>
+            <td>密码: </td>
             <td><input name="rpassword" 
               value="${ param.rpassword }" type="password" /></td>
           </tr>

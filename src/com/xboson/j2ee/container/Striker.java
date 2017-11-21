@@ -20,32 +20,58 @@ import java.io.IOException;
 import java.io.Writer;
 
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.xboson.been.Config;
 import com.xboson.been.ResponseRoot;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
+
 
 /**
  * 抓住所有异常, 编码转换, 等初始化操作
+ *
+ * @see com.xboson.init.Startup 配置到容器
  */
 public class Striker extends HttpFilter {
 
 	private static final long serialVersionUID = 8889985807692963369L;
 	private Log log;
 	private boolean debug;
+	private String context_path;
+	private String welcome;
+
+	// 优化路径比较算法
+	private int check1hash;
+	private int check1len;
+	private int check2hash;
+	private int check2len;
 
 
 	@Override
-	public void init() throws ServletException {
-		super.init();
-		log = LogFactory.create();
-		debug = SysConfig.me().readConfig().debugService;
+  public void init(FilterConfig filterConfig) throws ServletException {
+		super.init(filterConfig);
+		Config cf = SysConfig.me().readConfig();
+
+		this.log          = LogFactory.create();
+		this.debug        = cf.debugService;
+    this.context_path = filterConfig.getServletContext().getContextPath();
+    this.check1hash   = context_path.hashCode();
+    this.check2hash   = (context_path + '/').hashCode();
+    this.check1len    = context_path.length();
+    this.check2len    = check1len + 1;
+
+    if (cf.uiWelcome != null) {
+      this.welcome = Tool.normalize(context_path +'/'+ cf.uiWelcome);
+      log.debug("Welcome page:", this.welcome);
+    }
 	}
 
 
@@ -54,13 +80,29 @@ public class Striker extends HttpFilter {
 		response.setCharacterEncoding("utf8");
 		request.setCharacterEncoding("utf8");
 		XResponse jr = null;
+
+		if (welcome != null) {
+		  final String uri  = request.getRequestURI();
+		  final int uri_len = uri.length();
+      //
+      // 不使用字符串的比较, 而是认为相同长度且hash相同的字符串相同.
+      // 虽然 hash 容易产生冲突, 但是 uri 的前缀一致由容器保证,
+      // 后缀一致由长度保证. 这种优化方法仅在这个场景可用 !
+      //
+      if ( (uri_len == check1len && uri.hashCode() == check1hash) ||
+           (uri_len == check2len && uri.hashCode() == check2hash) )
+      {
+        response.sendRedirect(welcome);
+        return;
+      }
+    }
 		
 		try {
 			jr = new XResponse(request, response);
 			chain.doFilter(request, response);
 
 		} catch(Throwable e) {
-			log.error(e.getMessage());
+			log.debug(e.getMessage());
       response.setStatus(500);
 
       //
@@ -76,6 +118,7 @@ public class Striker extends HttpFilter {
       ResponseRoot ret = jr.getRoot();
 			if (debug) {
         ret.setError(e);
+        e.printStackTrace();
       } else {
 			  String msg = e.getMessage();
 			  if (msg != null) {

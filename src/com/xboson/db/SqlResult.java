@@ -18,10 +18,11 @@ package com.xboson.db;
 
 import com.xboson.been.XBosonException;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -75,4 +76,25 @@ public class SqlResult implements AutoCloseable {
     }
   }
 
+
+  /**
+   * 将结果数据库集转换为列表对象并返回, 每行数据是一个 map.
+   * 适合小数据集的转换, 并将结果附加在 json 上.
+   */
+  public List resultToList() throws SQLException {
+    List<Map<String, Object>> ret = new ArrayList<>();
+    try (ResultSet rs = getResult()) {
+      ResultSetMetaData meta = rs.getMetaData();
+      int cc = meta.getColumnCount();
+
+      while (rs.next()) {
+        Map<String, Object> row = new HashMap<>();
+        ret.add(row);
+        for (int i=1; i<=cc; ++i) {
+          row.put(meta.getColumnLabel(i), rs.getObject(i));
+        }
+      }
+    }
+    return ret;
+  }
 }

@@ -29,6 +29,11 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
 
+/**
+ * 实现了一个轻量级路由
+ *
+ * @see com.xboson.init.Startup 配置到容器
+ */
 public class MainServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 5854315900895352428L;
@@ -71,6 +76,8 @@ public class MainServlet extends HttpServlet {
       if (!cd.xres.isResponsed()) {
         cd.xres.response("unknow return", 999);
       }
+    } catch(XBosonException e) {
+		  throw e;
     } catch(Exception e) {
 		  throw new XBosonException(e);
     }

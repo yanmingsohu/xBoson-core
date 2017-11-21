@@ -24,7 +24,7 @@ public interface ServiceClassList {
    */
 	static Class<?>[] list = new Class<?>[] {
       App.class,
-      Login.class,
+      UserService.class,
 	};
 	
 }

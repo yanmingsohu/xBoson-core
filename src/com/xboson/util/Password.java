@@ -27,7 +27,7 @@ import java.security.MessageDigest;
 public final class Password {
 
   private Password() {}
-  private static final String salt = "J.yanming.0";
+  public static final String salt = "1985-02-24 01:02:03.4";
 
 
   /**

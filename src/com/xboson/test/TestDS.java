@@ -16,8 +16,14 @@
 
 package com.xboson.test;
 
+import com.xboson.been.Config;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.script.lib.Uuid;
+import com.xboson.util.Password;
+import com.xboson.util.SysConfig;
 
 import java.sql.Connection;
 
@@ -35,6 +41,7 @@ public class TestDS extends TestDBMS {
     init_db();
     connect_config();
     tables();
+    create_root();
   }
 
 
@@ -47,6 +54,33 @@ public class TestDS extends TestDBMS {
 
     sub("API 内容表");
     query(cc, "select * from sys_api_content limit 3");
+  }
+
+
+  public void create_root() throws Throwable {
+    Config cf = SysConfig.me().readConfig();
+    Uuid uuid = new Uuid();
+    String pid = cf.rootPid; // uuid.ds();
+
+    // !!! 创建超级用户可用, 需要迁移到正式代码中
+    //    query("create_user.sql", pid,
+    //            cf.rootUserName, cf.rootPassword, Password.salt);
+    //    query("join_all_group.sql", pid);
+    //    query("join_all_org.sql", pid);
+
+    String orglist = SqlReader.read("user0003");
+    TestDBMS.query(cc, orglist, pid);
+  }
+
+
+  private void query(String sql, Object ...parms) {
+    try (SqlResult r1 = SqlReader.query(sql, cc, parms))
+    {
+      msg("Success", sql);
+    } catch (Exception e) {
+      fail(sql, e);
+      e.printStackTrace();
+    }
   }
 
 

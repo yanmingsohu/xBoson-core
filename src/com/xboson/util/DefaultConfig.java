@@ -19,6 +19,7 @@ package com.xboson.util;
 import com.xboson.been.Config;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
+import com.xboson.script.lib.Uuid;
 import com.xboson.test.Test;
 import com.xboson.j2ee.ui.LocalFileMapping;
 import redis.clients.jedis.JedisPoolConfig;
@@ -30,6 +31,8 @@ public final class DefaultConfig {
    * 将配置设置成为默认设置
    */
   public static void setto(Config c) {
+    Uuid uuid = new Uuid();
+
     c.configVersion     = "1.3.1";
     c.loggerWriterType  = "ConsoleOut";
     c.logLevel          = "info";
@@ -37,7 +40,11 @@ public final class DefaultConfig {
     c.sessionPassword   = Test.randomString(20);
     c.debugService      =  false;
     c.rootUserName      = "root";
-    c.rootPassword      = null;
+    c.rootPassword      = "111111";
+    c.rootPid           = uuid.ds();
+
+    c.rootPassword =
+            Password.v1(c.rootUserName, Password.md5(c.rootPassword));
 
     c.uiProviderClass   = LocalFileMapping.class.getName();
     c.uiUrl             = "/ui";

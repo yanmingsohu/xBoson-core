@@ -40,6 +40,10 @@ import java.nio.file.NoSuchFileException;
 /**
  * 当操作成功返回 http 状态 200, 文件找不到返回 404,
  * 操作失败返回 500 并且设置 http 头域 Error-Message 包含错误消息字符串.
+ *
+ * 应用路径: /[xboson]/face/*[文件目录]/**
+ *
+ * @see com.xboson.init.Startup 配置到容器
  */
 public class UIEngineServlet extends HttpServlet {
 
@@ -163,6 +167,16 @@ public class UIEngineServlet extends HttpServlet {
     UrlSplit url = new UrlSplit(req);
     log.warn("DELETE file ", url.getLast());
     throw new UnsupportedOperationException(); // !!!!!!!!!!!!!!!!!!!!
+  }
+
+
+  @Override
+  protected void doHead(HttpServletRequest req, HttpServletResponse resp)
+          throws ServletException, IOException {
+    String path = getReqFile(req);
+    String file_type = mime.getContentType(path);
+    resp.setContentType(file_type);
+    log.debug("Head", file_type, path);
   }
 
 

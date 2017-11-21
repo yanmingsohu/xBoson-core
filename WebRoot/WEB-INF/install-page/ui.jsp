@@ -34,8 +34,9 @@
             静态文件根目录必须是绝对路径, 应该有如下几个子目录: t, ui, web, lib</p>
 
           <p>如果选了 <b>"输出目录列表"</b> 当用户打开的路径是目录时, 会返回一个 html
-            页面, 并输出这个目录中的所有文件/目录, 仅在单机时有效.
-            (该功能用于调试, 暴露目录结构会产生安全问题) </p>
+            页面, 并输出这个目录中的所有文件/目录,
+            该特性仅在单机时有效, 在集群中设置容易出现, 有时不好用的情况.
+            <u>(该功能用于调试, 暴露目录结构会产生安全问题)</u> </p>
         </section>
 
         <form method="POST">
@@ -55,6 +56,14 @@
           <tr>
             <td class='td1'>静态文件根目录:</td><td>
               <input name="uiUrl" value="${ param.uiUrl }" />
+            </td>
+          </tr>
+
+          <tr>
+            <td class='td1'>根路径跳转:</td><td>
+              <input name="uiWelcome" value="${ param.uiWelcome }" />
+              <a href='#' val='/face/ui/paas/login.html'
+                 setto='[name=uiWelcome]'/>(DS 静态文件目录树)</a>
             </td>
           </tr>
 

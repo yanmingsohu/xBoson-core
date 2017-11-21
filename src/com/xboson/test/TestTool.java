@@ -33,6 +33,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -43,6 +45,41 @@ public class TestTool extends Test {
     local_file_watcher();
     // uri_object();
     red(new XBosonException("test").getMessage());
+    check_string_hash();
+  }
+
+
+  /**
+   * Random len:  5 total: 1000000 conflict: 184  Used Time 2169 ms
+   * Random len: 10 total: 1000000 conflict: 110  Used Time 2169 ms
+   * Random len: 20 total: 1000000 conflict:  93  Used Time 2386 ms
+   */
+  public void check_string_hash() {
+    sub("Check random string 10 length hash value conflict");
+    int total = 1000000;
+    int d = total / 10;
+    int conflict = 0;
+    int strlen = 5;
+
+    beginTime();
+    Map<Integer, String> check = new HashMap<>();
+    for (int i=0; i<total; ++i) {
+      String s = randomString(strlen);
+      int hash = s.hashCode();
+      String c = check.get(hash);
+
+      if (c == null) {
+        check.put(hash, s);
+      } else if (!s.equals(c)){
+        msg("hash conflict:", s, c, hash);
+        ++conflict;
+      }
+
+      if (i % d == 0) {
+        endTime("hash", i, "conflict:", conflict);
+      }
+    }
+    endTime("Random len:", strlen, "total:", total, "conflict:", conflict);
   }
 
 
@@ -57,6 +94,7 @@ public class TestTool extends Test {
    *    Max Memory:3620
    */
   public void uri_object() throws URISyntaxException {
+    sub("Url parse speed");
     final int c= 50000;
     final int p = c / 5;
 

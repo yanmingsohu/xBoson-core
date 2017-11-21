@@ -16,19 +16,24 @@
 
 package com.xboson.j2ee.container;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
 import com.xboson.been.CallData;
+import com.xboson.been.UrlSplit;
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 
 /**
  * 可以多线程重入服务实现, 默认总是需要验证.
+ *
+ * @see #subService 方便制作子服务
  */
 public abstract class XService {
+
+  private static final Class[] PARMS_TYPE = new Class[] { CallData.class };
 	
 	/**
 	 * 输出日志
@@ -56,4 +61,31 @@ public abstract class XService {
 		return true;
 	}
 
+
+	/**
+   * 将本类的函数映射为子服务.
+   *
+	 * 调用该方法, 将请求路径再次拆分, 后一级路径作为函数名, 并使用 data 调用这个函数,
+	 * 函数必须是 public 且函数签名和 service 一致.
+	 *
+	 * @param msg 差分路径错误抛出的消息
+	 * @throws Exception
+	 */
+	protected void subService(CallData data, String msg) throws Exception {
+		UrlSplit sp = data.url.clone();
+		sp.setErrorMessage(msg);
+		sp.withoutSlash(true);
+		String sub = sp.next();
+
+		try {
+			Method sub_service = this.getClass().getMethod(sub, PARMS_TYPE);
+			sub_service.invoke(this, data);
+
+		} catch(NoSuchMethodException e) {
+			throw new XBosonException("Not found sub Service: " + sub);
+
+		} catch(InvocationTargetException e) {
+			throw (Exception) e.getCause();
+		}
+	}
 }

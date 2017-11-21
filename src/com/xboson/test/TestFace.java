@@ -46,6 +46,7 @@ public class TestFace extends Test {
 
 
   public void test_sync_files() {
+    sub("SynchronizeFiles");
     SynchronizeFiles.start("/down1/web4node/public");
     SynchronizeFiles.join();
   }

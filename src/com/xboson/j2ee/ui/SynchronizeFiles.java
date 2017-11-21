@@ -48,7 +48,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
 
   /**
-   * 等待线程结束后返回
+   * 等待线程结束后返回, 如果线程已经停止或没有启动则立即返回.
    */
   public synchronized static void join() {
     Tool.waitOver(t);
@@ -59,6 +59,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   private Log log;
   private Path base;
   private Path virtual;
+  private long begin_time;
   private int files = 0;
   private int dirs  = 0;
   private int d     = 50;
@@ -74,12 +75,14 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   @Override
   public void run() {
     log.info("Start Synchronize ui files", base);
+    begin_time = System.currentTimeMillis();
     try {
       Files.walkFileTree(base, this);
     } catch (IOException e) {
       log.error(e);
     }
-    log.info("Sync Over,", files, "files and", dirs, "directorys.");
+    log.info("Sync Over,", files, "files and", dirs,
+            "directorys, use", System.currentTimeMillis()-begin_time, "ms");
     t = null;
   }
 
@@ -119,7 +122,8 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
     if (++files > d) {
       d = files * 2;
-      log.info("Process", files, "...");
+      log.debug("Process", files, ", use",
+              System.currentTimeMillis()-begin_time, "ms", "...");
     }
     return FileVisitResult.CONTINUE;
   }

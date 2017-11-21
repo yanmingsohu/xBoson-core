@@ -40,10 +40,19 @@ public class UiConfig implements IStep {
 
     Class cl = null;
 
+    data.cf.uiWelcome = data.req.getParameter("uiWelcome");
+    if (Tool.isNulStr(data.cf.uiWelcome)) {
+      data.msg = "必须设置根路径跳转";
+      return false;
+    }
+
     try {
       String clname = data.req.getParameter("uiProviderClass");
       cl = Class.forName(clname);
-      IUIFileProvider fp = (IUIFileProvider) cl.newInstance();
+      if (!IUIFileProvider.class.isAssignableFrom(cl)) {
+        data.msg = clname + " 不是 UI 文件映射接口";
+        return false;
+      }
     } catch (Exception e) {
       data.msg = "服务类型错误:" + e.getMessage();
       return false;

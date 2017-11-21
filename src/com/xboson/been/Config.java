@@ -39,6 +39,7 @@ public class Config implements IBean {
 
 	public String rootUserName      = null;
 	public String rootPassword			= null;
+	public String rootPid           = null;
 	
 	public String loggerWriterType	= null;
 	public String sessionPassword		= null;
@@ -49,6 +50,7 @@ public class Config implements IBean {
 	public String uiProviderClass   = null;
 	public String uiUrl             = null;
 	public boolean uiListDir        = false;
+	public String uiWelcome         = null;
 
 	public JedisPoolConfig jedispool;
 	public DBPoolConfig dbpool;

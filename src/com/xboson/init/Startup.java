@@ -24,7 +24,7 @@ import java.io.File;
 
 
 /**
- * 启动监听器
+ * 启动监听器, 并配置 servlet 和 filter 到容器中
  */
 public class Startup implements ServletContextListener {
 
@@ -92,6 +92,7 @@ public class Startup implements ServletContextListener {
     session.addMappingForUrlPatterns(null, false, "/*");
 
     ui.addMapping("/face/*");
+    ui.setLoadOnStartup(2);
 
     main.addMapping("/*");
     main.setLoadOnStartup(1);

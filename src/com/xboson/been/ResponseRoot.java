@@ -37,6 +37,10 @@ public class ResponseRoot extends JsonHelper {
 	private String msg;
 	private Object data;
 	private String datatype;
+
+	/** 从这里开始会有各种乱躁躁的属性 */
+	public String openid;
+	public Object result;
 	
 	
 	public ResponseRoot() {

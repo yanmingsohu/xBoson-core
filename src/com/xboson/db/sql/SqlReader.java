@@ -21,12 +21,17 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.SqlResult;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
+import okio.Buffer;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 
@@ -39,7 +44,19 @@ public class SqlReader {
 
 
   /**
+   * 初始化一些数据
+   */
+  public static void me() {
+    SqlReader.readSqlFromJson(
+            "sys_sqls.table-data.json",
+            "sqlid", "content");
+  }
+
+
+  /**
    * 返回该类所在包下的 sql 文内容.
+   *
+   * @param file 可以是文件名, 也是可是缓存的 sql 名称.
    */
   public static String read(String file) {
     String ret = sqlCache.get(file);
@@ -76,7 +93,7 @@ public class SqlReader {
   /**
    * 执行 sql 文, 返回一个连接和数据的封装包, 可以对数据做进一步处理.
    *
-   * @param filename 保存 sql 文的文件名
+   * @param filename 保存 sql 文的文件名, 也是可是缓存的 sql 名称.
    * @param config 数据库连接配置
    * @param parm sql 文绑定数据
    * @return 对 sql 相关对象的封装
@@ -97,6 +114,38 @@ public class SqlReader {
 
     } catch(Exception e) {
       throw new XBosonException.XSqlException(sql, e);
+    }
+  }
+
+
+  /**
+   * 从 json 文件中读取 sql 语句, 每一行为一个 sql 对象.
+   * 之后可以用 read/query 利用 sql 文.
+   *
+   * @param file 文件名, 相对于本类的路径
+   * @param key_name 作为 sql 名称的属性名
+   * @param val_name 作为 sql 文的属性名
+   */
+  public static void readSqlFromJson(String file, String key_name, String val_name) {
+    URL jsonfile = SqlReader.class.getResource("./" + file);
+    if (jsonfile == null)
+      throw new XBosonException("cannot found " + file);
+
+    try (InputStream in = jsonfile.openStream()) {
+      Buffer jr = new Buffer();
+      jr.readFrom(in);
+      List list = Tool.getAdapter(List.class).fromJson(jr);
+      Iterator it = list.iterator();
+
+      synchronized (sqlCache) {
+        while (it.hasNext()) {
+          Map row = (Map) it.next();
+          sqlCache.put(row.get("sqlid").toString(),
+                  row.get("content").toString());
+        }
+      }
+    } catch(Exception e) {
+      throw new XBosonException(e);
     }
   }
 }

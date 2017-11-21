@@ -20,6 +20,7 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDriver;
 import com.xboson.db.driver.Mysql;
+import com.xboson.db.sql.SqlReader;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ public class TestDBMS extends Test {
     init_db();
     mysql();
 //    t10000();
+    read_json_table();
   }
 
 
@@ -189,6 +191,26 @@ public class TestDBMS extends Test {
     } catch (Exception e) {
       throw new RuntimeException("创建第"+ i +"个链接时发生异常", e);
     }
+  }
+
+
+  public void read_json_table() throws Exception {
+    sub("Read sql from json file.");
+    String user0003 = SqlReader.read("user0003");
+    ok(user0003 != null, "from json");
+    msg("SQL:", line, '\n', user0003);
+    msg("Bind param count:", bind_parm_count(user0003));
+  }
+
+
+  public int bind_parm_count(String sql) {
+    int ret = 0;
+    for (int i=0; i<sql.length(); ++i) {
+      if (sql.charAt(i) == '?') {
+        ++ret;
+      }
+    }
+    return ret;
   }
 
 

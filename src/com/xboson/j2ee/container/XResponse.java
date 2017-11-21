@@ -96,7 +96,7 @@ public class XResponse {
 	
 	
 	/**
-	 * 立即应答客户端
+	 * 立即应答客户端, 应答码 0 (成功)
 	 * @param data 快速设置返回数据
 	 * @throws IOException
 	 */
@@ -119,8 +119,24 @@ public class XResponse {
 		ret_root.setCode(code);
 		response();
 	}
-	
-	
+
+
+	/**
+	 * 使用消息字段应答客户端, 没有数据
+	 * @param msg
+	 * @param code
+	 * @throws IOException
+	 */
+	public void responseMsg(String msg, int code) throws IOException {
+		ret_root.setMsg(msg);
+		ret_root.setCode(code);
+		response();
+	}
+
+
+  /**
+   * 必须直接或间接调用该方法, 否则处理器认为没有返回值, 则强制返回 999.
+   */
 	public void response() throws IOException {
 	  if (is_responsed)
 	    throw new XBosonException("is responsed");

@@ -11,6 +11,13 @@
       .configlist * {
         border-bottom: 1px solid #aaa;
       }
+      .configlist a {
+        color: #ccc;
+        display: inline-block;
+        width: 100px;
+        background-color: #555;
+        padding: 3px 10px;
+      }
     </style>
     <script><%@ include file="jquery-2.1.4.min.js" %></script>
     <script><%@ include file="install.js" %></script>
@@ -28,14 +35,23 @@
         <h2>配置文件</h2>
 
         <section class='configlist'>
-          <div>文件路径: <%=c.configFile %></div>
-          <div>ROOT 帐号: <%=c.rootUserName %></div>
-          <div>DB: <%=c.db.getDbname() %> 
-            / <%=c.db.getHost() %> / <%=c.db.getDatabase() %></div>
-          <div>Redis: <%=c.redis.getHost() %> / <%=c.redis.getPort() %></div>
-          <div>Log Level: <%=c.logLevel %> </div>
-          <div>UI 目录: <%=c.uiUrl %> </div>
-          <div>UI 目录列表: <%=c.uiListDir %> </div>
+          <div><a>文件路径</a>
+                <%=c.configFile %></div>
+          <div><a>ROOT 帐号</a>
+                <%=c.rootUserName %></div>
+          <div><a>DB</a>
+                <%=c.db.getDbname() %> /
+                <%=c.db.getHost() %> / <%=c.db.getDatabase() %></div>
+          <div><a>Redis</a>
+                <%=c.redis.getHost() %> : <%=c.redis.getPort() %></div>
+          <div><a>Log Level</a>
+                <%=c.logLevel %> </div>
+          <div><a>UI 目录</a>
+                <%=c.uiUrl %> </div>
+          <div><a>UI 目录列表</a>
+                <%=c.uiListDir %> </div>
+          <div><a>根目录跳转</a>
+                <%=c.uiWelcome %> </div>
         </section>
 
         <form method="POST">
