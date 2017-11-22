@@ -35,20 +35,20 @@ public class TestJSON extends Test {
 		speed();
 		thread_safe();
 	}
-	
-	
+
+
 	private static JsonAdapter<TestData> jsonAdapter;
-	
+
 	static {
 		Moshi moshi = new Moshi.Builder().build();
 		jsonAdapter = moshi.adapter(TestData.class);
 	}
-	
-	
+
+
 	public void speed() {
 		int count = 100000;
-    TestData data = new TestData();
-		
+		TestData data = new TestData();
+
 		{
 			Moshi moshi = new Moshi.Builder().build();
 			beginTime();
@@ -58,7 +58,7 @@ public class TestJSON extends Test {
 			}
 			endTime("cache Moshi"); // 100000 Used Time 218ms
 		}
-		
+
 		{
 			Moshi moshi = new Moshi.Builder().build();
 			jsonAdapter = moshi.adapter(TestData.class);
@@ -68,7 +68,7 @@ public class TestJSON extends Test {
 			}
 			endTime("cache adapter"); // 100000 Used Time 156ms
 		}
-		
+
 		{
 			beginTime();
 			for (int i=0; i<count; ++i) {
@@ -78,22 +78,22 @@ public class TestJSON extends Test {
 			}
 			endTime("All Function"); // 100000 Used Time 765ms
 		}
-		
+
 		success("time test");
 	}
-	
-	
+
+
 	public void thread_safe() {
-	  final TestData data = new TestData();
-	  data.change();
+		final TestData data = new TestData();
+		data.change();
 		final Moshi moshi = new Moshi.Builder().build();
 		final JsonAdapter<TestData> jsonAdapter2 = moshi.adapter(TestData.class);
 		final String b = jsonAdapter2.toJson(data);
-		
+
 		final int count = 300000;
 		final int threadc = 10;
 		Thread t[] = new Thread[threadc];
-		
+
 		for (int c = 0; c<threadc; ++c) {
 			t[c] = new Thread(new Runnable() {
 				public void run() {
@@ -110,7 +110,7 @@ public class TestJSON extends Test {
 			});
 			t[c].start();
 		}
-		
+
 		for (int c = 0; c<threadc; ++c) {
 			try {
 				t[c].join();
@@ -120,41 +120,40 @@ public class TestJSON extends Test {
 		}
 		success("thread safe");
 	}
-	
-	
-	public void been_to_json() throws IOException {		
-		XResponse ret = new XResponse();
-		ResponseRoot root = ret.getRoot();
 
-    TestData src = new TestData();
-    src.change();
-		root.setData(src);
+
+	public void been_to_json() throws IOException {
+		XResponse ret = new XResponse();
+
+		TestData src = new TestData();
+		src.change();
+		ret.setData(src);
 		msg(ret.toJSON());
-		eq(ret.toJSON(), root.toJSON(), "eq");
+		eq(ret.toJSON(), ret.toJSON(), "eq");
 
 		success("been to JSON");
 	}
-	
-	
+
+
 	public void outputstream_warp() throws IOException {
-	  TestData data = new TestData();
-	  data.change();
+		TestData data = new TestData();
+		data.change();
 
 		OutputStream out = new StringBufferOutputStream();
 		jsonAdapter.toJson(new OutputStreamSinkWarp(out), data);
-		
+
 		String a = out.toString();
 		String b = jsonAdapter.toJson(data);
 
-    TestData aa = jsonAdapter.fromJson(a);
-    TestData bb = jsonAdapter.fromJson(b);
-		
+		TestData aa = jsonAdapter.fromJson(a);
+		TestData bb = jsonAdapter.fromJson(b);
+
 		msg(a);
 		eq(aa, bb, "from json");
-    eq(aa, data, "eq source");
+		eq(aa, data, "eq source");
 	}
-	
-	
+
+
 	public static void main(String[] s) throws Exception {
 		new TestJSON();
 	}

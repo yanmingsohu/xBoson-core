@@ -17,14 +17,18 @@
 package com.xboson.j2ee.container;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.xboson.been.NameCache;
 import com.xboson.been.ResponseRoot;
 import com.xboson.been.XBosonException;
 import com.xboson.j2ee.resp.ResponseTypes;
+import com.xboson.util.Tool;
 
 
 /**
@@ -35,6 +39,7 @@ public class XResponse {
 	
 	private static final String attrname   = "xBoson-X-response";
 	private static final String attrformat = "$format";
+  private static NameCache<Class> namecache = new NameCache<>();
 	
 	private HttpServletRequest request;
 	private HttpServletResponse response;
@@ -75,14 +80,16 @@ public class XResponse {
 		}
 		return jr; 
 	}
-	
-	
-	/**
-	 * 返回的 ResponseRoot 用于定制返回数据中的属性.
-	 */
-	public ResponseRoot getRoot() {
-		return ret_root;
-	}
+
+
+  /**
+   * 在应答数据上绑定对象
+   * @param name 属性名
+   * @param data 数据
+   */
+	public void bindResponse(String name, Object data) {
+	  ret_root.put(name, data);
+  }
 
 
   /**
@@ -93,6 +100,78 @@ public class XResponse {
 	public void setResponseType(String typename) {
     res_impl = ResponseTypes.get(typename);
   }
+
+
+  /**
+   * 使用对象类型设置应答的 datatype 属性
+   * @param cl
+   */
+  public void setDatatype(Class cl) {
+    if (cl == null)
+      throw new XBosonException.NullParamException("Class cl");
+
+    String datatype = namecache.get(cl);
+    if (datatype == null) {
+      datatype = NameCache.formatClassName(cl);
+      namecache.put(cl, datatype);
+    }
+    ret_root.put("datatype", datatype);
+  }
+
+  /**
+   * 设置应答的 msg/code 属性
+   */
+  public void setMessage(String msg, int code) {
+    setMessage(msg);
+    setCode(code);
+  }
+
+  /**
+   * 设置应答的 msg 属性
+   */
+  public void setMessage(String msg) {
+    ret_root.put("msg", msg);
+  }
+
+
+  /**
+   * 设置应答的 data/code/datatype 属性
+   */
+  public void setData(Object data, int code) {
+    setData(data);
+    setCode(code);
+  }
+
+
+  /**
+   * 设置应答的 data/datatype 属性
+   */
+  public void setData(Object data) {
+    if (data == null) {
+      throw new NullPointerException("parm null");
+    }
+    ret_root.put("data", data);
+    setDatatype(data.getClass());
+  }
+
+
+  /**
+   * 设置应答的 code/ret 属性
+   */
+  public void setCode(int code) {
+    ret_root.put("code", code);
+    ret_root.put("ret", Integer.toString(code));
+  }
+
+
+  /**
+   * 转换错误消息到返回对象
+   */
+  public void setError(Throwable e) throws IOException {
+    setData(Tool.miniStack(e, 5));
+    setDatatype(e.getClass());
+    setMessage(e.getMessage());
+  }
 	
 	
 	/**
@@ -100,8 +179,9 @@ public class XResponse {
 	 * @param data 快速设置返回数据
 	 * @throws IOException
 	 */
-	public void response(Object data) throws IOException {
-    response(data, 0);
+	public void responseData(Object data) throws IOException {
+    setData(data, 0);
+    response();
 	}
 
 
@@ -111,12 +191,8 @@ public class XResponse {
    * @param code 返回码
    * @throws IOException
    */
-	public void response(Object data, int code) throws IOException {
-		if (data == null) {
-			throw new NullPointerException("parm null");
-		}
-		ret_root.setData(data, true);
-		ret_root.setCode(code);
+	public void responseData(Object data, int code) throws IOException {
+    setData(data, code);
 		response();
 	}
 
@@ -128,8 +204,7 @@ public class XResponse {
 	 * @throws IOException
 	 */
 	public void responseMsg(String msg, int code) throws IOException {
-		ret_root.setMsg(msg);
-		ret_root.setCode(code);
+    setMessage(msg, code);
 		response();
 	}
 
@@ -139,7 +214,7 @@ public class XResponse {
    */
 	public void response() throws IOException {
 	  if (is_responsed)
-	    throw new XBosonException("is responsed");
+	    throw new XBosonException("Is responsed");
 
     res_impl.response(request, response, ret_root);
     is_responsed = true;
@@ -155,11 +230,11 @@ public class XResponse {
 	 * 仅用于调试, 不要在生产环境下使用.
 	 */
 	public String toString() {
-		return ret_root.toString();
+		return "Response Root: " + ret_root.toString();
 	}
 
 
 	public String toJSON() {
-	  return ret_root.toJSON();
+	  return Tool.getAdapter(Map.class).toJson(ret_root);
   }
 }

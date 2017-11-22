@@ -42,26 +42,26 @@ import com.xboson.util.Tool;
  */
 public class Striker extends HttpFilter {
 
-	private static final long serialVersionUID = 8889985807692963369L;
-	private Log log;
-	private boolean debug;
-	private String context_path;
-	private String welcome;
+  private static final long serialVersionUID = 8889985807692963369L;
+  private Log log;
+  private boolean debug;
+  private String context_path;
+  private String welcome;
 
-	// 优化路径比较算法
-	private int check1hash;
-	private int check1len;
-	private int check2hash;
-	private int check2len;
+  // 优化路径比较算法
+  private int check1hash;
+  private int check1len;
+  private int check2hash;
+  private int check2len;
 
 
-	@Override
+  @Override
   public void init(FilterConfig filterConfig) throws ServletException {
-		super.init(filterConfig);
-		Config cf = SysConfig.me().readConfig();
+    super.init(filterConfig);
+    Config cf = SysConfig.me().readConfig();
 
-		this.log          = LogFactory.create();
-		this.debug        = cf.debugService;
+    this.log          = LogFactory.create();
+    this.debug        = cf.debugService;
     this.context_path = filterConfig.getServletContext().getContextPath();
     this.check1hash   = context_path.hashCode();
     this.check2hash   = (context_path + '/').hashCode();
@@ -72,72 +72,71 @@ public class Striker extends HttpFilter {
       this.welcome = Tool.normalize(context_path +'/'+ cf.uiWelcome);
       log.debug("Welcome page:", this.welcome);
     }
-	}
+  }
 
 
-	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-			throws IOException, ServletException {
-		response.setCharacterEncoding("utf8");
-		request.setCharacterEncoding("utf8");
-		XResponse jr = null;
+  protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+          throws IOException, ServletException {
+    response.setCharacterEncoding("utf8");
+    request.setCharacterEncoding("utf8");
+    XResponse jr = null;
 
-		if (welcome != null) {
-		  final String uri  = request.getRequestURI();
-		  final int uri_len = uri.length();
+    if (welcome != null) {
+      final String uri  = request.getRequestURI();
+      final int uri_len = uri.length();
       //
       // 不使用字符串的比较, 而是认为相同长度且hash相同的字符串相同.
       // 虽然 hash 容易产生冲突, 但是 uri 的前缀一致由容器保证,
       // 后缀一致由长度保证. 这种优化方法仅在这个场景可用 !
       //
       if ( (uri_len == check1len && uri.hashCode() == check1hash) ||
-           (uri_len == check2len && uri.hashCode() == check2hash) )
+              (uri_len == check2len && uri.hashCode() == check2hash) )
       {
         response.sendRedirect(welcome);
         return;
       }
     }
-		
-		try {
-			jr = new XResponse(request, response);
-			chain.doFilter(request, response);
 
-		} catch(Throwable e) {
-			log.debug(e.getMessage());
+    try {
+      jr = new XResponse(request, response);
+      chain.doFilter(request, response);
+
+    } catch(Throwable e) {
+      log.debug(e.getMessage());
       response.setStatus(500);
 
       //
-			// 初始化失败的情况
-			//
+      // 初始化失败的情况
+      //
       if (jr == null) {
-      	Writer out = response.getWriter();
-      	out.write("System Fail:\n");
-      	out.write(e.getMessage());
-      	return;
-			}
+        Writer out = response.getWriter();
+        out.write("System Fail:\n");
+        out.write(e.getMessage());
+        return;
+      }
 
-      ResponseRoot ret = jr.getRoot();
-			if (debug) {
-        ret.setError(e);
+      if (debug) {
+        jr.setError(e);
         e.printStackTrace();
       } else {
-			  String msg = e.getMessage();
-			  if (msg != null) {
-          ret.setData(e.getMessage());
+        String msg = e.getMessage();
+        if (msg != null) {
+          jr.setData(e.getMessage());
         } else {
-			    ret.setData(e.toString());
+          jr.setData(e.toString());
         }
       }
 
       do {
         if (e instanceof XBosonException) {
           XBosonException xe = (XBosonException) e;
-          ret.setCode(xe.getCode());
+          jr.setCode(xe.getCode());
           break;
         }
         e = e.getCause();
       } while(e != null);
 
-			jr.response();
-		}
-	}
+      jr.response();
+    }
+  }
 }

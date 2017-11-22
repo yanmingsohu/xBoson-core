@@ -17,15 +17,58 @@
 package com.xboson.test;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import com.xboson.been.ResponseRoot;
+import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.util.Tool;
+
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class TestXML extends Test {
 
+
+  public void test() throws Throwable {
+    test_thread();
+    test_resp();
+  }
+
+
+  public void test_resp() throws Throwable {
+    XmlResponse x = new XmlResponse();
+
+    Map<String, Object> ret_root = new ResponseRoot();
+    ret_root.put("code", 0);
+    ret_root.put("message", "ok");
+
+    Map<Object, Object> a = new HashMap<>();
+    a.put("xxx", 1);
+    a.put("yyu", 2);
+    ret_root.put("a", a);
+
+    Writer out = new OutputStreamWriter(System.out);
+    out.write('\n');
+    out.write(x.XML_HEAD);
+
+    XStream xs = new XStream();
+    xs.registerConverter(new XmlResponse.MapEntryConverter());
+    xs.autodetectAnnotations(true);
+    xs.toXML(ret_root, out);
+
+    out.write('\n');
+    out.flush();
+  }
+
+
+
   /**
    * XStream 是线程安全的
    */
-  public void test() {
+  public void test_thread() {
     sub("Mutil XStream Thread Safe");
     final XStream xs = new XStream();
     TestData td = new TestData();

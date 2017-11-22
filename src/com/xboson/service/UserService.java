@@ -71,7 +71,7 @@ public class UserService extends XService {
 
     data.sess.login_user = lu;
     lu.password = null;
-    data.ret.openid = lu.userid;
+    data.xres.bindResponse("openid", lu.userid);
     data.xres.responseMsg("成功登录系统", 0);
 	}
 
@@ -97,7 +97,7 @@ public class UserService extends XService {
     try (SqlResult sr = SqlReader.query(
             "user0003", cf.db, data.sess.login_user.pid) )
     {
-      data.ret.result = sr.resultToList();
+      data.xres.setData(sr.resultToList());
       data.xres.response();
     }
   }

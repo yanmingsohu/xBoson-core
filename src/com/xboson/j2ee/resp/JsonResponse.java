@@ -26,23 +26,24 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 
 
 public class JsonResponse implements IXResponse {
 
   private static final String MIME_JSON = "application/json; charset=utf-8";
 
-  private final JsonAdapter<ResponseRoot> jadapter;
+  private final JsonAdapter<Map> jadapter;
 
 
   public JsonResponse() {
-    jadapter = Tool.getAdapter(ResponseRoot.class);
+    jadapter = Tool.getAdapter(Map.class);
   }
 
 
   @Override
   public void response(HttpServletRequest request, HttpServletResponse response,
-                       ResponseRoot ret_root) throws IOException {
+                       Map<String, Object> ret_root) throws IOException {
 
     OutputStream out = response.getOutputStream();
     OutputStreamSinkWarp outwarp = new OutputStreamSinkWarp(out);

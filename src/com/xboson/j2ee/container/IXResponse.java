@@ -16,11 +16,10 @@
 
 package com.xboson.j2ee.container;
 
-import com.xboson.been.ResponseRoot;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Map;
 
 
 /**
@@ -36,6 +35,6 @@ public interface IXResponse {
    * @throws IOException
    */
   void response(HttpServletRequest request, HttpServletResponse response,
-                ResponseRoot ret_root) throws IOException;
+                Map<String, Object> ret_root) throws IOException;
 
 }

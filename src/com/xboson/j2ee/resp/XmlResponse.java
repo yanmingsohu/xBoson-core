@@ -17,6 +17,13 @@
 package com.xboson.j2ee.resp;
 
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamImplicit;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.xboson.been.ResponseRoot;
 import com.xboson.j2ee.container.IXResponse;
 
@@ -24,6 +31,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -35,8 +45,8 @@ import java.io.Writer;
  */
 public class XmlResponse implements IXResponse {
 
-  private static final String MIME_XML = "application/xml; charset=utf-8";
-  private static final String XML_HEAD =
+  public static final String MIME_XML = "application/xml; charset=utf-8";
+  public static final String XML_HEAD =
           "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 
   private final XStream xs;
@@ -45,16 +55,50 @@ public class XmlResponse implements IXResponse {
   public XmlResponse() {
     xs = new XStream();
     xs.autodetectAnnotations(true);
+    xs.registerConverter(new XmlResponse.MapEntryConverter());
   }
 
 
   @Override
   public void response(HttpServletRequest request, HttpServletResponse response,
-                       ResponseRoot ret_root) throws IOException {
+                       Map<String, Object> ret_root) throws IOException {
 
     response.setHeader("content-type", MIME_XML);
     Writer out = response.getWriter();
     out.write(XML_HEAD);
+
     xs.toXML(ret_root, out);
+  }
+
+
+  public static class MapEntryConverter implements Converter {
+
+    public boolean canConvert(Class clazz) {
+      return ResponseRoot.class.isAssignableFrom(clazz);
+    }
+
+    public void marshal(Object value, HierarchicalStreamWriter writer,
+                        MarshallingContext context) {
+
+      Map map = (Map) value;
+      for (Object obj : map.entrySet()) {
+        Map.Entry entry = (Map.Entry) obj;
+        writer.startNode(entry.getKey().toString());
+        context.convertAnother(entry.getValue());
+        writer.endNode();
+      }
+    }
+
+    public Object unmarshal(HierarchicalStreamReader reader,
+                            UnmarshallingContext context) {
+
+      Map<String, String> map = new HashMap<>();
+      while(reader.hasMoreChildren()) {
+        reader.moveDown();
+        map.put(reader.getNodeName(), reader.getValue());
+        reader.moveUp();
+      }
+      return map;
+    }
   }
 }

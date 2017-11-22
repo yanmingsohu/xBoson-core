@@ -33,7 +33,6 @@ public class CallData implements IBean {
 	public final UrlSplit url;
 	public final XResponse xres;
 	public final SessionData sess;
-	public final ResponseRoot ret;
 	
 	
 	public CallData(HttpServletRequest req, HttpServletResponse resp)
@@ -43,7 +42,6 @@ public class CallData implements IBean {
 		this.xres = XResponse.get(req);
 		this.sess = SessionData.get(req);
 		this.url  = new UrlSplit(req);
-		this.ret  = xres.getRoot();
 	}
 
 

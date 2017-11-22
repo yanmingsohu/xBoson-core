@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 
 
 /**
@@ -37,17 +38,17 @@ public class JsonPaddingResp implements IXResponse {
   private static final String MIME_JS = "application/javascript; charset=utf-8";
   private static final String FN_NAME = "cb";
 
-  private final JsonAdapter<ResponseRoot> jadapter;
+  private final JsonAdapter<Map> jadapter;
 
 
   public JsonPaddingResp() {
-    jadapter = Tool.getAdapter(ResponseRoot.class);
+    jadapter = Tool.getAdapter(Map.class);
   }
 
 
   @Override
   public void response(HttpServletRequest request, HttpServletResponse response,
-                       ResponseRoot ret_root) throws IOException {
+                       Map<String, Object> ret_root) throws IOException {
 
     OutputStream out = response.getOutputStream();
     OutputStreamSinkWarp outwarp = new OutputStreamSinkWarp(out);

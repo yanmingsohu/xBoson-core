@@ -42,11 +42,6 @@ public class TestWebContainer extends Test {
     msg("formatClassName Java   --", NameCache.formatClassName(String.class));
     msg("formatClassName Swing  --", NameCache.formatClassName(JFrame.class));
     msg("toNoneJavaName         --", NameCache.toNoneJavaName("TestWebContainer"));
-
-    ResponseRoot r = new ResponseRoot();
-    r.setDatatype(this.getClass());
-
-    msg("xboson type --", r.getDatatype());
   }
 
 

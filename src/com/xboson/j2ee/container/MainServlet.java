@@ -74,7 +74,7 @@ public class MainServlet extends HttpServlet {
       sv.service(cd);
 
       if (!cd.xres.isResponsed()) {
-        cd.xres.response("unknow return", 999);
+        cd.xres.responseMsg("unknow return", 999);
       }
     } catch(XBosonException e) {
 		  throw e;
