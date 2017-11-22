@@ -25,6 +25,7 @@ import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.xboson.been.ResponseRoot;
+import com.xboson.been.XmlDataMap;
 import com.xboson.j2ee.container.IXResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -55,7 +56,7 @@ public class XmlResponse implements IXResponse {
   public XmlResponse() {
     xs = new XStream();
     xs.autodetectAnnotations(true);
-    xs.registerConverter(new XmlResponse.MapEntryConverter());
+    xs.registerConverter(new XmlDataMap.MapEntryConverter());
   }
 
 
@@ -70,35 +71,4 @@ public class XmlResponse implements IXResponse {
     xs.toXML(ret_root, out);
   }
 
-
-  public static class MapEntryConverter implements Converter {
-
-    public boolean canConvert(Class clazz) {
-      return ResponseRoot.class.isAssignableFrom(clazz);
-    }
-
-    public void marshal(Object value, HierarchicalStreamWriter writer,
-                        MarshallingContext context) {
-
-      Map map = (Map) value;
-      for (Object obj : map.entrySet()) {
-        Map.Entry entry = (Map.Entry) obj;
-        writer.startNode(entry.getKey().toString());
-        context.convertAnother(entry.getValue());
-        writer.endNode();
-      }
-    }
-
-    public Object unmarshal(HierarchicalStreamReader reader,
-                            UnmarshallingContext context) {
-
-      Map<String, String> map = new HashMap<>();
-      while(reader.hasMoreChildren()) {
-        reader.moveDown();
-        map.put(reader.getNodeName(), reader.getValue());
-        reader.moveUp();
-      }
-      return map;
-    }
-  }
 }

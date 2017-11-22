@@ -20,6 +20,7 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.xboson.been.ResponseRoot;
+import com.xboson.been.XmlDataMap;
 import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.util.Tool;
 
@@ -55,7 +56,7 @@ public class TestXML extends Test {
     out.write(x.XML_HEAD);
 
     XStream xs = new XStream();
-    xs.registerConverter(new XmlResponse.MapEntryConverter());
+    xs.registerConverter(new XmlDataMap.MapEntryConverter());
     xs.autodetectAnnotations(true);
     xs.toXML(ret_root, out);
 

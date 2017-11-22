@@ -26,5 +26,5 @@ import java.util.HashMap;
  * 平台应答数据根节点, 最终数据将被转换;
  */
 @XStreamAlias("response-root")
-public class ResponseRoot extends HashMap<String, Object> {
+public class ResponseRoot extends XmlDataMap<String, Object> {
 }
