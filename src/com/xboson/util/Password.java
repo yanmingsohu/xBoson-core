@@ -18,7 +18,13 @@ package com.xboson.util;
 
 import com.xboson.been.XBosonException;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 
 
 /**
@@ -28,6 +34,34 @@ public final class Password {
 
   private Password() {}
   public static final String salt = "1985-02-24 01:02:03.4";
+  public static final String CHARSET = "UTF-8";
+
+  static AES2 ekey;
+  static AES2 iekey;
+
+  static {
+    try {
+      String code = "1200"; // 从配置文件读取
+      String encode = encodeSha256(code, "zr_zy秘");
+      ekey = new AES2(code + encode);
+
+      String ieCode = "import&&export";
+      iekey = new AES2(ieCode);
+    } catch(Exception e) {
+      e.printStackTrace();
+      System.exit(2);
+    }
+  }
+
+
+  public static String encryptApi(String code) {
+    return ekey.encrypt(code);
+  }
+
+
+  public static String decryptApi(String mi) {
+    return ekey.decrypt(mi);
+  }
 
 
   /**
@@ -69,9 +103,51 @@ public final class Password {
   public static String md5(String s) {
     try {
       MessageDigest md = MessageDigest.getInstance("MD5");
-      return Hex.lowerHex(md.digest(s.getBytes("UTF-8")));
+      return Hex.lowerHex(md.digest(s.getBytes(CHARSET)));
     } catch(Exception e) {
       throw new XBosonException("password v1()", e);
+    }
+  }
+
+
+  static private class AES2 {
+    private SecretKeySpec key;
+
+    AES2(String keystr) {
+      try {
+        KeyGenerator kgen = KeyGenerator.getInstance("AES");
+        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+        secureRandom.setSeed(keystr.getBytes(CHARSET));
+        kgen.init(128, secureRandom);
+
+        SecretKey secretKey = kgen.generateKey();
+        byte[] enCodeFormat = secretKey.getEncoded();
+        key = new SecretKeySpec(enCodeFormat, "AES");
+      } catch(Exception e) {
+        throw new XBosonException(e);
+      }
+    }
+
+    String encrypt(String code) {
+      try {
+        byte[] srcBytes = code.getBytes(CHARSET);
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return Hex.upperHex(cipher.doFinal(srcBytes));
+      } catch (Exception e) {
+        throw new XBosonException(e);
+      }
+    }
+
+    String decrypt(String mi) {
+      try {
+        byte[] srcBytes = Hex.parse(mi);
+        Cipher cipher = Cipher.getInstance("AES");
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        return new String(cipher.doFinal(srcBytes), CHARSET);
+      } catch (Exception e) {
+        throw new XBosonException(e);
+      }
     }
   }
 }

@@ -16,33 +16,23 @@
 
 package com.xboson.app;
 
-import javax.servlet.ServletException;
+import com.xboson.db.ConnectConfig;
+import com.xboson.util.SysConfig;
 
-public class AppPool {
+
+public class AppPool extends XjPool<XjOrg> {
+
+  private ConnectConfig dbcc;
 
 
-  /**
-   * 从应用池获取应用实例, 不检查权限
-   *
-   * @param org 机构 id
-   * @param app 应用 id
-   * @return 返回启动的应用实例, 但不负责启动
-   */
-  public OrgApp getAppFromOrg(String org, String app) {
-    return null;
+  public AppPool() {
+    dbcc = SysConfig.me().readConfig().db;
   }
 
 
-  /**
-   * 将 app 在 org 机构上启动
-   *
-   * @param org
-   * @param app
-   * @throws ServletException 出现任何错误都会抛出异常, 否则应用成功启动
-   */
-  public void bootApp(String org, String app) throws ServletException {
-    throw new UnsupportedOperationException("boot app.....");
+  @Override
+  protected XjOrg createItem(String id) {
+    return new XjOrg(dbcc, id);
   }
-
 
 }

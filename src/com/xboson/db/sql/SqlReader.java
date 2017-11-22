@@ -103,15 +103,7 @@ public class SqlReader {
     String sql = read(filename);
     try {
       Connection conn = DbmsFactory.me().open(config);
-      PreparedStatement ps = conn.prepareStatement(sql);
-
-      if (parm != null) {
-        for (int i=0; i<parm.length; ++i) {
-          ps.setObject(i+1, parm[i]);
-        }
-      }
-      return new SqlResult(conn, ps);
-
+      return SqlResult.query(conn, sql, parm);
     } catch(Exception e) {
       throw new XBosonException.XSqlException(sql, e);
     }

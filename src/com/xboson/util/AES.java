@@ -77,7 +77,6 @@ public class AES {
 	
 	public static byte[] Decode(byte[] data, byte[] password) throws ServletException {
 		try {
-			
 			Cipher c = Cipher.getInstance(algorithmName);
 			SecretKeySpec key = new SecretKeySpec(password, keyname);
 			c.init(Cipher.DECRYPT_MODE, key, iv);

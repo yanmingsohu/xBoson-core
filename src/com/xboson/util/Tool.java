@@ -28,166 +28,173 @@ import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
 import com.xboson.been.XBosonException;
 import com.xboson.log.LogFactory;
+import com.xboson.script.lib.Uuid;
 import com.xboson.test.Test;
 
 
 public class Tool {
-	
-	private static final ThreadLocal<SimpleDateFormat> 
-					dataformat = new ThreadLocal<SimpleDateFormat>();
-	
-	private static Builder jsbuilded;
-	private static Moshi moshi;
-	private static com.xboson.script.lib.Path p = new com.xboson.script.lib.Path();
-	
-	private Tool() {}
-	
-	static {
-		jsbuilded = new Moshi.Builder();
-		moshi = jsbuilded.build();
-	}
+
+  private static final ThreadLocal<SimpleDateFormat>
+          dataformat = new ThreadLocal<>();
+
+  private static final ThreadLocal<SecureRandom>
+          secure_random_thread = new ThreadLocal<>();
+
+  private static Builder jsbuilded;
+  private static Moshi moshi;
+  private static com.xboson.script.lib.Path p = new com.xboson.script.lib.Path();
+
+  public static final Uuid uuid;
+
+  private Tool() {}
+
+  static {
+    jsbuilded = new Moshi.Builder();
+    moshi = jsbuilded.build();
+    uuid = new Uuid();
+  }
 
 
-	/**
-	 * 保证性能和线程安全;
-	 * moshi 内部已经对适配器做了缓存.
-	 */
-	public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
-		return moshi.adapter(c);
-	}
-	
-	
-	public static void regJsonAdapter(Object adapter) {
-		jsbuilded.add(adapter);
-	}
-	
-	
-	public static void eq(byte[] a, byte[] b) {
-		if (a.length != b.length)
-			throw new RuntimeException("bad length " + a.length + " != " + b.length);
-		
-		for (int i=0; i<a.length; ++i) {
-			if (a[i] != b[i]) {
-				throw new RuntimeException("On " + i + " a=" + a[i] + " b=" + b[i] + " not eq");
-			}
-		}
-	}
-	
-	
-	public static void println(byte[] a) {
-		for (int i=0; i<a.length; ++i) {
-			System.out.print(Integer.toString(a[i], 16) + " " );
-			if (i % 16 == 0) System.out.println();
-		}
-		System.out.println();
-	}
-	
-	
-	/**
-	 * 返回完整堆栈字符串
-	 */
-	public static String allStack(Throwable e) {
-		StringWriter sw = new StringWriter();
-		PrintWriter ps = new PrintWriter(sw);
-		e.printStackTrace(ps);
-		ps.flush();
-		return sw.toString();
-	}
-	
-	
-	/**
-	 * 返回部分堆栈字符串, 包含至多 count 个堆栈
-	 */
-	public static String miniStack(Throwable e, int count) {
-		StringBuilder buff = new StringBuilder();
-		StackTraceElement[] trace = e.getStackTrace();
-		if (count <= 0) {
-			count = trace.length;
-		} else {
-			count = Math.min(count, trace.length);
-		}
-		
-		buff.append(e.getClass());
-		buff.append(": ");
-		buff.append(e.getMessage());
-		
-		for (int i=0; i<count; ++i) {
-			buff.append("\r\n\t");
-			buff.append(trace[i].getClassName());
-			buff.append("->");
-			buff.append(trace[i].getMethodName());
-			buff.append("() [");
-			buff.append(trace[i].getFileName());
-			buff.append(" :");
-			buff.append(trace[i].getLineNumber());
-			buff.append("]");
-		}
-		
-		if (count < trace.length) {
-			buff.append("\r\n\t... ");
-			buff.append(trace.length - count);
-		}
-		
-		return buff.toString();
-	}
-	
-	
-	/**
-	 * 优化性能, 总是返回完整的日期/时间字符串
-	 */
-	public static String formatDate(Date d) {
-		SimpleDateFormat f = dataformat.get();
-		if (f == null) {
-			f = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-			dataformat.set(f);
-		}
-		return f.format(d);
-	}
-	
-	
-	/**
-	 * 复制并关闭文件
-	 * @throws IOException 
-	 */
-	public static void copy(InputStream src, OutputStream dst, boolean close) throws IOException {
-		try {
-			byte[] buff = new byte[1024];
-			int len = 0;
-			while ((len = src.read(buff)) > 0) {
-				dst.write(buff, 0, len);
-			}
-		} finally {
-			if (close) {
-				close(src);
-				close(dst);
-			}
-		}
-	}
-	
-	
-	public static StringBuilder readFromFile(String filename) throws IOException {
-		FileReader r = null;
-		try {
-			StringBuilder out = new StringBuilder();
-			r = new FileReader(filename);
-			char[] buff = new char[1024];
-			int len = 0;
-			while ((len = r.read(buff)) > 0) {
-				out.append(buff, 0, len);
-			}
-			return out;
-		} finally {
-			close(r);
-		}
-	}
+  /**
+   * 保证性能和线程安全;
+   * moshi 内部已经对适配器做了缓存.
+   */
+  public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
+    return moshi.adapter(c);
+  }
 
 
-	public static void close(Closeable c) {
-	  try {
-	    if (c != null) c.close();
+  public static void regJsonAdapter(Object adapter) {
+    jsbuilded.add(adapter);
+  }
+
+
+  public static void eq(byte[] a, byte[] b) {
+    if (a.length != b.length)
+      throw new RuntimeException("bad length " + a.length + " != " + b.length);
+
+    for (int i=0; i<a.length; ++i) {
+      if (a[i] != b[i]) {
+        throw new RuntimeException("On " + i + " a=" + a[i] + " b=" + b[i] + " not eq");
+      }
+    }
+  }
+
+
+  public static void println(byte[] a) {
+    for (int i=0; i<a.length; ++i) {
+      System.out.print(Integer.toString(a[i], 16) + " " );
+      if (i % 16 == 0) System.out.println();
+    }
+    System.out.println();
+  }
+
+
+  /**
+   * 返回完整堆栈字符串
+   */
+  public static String allStack(Throwable e) {
+    StringWriter sw = new StringWriter();
+    PrintWriter ps = new PrintWriter(sw);
+    e.printStackTrace(ps);
+    ps.flush();
+    return sw.toString();
+  }
+
+
+  /**
+   * 返回部分堆栈字符串, 包含至多 count 个堆栈
+   */
+  public static String miniStack(Throwable e, int count) {
+    StringBuilder buff = new StringBuilder();
+    StackTraceElement[] trace = e.getStackTrace();
+    if (count <= 0) {
+      count = trace.length;
+    } else {
+      count = Math.min(count, trace.length);
+    }
+
+    buff.append(e.getClass());
+    buff.append(": ");
+    buff.append(e.getMessage());
+
+    for (int i=0; i<count; ++i) {
+      buff.append("\r\n\t");
+      buff.append(trace[i].getClassName());
+      buff.append("->");
+      buff.append(trace[i].getMethodName());
+      buff.append("() [");
+      buff.append(trace[i].getFileName());
+      buff.append(" :");
+      buff.append(trace[i].getLineNumber());
+      buff.append("]");
+    }
+
+    if (count < trace.length) {
+      buff.append("\r\n\t... ");
+      buff.append(trace.length - count);
+    }
+
+    return buff.toString();
+  }
+
+
+  /**
+   * 优化性能, 总是返回完整的日期/时间字符串
+   */
+  public static String formatDate(Date d) {
+    SimpleDateFormat f = dataformat.get();
+    if (f == null) {
+      f = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+      dataformat.set(f);
+    }
+    return f.format(d);
+  }
+
+
+  /**
+   * 复制并关闭文件
+   * @throws IOException
+   */
+  public static void copy(InputStream src, OutputStream dst, boolean close) throws IOException {
+    try {
+      byte[] buff = new byte[1024];
+      int len = 0;
+      while ((len = src.read(buff)) > 0) {
+        dst.write(buff, 0, len);
+      }
+    } finally {
+      if (close) {
+        close(src);
+        close(dst);
+      }
+    }
+  }
+
+
+  public static StringBuilder readFromFile(String filename) throws IOException {
+    FileReader r = null;
+    try {
+      StringBuilder out = new StringBuilder();
+      r = new FileReader(filename);
+      char[] buff = new char[1024];
+      int len = 0;
+      while ((len = r.read(buff)) > 0) {
+        out.append(buff, 0, len);
+      }
+      return out;
+    } finally {
+      close(r);
+    }
+  }
+
+
+  public static void close(Closeable c) {
+    try {
+      if (c != null) c.close();
     } catch(Exception e) {
-			LogFactory.create().debug(e);
-		}
+      LogFactory.create().debug(e);
+    }
   }
 
 
@@ -195,21 +202,21 @@ public class Tool {
    * 等待线程结束后返回
    */
   public static void waitOver(Thread t) {
-	  try {
+    try {
       if (t != null) t.join();
     } catch(Exception e) {
-			LogFactory.create().debug(e);
-		}
+      LogFactory.create().debug(e);
+    }
   }
-	
-	
-	public static short reverseBytesShort(short s) {
+
+
+  public static short reverseBytesShort(short s) {
     int i = s & 0xffff;
     int reversed = (i & 0xff00) >>> 8
         |          (i & 0x00ff)  << 8;
     return (short) reversed;
   }
-	
+
 
   public static int reverseBytesInt(int i) {
     return (i & 0xff000000) >>> 24
@@ -256,21 +263,21 @@ public class Tool {
     return classs;
   }
 
-	/**
-	 * 返回 i 做为无符号字节的 16 进制字符串
-	 */
+  /**
+   * 返回 i 做为无符号字节的 16 进制字符串
+   */
   public static String ubytehex(byte i) {
-		int ii = Byte.toUnsignedInt(i);
-		return "" + hex(ii >> 4) + hex(ii);
-	}
+    int ii = Byte.toUnsignedInt(i);
+    return "" + hex(ii >> 4) + hex(ii);
+  }
 
 
-	/**
-	 * 将 (i & 0x0F) 的值转换为 16 进制字符
-	 */
-	public static char hex(Number i) {
-  	int b = 0x0F & i.intValue();
-  	if (b >= 0) {
+  /**
+   * 将 (i & 0x0F) 的值转换为 16 进制字符
+   */
+  public static char hex(Number i) {
+    int b = 0x0F & i.intValue();
+    if (b >= 0) {
       if (b < 10) {
         return (char) ((int) '0' + b);
       }
@@ -278,33 +285,33 @@ public class Tool {
         return (char) ((int) 'A' + (b-10));
       }
     }
-		throw new IllegalArgumentException("number on 0-15");
-	}
+    throw new IllegalArgumentException("number on 0-15");
+  }
 
 
-	/**
-	 * 返回字符串首字母大写的形式
-	 */
-	public static String upperFirst(String n) {
-		return Character.toUpperCase(n.charAt(0)) + n.substring(1);
-	}
+  /**
+   * 返回字符串首字母大写的形式
+   */
+  public static String upperFirst(String n) {
+    return Character.toUpperCase(n.charAt(0)) + n.substring(1);
+  }
 
 
-	/**
-	 * @see #findPackage(Package)
+  /**
+   * @see #findPackage(Package)
    * @deprecated 不推荐在正式代码中使用, 可用于测试
-	 * @param packageName 包名
-	 * @return 即使找不到类, 也会返回空数组
-	 */
-	public static Set<Class> findPackage(String packageName)
-					throws IOException, ClassNotFoundException {
+   * @param packageName 包名
+   * @return 即使找不到类, 也会返回空数组
+   */
+  public static Set<Class> findPackage(String packageName)
+          throws IOException, ClassNotFoundException {
     Package pk = Package.getPackage(packageName);
     if (pk == null)
       throw new XBosonException.NotExist(
               "cannot find package: " + packageName);
 
     return findPackage(pk);
-	}
+  }
 
 
   /**
@@ -315,7 +322,7 @@ public class Tool {
    * @param pk 包
    * @return 即使找不到类, 也会返回空数组
    */
-	public static Set<Class> findPackage(Package pk)
+  public static Set<Class> findPackage(Package pk)
           throws IOException, ClassNotFoundException {
     if (pk == null)
       throw new XBosonException.NullParamException("Package pk");
@@ -347,13 +354,13 @@ public class Tool {
     }
 
     return ret;
-	}
+  }
 
 
   /**
    * @see java.lang.Thread#sleep(long)
    */
-	public static void sleep(long time) {
+  public static void sleep(long time) {
     try {
       Thread.sleep(time);
     } catch(Exception e) {
@@ -363,7 +370,7 @@ public class Tool {
 
 
   public static boolean isNulStr(String s) {
-	  return s == null || s.trim().length() == 0;
+    return s == null || s.trim().length() == 0;
   }
 
 
@@ -372,7 +379,35 @@ public class Tool {
    * @see com.xboson.script.lib.Path#normalize(String)
    */
   public static String normalize(String path) {
-	  return p.normalize(path);
+    return p.normalize(path);
+  }
+
+
+  /**
+   * 生成随机字符串
+   *
+   * @param byteLength 字节数量, 最后被压缩成 base64 字符串长度会小于字节长度.
+   * @return 字符串
+   */
+  public static String randomString(int byteLength) {
+    byte[] buf = randomBytes(byteLength);
+    return Base64.getEncoder().withoutPadding().encodeToString(buf);
+  }
+
+
+  /**
+   * 生成随机长度字节数组
+   * @param byteLength 字节数量
+   */
+  public static byte[] randomBytes(int byteLength) {
+    byte[] buf = new byte[byteLength];
+    SecureRandom r = secure_random_thread.get();
+    if (r == null) {
+      r = new SecureRandom();
+      secure_random_thread.set(r);
+    }
+    r.nextBytes(buf);
+    return buf;
   }
 
 }

@@ -18,6 +18,7 @@ package com.xboson.service;
 
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
@@ -33,7 +34,7 @@ import java.util.List;
 
 
 @XPath("/user")
-public class UserService extends XService {
+public class UserService extends XService implements IDict {
 
   private static final String MSG
           = "Provide sub-service name '/user/[sub service]'";
@@ -65,7 +66,7 @@ public class UserService extends XService {
       data.xres.responseMsg("用户不存在", 1014);
       return;
     }
-    if (! "1".equals(lu.status)) {
+    if (! ZR001_ENABLE.equals(lu.status)) {
       data.xres.responseMsg("用户已锁定", 1007);
       return;
     }

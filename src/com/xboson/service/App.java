@@ -17,7 +17,8 @@
 package com.xboson.service;
 
 import com.xboson.app.AppPool;
-import com.xboson.app.OrgApp;
+import com.xboson.app.XjApp;
+import com.xboson.app.XjOrg;
 import com.xboson.been.CallData;
 import com.xboson.been.UrlSplit;
 import com.xboson.j2ee.container.XPath;
@@ -52,14 +53,9 @@ public class App extends XService {
     String modid = sp.next();
     String api   = sp.next();
 
-    log.debug( "orgid:", orgid, "appid:", appid,"modid:", modid, api);
-
-	  OrgApp app = app_pool.getAppFromOrg(orgid, appid);
-	  if (app == null) {
-      app_pool.bootApp(orgid, appid);
-      app = app_pool.getAppFromOrg(orgid, appid);
-    }
-    app.call(modid, api);
+    XjOrg org = app_pool.getWithCreate(orgid);
+    XjApp app = org.getWithCreate(appid);
+    //....
 	}
 
 }

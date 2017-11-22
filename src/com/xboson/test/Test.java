@@ -246,27 +246,13 @@ public class Test {
 	}
 
 
-	/**
-	 * 低效的生成随机字符串, 仅用于测试
-   *
-	 * @deprecated 效率低
-	 * @param byteLength 字节数量
-	 * @return 字符串
-	 */
 	public static String randomString(int byteLength) {
-		byte[] buf = randomBytes(byteLength);
-		return Base64.getEncoder().withoutPadding().encodeToString(buf);
+	  return Tool.randomString(byteLength);
 	}
 
 
-  /**
-   * @deprecated 效率低
-   */
 	public static byte[] randomBytes(int byteLength) {
-    byte[] buf = new byte[byteLength];
-    Random r = new SecureRandom();
-    r.nextBytes(buf);
-    return buf;
+	  return Tool.randomBytes(byteLength);
   }
 
 

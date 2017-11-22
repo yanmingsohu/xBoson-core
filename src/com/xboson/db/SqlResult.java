@@ -18,6 +18,7 @@ package com.xboson.db;
 
 import com.xboson.been.XBosonException;
 
+import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,6 +41,32 @@ public class SqlResult implements AutoCloseable {
     this.conn = conn;
     this.ps = ps;
     this.is_update = ! ps.execute();
+  }
+
+
+  /**
+   * 执行 sql 文, 返回一个连接和数据的封装包, 可以对数据做进一步处理.
+   *
+   * @param conn 数据库连接
+   * @param sql 查询文
+   * @param parm sql 文绑定数据
+   * @return 对 sql 相关对象的封装
+   * @throws XBosonException.XSqlException
+   */
+  public static SqlResult query(Connection conn, String sql, Object...parm) {
+    try {
+      PreparedStatement ps = conn.prepareStatement(sql);
+
+      if (parm != null) {
+        for (int i=0; i<parm.length; ++i) {
+          ps.setObject(i+1, parm[i]);
+        }
+      }
+      return new SqlResult(conn, ps);
+
+    } catch(Exception e) {
+      throw new XBosonException.XSqlException(sql, e);
+    }
   }
 
 
@@ -96,5 +123,36 @@ public class SqlResult implements AutoCloseable {
       }
     }
     return ret;
+  }
+
+
+  /**
+   * 将唯一一行数据通过反射设置到对象上
+   * @param o 保存数据的对象
+   * @return 返回读取的行数, 0 没有数据, 1 一行数据, 没有其他的情况
+   */
+  public int oneRowTo(Object o)  {
+    int rl = 0;
+    try (ResultSet rs = getResult()) {
+      ResultSetMetaData meta = rs.getMetaData();
+      int cc = meta.getColumnCount();
+
+      if (rs.next()) {
+        for (int i=1; i<=cc; ++i) {
+          String cname = meta.getColumnLabel(i);
+          Field f = o.getClass().getDeclaredField(cname);
+          f.setAccessible(true);
+          f.set(o, rs.getObject(i));
+        }
+        ++rl;
+      }
+    } catch (IllegalAccessException e) {
+      throw new XBosonException("反射时权限错误", e);
+    } catch (SQLException e) {
+      throw new XBosonException.XSqlException(e);
+    } catch (NoSuchFieldException e) {
+      throw new XBosonException("无法通过反射设置属性", e);
+    }
+    return rl;
   }
 }

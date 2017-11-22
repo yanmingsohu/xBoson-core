@@ -183,7 +183,7 @@ public final class ConnectConfig extends JsonHelper {
    * 该方法不会复制 password
    */
   @Override
-  protected ConnectConfig clone() {
+  public ConnectConfig clone() {
     ConnectConfig cc = new ConnectConfig();
     cc.database = database;
     cc.dbname = dbname;

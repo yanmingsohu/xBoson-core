@@ -6,20 +6,22 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-13 上午11:52
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/OrgApp.java
+// 文件创建日期: 17-11-22 下午1:32
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/db/IDict.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.app;
+package com.xboson.db;
 
-public class OrgApp {
+/**
+ * 提供了常用字典的常量, 直接继承该接口
+ */
+public interface IDict {
 
-  public void call(String modid, String api) {
-    throw new UnsupportedOperationException("OrgApp.call");
-  }
+  String ZR001_ENABLE = "1";
+  String ZR001_DISABLE = "0";
 
 }

@@ -16,6 +16,9 @@
 
 package com.xboson.util;
 
+import javax.xml.bind.DatatypeConverter;
+
+
 /**
  * 字节数组 16 进制字符串转换
  */
@@ -43,5 +46,10 @@ public class Hex {
       ch[ (i<<1)+1 ] = map[ b & 15 ];
     }
     return new String(ch);
+  }
+
+
+  public static byte[] parse(String hexstr) {
+    return DatatypeConverter.parseHexBinary(hexstr);
   }
 }

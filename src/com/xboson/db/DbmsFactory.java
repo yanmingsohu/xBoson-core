@@ -210,4 +210,26 @@ public class DbmsFactory extends OnExitHandle {
     return dr;
   }
 
+
+  /**
+   * 使用 name 或 id 查询符合的驱动
+   * @param nameOrID
+   * @return
+   */
+  public IDriver findDriver(String nameOrID) {
+    int id = -1;
+    try {
+      id = Integer.parseInt(nameOrID);
+    } catch(Exception e) {}
+
+    IDriver ret = null;
+    if (id >= 0) {
+      ret = idmap.get(id);
+    }
+    if (ret == null) {
+      ret = namemap.get(id);
+    }
+    return ret;
+  }
+
 }
