@@ -70,4 +70,12 @@ public class SessionData implements IBean, IBinData, ITimeout {
   public String getid() {
     return id;
   }
+
+
+	/**
+	 * 标记为销毁状态
+	 */
+	public void destoryFlag() {
+		endTime = 0;
+	}
 }

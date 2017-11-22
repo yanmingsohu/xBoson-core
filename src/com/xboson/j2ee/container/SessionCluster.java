@@ -47,6 +47,7 @@ public class SessionCluster extends HttpFilter {
 	private static int sessionTimeout = 0; // 分钟
 
   private final Log log = LogFactory.create();
+  private String contextPath;
 
 	
 	protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain) 
@@ -80,6 +81,7 @@ public class SessionCluster extends HttpFilter {
         // 超时则重建数据
         //
         if (sd != null && sd.isTimeout()) {
+          ck = createCookie(response);
           sd = null;
         }
       }
@@ -95,7 +97,11 @@ public class SessionCluster extends HttpFilter {
 		try {
       chain.doFilter(request, response);
     } finally {
-      RedisMesmerizer.me().sleep(sd);
+			if (sd.isTimeout()) {
+				RedisMesmerizer.me().remove(sd);
+			} else {
+				RedisMesmerizer.me().sleep(sd);
+			}
     }
   }
 	
@@ -104,6 +110,7 @@ public class SessionCluster extends HttpFilter {
 		Cookie ck = new Cookie(cookieName, SessionID.generateSessionId(sessionPassword));
 		ck.setHttpOnly(true);
 		ck.setMaxAge(sessionTimeout * 60);
+		ck.setPath(contextPath);
 		response.addCookie(ck);
 		return ck;
 	}
@@ -113,5 +120,6 @@ public class SessionCluster extends HttpFilter {
 		Config cfg = SysConfig.me().readConfig();
 		sessionTimeout = cfg.sessionTimeout;
 		sessionPassword = AES.aesKey( cfg.sessionPassword );
+    contextPath = filterConfig.getServletContext().getContextPath();
 	}
 }

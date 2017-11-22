@@ -135,6 +135,16 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   }
 
 
+  public void remove(ISleepwalker data) {
+    if (data instanceof IBinData) {
+      bin.remove(data);
+    }
+    else {
+      json.remove(data);
+    }
+  }
+
+
   class JSON {
     public void sleep(String id, Object data) {
       try (Jedis client = jpool.getResource()) {
@@ -163,6 +173,13 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
       } catch(Exception e) {
         log.error("wake json", e);
         return null;
+      }
+    }
+
+    public void remove(ISleepwalker data) {
+      try (Jedis client = jpool.getResource()) {
+        String id = genid(data, "JSON");
+        client.hdel(KEY, id);
       }
     }
   }
@@ -208,6 +225,13 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
       } catch(Exception e) {
         log.error("wake bin", e);
         return null;
+      }
+    }
+
+    public void remove(ISleepwalker data) {
+      try (Jedis client = jpool.getResource()) {
+        String id = genid(data, "BIN");
+        client.hdel(KEY_BYTE, id.getBytes());
       }
     }
   }

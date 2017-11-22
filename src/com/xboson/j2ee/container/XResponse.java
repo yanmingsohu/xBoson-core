@@ -69,6 +69,7 @@ public class XResponse {
 	
 	public XResponse() {
 		this.ret_root = new ResponseRoot();
+    ret_root.put("code", 0);
 	}
 	
 	
@@ -160,7 +161,7 @@ public class XResponse {
    */
   public void setCode(int code) {
     ret_root.put("code", code);
-    ret_root.put("ret", Integer.toString(code));
+    // ret_root.put("ret", Integer.toString(code));
   }
 
 

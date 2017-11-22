@@ -41,7 +41,7 @@ get 请求使用标准的 http url 参数.
 
 脚本接口
 
-`/app/APP ID/机构ID/模块ID/API?参数`
+`/app/机构ID/APP ID/模块ID/API?参数`
 
 当请求参数中有 jsonp=functionname, 则返回 jsonp 格式的数据, 
 并使用 functionname 来作为回调函数.

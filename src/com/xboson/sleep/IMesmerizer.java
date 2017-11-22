@@ -35,4 +35,9 @@ public interface IMesmerizer {
    */
   ISleepwalker wake(Class<? extends ISleepwalker> c, String id);
 
+  /**
+   * 删除数据
+   * @param data
+   */
+  void remove(ISleepwalker data);
 }

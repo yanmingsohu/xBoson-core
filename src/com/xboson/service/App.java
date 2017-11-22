@@ -16,24 +16,22 @@
 
 package com.xboson.service;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-
 import com.xboson.app.AppPool;
 import com.xboson.app.OrgApp;
 import com.xboson.been.CallData;
 import com.xboson.been.UrlSplit;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
-import com.xboson.test.Test;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
 
 
 @XPath("/app")
 public class App extends XService {
 
   private static final String PATH_FOTMAT
-          = "Path format: /app/{app id}/{org id}/{module id}/{api name}";
+          = "Path format: /app/{org id}/{app id}/{module id}/{api name}";
 
 	private AppPool app_pool;
 
@@ -49,12 +47,12 @@ public class App extends XService {
     sp.setErrorMessage(PATH_FOTMAT);
     sp.withoutSlash(true);
 
-    String appid = sp.getName();
-	  String orgid = sp.next();
+    String orgid = sp.getName();
+	  String appid = sp.next();
     String modid = sp.next();
-    String api = sp.next();
+    String api   = sp.next();
 
-    log.debug("appid:", appid, "orgid:", orgid, "modid:", modid, api);
+    log.debug( "orgid:", orgid, "appid:", appid,"modid:", modid, api);
 
 	  OrgApp app = app_pool.getAppFromOrg(orgid, appid);
 	  if (app == null) {

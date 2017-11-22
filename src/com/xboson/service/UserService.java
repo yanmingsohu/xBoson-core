@@ -50,6 +50,7 @@ public class UserService extends XService {
    */
 	public void login(CallData data) throws Exception {
 	  if (isLogin(data)) {
+      data.xres.bindResponse("openid", data.sess.login_user.userid);
       data.xres.responseMsg("用户已经登录", 1002);
       return;
     }
@@ -58,7 +59,7 @@ public class UserService extends XService {
     final String userid = data.getString("userid",   4, 50);
 
     Config cf = SysConfig.me().readConfig();
-    LoginUser lu = searchUser(userid, md5ps, cf.db);
+    LoginUser lu = searchUser(userid, md5ps, cf);
 
     if (lu == null) {
       data.xres.responseMsg("用户不存在", 1014);
@@ -84,6 +85,7 @@ public class UserService extends XService {
 
     data.sess.login_user = null;
     data.xres.responseMsg("已登出", 0);
+    data.sess.destoryFlag();
   }
 
 
@@ -103,22 +105,25 @@ public class UserService extends XService {
   }
 
 
-	private LoginUser searchUser(String userid, String md5ps, ConnectConfig db)
+	private LoginUser searchUser(String userid, String md5ps, Config cf)
           throws SQLException {
     //
     // 把 userid 分别假设为 userid/tel/email 查出哪个算哪个
     //
-    String[] parmbind = new String[] {userid, userid, userid};
+    Object[] parmbind = new Object[] {userid, userid, userid};
     LoginUser lu = null;
+    ConnectConfig db = cf.db;
 
     try (SqlResult sr = SqlReader.query("login.sql", db, parmbind)) {
       ResultSet rs = sr.getResult();
       while (rs.next()) {
         int c = rs.getInt("c");
         if (c == 1) {
-          lu              = new LoginUser();
+          userid          = rs.getString("userid");
+          lu              = userid.equals(cf.rootUserName)
+                          ? new Root() : new LoginUser();
           lu.pid          = rs.getString("pid");
-          lu.userid       = rs.getString("userid");
+          lu.userid       = userid;
           lu.password     = rs.getString("password");
           lu.password_dt  = rs.getString("password_dt");
           lu.tel          = rs.getString("tel");
@@ -153,7 +158,7 @@ public class UserService extends XService {
 
 
   /**
-   * 没用上...
+   * 超级用户
    */
 	static private final class Root extends LoginUser {
 	  public boolean isRoot() {
