@@ -18,23 +18,16 @@ package com.xboson.util;
 
 import com.xboson.been.XBosonException;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
-import java.security.SecureRandom;
 
 
 /**
  * 用来计算密码摘要, 所有密码都是用摘要来保存的, 并且不可还原
  */
-public final class Password {
+public final class Password implements IConstant {
 
   private Password() {}
   public static final String salt = "1985-02-24 01:02:03.4";
-  public static final String CHARSET = "UTF-8";
 
   static AES2 ekey;
   static AES2 iekey;
@@ -51,16 +44,6 @@ public final class Password {
       e.printStackTrace();
       System.exit(2);
     }
-  }
-
-
-  public static String encryptApi(String code) {
-    return ekey.encrypt(code);
-  }
-
-
-  public static String decryptApi(String mi) {
-    return ekey.decrypt(mi);
   }
 
 
@@ -92,9 +75,9 @@ public final class Password {
 
 
   public static String encodeSha256(String a, String b) throws Exception {
-    MessageDigest md = MessageDigest.getInstance("SHA-256");
-    md.update(a.getBytes());
-    md.update(b.getBytes());
+    MessageDigest md = MessageDigest.getInstance(SHA256_NAME);
+    md.update(a.getBytes(CHARSET));
+    md.update(b.getBytes(CHARSET));
     byte[] e1 = md.digest();
     return Hex.upperHex(e1);
   }
@@ -102,7 +85,7 @@ public final class Password {
 
   public static String md5(String s) {
     try {
-      MessageDigest md = MessageDigest.getInstance("MD5");
+      MessageDigest md = MessageDigest.getInstance(MD5_NAME);
       return Hex.lowerHex(md.digest(s.getBytes(CHARSET)));
     } catch(Exception e) {
       throw new XBosonException("password v1()", e);
@@ -110,44 +93,4 @@ public final class Password {
   }
 
 
-  static private class AES2 {
-    private SecretKeySpec key;
-
-    AES2(String keystr) {
-      try {
-        KeyGenerator kgen = KeyGenerator.getInstance("AES");
-        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
-        secureRandom.setSeed(keystr.getBytes(CHARSET));
-        kgen.init(128, secureRandom);
-
-        SecretKey secretKey = kgen.generateKey();
-        byte[] enCodeFormat = secretKey.getEncoded();
-        key = new SecretKeySpec(enCodeFormat, "AES");
-      } catch(Exception e) {
-        throw new XBosonException(e);
-      }
-    }
-
-    String encrypt(String code) {
-      try {
-        byte[] srcBytes = code.getBytes(CHARSET);
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        return Hex.upperHex(cipher.doFinal(srcBytes));
-      } catch (Exception e) {
-        throw new XBosonException(e);
-      }
-    }
-
-    String decrypt(String mi) {
-      try {
-        byte[] srcBytes = Hex.parse(mi);
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.DECRYPT_MODE, key);
-        return new String(cipher.doFinal(srcBytes), CHARSET);
-      } catch (Exception e) {
-        throw new XBosonException(e);
-      }
-    }
-  }
 }
