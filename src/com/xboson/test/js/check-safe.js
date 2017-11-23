@@ -117,3 +117,14 @@ assert.throws(function() {
 assert.throws(function() {
   Buffer.from([]).eval("1+1");
 }, /TypeError.*.*function.*/);
+
+
+//
+// 因为默认上下文禁止创建变量, 而 name 定义在默认上下文导致错误.
+//
+assert.throws(function() {
+  var arr = {a:1, b:2, c:3};
+  for (name in arr) {
+    console.log(name, arr[name], "is working !!!!!!!!!!!!!!!!!!");
+  }
+}, /ReferenceError.*name/);
