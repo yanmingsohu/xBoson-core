@@ -25,7 +25,7 @@ import java.nio.file.attribute.BasicFileAttributes;
  * 文件属性对象
  */
 public class FileAttr extends JsonHelper {
-  public String fileName; // 自由文件名本身
+  public String fileName; // 只有文件名本身
   public long createTime;
   public long modifyTime;
   public String creatorUID;

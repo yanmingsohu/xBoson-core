@@ -2,7 +2,9 @@
 Select
        a.apinm,
        a.status,
-       b.content
+       b.content,
+       a.createdt,
+       a.updatedt
   From
        sys_apis a,
        sys_api_content b

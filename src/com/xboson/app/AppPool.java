@@ -20,6 +20,9 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.util.SysConfig;
 
 
+/**
+ * 应用池维护机构下的所有 app, 这些对象已经缓存, 并且线程安全.
+ */
 public class AppPool extends XjPool<XjOrg> {
 
   private ConnectConfig dbcc;
@@ -33,6 +36,16 @@ public class AppPool extends XjPool<XjOrg> {
   @Override
   protected XjOrg createItem(String id) {
     return new XjOrg(dbcc, id);
+  }
+
+
+  /**
+   * 创建或获取缓存的 org
+   * @param id
+   * @return
+   */
+  public XjOrg getOrg(String id) {
+    return super.getWithCreate(id);
   }
 
 }

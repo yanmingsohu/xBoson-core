@@ -29,7 +29,7 @@ public class EnvironmentFactory {
   private EnvironmentFactory() {}
 
 
-  public static IEnvironment createBasic() throws IOException {
+  public static BasicEnvironment createBasic() throws IOException {
     SysModules sysmod = new SysModules();
 
     sysmod.regClass("console",
@@ -67,4 +67,5 @@ public class EnvironmentFactory {
 
     return env;
   }
+
 }

@@ -16,26 +16,58 @@
 
 package com.xboson.app;
 
+import com.xboson.been.CallData;
+import com.xboson.been.Module;
+import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
+import com.xboson.fs.FileAttr;
+import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.script.Application;
 
+import javax.script.ScriptException;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
-public class XjApp extends XjPool<XjModule> implements IDict {
+public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem {
 
+  private ServiceScriptWrapper ssw;
+  private Application runtime;
   private XjOrg org;
   private String name;
   private String id;
+  private Module jsmodule;
 
 
   XjApp(XjOrg org, String id) {
     this.org = org;
     this.id = id;
     init_app();
+
+    try {
+      this.ssw = new ServiceScriptWrapper();
+      runtime = new Application(ssw.getEnvironment(), this);
+    } catch (IOException|ScriptException e) {
+      throw new XBosonException(e);
+    }
+
     log.debug("App success", id);
+  }
+
+
+  public void run(CallData cd, String path) throws IOException, ScriptException {
+    if (jsmodule == null) {
+      synchronized (this) {
+        if (jsmodule == null) {
+          jsmodule = runtime.run(path);
+        }
+      }
+    }
+    ssw.run(cd, jsmodule, org.getOrgDb());
   }
 
 
@@ -62,7 +94,37 @@ public class XjApp extends XjPool<XjModule> implements IDict {
   }
 
 
-  public String id() {
+  private XjApi getApi(String path) {
+    UrlSplit sp = new UrlSplit(path);
+    sp.withoutSlash(true);
+
+    XjModule mod = super.getWithCreate(sp.getName());
+    return mod.getWithCreate(sp.getLast());
+  }
+
+
+  @Override
+  public ByteBuffer readFile(String path) throws IOException {
+    XjApi api = getApi(path);
+    return ssw.wrap(api.getCode());
+  }
+
+
+  @Override
+  public FileAttr readAttribute(String path) throws IOException {
+    XjApi api = getApi(path);
+    return api.getApiAttr();
+  }
+
+
+  @Override
+  public String getID() {
     return id;
+  }
+
+
+  @Override
+  public String getType() {
+    return "Script-FS";
   }
 }

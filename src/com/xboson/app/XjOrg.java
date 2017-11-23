@@ -59,6 +59,16 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
   }
 
 
+  /**
+   * 创建或获取缓存的 app
+   * @param id app-id
+   * @return app
+   */
+  public XjApp getApp(String id) {
+    return super.getWithCreate(id);
+  }
+
+
   private void get_org_db_config(Connection conn) throws SQLException {
     SysPlDrmDs001 dbconf = new SysPlDrmDs001();
 
@@ -107,6 +117,7 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
     Statement s = conn.createStatement();
     s.executeUpdate(sql);
     s.executeUpdate("Flush Privileges");
+    log.debug("Create DB User:", un);
   }
 
 
@@ -170,6 +181,11 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
 
   public String id() {
     return orgid;
+  }
+
+
+  ConnectConfig getOrgDb() {
+    return orgdb;
   }
 
 }

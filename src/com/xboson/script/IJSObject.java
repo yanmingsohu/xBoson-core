@@ -17,26 +17,29 @@
 package com.xboson.script;
 
 
+/**
+ * 当把这个对象注册到 BasicEnvironment 中, 只会在环境中生成唯一实例
+ */
 public interface IJSObject {
 
-	/**
-	 * 返回对象在环境中的变量名称
-	 */
-	public String env_name();
-	
-	/**
-	 * 返回对象中的属性是否应该被冻结
-	 */
-	public boolean freeze();
-	
-	/**
-	 * 当环境被创建时, 初始化自身, 该方法被环境调用
-	 */
-	public void init();
-	
-	/**
-	 * 当环境被销毁时, 调用
-	 */
-	public void destory();
-	
+  /**
+   * 返回对象在环境中的变量名称
+   */
+  public String env_name();
+
+  /**
+   * 返回对象中的属性是否应该被冻结
+   */
+  public boolean freeze();
+
+  /**
+   * 当环境被创建时, 初始化自身, 该方法被环境调用
+   */
+  public void init();
+
+  /**
+   * 当环境被销毁时, 调用
+   */
+  public void destory();
+
 }

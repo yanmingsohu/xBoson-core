@@ -53,8 +53,8 @@ public class App extends XService {
     String modid = sp.next();
     String api   = sp.next();
 
-    XjOrg org = app_pool.getWithCreate(orgid);
-    XjApp app = org.getWithCreate(appid);
+//    XjOrg org = app_pool.getWithCreate(orgid);
+//    XjApp app = org.getWithCreate(appid);
     //....
 	}
 

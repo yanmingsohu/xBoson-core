@@ -19,9 +19,9 @@ package com.xboson.app;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
+import com.xboson.fs.FileAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.Password;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,7 +35,10 @@ public class XjApi implements IDict {
   private XjModule mod;
   private String id;
   private String name;
-  private String content;
+  private byte[] content;
+  private FileAttr attr;
+  private long createdt;
+  private long updatedt;
 
 
   XjApi(XjOrg org, XjApp app, XjModule mod, String id) {
@@ -51,7 +54,7 @@ public class XjApi implements IDict {
 
 
   private void init() {
-    Object[] parm = new Object[] { app.id(), mod.id(), id };
+    Object[] parm = new Object[] { app.getID(), mod.id(), id };
 
     try (SqlResult res = org.queryRoot("open_api.sql", parm)) {
       ResultSet rs = res.getResult();
@@ -59,7 +62,9 @@ public class XjApi implements IDict {
         if (! ZR001_ENABLE.equals(rs.getString("status")) ) {
           throw new XBosonException("API 已经禁用");
         }
-        name = rs.getString("apinm");
+        name     = rs.getString("apinm");
+        createdt = rs.getDate("createdt").getTime();
+        updatedt = rs.getDate("updatedt").getTime();
         decode(rs.getString("content"));
       } else {
         throw new XBosonException("找不到 API " + id);
@@ -70,11 +75,47 @@ public class XjApi implements IDict {
   }
 
 
+  /**
+   * 解码脚本, 同时去掉脚本的前后特殊符号 "<%...%>"
+   */
   private void decode(String str) {
-    content = Password.decryptApi(str);
-    int a = content.indexOf("<%");
-    int b = content.lastIndexOf("%>");
-    content = content.substring(a+2, b);
-    log.error(content);
+    content = ApiEncryption.decryptApi(str);
+
+    int len = content.length - 1;
+    if (content[0] == 60
+            && content[1] == 37
+            && content[len-1] == 37
+            && content[len] == 62)
+    {
+      content[0    ] = 32; // 13 = CR (carriage return) 回车键
+      content[1    ] = 32; // 32 = (space) 空格
+      content[len-1] = 13;
+      content[len  ] = 13;
+    }
+  }
+
+
+  public byte[] getCode() {
+    return content;
+  }
+
+
+  public FileAttr getApiAttr() {
+    if (attr == null) {
+      synchronized (this) {
+        if (attr == null) {
+          attr = new FileAttr();
+          attr.fileSize   = content.length;
+          attr.fileName   = id;
+          attr.pathName   = '/' + mod.id();
+          attr.fullPath   = '/' + mod.id() + '/' + id;
+          attr.isfile     = true;
+          attr.isdir      = false;
+          attr.createTime = createdt;
+          attr.modifyTime = updatedt;
+        }
+      }
+    }
+    return attr;
   }
 }

@@ -6,38 +6,25 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月5日 下午1:53:54
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/Module.java
+// 文件创建日期: 17-11-23 上午11:33
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/lib/MapImpl.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.been;
+package com.xboson.app.lib;
 
-import com.xboson.util.Tool;
-
-
-/**
- * js 运行后生成的模块.
- */
-public class Module implements IBean {
-  public String   id;
-  public String   filename;
-  public Object   children;
-  public Object   exports;
-  public boolean  loaded;
-  public Object   parent;
-  public String[] paths;
+import com.xboson.script.IJSObject;
+import com.xboson.script.JSObject;
 
 
-  public Module() {
-    loaded = false;
+public class MapImpl extends JSObject implements IJSObject {
+
+  @Override
+  public String env_name() {
+    return "map";
   }
 
-
-  public String toString() {
-    return Tool.getAdapter(Module.class).toJson(this);
-  }
 }

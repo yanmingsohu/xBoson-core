@@ -45,13 +45,18 @@ public abstract class XjPool<E> {
    * @param name
    * @return
    */
-  public E getWithCreate(String name) {
+  protected E getWithCreate(String name) {
     if (name == null) {
       throw new XBosonException.NullParamException("String name");
     }
     E ret = pool.get(name);
     if (ret == null) {
-      ret = createItem(name);
+      synchronized (this) {
+        ret = pool.get(name);
+        if (ret == null) {
+          ret = createItem(name);
+        }
+      }
     }
     return ret;
   }

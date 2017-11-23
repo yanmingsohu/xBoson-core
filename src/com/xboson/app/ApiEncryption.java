@@ -6,38 +6,51 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月5日 下午1:53:54
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/Module.java
+// 文件创建日期: 17-11-23 上午8:39
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/ApiEncryption.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.been;
+package com.xboson.app;
 
-import com.xboson.util.Tool;
+import com.xboson.util.AES2;
+import com.xboson.util.Password;
 
 
 /**
- * js 运行后生成的模块.
+ * 这个类只有本包对象可以访问
  */
-public class Module implements IBean {
-  public String   id;
-  public String   filename;
-  public Object   children;
-  public Object   exports;
-  public boolean  loaded;
-  public Object   parent;
-  public String[] paths;
+class ApiEncryption {
+
+  private static AES2 ekey;
+  private static AES2 iekey;
 
 
-  public Module() {
-    loaded = false;
+  static {
+    try {
+      String code = "1200"; // 从配置文件读取
+      String encode = Password.encodeSha256(code, "zr_zy秘");
+      ekey = new AES2(code + encode);
+
+      String ieCode = "import&&export";
+      iekey = new AES2(ieCode);
+    } catch(Exception e) {
+      e.printStackTrace();
+      System.exit(2);
+    }
   }
 
 
-  public String toString() {
-    return Tool.getAdapter(Module.class).toJson(this);
+  static String encryptApi(String code) {
+    return ekey.encrypt(code);
   }
+
+
+  static byte[] decryptApi(String mi) {
+    return ekey.decrypt(mi);
+  }
+
 }
