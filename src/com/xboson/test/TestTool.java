@@ -144,6 +144,12 @@ public class TestTool extends Test {
 
 		Set<Class> all = Tool.findPackage("com.xboson.test");
 		msg("Tool.findPackage: " + all);
+
+		eq(10, Tool.randomString(10).length(), "length");
+    eq(20, Tool.randomString(20).length(), "length");
+    for (int i=0; i<10; ++i) {
+      msg(Tool.randomString(79));
+    }
 	}
 
 

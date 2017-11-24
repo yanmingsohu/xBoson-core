@@ -179,7 +179,7 @@ public class SysImpl extends RuntimeImpl {
 
   public String randomDouble(int p, int s) {
     BigDecimal a = BigDecimal.valueOf(Math.random() * Math.pow(10, p));
-    return a.setScale(2, BigDecimal.ROUND_DOWN).toString();
+    return a.setScale(s, BigDecimal.ROUND_DOWN).toString();
   }
 
 

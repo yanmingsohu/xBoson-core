@@ -395,13 +395,14 @@ public class Tool {
 
   /**
    * 生成随机字符串
-   *
-   * @param byteLength 字节数量, 最后被压缩成 base64 字符串长度会小于字节长度.
-   * @return 字符串
+   * @param charLength 字符数量.
    */
-  public static String randomString(int byteLength) {
-    byte[] buf = randomBytes((int) (byteLength*2/3));
-    return Base64.getEncoder().withoutPadding().encodeToString(buf);
+  public static String randomString(int charLength) {
+    char[] ch = new char[charLength];
+    for (int i=0; i<charLength; ++i) {
+      ch[i] = (char) (Math.random() * 94 + 33);
+    }
+    return new String(ch);
   }
 
 
