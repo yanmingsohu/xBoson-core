@@ -27,6 +27,7 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.xboson.been.ResponseRoot;
 import com.xboson.been.XmlDataMap;
 import com.xboson.j2ee.container.IXResponse;
+import com.xboson.util.Tool;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,9 +55,7 @@ public class XmlResponse implements IXResponse {
 
 
   public XmlResponse() {
-    xs = new XStream();
-    xs.autodetectAnnotations(true);
-    xs.registerConverter(new XmlDataMap.MapEntryConverter());
+    xs = Tool.createXmlStream();
   }
 
 

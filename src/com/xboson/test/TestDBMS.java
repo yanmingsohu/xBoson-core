@@ -19,12 +19,14 @@ package com.xboson.test;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDriver;
+import com.xboson.db.SqlCachedResult;
 import com.xboson.db.driver.Mysql;
 import com.xboson.db.sql.SqlReader;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 public class TestDBMS extends Test {
@@ -40,6 +42,22 @@ public class TestDBMS extends Test {
     mysql();
 //    t10000();
     read_json_table();
+    test_cache_sql();
+  }
+
+
+  public void test_cache_sql() throws Exception {
+    sub("Test query sql from cache");
+    try (SqlCachedResult scr = new SqlCachedResult(localdb()) ) {
+      String sql = "select * from sys_eeb_detail where pname=? limit ?";
+      String parm = "Http 服务端";
+
+      List<Map<String, Object>> ret1 = scr.query(sql, parm, SHOW_RESULT_LINE);
+      List<Map<String, Object>> ret2 = scr.queryWithoutDB(sql, parm, SHOW_RESULT_LINE);
+
+      eq(ret1, ret2, "cache ok");
+      msg(ret2);
+    }
   }
 
 

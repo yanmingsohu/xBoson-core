@@ -17,6 +17,7 @@
 package com.xboson.script;
 
 
+import com.xboson.been.XBosonException;
 import com.xboson.util.IConversion;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.AbstractJSObject;
@@ -30,8 +31,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
 
 /**
  * 用于辅助 js 对象与 java 对象桥接和转换.

@@ -19,6 +19,13 @@ package com.xboson.sleep;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * 当有其他用途时再进行设计
+ *
+ * @deprecated 通常直接使用 RedisMesmerizer
+ * @see RedisMesmerizer
+ */
 public class SleepFactory {
 
   private static SleepFactory instance;

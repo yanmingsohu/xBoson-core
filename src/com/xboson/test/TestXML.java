@@ -17,12 +17,10 @@
 package com.xboson.test;
 
 import com.thoughtworks.xstream.XStream;
-import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.thoughtworks.xstream.annotations.XStreamImplicit;
 import com.xboson.been.ResponseRoot;
-import com.xboson.been.XmlDataMap;
 import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.util.Tool;
+import com.xboson.util.converter.XmlDataMapConverter;
 
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -56,7 +54,7 @@ public class TestXML extends Test {
     out.write(x.XML_HEAD);
 
     XStream xs = new XStream();
-    xs.registerConverter(new XmlDataMap.MapEntryConverter());
+    xs.registerConverter(new XmlDataMapConverter());
     xs.autodetectAnnotations(true);
     xs.toXML(ret_root, out);
 
@@ -71,7 +69,7 @@ public class TestXML extends Test {
    */
   public void test_thread() {
     sub("Mutil XStream Thread Safe");
-    final XStream xs = new XStream();
+    final XStream xs = Tool.createXmlStream();
     TestData td = new TestData();
     td.change();
     msg("---------- XML:\n", xs.toXML(td));

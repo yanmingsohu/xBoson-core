@@ -20,6 +20,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
+import com.xboson.util.ChineseInital;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
@@ -45,7 +46,32 @@ public class TestTool extends Test {
     local_file_watcher();
     // uri_object();
     red(new XBosonException("test").getMessage());
-    check_string_hash();
+    // check_string_hash();
+    test_chinese();
+  }
+
+
+  public void test_chinese() {
+    check("中华人民共和国", "zhrmghg");
+    check("山高似水深", "sgsss");
+    check("窗前明月光", "cqmyg");
+
+//    //
+//    // 使用缓存: to First Letter 1000000  Used Time 389 ms
+//    // 不用缓存: to First Letter 1000000  Used Time 1220 ms
+//    //
+//    beginTime();
+//    int c = 1000000;
+//    for (int i=0; i<c; ++i) {
+//      ChineseInital.getAllFirstLetter("中华人民共和国");
+//    }
+//    endTime("to First Letter", c);
+  }
+
+
+  public void check(String cn, String en) {
+    String s = ChineseInital.getAllFirstLetter(cn);
+    eq(en, s, "ch -> en");
   }
 
 

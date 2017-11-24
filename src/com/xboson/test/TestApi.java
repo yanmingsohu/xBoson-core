@@ -20,6 +20,7 @@ import com.xboson.app.AppPool;
 import com.xboson.app.XjApp;
 import com.xboson.app.XjOrg;
 import com.xboson.been.CallData;
+import com.xboson.been.LoginUser;
 import com.xboson.been.SessionData;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.test.impl.TestServletRequest;
@@ -36,6 +37,19 @@ public class TestApi extends Test {
   }
 
 
+  public void test_ds_api(XjApp app, CallData cd) throws Exception {
+    sub("Test sys api");
+    String path = "/test_double/test-sys";
+    try {
+      app.run(cd, path);
+    } catch(Exception e) {
+      show_code(app, path);
+      fail(e);
+      e.printStackTrace();
+    }
+  }
+
+
   public void test_pool() throws Exception {
     sub("Test app pool");
 
@@ -43,15 +57,9 @@ public class TestApi extends Test {
 
     AppPool ap = new AppPool();
     XjOrg org = ap.getOrg("a297dfacd7a84eab9656675f61750078");
-    XjApp app = org.getApp("cfb82858dc0a4598834d356c661a678f");// 日志分析
+    XjApp app = org.getApp("a9943b0fb1e141b3a3ce7e886d407f5b");
 
-    String path = "/log_access/query";
-    try {
-      app.run(cd, path);
-    } catch(Exception e) {
-      show_code(app, path);
-      fail(e);
-    }
+    test_ds_api(app, cd);
   }
 
 
@@ -60,6 +68,9 @@ public class TestApi extends Test {
     TestServletResponse resp = new TestServletResponse();
     XResponse xr = new XResponse(req, resp);
     SessionData sd = new SessionData();
+    sd.login_user = new LoginUser();
+    sd.login_user.pid = "e3e5cf168dd24b44ba4b72775d5fb215";
+    sd.login_user.userid = "root";
     req.setAttribute(SessionData.attrname, sd);
     return new CallData(req, resp);
   }

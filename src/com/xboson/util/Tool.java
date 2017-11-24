@@ -17,7 +17,6 @@
 package com.xboson.util;
 
 import java.io.*;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
@@ -26,10 +25,12 @@ import java.util.*;
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
+import com.thoughtworks.xstream.XStream;
 import com.xboson.been.XBosonException;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Uuid;
-import com.xboson.test.Test;
+import com.xboson.util.converter.ScriptObjectMirrorConverter;
+import com.xboson.util.converter.XmlDataMapConverter;
 
 
 public class Tool {
@@ -40,32 +41,41 @@ public class Tool {
   private static final ThreadLocal<SecureRandom>
           secure_random_thread = new ThreadLocal<>();
 
-  private static Builder jsbuilded;
   private static Moshi moshi;
-  private static com.xboson.script.lib.Path p = new com.xboson.script.lib.Path();
+  private static com.xboson.script.lib.Path
+          p = new com.xboson.script.lib.Path();
 
   public static final Uuid uuid;
 
   private Tool() {}
 
   static {
-    jsbuilded = new Moshi.Builder();
+    Builder jsbuilded = new Moshi.Builder();
+    ScriptObjectMirrorConverter.registerAdapter(jsbuilded);
+
     moshi = jsbuilded.build();
     uuid = new Uuid();
   }
 
 
   /**
-   * 保证性能和线程安全;
-   * moshi 内部已经对适配器做了缓存.
+   * 保证性能和线程安全; moshi 内部已经对适配器做了缓存.
+   * 返回的适配器已经注册了可用的对象转换器.
    */
   public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
     return moshi.adapter(c);
   }
 
 
-  public static void regJsonAdapter(Object adapter) {
-    jsbuilded.add(adapter);
+  /**
+   * 返回的 xml 解析器已经注册了所有可用的转换器,
+   * XStream 对象是线程安全的, 可以在全局使用.
+   */
+  public static XStream createXmlStream() {
+    XStream xs = new XStream();
+    xs.autodetectAnnotations(true);
+    xs.registerConverter(new XmlDataMapConverter());
+    return xs;
   }
 
 
@@ -390,7 +400,7 @@ public class Tool {
    * @return 字符串
    */
   public static String randomString(int byteLength) {
-    byte[] buf = randomBytes(byteLength);
+    byte[] buf = randomBytes((int) (byteLength*2/3));
     return Base64.getEncoder().withoutPadding().encodeToString(buf);
   }
 
