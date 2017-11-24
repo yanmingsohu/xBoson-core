@@ -16,19 +16,13 @@
 
 package com.xboson.been;
 
-import com.thoughtworks.xstream.converters.Converter;
-import com.thoughtworks.xstream.converters.MarshallingContext;
-import com.thoughtworks.xstream.converters.UnmarshallingContext;
-import com.thoughtworks.xstream.io.HierarchicalStreamReader;
-import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
-
 import java.util.HashMap;
 import java.util.Map;
 
 
 /**
  * 行为与 HashMap 完全相同, 但是当转换为 xml 时将与 Map 的行为不同.
- * 注册转换器: XStream.registerConverter(new MapEntryConverter());
+ * 默认转换器已经注册到 Tool 中.
  *
  * Map 转换后的样式:
  * <map>
@@ -47,6 +41,9 @@ import java.util.Map;
  *   <code>0</code>
  *   <message>ok</message>
  * </map>
+ *
+ * @see com.xboson.util.converter.XmlDataMapConverter
+ * @see com.xboson.util.Tool#createXmlStream
  */
 public class XmlDataMap<K,V> extends HashMap<K,V> {
 
@@ -70,37 +67,4 @@ public class XmlDataMap<K,V> extends HashMap<K,V> {
   }
 
 
-  /**
-   * Map 的属性转换为 <key>Value</key> 的形式
-   */
-  public static class MapEntryConverter implements Converter {
-
-    public boolean canConvert(Class clazz) {
-      return XmlDataMap.class.isAssignableFrom(clazz);
-    }
-
-    public void marshal(Object value, HierarchicalStreamWriter writer,
-                        MarshallingContext context) {
-
-      Map map = (Map) value;
-      for (Object obj : map.entrySet()) {
-        Map.Entry entry = (Map.Entry) obj;
-        writer.startNode(entry.getKey().toString());
-        context.convertAnother(entry.getValue());
-        writer.endNode();
-      }
-    }
-
-    public Object unmarshal(HierarchicalStreamReader reader,
-                            UnmarshallingContext context) {
-
-      Map<String, String> map = new HashMap<>();
-      while(reader.hasMoreChildren()) {
-        reader.moveDown();
-        map.put(reader.getNodeName(), reader.getValue());
-        reader.moveUp();
-      }
-      return map;
-    }
-  }
 }
