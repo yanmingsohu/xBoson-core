@@ -19,6 +19,7 @@ package com.xboson.service;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
+import com.xboson.db.SqlCachedResult;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
@@ -31,6 +32,7 @@ import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 
 @XPath("/user")
@@ -97,10 +99,11 @@ public class UserService extends XService implements IDict {
     }
 
     Config cf = SysConfig.me().readConfig();
-    try (SqlResult sr = SqlReader.query(
-            "user0003", cf.db, data.sess.login_user.pid) )
-    {
-      data.xres.setData(sr.resultToList());
+    try (SqlCachedResult scr = new SqlCachedResult(cf.db)) {
+      List<Map<String, Object>> ret =
+	        scr.query(SqlReader.read("user0003"), data.sess.login_user.pid);
+
+      data.xres.setData(ret);
       data.xres.response();
     }
   }

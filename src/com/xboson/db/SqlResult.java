@@ -27,8 +27,12 @@ import java.util.Map;
 
 
 /**
- * 该结果集封装了 Connect, ResultSet 等对象,
- * 在完成查询后应该调用 close 关闭, 更好的方式是使用 try(SqlResult r = ...) {}
+ * 该结果集封装了 Connection, ResultSet 等对象,
+ * 在完成查询后应该调用 close 关闭, 更好的方式是使用 try(SqlResult r = ...) {}.
+ * <br/><br/>
+ * 大部分时候推荐使用 SqlCachedResult 替换 SqlResult
+ *
+ * @see SqlCachedResult
  */
 public class SqlResult implements AutoCloseable {
 
@@ -109,13 +113,15 @@ public class SqlResult implements AutoCloseable {
    * 适合小数据集的转换, 并将结果附加在 json 上.
    */
   public List resultToList() throws SQLException {
-    List<Map<String, Object>> ret = new ArrayList<>();
+    List<Map<String, Object>> ret;
+
     try (ResultSet rs = getResult()) {
+      ret = new ArrayList<>(rs.getFetchSize());
       ResultSetMetaData meta = rs.getMetaData();
       int cc = meta.getColumnCount();
 
       while (rs.next()) {
-        Map<String, Object> row = new HashMap<>();
+        Map<String, Object> row = new HashMap<>(cc);
         ret.add(row);
         for (int i=1; i<=cc; ++i) {
           row.put(meta.getColumnLabel(i), rs.getObject(i));
