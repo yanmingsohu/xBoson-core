@@ -232,7 +232,18 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         ByteArrayInputStream ibyte = new ByteArrayInputStream(data);
         ObjectInputStream iobj = new ObjectInputStream(ibyte);
 
-        IBinData obj = (IBinData) iobj.readObject();
+        IBinData obj = null;
+        try {
+          obj = (IBinData) iobj.readObject();
+        } catch(InvalidClassException ice) {
+          log.debug("BIN.wake", ice);
+          //
+          // 反序列化失败, 比如类定义改变, 序列号改变.
+          //
+          client.hdel(KEY_BYTE, bid);
+          return null;
+        }
+
         if (check_timeout(client, obj, bid))
           return null;
 
