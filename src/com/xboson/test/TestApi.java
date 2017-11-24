@@ -50,7 +50,7 @@ public class TestApi extends Test {
       app.run(cd, path);
     } catch(Exception e) {
       show_code(app, path);
-      throw e;
+      fail(e);
     }
   }
 

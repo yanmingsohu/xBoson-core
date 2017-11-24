@@ -40,9 +40,9 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
   public static final String XBOSON_TYPE = "9";
 
   private String orgid;
+  private String name;
   private ConnectConfig orgdb;
   private ConnectConfig rootdb;
-  private String name;
 
 
   XjOrg(ConnectConfig dbcc, String orgid) {

@@ -17,6 +17,7 @@
 package com.xboson.sleep;
 
 import com.xboson.been.Config;
+import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
@@ -26,10 +27,8 @@ import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
+
 
 /**
  * 能正确处理 json/bin 类型
@@ -145,9 +144,15 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   }
 
 
+  /**
+   * JSON 持久化
+   */
   class JSON {
     public void sleep(String id, Object data) {
       try (Jedis client = jpool.getResource()) {
+        if (check_timeout(client, data, id))
+          return;
+
         String str = Tool.getAdapter((Class) data.getClass()).toJson(data);
         client.hset(KEY, id, str);
       }
@@ -157,22 +162,17 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
       try (Jedis client = jpool.getResource()) {
         String str = client.hget(KEY, id);
         if (str == null) {
-          throw new Exception("cannot found data " + c + " - " + id);
+          return null;
         }
 
         ISleepwalker obj = (ISleepwalker) Tool.getAdapter(c).fromJson(str);
-
-        if (obj instanceof ITimeout) {
-          ITimeout to = (ITimeout) obj;
-          if (to.isTimeout()) {
-            client.hdel(KEY, id);
-          }
-        }
+        if (check_timeout(client, obj, id))
+          return null;
 
         return obj;
-      } catch(Exception e) {
-        log.error("wake json", e);
-        return null;
+      } catch(IOException e) {
+        log.debug("JSON.wake", e);
+        throw new XBosonException(e);
       }
     }
 
@@ -182,23 +182,42 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         client.hdel(KEY, id);
       }
     }
+
+    private boolean check_timeout(Jedis client, Object obj, String id) {
+      if (obj instanceof ITimeout) {
+        ITimeout to = (ITimeout) obj;
+        if (to.isTimeout()) {
+          client.hdel(KEY, id);
+          return true;
+        }
+      }
+      return false;
+    }
   }
 
 
+  /**
+   * Java 序列化
+   */
   class BIN {
     byte [] KEY_BYTE = KEY.getBytes();
 
     public void sleep(String id, Object data) {
       try (Jedis client = jpool.getResource()) {
+        byte[] bid = id.getBytes();
+        if (check_timeout(client, data, bid))
+          return;
+
         ByteArrayOutputStream obyte = new ByteArrayOutputStream();
         ObjectOutputStream oobj = new ObjectOutputStream(obyte);
         oobj.writeObject(data);
         oobj.flush();
 
         byte[] out = obyte.toByteArray();
-        client.hset(KEY_BYTE, id.getBytes(), out);
-      } catch(Exception e) {
-        log.error("sleep bin", e);
+        client.hset(KEY_BYTE, bid, out);
+      } catch(IOException e) {
+        log.debug("BIN.sleep", e);
+        throw new XBosonException(e);
       }
     }
 
@@ -207,24 +226,23 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         byte[] bid  = id.getBytes();
         byte[] data = client.hget(KEY_BYTE, bid);
         if (data == null) {
-          throw new Exception("cannot found data " + c + " - " + id);
+          return null;
         }
 
         ByteArrayInputStream ibyte = new ByteArrayInputStream(data);
         ObjectInputStream iobj = new ObjectInputStream(ibyte);
 
         IBinData obj = (IBinData) iobj.readObject();
-        if (obj instanceof ITimeout) {
-          ITimeout to = (ITimeout) obj;
-          if (to.isTimeout()) {
-            client.hdel(KEY_BYTE, bid);
-          }
-        }
+        if (check_timeout(client, obj, bid))
+          return null;
+
+        if (obj.getClass() != c)
+          throw new XBosonException.BadParameter("Is not", c.getName());
 
         return obj;
-      } catch(Exception e) {
-        log.error("wake bin", e);
-        return null;
+      } catch(IOException|ClassNotFoundException e) {
+        log.debug("BIN.wake", e);
+        throw new XBosonException(e);
       }
     }
 
@@ -233,6 +251,17 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         String id = genid(data, "BIN");
         client.hdel(KEY_BYTE, id.getBytes());
       }
+    }
+
+    private boolean check_timeout(Jedis client, Object obj, byte[] bid) {
+      if (obj instanceof ITimeout) {
+        ITimeout to = (ITimeout) obj;
+        if (to.isTimeout()) {
+          client.hdel(KEY_BYTE, bid);
+          return true;
+        }
+      }
+      return false;
     }
   }
 }

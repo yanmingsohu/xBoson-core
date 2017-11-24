@@ -17,21 +17,23 @@
 package com.xboson.sleep;
 
 /**
- * 持久化接口
+ * 持久化接口; 如果底层连接发生错误, 会抛出运行时异常
  */
 public interface IMesmerizer {
 
   /**
-   * 持久化数据, 实现需要检查 data 类型来正确处理数据
+   * 持久化数据, 实现需要检查 data 类型来正确处理数据,
+   * 当 data 继承了 ITimeout, 超时的对象不会保存, 且被删除
    * @param data
    */
   void sleep(ISleepwalker data);
 
   /**
-   * 唤醒持久化的数据
+   * 唤醒持久化的数据,
+   * 当  继承了 ITimeout, 唤醒后发现对象超时则返回null, 且被删除.
    * @param c
    * @param id
-   * @return
+   * @return 如果找不到 id 对应的缓存对象, 则返回 null
    */
   ISleepwalker wake(Class<? extends ISleepwalker> c, String id);
 

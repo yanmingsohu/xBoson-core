@@ -349,7 +349,8 @@ public class Test {
       try {
         run();
       } catch(Throwable t) {
-        if (_throws.isAssignableFrom(t.getClass())) {
+        if (_throws.isAssignableFrom(t.getClass())
+                || t.getClass() == _throws) {
           msg("OK, cache", t);
           return;
         }

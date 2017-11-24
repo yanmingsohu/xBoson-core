@@ -97,11 +97,7 @@ public class SessionCluster extends HttpFilter {
 		try {
       chain.doFilter(request, response);
     } finally {
-			if (sd.isTimeout()) {
-				RedisMesmerizer.me().remove(sd);
-			} else {
-				RedisMesmerizer.me().sleep(sd);
-			}
+			RedisMesmerizer.me().sleep(sd);
     }
   }
 	

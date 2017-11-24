@@ -69,9 +69,6 @@ public class SleepFactory {
   public IMesmerizer getMesmerizer(Class<?> c) {
     IMesmerizer mes = map.get(c);
     if (mes == null) {
-      mes = default_mes;
-    }
-    if (mes == null) {
       throw new NullPointerException("cannot config any Mesmerizer");
     }
     return mes;
@@ -79,7 +76,10 @@ public class SleepFactory {
 
 
   public IMesmerizer getMesmerizer() {
-    return getMesmerizer(null);
+    if (default_mes == null) {
+      throw new NullPointerException("cannot get default Mesmerizer");
+    }
+    return default_mes;
   }
 
 }
