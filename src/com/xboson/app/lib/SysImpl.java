@@ -408,6 +408,6 @@ public class SysImpl extends RuntimeImpl {
 
 
   public Object lotteryRate(int[] list, int[] ign) {
-
+    return null; //!!!!!
   }
 }

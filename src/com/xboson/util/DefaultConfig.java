@@ -48,7 +48,6 @@ public final class DefaultConfig {
 
     c.uiProviderClass   = LocalFileMapping.class.getName();
     c.uiUrl             = "/ui";
-    c.clusterCenterID   = 0;
     c.clusterNodeID     = 0;
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();

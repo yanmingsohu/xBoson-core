@@ -57,7 +57,6 @@ public class Config implements IBean {
 	public ConnectConfig db;
 	public ConnectConfig redis;
 
-	public byte clusterCenterID;
 	public byte clusterNodeID;
 	
 	

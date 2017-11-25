@@ -445,7 +445,9 @@ public final class Tool {
   public synchronized static long nextId() {
     if (id == null) {
       Config c = SysConfig.me().readConfig();
-      id = new SnowflakeIdWorker(c.clusterNodeID, c.clusterCenterID);
+      long a = c.clusterNodeID & 0x1F;
+      long b = (c.clusterNodeID >> 5) & 0x1F;
+      id = new SnowflakeIdWorker(a, b);
     }
     return id.nextId();
   }
