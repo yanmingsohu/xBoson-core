@@ -19,6 +19,7 @@ package com.xboson.test;
 import com.xboson.app.AppPool;
 import com.xboson.app.XjApp;
 import com.xboson.app.XjOrg;
+import com.xboson.app.lib.SysImpl;
 import com.xboson.been.CallData;
 import com.xboson.been.LoginUser;
 import com.xboson.been.SessionData;
@@ -28,12 +29,14 @@ import com.xboson.test.impl.TestServletResponse;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 
 public class TestApi extends Test {
 
   public void test() throws Exception {
     test_pool();
+    test_lottery_rate();
   }
 
 
@@ -80,6 +83,35 @@ public class TestApi extends Test {
     ByteBuffer buf = app.readFile(path);
     String code = new String(buf.array());
     printCode(code);
+  }
+
+
+  public void test_lottery_rate() throws Exception {
+    sub("Test lottery rate");
+    double[] ret = new double[] {0,0,0,0,0};
+    double[] list = new double[] {20.5, 10.0, 50.5, 10.0};
+    int[] ign = new int[] {1, 3};
+
+    CallData cd = simulationCallData();
+
+    SysImpl sys = new SysImpl(cd, null);
+
+    for (int i=0; i<100000; ++i) {
+      int r = sys.lotteryRate(list, ign);
+      ret[r] += 1;
+    }
+    double sum = 0;
+    for (int i=0; i<ret.length; ++i) sum += ret[i];
+    for (int i=0; i<ret.length; ++i) ret[i] /= sum / 100;
+
+    msg("运行结果", Arrays.toString(ret));
+    msg("正确值应该在 30.00 0.0 60.00 0.0 10.00 上下浮动");
+
+    ok(Math.abs(ret[0] - 30.0) < 1, "arr[0] = 30%");
+    ok(ret[1] == 0, "arr[1] = 0%");
+    ok(Math.abs(ret[2] - 60.0) < 1, "arr[2] = 60%");
+    ok(ret[3] == 0, "arr[3] = 0%");
+    ok(Math.abs(ret[4] - 10.0) < 1, "arr[4] = 10%");
   }
 
 

@@ -407,7 +407,54 @@ public class SysImpl extends RuntimeImpl {
   }
 
 
-  public Object lotteryRate(int[] list, int[] ign) {
-    return null; //!!!!!
+  public Object lotteryRate(double[] list) {
+    return lotteryRate(list, null);
+  }
+
+
+  /**
+   * 俄罗斯轮盘赌 !!
+   */
+  public int lotteryRate(double[] list, int[] ign) {
+    double d = Math.random() * 101;
+    double a = 0;
+    int i;
+
+    // ign 如果为 null, 性能最好
+    if (ign != null && ign.length > 0) {
+      // 防止对 list 的修改
+      list = Arrays.copyOf(list, list.length);
+
+      double share = 0;
+      int listcount = list.length;
+
+      // 计算要分摊的忽略列表中指定的项
+      for (i=0; i<ign.length; ++i) {
+        int index = ign[i];
+        if (list[index] < 0) continue;
+        share += list[index];
+        list[index] = -1;
+        --listcount;
+      }
+
+      // 将分摊值加入正常项
+      share = share / listcount;
+      for (i=0; i<list.length; ++i) {
+        if (list[i] >= 0) {
+          list[i] += share;
+        }
+      }
+    }
+
+    for (i=0; i<list.length; ++i) {
+      if (list[i] >= 0) {
+        a += list[i];
+        if (d < a) {
+          break;
+        }
+      }
+    }
+
+    return i;
   }
 }
