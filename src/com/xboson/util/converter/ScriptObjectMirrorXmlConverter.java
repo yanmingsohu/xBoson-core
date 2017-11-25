@@ -19,13 +19,16 @@ package com.xboson.util.converter;
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
+import com.xboson.util.Version;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.internal.objects.*;
+import jdk.nashorn.internal.objects.NativeArray;
+import jdk.nashorn.internal.objects.NativeNumber;
+import jdk.nashorn.internal.objects.NativeObject;
+import jdk.nashorn.internal.objects.NativeString;
 import jdk.nashorn.internal.runtime.Context;
-import jdk.nashorn.internal.runtime.ScriptObject;
-import jdk.nashorn.internal.runtime.linker.NashornCallSiteDescriptor;
 
 import java.util.Iterator;
 
@@ -187,6 +190,7 @@ public class ScriptObjectMirrorXmlConverter implements Converter {
       ScriptObjectMirrorJsonConverter.Warp
               warp = (ScriptObjectMirrorJsonConverter.Warp) o;
 
+      hierarchicalStreamWriter.addAttribute("xboson", Version.xBoson);
       me.marshal(warp.jsobj, hierarchicalStreamWriter, marshallingContext);
     }
 

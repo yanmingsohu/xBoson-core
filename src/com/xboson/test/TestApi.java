@@ -79,7 +79,7 @@ public class TestApi extends Test {
   public void show_code(XjApp app, String path) throws IOException {
     ByteBuffer buf = app.readFile(path);
     String code = new String(buf.array());
-    msg(code);
+    printCode(code);
   }
 
 

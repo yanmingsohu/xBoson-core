@@ -19,6 +19,7 @@ package com.xboson.util;
 import com.xboson.been.XBosonException;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 /**
@@ -83,12 +84,17 @@ public final class Password implements IConstant {
   }
 
 
-  public static String md5(String s) {
+  public static String md5lowstr(String s) {
+    return Hex.lowerHex(md5(s));
+  }
+
+
+  public static byte[] md5(String s) {
     try {
       MessageDigest md = MessageDigest.getInstance(MD5_NAME);
-      return Hex.lowerHex(md.digest(s.getBytes(CHARSET)));
-    } catch(Exception e) {
-      throw new XBosonException("password v1()", e);
+      return md.digest(s.getBytes(CHARSET));
+    } catch (NoSuchAlgorithmException e) {
+      throw new XBosonException("password md5", e);
     }
   }
 

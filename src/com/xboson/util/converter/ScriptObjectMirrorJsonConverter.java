@@ -21,7 +21,9 @@ import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.thoughtworks.xstream.annotations.XStreamAsAttribute;
 import com.xboson.util.Tool;
+import com.xboson.util.Version;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
@@ -134,8 +136,10 @@ public class ScriptObjectMirrorJsonConverter {
   /**
    * 对象包装器, 帮助深层对象的 json(xml) 化,
    * 解决当 ScriptObjectMirror 在 map 中时无法被正确的 Adapter 感知.
+   * <br/><br/>
+   * XStream 在反序列化时, 根据主节点名称来调用对应的转换器.
    */
-  @XStreamAlias("root")
+  @XStreamAlias("js-object-root")
   static public class Warp {
     ScriptObjectMirror jsobj;
 

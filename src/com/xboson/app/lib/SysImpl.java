@@ -21,22 +21,23 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlCachedResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.resp.XmlResponse;
+import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Uuid;
-import com.xboson.util.ChineseInital;
-import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
+import com.xboson.util.*;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
+import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJSON;
+import jdk.nashorn.internal.runtime.Context;
+import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 
 
 /**
@@ -52,11 +53,7 @@ public class SysImpl extends RuntimeImpl {
 
   private ConnectConfig orgdb;
   private Map<String, Object> retData;
-  private static long id = 0;
-
-  static {
-    id = (long)(Uuid.HALF * Math.random());
-  }
+  private List<Object> printList;
 
 
   public SysImpl(CallData cd, ConnectConfig orgdb) {
@@ -178,7 +175,7 @@ public class SysImpl extends RuntimeImpl {
 
 
   public synchronized long nextId() {
-    return id++;
+    return Tool.nextId();
   }
 
 
@@ -244,5 +241,173 @@ public class SysImpl extends RuntimeImpl {
     out.append(XmlResponse.XML_HEAD);
     Tool.createXmlStream().toXML(warp, out);
     return out.toString();
+  }
+
+
+  public Object emptyToNull(String str) {
+    if (str == null) return null;
+    str = str.trim();
+    if (str.length() <= 0) return null;
+    if (str.equalsIgnoreCase("NULL")) return null;
+    return str;
+  }
+
+
+  public Object isNumber(Object v) {
+    try {
+      Double.parseDouble(v.toString());
+      return true;
+    } catch(Exception e) {
+      return false;
+    }
+  }
+
+
+  public Object parseInt(Object v) {
+    try {
+      return Integer.parseInt(v.toString());
+    } catch(Exception e) {
+      return 0;
+    }
+  }
+
+
+  public Object executeJavaScript(Object a, Object b) {
+    throw new UnsupportedOperationException("executeJavaScript");
+  }
+
+
+  public void printValue(Object v) {
+    if (printList == null) {
+      printList = new ArrayList<>();
+      cd.xres.bindResponse("print", printList);
+    }
+    printList.add(v);
+  }
+
+
+  /**
+   * 包装 java byte 数组, 返回 js 数组类型对象.
+   *
+   * [实现细节] 使用 ArrayData.allocate(ByteBuffer.wrap(b)) 创建的数组对象,
+   * 虽然不需要复制内存, 但是无法再次调用 java 函数, 如果调用抛出
+   * UnsupportedOperationException 异常.
+   */
+  private Object _warp_(byte[] b) {
+    NativeArray na = NativeArray.construct(true, null, b.length);
+    ScriptObjectMirror js = (ScriptObjectMirror)
+            ScriptObjectMirror.wrap(na, Context.getGlobal());
+
+    for (int i=0; i<b.length; ++i) {
+      js.setSlot(i, b[i]);
+    }
+    return js;
+  }
+
+
+  public Object bytes(String s) {
+    return _warp_( s.getBytes(IConstant.CHARSET) );
+  }
+
+
+  public Object encodeBase64(String v) {
+    return encodeBase64( v.getBytes(IConstant.CHARSET) );
+  }
+
+
+  public Object encodeBase64(byte[] b) {
+    return _warp_( Base64.getEncoder().encode(b) );
+  }
+
+
+  public Object encodeBase64(Buffer.JsBuffer buf) {
+    return encodeBase64( buf._buffer().array() );
+  }
+
+
+  public String encodeBase64String(String v) {
+    return encodeBase64String( v.getBytes(IConstant.CHARSET) );
+  }
+
+
+  public String encodeBase64String(byte[] b) {
+    return Base64.getEncoder().encodeToString(b);
+  }
+
+
+  public String encodeBase64String(Buffer.JsBuffer buf) {
+    return encodeBase64String( buf._buffer().array() );
+  }
+
+
+  public Object decodeBase64(String v) {
+    return _warp_( Base64.getDecoder().decode(v) );
+  }
+
+
+  public Object decodeBase64(byte[] b) {
+    return _warp_( Base64.getDecoder().decode(b) );
+  }
+
+
+  public Object decodeBase64(Buffer.JsBuffer buf) {
+    return decodeBase64( buf._buffer().array() );
+  }
+
+
+  public String decodeBase64String(String v) {
+    return new String(Base64.getDecoder().decode(v), IConstant.CHARSET);
+  }
+
+
+  public String decodeBase64String(byte[] v) {
+    return new String(Base64.getDecoder().decode(v), IConstant.CHARSET);
+  }
+
+
+  public String decodeBase64String(Buffer.JsBuffer buf) {
+    return decodeBase64String( buf._buffer().array() );
+  }
+
+
+  public String md5(String v) {
+    return Hex.upperHex(Password.md5(v));
+  }
+
+
+  public String encrypt(String content, String ps) throws Exception {
+    AES2 ekey = new AES2(ps);
+    return ekey.encrypt(content);
+  }
+
+
+  public String decrypt(String cipher_text, String ps) {
+    AES2 ekey = new AES2(ps);
+    return new String(ekey.decrypt(cipher_text), IConstant.CHARSET);
+  }
+
+
+  public boolean regexFind(String regex, String str) {
+    return Pattern.matches(regex, str);
+  }
+
+
+  public Object regexSplit(String regex, String str) {
+    return str.split(regex);
+  }
+
+
+  public String regexReplaceFirst(String regex, String str, String repl) {
+    return str.replaceFirst(regex, repl);
+  }
+
+
+  public String regexReplaceAll(String regex, String str, String repl) {
+    return str.replaceAll(regex, repl);
+  }
+
+
+  public Object lotteryRate(int[] list, int[] ign) {
+
   }
 }

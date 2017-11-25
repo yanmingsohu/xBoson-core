@@ -877,5 +877,10 @@ public class Buffer {
     public int writeUIntLE(int value, int offset, int byteLength) {
       throw new UnsupportedOperationException();
     }
+
+
+    public ByteBuffer _buffer() {
+      return buf;
+    }
   }
 }

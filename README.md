@@ -134,6 +134,12 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
     /* 访问根路径时的跳转页面 */
   "uiWelcome": "/face/t/login.html",
   
+    /* 集群所在机房的 ID, 用于多个集群的连接, 0-31, 当一个机房的节点超过 31
+       应该占用多个机房 ID, 生成虚拟机房 */
+  "clusterCenterID": 0,
+    /* 本机节点 ID, 这两个参数组合用来保证生成不冲突的主键 ID */
+  "clusterNodeID": 0,
+  
   /* 数据库连接池的设置 */
   "dbpool": {
       /* 默认值 true ,当资源耗尽时,是否阻塞等待获取资源 */

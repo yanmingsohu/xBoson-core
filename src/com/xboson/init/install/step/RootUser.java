@@ -43,7 +43,7 @@ public class RootUser implements IStep {
       data.msg = "重复密码错误";
     } else {
       data.cf.rootUserName = un;
-      data.cf.rootPassword = Password.v1(un, Password.md5(up));
+      data.cf.rootPassword = Password.v1(un, Password.md5lowstr(up));
       return true;
     }
 

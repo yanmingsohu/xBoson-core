@@ -65,10 +65,10 @@ public class TestAuth extends Test {
     // 密码修改时间（password_dt）
     String date = "2017-11-18 10:48:32.0";
 
-    String ps = Password.v1(userid, Password.md5(pstrue), date);
+    String ps = Password.v1(userid, Password.md5lowstr(pstrue), date);
     eq(psword, ps, "encode password");
     msg(ps);
-    msg(Password.md5("111111"));
+    msg(Password.md5lowstr("111111"));
 
     beginTime();
     for (int i=0; i<100000; ++i) {

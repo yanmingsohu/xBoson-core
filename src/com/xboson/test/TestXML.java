@@ -23,6 +23,7 @@ import com.xboson.util.Tool;
 import com.xboson.util.converter.XmlDataMapConverter;
 
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,17 +50,19 @@ public class TestXML extends Test {
     a.put("yyu", 2);
     ret_root.put("a", a);
 
-    Writer out = new OutputStreamWriter(System.out);
+    Writer out = new StringWriter();
     out.write('\n');
     out.write(x.XML_HEAD);
 
-    XStream xs = new XStream();
-    xs.registerConverter(new XmlDataMapConverter());
-    xs.autodetectAnnotations(true);
+    XStream xs = Tool.createXmlStream();
     xs.toXML(ret_root, out);
-
     out.write('\n');
-    out.flush();
+
+    String xmlstr = out.toString();
+    Object o = xs.fromXML(xmlstr);
+    msg("From Xml:", o);
+
+    msg(xmlstr);
   }
 
 

@@ -22,6 +22,7 @@ import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.xboson.been.XmlDataMap;
+import com.xboson.util.Version;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +42,7 @@ public class XmlDataMapConverter implements Converter {
 
   public void marshal(Object value, HierarchicalStreamWriter writer,
                       MarshallingContext context) {
+    writer.addAttribute("xboson", Version.xBoson);
 
     Map map = (Map) value;
     for (Object obj : map.entrySet()) {

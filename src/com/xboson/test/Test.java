@@ -16,8 +16,7 @@
 
 package com.xboson.test;
 
-import java.io.PrintStream;
-import java.io.Serializable;
+import java.io.*;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -258,6 +257,24 @@ public class Test {
 
   public static void printArr(byte [] arr) {
 	  msg(Arrays.toString(arr));
+  }
+
+
+  public static void printCode(String code) throws IOException {
+    Reader in = new StringReader(code);
+    BufferedReader br = new BufferedReader(in);
+    String line;
+    int count = 1;
+    do {
+      line = br.readLine();
+      if (line != null) {
+        String c = (count<1000 ? (count < 100 ? (count < 10?
+                "000" :"00") :"0") :"")+ count;
+
+        msg("/* ", c, " */   ", line);
+        ++count;
+      }
+    } while(line != null);
   }
 
 

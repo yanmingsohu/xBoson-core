@@ -52,6 +52,7 @@ public class AES2 implements IConstant {
     }
   }
 
+
   public String encrypt(String code) {
     try {
       byte[] srcBytes = code.getBytes(CHARSET);
@@ -62,6 +63,7 @@ public class AES2 implements IConstant {
       throw new XBosonException(e);
     }
   }
+
 
   public byte[] decrypt(String mi) {
     try {

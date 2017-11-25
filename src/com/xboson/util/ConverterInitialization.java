@@ -20,6 +20,8 @@ package com.xboson.util;
 import com.thoughtworks.xstream.security.NoTypePermission;
 import com.thoughtworks.xstream.security.NullPermission;
 import com.thoughtworks.xstream.security.PrimitiveTypePermission;
+import com.xboson.been.ResponseRoot;
+import com.xboson.been.XmlDataMap;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import com.xboson.util.converter.ScriptObjectMirrorXmlConverter;
 import com.xboson.util.converter.XmlDataMapConverter;
@@ -52,7 +54,9 @@ public final class ConverterInitialization {
 
     xs.allowTypes(new Class[] {
             ScriptObjectMirrorJsonConverter.Warp.class,
-            ScriptObjectMirror.class
+            ScriptObjectMirror.class,
+            ResponseRoot.class,
+            XmlDataMap.class,
     });
   }
 

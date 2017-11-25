@@ -23,7 +23,7 @@ import java.nio.charset.Charset;
 
 
 /**
- * 编程用常量
+ * 编程用常量, 不要放敏感数据
  */
 public interface IConstant extends IDict {
 

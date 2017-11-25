@@ -21,6 +21,7 @@ import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
 import com.xboson.util.ChineseInital;
+import com.xboson.util.SnowflakeIdWorker;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
@@ -48,6 +49,20 @@ public class TestTool extends Test {
     red(new XBosonException("test").getMessage());
     // check_string_hash();
     test_chinese();
+    test_id();
+  }
+
+
+  public void test_id() {
+    sub("SnowflakeIdWorker");
+    beginTime();
+    for (int i=0; i<5000000; ++i) {
+      Tool.nextId();
+    }
+    endTime("生成 id");
+    for (int i=0; i<5; ++i) {
+      msg("Next ID", Tool.nextId());
+    }
   }
 
 
