@@ -26,6 +26,7 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
 import com.thoughtworks.xstream.XStream;
+import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Uuid;
@@ -39,6 +40,7 @@ public final class Tool {
   private static final ThreadLocal<SecureRandom>
           secure_random_thread = new ThreadLocal<>();
 
+  private static SnowflakeIdWorker id;
   private static Moshi moshi;
   private static XStream xml;
   private static com.xboson.script.lib.Path
@@ -434,6 +436,18 @@ public final class Tool {
     }
     r.nextBytes(buf);
     return buf;
+  }
+
+
+  /**
+   * Twitter 的分布式自增ID算法 snowflake
+   */
+  public synchronized static long nextId() {
+    if (id == null) {
+      Config c = SysConfig.me().readConfig();
+      id = new SnowflakeIdWorker(c.clusterNodeID, c.clusterCenterID);
+    }
+    return id.nextId();
   }
 
 }
