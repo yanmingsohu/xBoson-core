@@ -29,11 +29,9 @@ import com.thoughtworks.xstream.XStream;
 import com.xboson.been.XBosonException;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Uuid;
-import com.xboson.util.converter.ScriptObjectMirrorConverter;
-import com.xboson.util.converter.XmlDataMapConverter;
 
 
-public class Tool {
+public final class Tool {
 
   private static final ThreadLocal<SimpleDateFormat>
           dataformat = new ThreadLocal<>();
@@ -42,27 +40,35 @@ public class Tool {
           secure_random_thread = new ThreadLocal<>();
 
   private static Moshi moshi;
+  private static XStream xml;
   private static com.xboson.script.lib.Path
           p = new com.xboson.script.lib.Path();
 
-  public static final Uuid uuid;
-
   private Tool() {}
 
-  static {
-    Builder jsbuilded = new Moshi.Builder();
-    ScriptObjectMirrorConverter.registerAdapter(jsbuilded);
 
-    moshi = jsbuilded.build();
-    uuid = new Uuid();
-  }
+  /**
+   * 提供 uuid 转换
+   */
+  public static final Uuid uuid = new Uuid();
 
 
   /**
    * 保证性能和线程安全; moshi 内部已经对适配器做了缓存.
    * 返回的适配器已经注册了可用的对象转换器.
+   *
+   * @see ConverterInitialization
    */
   public static <E> JsonAdapter<E> getAdapter(Class<E> c) {
+    if (moshi == null) {
+      synchronized (Tool.class) {
+        if (moshi == null) {
+          Builder jsbuilded = new Moshi.Builder();
+          ConverterInitialization.initJSON(jsbuilded);
+          moshi = jsbuilded.build();
+        }
+      }
+    }
     return moshi.adapter(c);
   }
 
@@ -70,12 +76,21 @@ public class Tool {
   /**
    * 返回的 xml 解析器已经注册了所有可用的转换器,
    * XStream 对象是线程安全的, 可以在全局使用.
+   *
+   * @see ConverterInitialization
+   * @see com.thoughtworks.xstream.annotations.XStreamAlias 转换 xml 时设置别名
    */
   public static XStream createXmlStream() {
-    XStream xs = new XStream();
-    xs.autodetectAnnotations(true);
-    xs.registerConverter(new XmlDataMapConverter());
-    return xs;
+    if (xml == null) {
+      synchronized (Tool.class) {
+        if (xml == null) {
+          xml = new XStream();
+          xml.autodetectAnnotations(true);
+          ConverterInitialization.initXml(xml);
+        }
+      }
+    }
+    return xml;
   }
 
 

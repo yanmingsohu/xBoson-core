@@ -38,6 +38,7 @@ public class XmlDataMapConverter implements Converter {
     return XmlDataMap.class.isAssignableFrom(clazz);
   }
 
+
   public void marshal(Object value, HierarchicalStreamWriter writer,
                       MarshallingContext context) {
 
@@ -50,11 +51,12 @@ public class XmlDataMapConverter implements Converter {
     }
   }
 
+
   public Object unmarshal(HierarchicalStreamReader reader,
                           UnmarshallingContext context) {
 
     Map<String, String> map = new HashMap<>();
-    while(reader.hasMoreChildren()) {
+    while (reader.hasMoreChildren()) {
       reader.moveDown();
       map.put(reader.getNodeName(), reader.getValue());
       reader.moveUp();

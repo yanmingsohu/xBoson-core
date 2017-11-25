@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-24 下午12:51
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/ScriptObjectMirrorConverter.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/ScriptObjectMirrorJsonConverter.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -20,6 +20,7 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -31,7 +32,7 @@ import java.util.Iterator;
  * ScriptObjectMirror 不能很好的转换为 json, 将该对象包装,
  * 在 json 化的时候使用定制的方法来输出.
  */
-public class ScriptObjectMirrorConverter {
+public class ScriptObjectMirrorJsonConverter {
 
   public static final WarpAdapter warpAdapter = new WarpAdapter();
   public static final SOMAdapter jsAdapter = new SOMAdapter();
@@ -70,7 +71,7 @@ public class ScriptObjectMirrorConverter {
     @Override
     public void toJson(JsonWriter jsonWriter, ScriptObjectMirror jsobj)
             throws IOException {
-      if (jsobj.isFunction() || jsobj.isFunction())
+      if (jsobj.isFunction())
         return;
 
       if (jsobj.isArray()) {
@@ -131,9 +132,10 @@ public class ScriptObjectMirrorConverter {
 
 
   /**
-   * 对象包装器, 帮助深层对象的 json 化,
+   * 对象包装器, 帮助深层对象的 json(xml) 化,
    * 解决当 ScriptObjectMirror 在 map 中时无法被正确的 Adapter 感知.
    */
+  @XStreamAlias("root")
   static public class Warp {
     ScriptObjectMirror jsobj;
 
@@ -149,5 +151,5 @@ public class ScriptObjectMirrorConverter {
    * @see Warp
    * @see
    */
-  private ScriptObjectMirrorConverter() {}
+  private ScriptObjectMirrorJsonConverter() {}
 }

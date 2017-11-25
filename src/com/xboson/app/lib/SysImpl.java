@@ -20,16 +20,19 @@ import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlCachedResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.script.lib.Uuid;
 import com.xboson.util.ChineseInital;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
-import com.xboson.util.converter.ScriptObjectMirrorConverter;
+import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeJSON;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -72,7 +75,7 @@ public class SysImpl extends RuntimeImpl {
 
   public void addRetData(Object o, String key) {
     if (o instanceof ScriptObjectMirror) {
-      retData.put(key, new ScriptObjectMirrorConverter.Warp(o));
+      retData.put(key, new ScriptObjectMirrorJsonConverter.Warp(o));
     } else {
       retData.put(key, o);
     }
@@ -100,6 +103,19 @@ public class SysImpl extends RuntimeImpl {
 
   public String getUserPID() {
     return cd.sess.login_user.pid;
+  }
+
+
+  public String getUserPID(String userid) throws Exception {
+    try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
+      String sql = SqlReader.read("user_id_to_pid.sql");
+      List<Map<String, Object>> rows = scr.query(sql, userid);
+      if (rows.size() > 0) {
+        Map<String, Object> o = rows.get(0);
+        return (String) o.get("pid");
+      }
+    }
+    return null;
   }
 
 
@@ -212,5 +228,21 @@ public class SysImpl extends RuntimeImpl {
   public Object jsonFromInstance(Object obj) {
     return NativeJSON.stringify(this,
             ScriptUtils.unwrap(obj), null, null);
+  }
+
+
+  public Object instanceFromXml(String xmlstr) {
+    return Tool.createXmlStream().fromXML(xmlstr);
+  }
+
+
+  public Object xmlFromInstance(Object obj) throws IOException {
+    ScriptObjectMirrorJsonConverter.Warp warp
+            = new ScriptObjectMirrorJsonConverter.Warp(obj);
+
+    Writer out = new StringWriter();
+    out.append(XmlResponse.XML_HEAD);
+    Tool.createXmlStream().toXML(warp, out);
+    return out.toString();
   }
 }
