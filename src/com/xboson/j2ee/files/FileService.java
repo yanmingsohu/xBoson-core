@@ -16,17 +16,10 @@
 
 package com.xboson.j2ee.files;
 
-import com.xboson.been.FileInfo;
-import com.xboson.been.SessionData;
-import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
-import com.xboson.db.ConnectConfig;
-import com.xboson.db.SqlResult;
-import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import javax.servlet.ServletConfig;
@@ -38,8 +31,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -56,14 +47,14 @@ public class FileService extends HttpServlet {
 
   public final static String UPLOAD_HTML = "/WEB-INF/tool-page/upload.html";
   private Log log;
-  private ConnectConfig db;
 
 
   @Override
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     log = LogFactory.create();
-    db = SysConfig.me().readConfig().db;
+    PrimitiveOperation.me().cleanUpYesterdayTrash();
+    log.debug("Clean Up Yesterday Trash Upload files.");
   }
 
 
@@ -79,7 +70,7 @@ public class FileService extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
     XResponse ret = XResponse.get(req);
-    String dirname = getDirectory(req);
+    String dirname = Directory.get(req);
     int new_count = 0;
     int update_count = 0;
 
@@ -99,18 +90,17 @@ public class FileService extends HttpServlet {
       String type = p.getContentType();
 
       if (Tool.isNulStr(filename) != true && type != null) {
-        String id = Tool.uuid.zip();
+        int count = PrimitiveOperation.me().updateFile(
+                dirname, filename, type, p.getInputStream());
 
-        try (SqlResult sr = SqlReader.query("file_create_or_replace.sql",
-                db, id, filename, dirname, type, p.getInputStream())) {
-          if (sr.getUpdateCount() == 1) {
-            ++new_count;
-          } else {
-            ++update_count;
-          }
-          info.add(new FileInfo(dirname, filename));
-          log.debug("Saved file", dirname, filename);
+        if (count == 1) {
+          ++new_count;
+        } else {
+          ++update_count;
         }
+
+        info.add(new FileInfo(dirname, filename));
+        log.debug("Saved file", dirname, filename);
       }
     }
 
@@ -141,52 +131,16 @@ public class FileService extends HttpServlet {
       return;
     }
 
-    String dir_name = getDirectory(req);
-    log.debug("Dir", dir_name, ", File", file_name);
+    String dir_name = Directory.get(req);
+    try (FileInfo info = PrimitiveOperation.me().openFile(dir_name, file_name)) {
+      resp.setDateHeader("Last-Modified", info.last_modified);
+      resp.setContentType(info.type);
+      Tool.copy(info.input, resp.getOutputStream(), true);
 
-    try (SqlResult sr = SqlReader.query(
-            "file_open.sql", db, dir_name, file_name)) {
-      ResultSet rs = sr.getResult();
-
-      if (rs.next()) {
-        resp.setContentType( rs.getString("content-type") );
-
-        resp.setDateHeader("Last-Modified",
-                rs.getTimestamp("update-time").getTime());
-
-        Tool.copy(rs.getBinaryStream("content"),
-                  resp.getOutputStream(),
-                  true);
-      } else {
-        ret.responseMsg("Not found file: " + file_name, 404);
-      }
-    } catch (SQLException e) {
-      throw new XBosonException.XSqlException(e);
+      log.debug("Dir", dir_name, ", File", file_name);
+    } catch (Exception e) {
+      throw new XBosonException(e);
     }
-  }
-
-
-  /**
-   * 路径生成规则:
-   *    当用户登录一级目录为用户 id, 否则为 temporary;
-   *    二级目录为 servlet 服务路径之后的路径字符串, 使用 '/' 拼接
-   */
-  private String getDirectory(HttpServletRequest req) throws ServletException {
-    SessionData sess = SessionData.get(req);
-    UrlSplit sp = new UrlSplit(req);
-    String dirname;
-
-    if (sess == null || sess.login_user == null) {
-      dirname = "/temporary";
-    } else {
-      dirname = "/" + sess.login_user.userid;
-    }
-
-    if (sp.getLast() != null) {
-      dirname += sp.getLast();
-    }
-
-    return dirname;
   }
 
 }
