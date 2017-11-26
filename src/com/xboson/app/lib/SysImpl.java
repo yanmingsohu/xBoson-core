@@ -22,7 +22,6 @@ import com.xboson.db.SqlCachedResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.script.lib.Buffer;
-import com.xboson.script.lib.Uuid;
 import com.xboson.util.*;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -30,7 +29,6 @@ import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJSON;
 import jdk.nashorn.internal.runtime.Context;
-import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -416,7 +414,7 @@ public class SysImpl extends RuntimeImpl {
    * 俄罗斯轮盘赌 !!
    */
   public int lotteryRate(double[] list, int[] ign) {
-    double d = Math.random() * 101;
+    final double d = Math.random() * 101;
     double a = 0;
     int i;
 
@@ -456,5 +454,45 @@ public class SysImpl extends RuntimeImpl {
     }
 
     return i;
+  }
+
+
+  /**
+   * 没有 api 用到这个函数
+   */
+  public void bizLog(String logid, Object... parms) {
+    throw new UnsupportedOperationException("bizLog");
+  }
+
+
+  /**
+   * 压缩 list 到 path 目录中, 动态生成文件.
+   * @param list 要压缩的数据列表
+   * @param path 保存目录
+   * @return 返回生成的文件名
+   */
+  public String listToZip(Object[] list, String path) {
+    return null;
+  }
+
+
+  /**
+   * 解压缩文件, 返回解压的数据
+   * @param path 压缩文件路径
+   * @param filename 压缩文件名
+   * @return 解压的 list 数据对象
+   */
+  public Object[] zipToList(String path, String filename) {
+    return null;
+  }
+
+
+  public Object csvToList(Object... parms) {
+    return null;
+  }
+
+
+  public Object ListToCsv(Object... parms) {
+    return null;
   }
 }

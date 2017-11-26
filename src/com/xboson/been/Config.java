@@ -22,57 +22,60 @@ import com.xboson.db.DBPoolConfig;
 import redis.clients.jedis.JedisPoolConfig;
 
 /**
- * public 属性能死么 ?! getter/setter 烦不烦.
+ * 不要修改 Config 对象中的属性, 除非世界末日.
  */
 public class Config implements IBean {
 
-	public static final String CONFIG_DIR 	= "/xBoson-config";
-	public static final String CONFIG_FILE 	= "/config.json";
-	public static final String LOG_DIR 			= "/logs";
+  public static final String CONFIG_DIR 	= "/xBoson-config";
+  public static final String CONFIG_FILE 	= "/config.json";
+  public static final String LOG_DIR 			= "/logs";
 
-	public String configVersion     = "1.3.2";
-	
-	public String configFile				= null;
-	public String configPath				= null;
-	public String logPath						= null;
-	public String home              = null;
+  public String configVersion     = "1.3.2";
 
-	public String rootUserName      = null;
-	public String rootPassword			= null;
-	public String rootPid           = null;
-	
-	public String loggerWriterType	= null;
-	public String sessionPassword		= null;
-	public int    sessionTimeout		= 0; // 分钟
-	public String logLevel					= null;
-	public boolean debugService     = false;
+  public String configFile				= null;
+  public String configPath				= null;
+  public String logPath						= null;
+  public String home              = null;
 
-	public String uiProviderClass   = null;
-	public String uiUrl             = null;
-	public boolean uiListDir        = false;
-	public String uiWelcome         = null;
+  public String rootUserName      = null;
+  public String rootPassword			= null;
+  public String rootPid           = null;
 
-	public JedisPoolConfig jedispool;
-	public DBPoolConfig dbpool;
-	public ConnectConfig db;
-	public ConnectConfig redis;
+  public String loggerWriterType	= null;
+  public String sessionPassword		= null;
+  public int    sessionTimeout		= 0; // 分钟
+  public String logLevel					= null;
+  public boolean debugService     = false;
 
-	public byte clusterNodeID;
-	
-	
+  public String uiProviderClass   = null;
+  public String uiUrl             = null;
+  public boolean uiListDir        = false;
+  public String uiWelcome         = null;
+
+  public JedisPoolConfig jedispool;
+  public DBPoolConfig dbpool;
+  public ConnectConfig db;
+  public ConnectConfig redis;
+
+  public byte clusterNodeID;
+
+
+	/**
+	 * public 属性能死么 ? 并不能 !
+	 */
 	public Config() {
-	}
-	
-	
-	public Config(String home) {
-		setHome(home);
-	}
-	
-	
-	public void setHome(String home) {
-		this.home		= home;
-		configPath	= home + CONFIG_DIR;
-		logPath 		= configPath + LOG_DIR;
-		configFile	= configPath + CONFIG_FILE;
-	}
+  }
+
+
+  public Config(String home) {
+    setHome(home);
+  }
+
+
+  public void setHome(String home) {
+    this.home		= home;
+    configPath	= home + CONFIG_DIR;
+    logPath 		= configPath + LOG_DIR;
+    configFile	= configPath + CONFIG_FILE;
+  }
 }

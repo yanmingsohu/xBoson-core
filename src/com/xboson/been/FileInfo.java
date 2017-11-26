@@ -6,25 +6,24 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月3日 下午4:39:48
-// 原始文件路径: xBoson/src/com/xboson/service/ServiceClassList.java
+// 文件创建日期: 17-11-26 下午1:32
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/FileInfo.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.service;
+package com.xboson.been;
+
+public class FileInfo {
+
+  public String file_name;
+  public String dir_name;
 
 
-public interface ServiceClassList {
-
-  /**
-   * 所有服务列表, 服务的路径使用注解设定
-   */
-  static Class<?>[] list = new Class<?>[] {
-					App.class,
-					UserService.class,
-  };
-
+  public FileInfo(String dir, String file) {
+    this.file_name = file;
+    this.dir_name = dir;
+  }
 }

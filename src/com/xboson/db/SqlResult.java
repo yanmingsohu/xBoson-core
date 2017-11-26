@@ -75,6 +75,18 @@ public class SqlResult implements AutoCloseable {
 
 
   /**
+   * 使用现有数据库连接进行一个新的查询.
+   *
+   * @param sql
+   * @param parm
+   * @return 创建一个新查询对象, 不需要主动关闭, 因为父级关闭后自动关闭
+   */
+  public SqlResult query(String sql, Object...parm) {
+    return query(conn, sql, parm);
+  }
+
+
+  /**
    * 返回查询结果集, 如果查询不是 select, 则返回 null.
    */
   public ResultSet getResult() {
@@ -83,6 +95,22 @@ public class SqlResult implements AutoCloseable {
       return ps.getResultSet();
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);
+    }
+  }
+
+
+  /**
+   * 如果是更新语句返回更新的行数, 否则返回 -1
+   */
+  public int getUpdateCount() {
+    if (is_update) {
+      try {
+        return ps.getUpdateCount();
+      } catch (SQLException e) {
+        throw new XBosonException.XSqlException(e);
+      }
+    } else {
+      return -1;
     }
   }
 

@@ -87,12 +87,19 @@ public class Startup implements ServletContextListener {
             sc.addServlet("ui",
                     com.xboson.j2ee.ui.UIEngineServlet.class);
 
+    ServletRegistration.Dynamic files =
+            sc.addServlet("files",
+                    com.xboson.j2ee.files.FileService.class);
+
 
     striker.addMappingForUrlPatterns(null, false, "/*");
     session.addMappingForUrlPatterns(null, false, "/*");
 
     ui.addMapping("/face/*");
     ui.setLoadOnStartup(2);
+
+    files.addMapping("/files/*");
+    files.setLoadOnStartup(2);
 
     main.addMapping("/*");
     main.setLoadOnStartup(1);

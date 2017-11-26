@@ -135,7 +135,7 @@ public class Uuid extends JSObject {
 
 
   /**
-   * 生成压缩的 UUID 字符串
+   * 生成压缩的 UUID 字符串, 长度 24 字符
    */
   public String zip() {
     return zip(v4obj());
