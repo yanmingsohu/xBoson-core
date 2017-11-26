@@ -30,6 +30,10 @@ Java JDK 8, Tomcat 9, Servlet 4.0,
     -- (xstream-1.4.10-java7.jar)[http://hmkcode.com/xstream-java-object-xml/]
     -- (xmlpull-1.1.3.1.jar)
     -- (xpp3_min-1.1.4c.jar)
+    
+* (CSV 转换)
+    -- (super-csv-2.4.0.jar)[https://github.com/super-csv/super-csv]
+    -- (super-csv-2.4.0-javadoc.jar)
 
 		
 # URL 映射约定

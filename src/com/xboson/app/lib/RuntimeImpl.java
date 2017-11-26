@@ -17,10 +17,17 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.objects.NativeArray;
+import jdk.nashorn.internal.runtime.Context;
+import jdk.nashorn.internal.runtime.PropertyMap;
+import jdk.nashorn.internal.runtime.ScriptObject;
+
+import java.util.Map;
 
 
 /**
- * 运行时抽象基类
+ * js 运行时抽象基类
  */
 public abstract class RuntimeImpl {
 
@@ -34,4 +41,71 @@ public abstract class RuntimeImpl {
     this.cd = cd;
   }
 
+
+  /**
+   * 创建 js 环境中的 Array 对象
+   * @param length 列表初始长度
+   * @return
+   */
+  protected ScriptObjectMirror createJSList(int length) {
+    NativeArray na = NativeArray.construct(true, null, length);
+    ScriptObjectMirror list = (ScriptObjectMirror)
+            ScriptObjectMirror.wrap(na, Context.getGlobal());
+    return list;
+  }
+
+
+  /**
+   * @see #createJSList(int)
+   */
+  protected ScriptObjectMirror createJSList() {
+    return createJSList(0);
+  }
+
+
+  /**
+   * js 传来的对象, 包装后才能在 java 中操作
+   * @param obj 一个 ScriptObject 的子类
+   * @return
+   */
+  protected ScriptObjectMirror wrap(Object obj) {
+    return (ScriptObjectMirror)
+            ScriptObjectMirror.wrap(obj, Context.getGlobal());
+  }
+
+
+  /**
+   * @see #createJSObject(Map)
+   */
+  protected ScriptObjectMirror createJSObject() {
+    return (ScriptObjectMirror) ScriptObjectMirror.wrap(
+            Context.getGlobal().newObject(), Context.getGlobal());
+  }
+
+
+  /**
+   * 使用 map 初始化创建的 js 对象的属性
+   */
+  protected ScriptObjectMirror createJSObject(
+          Map<? extends String, ? extends Object> init) {
+    ScriptObjectMirror js = createJSObject();
+    js.putAll(init);
+    return js;
+  }
+
+
+  /**
+   * 包装 java byte 数组, 返回 js 数组类型对象.
+   *
+   * [实现细节] 使用 ArrayData.allocate(ByteBuffer.wrap(b)) 创建的数组对象,
+   * 虽然不需要复制内存, 但是无法再次调用 java 函数, 如果调用抛出
+   * UnsupportedOperationException 异常.
+   */
+  protected Object wrapBytes(byte[] b) {
+    ScriptObjectMirror js = createJSList(b.length);
+    for (int i=0; i<b.length; ++i) {
+      js.setSlot(i, b[i]);
+    }
+    return js;
+  }
 }

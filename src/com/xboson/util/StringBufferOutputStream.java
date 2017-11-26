@@ -18,55 +18,86 @@ package com.xboson.util;
 
 import com.xboson.been.XBosonException;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * 字符串缓冲区输入流, 用流的方式写入字符串,
+ * 字符串缓冲区输入流, 用流的方式写入字符串, 尽可能避免数据的复制.
  * toString()/toBuffer() 获取结果
  */
 public class StringBufferOutputStream extends OutputStream {
-	
-	private byte[] buf = new byte[1024];
-	private int pos = 0;
+
+  private byte[] buf = new byte[1024];
+  private int pos = 0;
 
 
-	/**
-	 * 将输入流中的所有数据写入缓冲区, 该函数返回后, src 被关闭.
-	 * @param src
-	 * @throws IOException
-	 */
-	public void write(InputStream src) throws IOException {
-		if (src == null) {
-		  throw new XBosonException.NullParamException("InputStream src");
+  /**
+   * 将输入流中的所有数据写入缓冲区, 该函数返回后, src 被关闭.
+   * @param src
+   * @throws IOException
+   */
+  public void write(InputStream src) throws IOException {
+    if (src == null) {
+      throw new XBosonException.NullParamException("InputStream src");
     }
-		Tool.copy(src, this, true);
-	}
-
-	
-	@Override
-	public void write(int b) throws IOException {
-		buf[pos] = (byte) b;
-		if (++pos >= buf.length) {
-			buf = Arrays.copyOf(buf, buf.length * 2);
-		}
-	}
-	
-	
-	public String toString() {
-		return new String(buf, 0, pos);
-	}
+    Tool.copy(src, this, true);
+  }
 
 
-	public ByteBuffer toBuffer() {
-		return ByteBuffer.wrap(buf, 0, pos);
-	}
+  @Override
+  public void write(int b) throws IOException {
+    buf[pos] = (byte) b;
+    if (++pos >= buf.length) {
+      buf = Arrays.copyOf(buf, buf.length * 2);
+    }
+  }
 
 
-	public byte[] toBytes() {
-	  return Arrays.copyOf(buf, pos);
-	}
+  public String toString() {
+    return new String(buf, 0, pos);
+  }
+
+
+  public ByteBuffer toBuffer() {
+    return ByteBuffer.wrap(buf, 0, pos);
+  }
+
+
+  public byte[] toBytes() {
+    return Arrays.copyOf(buf, pos);
+  }
+
+
+  /**
+   * 返回一个 Write, 包装了自身, 目的是最终可以获取原始字节.
+   * 在写入完成后, 调用 Writer.flush 后才能保证缓冲区同步最新的数据.
+   */
+  public Writer openWrite() {
+    return new OutputStreamWriter(this);
+  }
+
+
+  /**
+   * @see #openWrite()
+   * @param charsetName 使用指定的编码创建 Writer
+   */
+  public Writer openWrite(String charsetName) {
+    try {
+      return new OutputStreamWriter(this, charsetName);
+    } catch (UnsupportedEncodingException e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  /**
+   * 创建一个读取器用于读取已经写入自身缓冲区的数据.
+   * 在返回该 InputStream 后继续写入数据, 已经返回的流不会同步更新.
+   * 可以多次调用, 返回多个 InputStream.
+   * @return
+   */
+  public InputStream openInputStream() {
+    return new ByteArrayInputStream(buf, 0, pos);
+  }
 }

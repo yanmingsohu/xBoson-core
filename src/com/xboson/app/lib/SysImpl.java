@@ -17,22 +17,26 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlCachedResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.j2ee.files.Directory;
+import com.xboson.j2ee.files.FileInfo;
+import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.script.lib.Buffer;
 import com.xboson.util.*;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
-import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJSON;
-import jdk.nashorn.internal.runtime.Context;
+import jdk.nashorn.internal.runtime.ScriptObject;
+import org.supercsv.io.CsvMapReader;
+import org.supercsv.io.CsvMapWriter;
+import org.supercsv.prefs.CsvPreference;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -284,27 +288,8 @@ public class SysImpl extends RuntimeImpl {
   }
 
 
-  /**
-   * 包装 java byte 数组, 返回 js 数组类型对象.
-   *
-   * [实现细节] 使用 ArrayData.allocate(ByteBuffer.wrap(b)) 创建的数组对象,
-   * 虽然不需要复制内存, 但是无法再次调用 java 函数, 如果调用抛出
-   * UnsupportedOperationException 异常.
-   */
-  private Object _warp_(byte[] b) {
-    NativeArray na = NativeArray.construct(true, null, b.length);
-    ScriptObjectMirror js = (ScriptObjectMirror)
-            ScriptObjectMirror.wrap(na, Context.getGlobal());
-
-    for (int i=0; i<b.length; ++i) {
-      js.setSlot(i, b[i]);
-    }
-    return js;
-  }
-
-
   public Object bytes(String s) {
-    return _warp_( s.getBytes(IConstant.CHARSET) );
+    return wrapBytes( s.getBytes(IConstant.CHARSET) );
   }
 
 
@@ -314,7 +299,7 @@ public class SysImpl extends RuntimeImpl {
 
 
   public Object encodeBase64(byte[] b) {
-    return _warp_( Base64.getEncoder().encode(b) );
+    return wrapBytes( Base64.getEncoder().encode(b) );
   }
 
 
@@ -339,12 +324,12 @@ public class SysImpl extends RuntimeImpl {
 
 
   public Object decodeBase64(String v) {
-    return _warp_( Base64.getDecoder().decode(v) );
+    return wrapBytes( Base64.getDecoder().decode(v) );
   }
 
 
   public Object decodeBase64(byte[] b) {
-    return _warp_( Base64.getDecoder().decode(b) );
+    return wrapBytes( Base64.getDecoder().decode(b) );
   }
 
 
@@ -466,7 +451,8 @@ public class SysImpl extends RuntimeImpl {
 
 
   /**
-   * 压缩 list 到 path 目录中, 动态生成文件.
+   * 压缩 list 到 path 目录中, 动态生成文件. !!!!!!!!!!!!!!!!!!!!!!
+   *
    * @param list 要压缩的数据列表
    * @param path 保存目录
    * @return 返回生成的文件名
@@ -477,7 +463,8 @@ public class SysImpl extends RuntimeImpl {
 
 
   /**
-   * 解压缩文件, 返回解压的数据
+   * 解压缩文件, 返回解压的数据 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   *
    * @param path 压缩文件路径
    * @param filename 压缩文件名
    * @return 解压的 list 数据对象
@@ -487,12 +474,106 @@ public class SysImpl extends RuntimeImpl {
   }
 
 
-  public Object csvToList(Object... parms) {
-    return null;
+  /**
+   * 从文件中解析 csv
+   * @param fileInfo [dirname(忽略), filename, charset]
+   * @see #parseCsv(Reader, String, String, String, String[], int)
+   */
+  public Object csvToList(String[] fileInfo, String delimiter, String quote,
+                          String escape, String[] header, int preview) {
+    String dir = Directory.get(cd);
+    try (FileInfo info = PrimitiveOperation.me().openFile(dir, fileInfo[1])) {
+      InputStreamReader reader = new InputStreamReader(info.input, fileInfo[2]);
+      return parseCsv(reader, delimiter, quote, escape, header, preview);
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
   }
 
 
-  public Object ListToCsv(Object... parms) {
-    return null;
+  /**
+   * 解析 csv 字符串
+   * @see #parseCsv(Reader, String, String, String, String[], int)
+   */
+  public Object csvToList(String content, String delimiter, String quote,
+                          String escape, String[] header, int preview) {
+    StringReader reader = new StringReader(content);
+    return parseCsv(reader, delimiter, quote, escape, header, preview);
   }
+
+
+  /**
+   * 解析 csv 文本, 返回 list 对象
+   *
+   * @param read 读取 read 中的文本
+   * @param delimiter csv 列分隔符
+   * @param quote csv 使用引号来包装一个列值, quote 来定义引号,
+   * @param escape (忽略) 使用引号包装后, 输出引号前的转义符号
+   * @param header 自定义表头, null 或空数组则从文件中解析
+   * @param preview >0 则只输出指定的行, 否则输出全部
+   * @return
+   */
+  private Object parseCsv(Reader read, String delimiter, String quote,
+                          String escape, String[] header, int preview) {
+    CsvPreference.Builder cb = new CsvPreference.Builder(
+            quote.charAt(0), delimiter.charAt(0), "\r\n");
+
+    try (CsvMapReader csv = new CsvMapReader(read, cb.build())) {
+      if (header == null || header.length < 1) {
+        header = csv.getHeader(true);
+      }
+      ScriptObjectMirror list = createJSList();
+
+      Map<String, String> row;
+      for (int i=0; ;++i) {
+        row = csv.read(header);
+        if (row == null) break;
+        if (preview > 0 && i >= preview-1) break;
+        list.setSlot(i, createJSObject(row));
+      }
+
+      read.close();
+      return list;
+    } catch(Exception e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  /**
+   * 转换 list 数据为 csv, 并保存在文件中.
+   *
+   * @param dir 目录, (忽略 仅为兼容设计)
+   * @param filename 保存文件名
+   * @param charset 文件编码
+   * @param list 数据
+   */
+  public void listToCsv(String dir, String filename,
+                        String charset, Object[] list) throws IOException {
+    dir = Directory.get(cd);
+    StringBufferOutputStream output = new StringBufferOutputStream();
+
+    try (CsvMapWriter csv = new CsvMapWriter(
+            output.openWrite(charset), CsvPreference.STANDARD_PREFERENCE) ) {
+
+      ScriptObjectMirror firstRow = wrap(list[0]);
+      String[] header = firstRow.getOwnKeys(false);
+      csv.writeHeader(header);
+
+      for (int i = 0; i < list.length; ++i) {
+        if (list[i] instanceof Map) {
+          csv.write((Map) list[i], header);
+        } else if (list[i] instanceof ScriptObject) {
+          ScriptObjectMirror js = wrap(list[i]);
+          csv.write(js, header);
+        } else {
+          throw new XBosonException("bad type:" + list[i]);
+        }
+      }
+      csv.flush();
+      PrimitiveOperation.me().updateFile(
+              dir, filename, output.openInputStream());
+    }
+  }
+
 }

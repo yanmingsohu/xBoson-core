@@ -27,5 +27,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="net.sf.supercsv:super-csv:2.4.0" level="project" />
   </component>
 </module>

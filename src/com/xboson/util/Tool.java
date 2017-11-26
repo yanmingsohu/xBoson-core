@@ -225,6 +225,15 @@ public final class Tool {
   }
 
 
+  public static void close(AutoCloseable c) {
+    try {
+      if ( c!= null) c.close();
+    } catch(Exception e) {
+      LogFactory.create().debug(e);
+    }
+  }
+
+
   /**
    * 等待线程结束后返回
    */
