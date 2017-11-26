@@ -48,12 +48,12 @@ import java.nio.file.NoSuchFileException;
 public class UIEngineServlet extends HttpServlet {
 
   public static final String MY_URL = "/face";
-  public static final String MIME_FILE = "./mime-types.properties";
 
   private IUIFileProvider file_provider;
   private Log log;
   private FileTypeMap mime;
   private String baseurl;
+
   /** 当该配置为 true, 用户打开的路径是目录则返回目录内文件列表 */
   private boolean list_dir;
 
@@ -62,7 +62,7 @@ public class UIEngineServlet extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     this.log = LogFactory.create();
-    this.mime = new MimetypesFileTypeMap(getClass().getResourceAsStream(MIME_FILE));
+    this.mime = MimeTypeFactory.getFileTypeMap();
     this.baseurl = config.getServletContext().getContextPath() + MY_URL;
 
     try {
