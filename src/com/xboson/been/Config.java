@@ -58,6 +58,9 @@ public class Config implements IBean {
   public ConnectConfig redis;
 
   public byte clusterNodeID;
+  public boolean enableUploadClear;
+  public boolean enableSessionClear;
+  public boolean enableUIFileSync;
 
 
 	/**

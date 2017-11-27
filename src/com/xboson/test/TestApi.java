@@ -24,6 +24,7 @@ import com.xboson.been.CallData;
 import com.xboson.been.LoginUser;
 import com.xboson.been.SessionData;
 import com.xboson.j2ee.container.XResponse;
+import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.test.impl.TestServletRequest;
 import com.xboson.test.impl.TestServletResponse;
 
@@ -35,6 +36,7 @@ import java.util.Arrays;
 public class TestApi extends Test {
 
   public void test() throws Exception {
+    PrimitiveOperation.me().createCleanTask().run();
     test_pool();
     test_lottery_rate();
   }

@@ -18,6 +18,7 @@ package com.xboson.j2ee.ui;
 
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
+import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.StringBufferOutputStream;
@@ -30,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.util.TimerTask;
 
 
 /**
@@ -54,6 +56,11 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
     this.rb = new RedisBase();
     rb.startModifyReciver(this);
     SynchronizeFiles.start(basepath);
+
+
+    if (cf.enableUIFileSync) {
+      SynchronizeFiles.regEarlyMorningClear(basepath);
+    }
   }
 
 

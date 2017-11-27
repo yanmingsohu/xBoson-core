@@ -16,6 +16,7 @@
 
 package com.xboson.j2ee.ui;
 
+import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.Tool;
@@ -35,7 +36,9 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
 
   /**
-   * 启动同步线程, 如果线程已经启动则立即返回
+   * 启动同步线程, 如果线程已经启动则立即返回,
+   * 同一个时刻只能启动一个同步线程.
+   * @param path 本地文件路径
    */
   public synchronized static void start(String path) {
     if (t != null) return;
@@ -44,6 +47,16 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
     t.setDaemon(true);
     t.setPriority(Thread.MIN_PRIORITY);
     t.start();
+  }
+
+
+  /**
+   * 注册到凌晨事件中, 每天凌晨触发同步
+   * @param path 本地文件路径
+   */
+  public static void regEarlyMorningClear(final String path) {
+    SynchronizeFiles sf = new SynchronizeFiles(path);
+    EarlyMorning.add(sf);
   }
 
 
@@ -58,7 +71,6 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   private RedisBase rb;
   private Log log;
   private Path base;
-  private Path virtual;
   private long begin_time;
   private int files = 0;
   private int dirs  = 0;

@@ -21,6 +21,7 @@ import com.xboson.event.GlobalEvent;
 import com.xboson.event.GlobalListener;
 import com.xboson.event.Names;
 import com.xboson.event.QuickSender;
+import com.xboson.event.timer.EarlyMorning;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
@@ -29,6 +30,7 @@ import javax.naming.Binding;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
 
 public class TestEvent extends Test implements GlobalListener {
@@ -59,6 +61,12 @@ public class TestEvent extends Test implements GlobalListener {
     ge.off(Names.inner_error,null);
 
     test_recv();
+    timer();
+  }
+
+
+  public void timer() throws Exception {
+    msg(EarlyMorning.class, EarlyMorning.first, EarlyMorning.hour24);
   }
 
 

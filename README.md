@@ -164,6 +164,13 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
     /* 本机在集群中的节点 ID, 这两个参数组合用来保证生成不冲突的主键 ID, 0-1023 */
   "clusterNodeID": 0,
   
+    /* 启用后, 每天凌晨清除昨天上传的临时文件 */
+  "enableUploadClear": false,
+    /* 启用后, 每天凌晨清除昨天的所有登录信息 */
+  "enableSessionClear": false,
+    /* 启用后, 每天凌晨同步本地 UI 文件 */
+  "enableUIFileSync": false,
+  
   /* 数据库连接池的设置 */
   "dbpool": {
       /* 默认值 true ,当资源耗尽时,是否阻塞等待获取资源 */

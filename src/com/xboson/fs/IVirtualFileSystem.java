@@ -22,30 +22,31 @@ import java.nio.ByteBuffer;
 /**
  * 每个机构的每个应用都有一个虚拟文件系统,
  * 这个接口对文件整个进行操作, 不适合大文件, 但适合脚本应用文件.
+ * 这个接口被设计为 Api Script 专用.
  */
 public interface IVirtualFileSystem {
 
-	/**
-	 * 读取路径上的文件, 返回文件内容, 如果文件不存在应该抛出异常
-	 */
-	public ByteBuffer readFile(String path) throws IOException;
+  /**
+   * 读取路径上的文件, 返回文件内容, 如果文件不存在应该抛出异常
+   */
+  public ByteBuffer readFile(String path) throws IOException;
 
 
   /**
    * 读取文件属性
    */
-	public FileAttr readAttribute(String path) throws IOException;
-	
-	
-	/**
-	 * 返回文件系统的id, 不同机构的id不同
-	 */
-	public String getID();
+  public FileAttr readAttribute(String path) throws IOException;
+
+
+  /**
+   * 返回文件系统的id, 不同机构的id不同
+   */
+  public String getID();
 
 
   /**
    * 返回文件系统类型
    */
-	public String getType();
-	
+  public String getType();
+
 }

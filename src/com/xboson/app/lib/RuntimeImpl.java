@@ -98,7 +98,7 @@ public abstract class RuntimeImpl {
    * 包装 java byte 数组, 返回 js 数组类型对象.
    *
    * [实现细节] 使用 ArrayData.allocate(ByteBuffer.wrap(b)) 创建的数组对象,
-   * 虽然不需要复制内存, 但是无法再次调用 java 函数, 如果调用抛出
+   * 虽然不需要复制内存, 但是该数组对象无法再次通过实参调用 java 函数, 如果调用抛出
    * UnsupportedOperationException 异常.
    */
   protected Object wrapBytes(byte[] b) {

@@ -17,7 +17,8 @@
 package com.xboson.sleep;
 
 /**
- * 持久化接口; 如果底层连接发生错误, 会抛出运行时异常
+ * 持久化接口; 如果底层连接发生错误, 会抛出运行时异常,
+ * 不能保证休眠的数据一定可以唤醒, 可能发生缓存重制或超时.
  */
 public interface IMesmerizer {
 
@@ -38,8 +39,14 @@ public interface IMesmerizer {
   ISleepwalker wake(Class<? extends ISleepwalker> c, String id);
 
   /**
-   * 删除数据
+   * 删除一条数据
    * @param data
    */
   void remove(ISleepwalker data);
+
+  /**
+   * 删除该类型的所有数据
+   * @param data
+   */
+  void removeAll(ISleepwalker data);
 }

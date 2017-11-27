@@ -23,7 +23,7 @@ import javax.naming.Name;
 import javax.naming.event.NamingEvent;
 
 /**
- * 监听系统退出的方便实现
+ * 监听系统退出的方便实现, 自动将自身注册到全局事件上.
  */
 public abstract class OnExitHandle extends GLHandle {
 

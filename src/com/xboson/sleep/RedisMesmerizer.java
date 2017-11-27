@@ -26,8 +26,13 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
 import java.io.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TimerTask;
 
 
 /**
@@ -41,6 +46,7 @@ import java.io.*;
 public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
   private final static String KEY = "RedisMesmerizer.IMesmerizer";
+  private final static String BEGIN_OVER_CURSOR = "0";
   private final static int TIMEOUT = 3000;
   private static RedisMesmerizer instance;
 
@@ -141,6 +147,54 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     else {
       json.remove(data);
     }
+  }
+
+
+  public void removeAll(ISleepwalker data) {
+    String id;
+    if (data instanceof IBinData) {
+      id = genid(data.getClass(), "*", "BIN");
+    }
+    else {
+      id = genid(data.getClass(), "*", "JSON");
+    }
+
+    try (Jedis client = jpool.getResource()) {
+      ScanParams sp = new ScanParams();
+      sp.match(id);
+      String cursor = BEGIN_OVER_CURSOR;
+
+      for (;;) {
+        ScanResult<Map.Entry<String, String>>
+                sr = client.hscan(KEY, cursor, sp);
+
+        Iterator<Map.Entry<String, String>> it = sr.getResult().iterator();
+        while (it.hasNext()) {
+          Map.Entry<String, String> item = it.next();
+          String itemkey = item.getKey();
+          //
+          // 可以用 string 类型的 key 删除 byte[] 类型的 key
+          //
+          client.hdel(KEY, itemkey);
+        }
+
+        cursor = sr.getStringCursor();
+        if (cursor.equals(BEGIN_OVER_CURSOR))
+          break;
+      }
+    }
+  }
+
+
+  /**
+   * 创建一个执行对象, 用来清除符合 data 类型的所有数据
+   */
+  public TimerTask createCleanTask(final ISleepwalker data) {
+    return new TimerTask() {
+      public void run() {
+        removeAll(data);
+      }
+    };
   }
 
 

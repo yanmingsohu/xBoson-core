@@ -17,9 +17,11 @@
 package com.xboson.j2ee.files;
 
 import com.xboson.been.XBosonException;
+import com.xboson.event.timer.EarlyMorning;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import javax.servlet.ServletConfig;
@@ -31,10 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 
 /**
@@ -53,8 +52,11 @@ public class FileService extends HttpServlet {
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
     log = LogFactory.create();
-    PrimitiveOperation.me().cleanUpYesterdayTrash();
-    log.debug("Clean Up Yesterday Trash Upload files.");
+
+    if (SysConfig.me().readConfig().enableUploadClear) {
+      TimerTask task = PrimitiveOperation.me().createCleanTask();
+      EarlyMorning.add(task);
+    }
   }
 
 

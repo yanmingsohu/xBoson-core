@@ -16,6 +16,8 @@
 
 package com.xboson.test;
 
+import com.xboson.been.SessionData;
+import com.xboson.sleep.RedisMesmerizer;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -28,6 +30,21 @@ import static javax.swing.UIManager.get;
 public class TestRedis extends Test {
 
   public void test() throws Exception {
+    test_pool();
+    test_remove_all();
+  }
+
+
+  public void test_remove_all() throws Exception {
+    sub("RedisMesmerizer removeAll");
+    SessionData sd = new SessionData();
+    RedisMesmerizer.me().removeAll(sd);
+  }
+
+
+  public void test_pool() throws Exception {
+    sub("Test Pool");
+
     JedisPoolConfig config = new JedisPoolConfig();
     JedisPool pool = new JedisPool(config, "localhost");
 
@@ -51,7 +68,6 @@ public class TestRedis extends Test {
 
 
   public static void main(String[] a) throws Exception {
-    sub("Connect RedisMesmerizer");
     new TestRedis();
   }
 }

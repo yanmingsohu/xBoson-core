@@ -19,6 +19,7 @@ package com.xboson.j2ee.ui;
 import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
+import com.xboson.event.timer.EarlyMorning;
 import com.xboson.j2ee.html.HtmlBuilder;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;

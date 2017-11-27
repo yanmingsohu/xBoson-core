@@ -21,6 +21,8 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.ui.MimeTypeFactory;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
@@ -28,6 +30,7 @@ import javax.activation.FileTypeMap;
 import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.TimerTask;
 
 
 /**
@@ -121,12 +124,21 @@ public class PrimitiveOperation {
 
 
   /**
-   * 删除今天之前的所有临时文件
-   * @return 删除的文件数量
+   * 创建一个任务对象, 执行后删除今天之前的所有临时文件
    */
-  public int cleanUpYesterdayTrash() {
-    try (SqlResult sr = SqlReader.query(CLEAN, db)) {
-      return sr.getUpdateCount();
+  public CleanTask createCleanTask() {
+    return new CleanTask();
+  }
+
+
+  public class CleanTask extends TimerTask {
+    private Log log = LogFactory.create();
+
+    public void run() {
+      try (SqlResult sr = SqlReader.query(CLEAN, db)) {
+        int c = sr.getUpdateCount();
+        log.debug("Clean Up Yesterday Trash Upload", c, "files.");
+      }
     }
   }
 }
