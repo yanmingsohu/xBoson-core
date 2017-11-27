@@ -24,12 +24,10 @@ import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.xboson.util.Version;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.internal.objects.NativeArray;
-import jdk.nashorn.internal.objects.NativeNumber;
-import jdk.nashorn.internal.objects.NativeObject;
-import jdk.nashorn.internal.objects.NativeString;
+import jdk.nashorn.internal.objects.*;
 import jdk.nashorn.internal.runtime.Context;
 
+import java.lang.annotation.Native;
 import java.util.Iterator;
 
 
@@ -58,7 +56,7 @@ public class ScriptObjectMirrorXmlConverter implements Converter {
 
 
   private void mArray(ScriptObjectMirror jsobj, HierarchicalStreamWriter writer,
-                       MarshallingContext context) {
+                      MarshallingContext context) {
     int len = jsobj.size();
     writer.addAttribute("type", "array");
     writer.addAttribute("length", Integer.toString(len));
@@ -100,6 +98,8 @@ public class ScriptObjectMirrorXmlConverter implements Converter {
   private void mType(Object val, HierarchicalStreamWriter writer) {
     if (val instanceof Number) {
       writer.addAttribute("type", "number");
+    } else if (val instanceof Boolean) {
+      writer.addAttribute("type", "bool");
     } else if (val instanceof CharSequence) {
       writer.addAttribute("type", "string");
     }
@@ -120,6 +120,10 @@ public class ScriptObjectMirrorXmlConverter implements Converter {
 
       case "object":
         ret = createObject(reader, context);
+        break;
+
+      case "bool":
+        ret = Boolean.parseBoolean(reader.getValue());
         break;
 
       case "number":
