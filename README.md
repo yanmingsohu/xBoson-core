@@ -33,7 +33,6 @@ Java JDK 8, Tomcat 9, Servlet 4.0,
     
 * (CSV 转换)
     -- (super-csv-2.4.0.jar)[https://github.com/super-csv/super-csv]
-    -- (super-csv-2.4.0-javadoc.jar)
 
 		
 # URL 映射约定

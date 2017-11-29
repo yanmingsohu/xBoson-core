@@ -22,7 +22,7 @@ import com.xboson.been.CallData;
 /**
  * 每个请求一个实例
  */
-public class CacheImpl extends RuntimeImpl {
+public class CacheImpl extends RuntimeUnitImpl {
 
   public CacheImpl(CallData cd) {
     super(cd);

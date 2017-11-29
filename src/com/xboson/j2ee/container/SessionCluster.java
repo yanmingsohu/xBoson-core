@@ -52,7 +52,9 @@ public class SessionCluster extends HttpFilter {
   private String contextPath;
 
 
-  protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+  protected void doFilter(HttpServletRequest request,
+                          HttpServletResponse response,
+                          FilterChain chain)
       throws IOException, ServletException {
 
     Cookie ck = SessionID.getCookie(cookieName, request);
@@ -104,8 +106,10 @@ public class SessionCluster extends HttpFilter {
   }
 
 
-  private Cookie createCookie(HttpServletResponse response) throws ServletException {
-    Cookie ck = new Cookie(cookieName, SessionID.generateSessionId(sessionPassword));
+  private Cookie createCookie(HttpServletResponse response)
+          throws ServletException {
+    Cookie ck = new Cookie(cookieName,
+            SessionID.generateSessionId(sessionPassword));
     ck.setHttpOnly(true);
     ck.setMaxAge(sessionTimeout * 60);
     ck.setPath(contextPath);

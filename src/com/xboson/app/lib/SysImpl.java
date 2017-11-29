@@ -38,6 +38,7 @@ import org.supercsv.prefs.CsvPreference;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -45,7 +46,7 @@ import java.util.regex.Pattern;
 /**
  * 每次请求一个实例
  */
-public class SysImpl extends RuntimeImpl {
+public class SysImpl extends RuntimeUnitImpl {
 
   /**
    * 公共属性
@@ -55,7 +56,7 @@ public class SysImpl extends RuntimeImpl {
 
   private ConnectConfig orgdb;
   private Map<String, Object> retData;
-  private List<Object> printList;
+  private ScriptObjectMirror printList;
 
 
   public SysImpl(CallData cd, ConnectConfig orgdb) {
@@ -281,10 +282,11 @@ public class SysImpl extends RuntimeImpl {
 
   public void printValue(Object v) {
     if (printList == null) {
-      printList = new ArrayList<>();
-      cd.xres.bindResponse("print", printList);
+      printList = createJSList();
+      cd.xres.bindResponse("print",
+              new ScriptObjectMirrorJsonConverter.Warp(printList));
     }
-    printList.add(v);
+    printList.setSlot(printList.size(), v);
   }
 
 
@@ -437,40 +439,7 @@ public class SysImpl extends RuntimeImpl {
         }
       }
     }
-
     return i;
-  }
-
-
-  /**
-   * 没有 api 用到这个函数
-   */
-  public void bizLog(String logid, Object... parms) {
-    throw new UnsupportedOperationException("bizLog");
-  }
-
-
-  /**
-   * 压缩 list 到 path 目录中, 动态生成文件. !!!!!!!!!!!!!!!!!!!!!!
-   *
-   * @param list 要压缩的数据列表
-   * @param path 保存目录
-   * @return 返回生成的文件名
-   */
-  public String listToZip(Object[] list, String path) {
-    return null;
-  }
-
-
-  /**
-   * 解压缩文件, 返回解压的数据 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   *
-   * @param path 压缩文件路径
-   * @param filename 压缩文件名
-   * @return 解压的 list 数据对象
-   */
-  public Object[] zipToList(String path, String filename) {
-    return null;
   }
 
 
@@ -570,10 +539,325 @@ public class SysImpl extends RuntimeImpl {
           throw new XBosonException("bad type:" + list[i]);
         }
       }
+
       csv.flush();
       PrimitiveOperation.me().updateFile(
               dir, filename, output.openInputStream());
     }
   }
 
+
+  /**
+   * 将符合条件的 clist 中的元素附加到 plist 元素的 keyname 属性上.
+   * associate 可以设置多个属性, 他们是 '并且' 的关系.
+   * 生成的 keyname 属性是一个数组, 数组中保存着复制来的 clist 中的元素.
+   *
+   * @param plist 元素是 object 对象
+   * @param clist 元素是 object 对象
+   * @param associate [[k1, k2],[...], ...] k1 是 plist 属性名, k2 是 clist 属性名.
+   * @param keyname 在 plist 中创建的数组属性名称
+   */
+  public void setRetList(Object[] plist, Object[] clist,
+                         Object[] associate, String keyname) {
+    Map<String, ScriptObjectMirror> cache = new HashMap<>(clist.length);
+    final int PARENT_KEY = 0;
+    final int CHILD_KEY = 1;
+
+    for (int i=0; i<clist.length; ++i) {
+      ScriptObjectMirror cobj = wrap(clist[i]);
+      StringBuilder allkey = new StringBuilder();
+
+      for (int a=0; a<associate.length; ++a) {
+        ScriptObjectMirror ass = wrap(associate[a]);
+        String key = (String) ass.getSlot(CHILD_KEY);
+        Object val = cobj.get(key);
+        String pkey = (String) ass.getSlot(PARENT_KEY);
+        allkey.append(pkey).append('=').append(val).append(';');
+      }
+
+      String complex_key = allkey.toString();
+      ScriptObjectMirror arr = cache.get(complex_key);
+      if (arr == null) {
+        arr = createJSList();
+        cache.put(complex_key, arr);
+      }
+      arr.setSlot(arr.size(), clist[i]);
+    }
+
+    for (int i=0; i<plist.length; ++i) {
+      ScriptObjectMirror pobj = wrap(plist[i]);
+      StringBuilder allkey = new StringBuilder();
+
+      for (int a=0; a<associate.length; ++a) {
+        ScriptObjectMirror ass = wrap(associate[a]);
+        String key = (String) ass.getSlot(PARENT_KEY);
+        Object val = pobj.get(key);
+        allkey.append(key).append('=').append(val).append(';');
+      }
+
+      Object cobj = cache.get(allkey.toString());
+      if (cobj != null) {
+        pobj.put(keyname, cobj);
+      } else {
+        pobj.put(keyname, createJSList());
+      }
+    }
+  }
+
+
+  /**
+   * 将平行的 list 数据转换为深层 tree 格式; 数据对象根据属性 child_key 来寻找含有
+   * 属性 parent_key 的数据对象, 并将自身附加到属性名 keyname 的数组上;
+   * 如果数据对象 parent_key 为 null, 则认为是根节点;
+   * 支持无限深层的 tree 数据格式.
+   *
+   * @param dataList 原始数据
+   * @param parent_key 父节点属性名称
+   * @param child_key 子节点属性名称
+   * @param keyname 生成的子节点数组
+   * @return 返回 tree 格式的数据
+   */
+  public Object transformTreeData(Object[] dataList, String parent_key,
+                                  String child_key, String keyname) {
+    Map<String, ScriptObjectMirror> mapping = new HashMap<>(dataList.length);
+    ScriptObjectMirror root = createJSList();
+
+    for (int i=0; i<dataList.length; ++i) {
+      ScriptObjectMirror cobj = wrap(dataList[i]);
+      String pkey = cobj.getMember(parent_key).toString();
+      mapping.put(pkey, cobj);
+
+      Object ckey = cobj.getMember(child_key);
+      if (ckey == null || Tool.isNulStr(ckey.toString())) {
+        root.setSlot(root.size(), cobj);
+      }
+    }
+
+    for (int i=0; i<dataList.length; ++i) {
+      ScriptObjectMirror cobj = wrap(dataList[i]);
+      Object chkey = cobj.getMember(child_key);
+
+      if (chkey != null) {
+        ScriptObjectMirror parent = mapping.get(chkey.toString());
+
+        if (parent != null) {
+          ScriptObjectMirror child_list;
+          if (parent.hasMember(keyname)) {
+            child_list = (ScriptObjectMirror) parent.getMember(keyname);
+          } else {
+            child_list = createJSList();
+            parent.setMember(keyname, child_list);
+          }
+
+          child_list.setSlot(child_list.size(), dataList[i]);
+        }
+      }
+    }
+    return root;
+  }
+
+
+  /**
+   * !!! 这个实现可能不正确 !!!
+   */
+  public Object getRelatedTreeData(Object[] all, Object[] filter,
+                                   String parent_attr, String child_attr) {
+    ScriptObjectMirror ret  = createJSList();
+    Set<String> allset      = array2Set(all, parent_attr);
+    Set<String> filterset   = array2Set(filter, parent_attr);
+
+    for (int i=0; i<filter.length; ++i) {
+      ret.setSlot(ret.size(), filter[i]);
+    }
+
+    for (int i=0; i<all.length; ++i) {
+      ScriptObjectMirror cobj = wrap(all[i]);
+      if (cobj.hasMember(child_attr)) {
+        Object pk = String.valueOf( cobj.getMember(child_attr) );
+
+        if (allset.contains(pk) && filterset.contains(pk) == false) {
+          ret.setSlot(ret.size(), all[i]);
+        }
+      }
+    }
+    return ret;
+  }
+
+
+  public boolean isEmpty(String o) {
+    return o == null || o.length() < 1;
+  }
+
+
+  public boolean isEmpty(Object[] arr) {
+    return arr == null || arr.length == 0;
+  }
+
+
+  public boolean isEmpty(ScriptObject js) {
+    return js.isEmpty();
+  }
+
+
+  public boolean isEmpty(Object n) {
+    return n == null;
+  }
+
+
+  public String toString(Object o) {
+    return o.toString();
+  }
+
+
+  public boolean toBool(boolean b) {
+    return b;
+  }
+
+
+  public boolean toBool(String s) {
+    return s != null && (s.equals("1") || s.equalsIgnoreCase("true"));
+  }
+
+
+  public boolean toBool(Number n) {
+    return n.intValue() > 0;
+  }
+
+
+  public boolean toBool(Object o) {
+    return false;
+  }
+
+
+  public char charAt(String str, int index) {
+    return str.charAt(index);
+  }
+
+
+  public int indexOf(String str, String find) {
+    return str.indexOf(find);
+  }
+
+
+  public int size(ScriptObject js) {
+    return js.size();
+  }
+
+
+  public boolean startWith(String str, String begin) {
+    return str.startsWith(begin);
+  }
+
+
+  public boolean endWith(String str, String end) {
+    return str.endsWith(end);
+  }
+
+
+  public int length(String str) {
+    return str.length();
+  }
+
+
+  public String subString(String str, int begin) {
+    return str.substring(begin);
+  }
+
+
+  public String subStringTo(String str, int begin, int end) {
+    return str.substring(begin, end);
+  }
+
+
+  public Object split(String str, String regex) {
+    String[] s = str.split(regex);
+    ScriptObjectMirror js = createJSList(s.length);
+    for (int i=0; i<s.length; ++i) {
+      js.setSlot(i, s[i]);
+    }
+    return js;
+  }
+
+
+  public boolean contain(String str, String sub) {
+    return str.contains(sub);
+  }
+
+
+  public String toLowerCase(String str) {
+    return str.toLowerCase();
+  }
+
+
+  public String toUpperCase(String str) {
+    return str.toUpperCase();
+  }
+
+
+  public String replace(String str, String what, String replacement) {
+    return str.replace(what, replacement);
+  }
+
+
+  public String format(String format, Object[] parm) {
+    return MessageFormat.format(format, parm);
+  }
+
+
+  public String trim(String s) {
+    return s.trim();
+  }
+
+
+  public double trunc(double d, int scale) {
+    return BigDecimal.valueOf(d)
+            .setScale(scale, BigDecimal.ROUND_HALF_UP).doubleValue();
+  }
+
+
+/////////////////////////////////////////////////////////////// ---- //
+// Not implements Functions
+/////////////////////////////////////////////////////////////// ---- //
+
+  public String setReportData(String fileName, Object[] data,
+                              String tmpPath, String downPath) {
+    throw new UnsupportedOperationException("setReportData");
+  }
+
+
+  public String convertCsvToXls(Object... p) {
+    throw new UnsupportedOperationException("convertCsvToXls");
+  }
+
+
+  /**
+   * 没有 api 用到这个函数
+   */
+  public void bizLog(String logid, Object... parms) {
+    throw new UnsupportedOperationException("bizLog");
+  }
+
+
+  /**
+   * 压缩 list 到 path 目录中, 动态生成文件. !!!!!!!!!!!!!!!!!!!!!!
+   *
+   * @param list 要压缩的数据列表
+   * @param path 保存目录
+   * @return 返回生成的文件名
+   */
+  public String listToZip(Object[] list, String path) {
+    throw new UnsupportedOperationException("listToZip");
+  }
+
+
+  /**
+   * 解压缩文件, 返回解压的数据 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   *
+   * @param path 压缩文件路径
+   * @param filename 压缩文件名
+   * @return 解压的 list 数据对象
+   */
+  public Object[] zipToList(String path, String filename) {
+    throw new UnsupportedOperationException("zipToList");
+  }
 }

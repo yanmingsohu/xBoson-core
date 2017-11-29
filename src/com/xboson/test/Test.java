@@ -162,7 +162,7 @@ public class Test {
    * @param msg
    */
 	public static void sub(Object ...msg) {
-    System.out.println("\u001b[;35m  " + _string(msg) + "\u001b[m");
+    System.out.println("\n\u001b[;35m  " + _string(msg) + "\u001b[m");
   }
 
 
@@ -269,7 +269,7 @@ public class Test {
       line = br.readLine();
       if (line != null) {
         String c = (count<1000 ? (count < 100 ? (count < 10?
-                "000" :"00") :"0") :"")+ count;
+                "   " :"  ") :" ") :"")+ count;
 
         msg("/* ", c, " */   ", line);
         ++count;

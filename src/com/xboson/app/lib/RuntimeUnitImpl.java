@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-23 上午11:44
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/lib/RuntimeImpl.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/lib/RuntimeUnitImpl.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -17,19 +17,23 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.runtime.Context;
 import jdk.nashorn.internal.runtime.PropertyMap;
 import jdk.nashorn.internal.runtime.ScriptObject;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
  * js 运行时抽象基类
  */
-public abstract class RuntimeImpl {
+public abstract class RuntimeUnitImpl {
 
   /**
    * 请求数据包装对象, 子类直接使用
@@ -37,7 +41,7 @@ public abstract class RuntimeImpl {
   protected final CallData cd;
 
 
-  public RuntimeImpl(CallData cd) {
+  public RuntimeUnitImpl(CallData cd) {
     this.cd = cd;
   }
 
@@ -107,5 +111,26 @@ public abstract class RuntimeImpl {
       js.setSlot(i, b[i]);
     }
     return js;
+  }
+
+
+  /**
+   * 创建对象数组的 key 集合
+   * @param objs js 对象数组
+   * @param attrName 每个对象使用该属性的值作为 set 的 key
+   */
+  protected Set<String> array2Set(Object[] objs, String attrName) {
+    if (Tool.isNulStr(attrName))
+      throw new XBosonException.NullParamException("String attrName");
+
+    Set<String> ret = new HashSet<>();
+
+    for (int i=0; i<objs.length; ++i) {
+      ScriptObjectMirror cobj = wrap(objs[i]);
+      if (cobj.hasMember(attrName)) {
+        ret.add( String.valueOf(cobj.getMember(attrName)) );
+      }
+    }
+    return ret;
   }
 }

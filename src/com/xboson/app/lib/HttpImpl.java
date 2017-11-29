@@ -22,7 +22,7 @@ import com.xboson.been.CallData;
 /**
  * 每个请求一个实例
  */
-public class HttpImpl extends RuntimeImpl {
+public class HttpImpl extends RuntimeUnitImpl {
 
   public HttpImpl(CallData cd) {
     super(cd);

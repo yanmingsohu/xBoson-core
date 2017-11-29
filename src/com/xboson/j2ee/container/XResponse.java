@@ -215,7 +215,7 @@ public class XResponse {
    */
 	public void response() throws IOException {
 	  if (is_responsed)
-	    throw new XBosonException("Is responsed");
+	    throw new XBosonException("Is responsed, Dont do it for the second time");
 
     res_impl.response(request, response, ret_root);
     is_responsed = true;

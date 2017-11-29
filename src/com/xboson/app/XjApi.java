@@ -16,6 +16,8 @@
 
 package com.xboson.app;
 
+import com.xboson.been.CallData;
+import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
@@ -23,10 +25,16 @@ import com.xboson.fs.FileAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
+import javax.script.ScriptException;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
+/**
+ * api 应该监听脚本修改事件并在脚本修改后清空缓存重新编译改变的脚本
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ */
 public class XjApi implements IDict {
 
   private Log log;
@@ -39,6 +47,7 @@ public class XjApi implements IDict {
   private FileAttr attr;
   private long createdt;
   private long updatedt;
+  private Module jsmodule;
 
 
   XjApi(XjOrg org, XjApp app, XjModule mod, String id) {
@@ -50,6 +59,18 @@ public class XjApi implements IDict {
 
     init();
     log.debug("Api Success", id);
+  }
+
+
+  public void run(CallData cd, String path) throws IOException, ScriptException {
+    if (jsmodule == null) {
+      synchronized (this) {
+        if (jsmodule == null) {
+          jsmodule = app.buildJSModule(cd, path);
+        }
+      }
+    }
+    app.run(cd, jsmodule);
   }
 
 

@@ -33,6 +33,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 
+/**
+ * 每个 app 共享唯一的沙箱, 并缓存编译好的模块
+ */
 public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem {
 
   private ServiceScriptWrapper ssw;
@@ -40,7 +43,6 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
   private XjOrg org;
   private String name;
   private String id;
-  private Module jsmodule;
 
 
   XjApp(XjOrg org, String id) {
@@ -59,15 +61,22 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
   }
 
 
-  public void run(CallData cd, String path) throws IOException, ScriptException {
-    if (jsmodule == null) {
-      synchronized (this) {
-        if (jsmodule == null) {
-          jsmodule = runtime.run(path);
-        }
-      }
-    }
+  Module buildJSModule(CallData cd, String path)
+          throws IOException, ScriptException {
+    return runtime.run(path);
+  }
+
+
+  void run(CallData cd, Module jsmodule) {
     ssw.run(cd, jsmodule, org.getOrgDb());
+  }
+
+
+  public void run(CallData cd, String module_id, String api_id)
+          throws IOException, ScriptException {
+    XjModule mod = getWithCreate(module_id);
+    XjApi api = mod.getApi(api_id);
+    api.run(cd, toFile(module_id, api_id));
   }
 
 
@@ -126,5 +135,10 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
   @Override
   public String getType() {
     return "Script-FS";
+  }
+
+
+  public static String toFile(String module_id, String api_id) {
+    return '/' + module_id + '/' + api_id;
   }
 }

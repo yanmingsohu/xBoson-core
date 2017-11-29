@@ -42,29 +42,13 @@ public class TestApi extends Test {
   }
 
 
-  public void test_ds_api(XjApp app, CallData cd) throws Exception {
-    sub("Test sys api");
-    String path = "/test_double/test-sys";
-    try {
-      app.run(cd, path);
-    } catch(Exception e) {
-      show_code(app, path);
-      fail(e);
-      e.printStackTrace();
-    }
-  }
-
-
   public void test_pool() throws Exception {
     sub("Test app pool");
 
-    CallData cd = simulationCallData();
-
-    AppPool ap = new AppPool();
-    XjOrg org = ap.getOrg("a297dfacd7a84eab9656675f61750078");
-    XjApp app = org.getApp("a9943b0fb1e141b3a3ce7e886d407f5b");
-
-    test_ds_api(app, cd);
+    RunApi ra = new RunApi();
+    ra.run("test_double", "test-sys");
+//    ra.run("test_double", "list0");
+//    ra.run("test_double", "tree0");
   }
 
 
@@ -121,4 +105,30 @@ public class TestApi extends Test {
     new TestApi();
   }
 
+
+  class RunApi {
+    CallData cd;
+    XjApp app;
+    XjOrg org;
+    AppPool ap;
+
+    RunApi() throws Exception {
+      ap = new AppPool();
+      org = ap.getOrg("a297dfacd7a84eab9656675f61750078");
+      app = org.getApp("a9943b0fb1e141b3a3ce7e886d407f5b");
+    }
+
+
+    void run(String module_id, String api_id) throws IOException {
+      sub("Run Script", module_id, api_id);
+      try {
+        cd = simulationCallData();
+        app.run(cd, module_id, api_id);
+      } catch(Exception e) {
+        show_code(app, XjApp.toFile(module_id, api_id));
+        fail(e);
+        e.printStackTrace();
+      }
+    }
+  }
 }

@@ -58,6 +58,11 @@ public class XjModule extends XjPool<XjApi> implements IDict {
   }
 
 
+  public XjApi getApi(String api_id) {
+    return getWithCreate(api_id);
+  }
+
+
   @Override
   protected XjApi createItem(String apiid) {
     return new XjApi(org, app, this, apiid);

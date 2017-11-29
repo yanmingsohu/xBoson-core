@@ -22,7 +22,7 @@ import com.xboson.been.CallData;
 /**
  * 每次请求一个实例
  */
-public class SqlImpl extends RuntimeImpl {
+public class SqlImpl extends RuntimeUnitImpl {
 
   public SqlImpl(CallData cd) {
     super(cd);
