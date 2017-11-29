@@ -18,6 +18,7 @@ package com.xboson.j2ee.files;
 
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.DbmsFactory;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.ui.MimeTypeFactory;
@@ -27,7 +28,10 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import javax.activation.FileTypeMap;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.TimerTask;
@@ -66,6 +70,11 @@ public class PrimitiveOperation {
   }
 
 
+  public Blob createBlob() throws SQLException {
+    return DbmsFactory.me().open(db).createBlob();
+  }
+
+
   /**
    * 打开文件
    *
@@ -73,7 +82,7 @@ public class PrimitiveOperation {
    * @param file 文件名
    * @return 文件消息包装文件输入流和数据库连接资源, 需要关闭
    */
-  public FileInfo openFile(String dir, String file) {
+  public FileInfo openReadFile(String dir, String file) {
     try {
       // 不能在这里关闭 db connect 否则读取流也会关闭
       SqlResult sr = SqlReader.query(OPEN, db, dir, file);
@@ -101,7 +110,7 @@ public class PrimitiveOperation {
    * @param dir 目录
    * @param file 文件名
    * @param type 文件 mime 类型
-   * @param read 文件内容输入流
+   * @param read 驱动从 read 中读取数据存入列中
    * @return 创建新文件返回 1, 更新文件返回 >1, 失败抛出异常.
    */
   public int updateFile(String dir, String file, String type, InputStream read) {
@@ -113,6 +122,15 @@ public class PrimitiveOperation {
   }
 
 
+  public SqlResult updateFile(String dir, String file, Blob content) {
+    String id = Tool.uuid.zip();
+    String type = types.getContentType(file);
+
+    SqlResult sr = SqlReader.query(CREATE, db, id, file, dir, type, content);
+    return sr;
+  }
+
+
   /**
    * 通过文件名推断文件类型
    *
@@ -120,6 +138,46 @@ public class PrimitiveOperation {
    */
   public int updateFile(String dir, String file, InputStream read) {
     return updateFile(dir, file, types.getContentType(file), read);
+  }
+
+
+  /**
+   * 修改已有文件, 比 updateFile 效率更高, 无需再内存中堆积数据.
+   *
+   * @deprecated 需要 blob 字段有足够的空间才能写入(需要进一步测试)
+   * @param dir
+   * @param file
+   * @return 向返回的流写入数据
+   */
+  public FileInfo openWriteFile(String dir, String file) {
+    try {
+      SqlResult sr = SqlReader.query(OPEN, db, dir, file);
+      ResultSet rs = sr.getResult();
+
+      if (rs.next()) {
+        FileInfo fi = new FileInfo(dir, file, sr);
+        fi.last_modified = rs.getTimestamp("update-time").getTime();
+        fi.type = rs.getString("content-type");
+
+        Blob content = rs.getBlob("content");
+        content.truncate(0);
+        fi.output = content.setBinaryStream(1);
+        fi.output.write("abc".getBytes());
+        rs.updateBlob("content", content);
+
+        if ((ResultSet.CONCUR_UPDATABLE & rs.getConcurrency()) == 0) {
+          throw new XBosonException("Cannot modify file");
+        }
+
+        return fi;
+      } else {
+        throw new XBosonException("Not found file: " + dir +' '+ file, 404);
+      }
+    } catch (SQLException e) {
+      throw new XBosonException.XSqlException(e);
+    } catch (IOException e) {
+      throw new XBosonException(e);
+    }
   }
 
 

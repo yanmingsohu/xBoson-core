@@ -59,7 +59,8 @@ public class SqlResult implements AutoCloseable {
    */
   public static SqlResult query(Connection conn, String sql, Object...parm) {
     try {
-      PreparedStatement ps = conn.prepareStatement(sql);
+      PreparedStatement ps = conn.prepareStatement(sql,
+              ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 
       if (parm != null) {
         for (int i=0; i<parm.length; ++i) {

@@ -19,7 +19,9 @@ package com.xboson.app.lib;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.DbmsFactory;
 import com.xboson.db.SqlCachedResult;
+import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.files.Directory;
 import com.xboson.j2ee.files.FileInfo;
@@ -38,9 +40,12 @@ import org.supercsv.prefs.CsvPreference;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.sql.Blob;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 
 /**
@@ -451,7 +456,7 @@ public class SysImpl extends RuntimeUnitImpl {
   public Object csvToList(String[] fileInfo, String delimiter, String quote,
                           String escape, String[] header, int preview) {
     String dir = Directory.get(cd);
-    try (FileInfo info = PrimitiveOperation.me().openFile(dir, fileInfo[1])) {
+    try (FileInfo info = PrimitiveOperation.me().openReadFile(dir, fileInfo[1])) {
       InputStreamReader reader = new InputStreamReader(info.input, fileInfo[2]);
       return parseCsv(reader, delimiter, quote, escape, header, preview);
     } catch (Exception e) {
@@ -839,14 +844,50 @@ public class SysImpl extends RuntimeUnitImpl {
 
 
   /**
-   * 压缩 list 到 path 目录中, 动态生成文件. !!!!!!!!!!!!!!!!!!!!!!
+   * 压缩 list 到 path 目录中, 动态生成文件.
+   * 尝试提前打开 blob 输出流, 而不是将数据堆积在内存.
    *
    * @param list 要压缩的数据列表
    * @param path 保存目录
    * @return 返回生成的文件名
    */
-  public String listToZip(Object[] list, String path) {
-    throw new UnsupportedOperationException("listToZip");
+  public String listToZip(Object[] list, final String path) throws Exception {
+    String base = Directory.get(cd);
+    String dir  = Tool.normalize( base + '/' + path);
+    String file = Tool.uuid.v4() + ".zip";
+
+    StringBufferOutputStream buf = new StringBufferOutputStream();
+    ZipOutputStream zip = new ZipOutputStream(buf);
+
+    for (int i=0; i<list.length; ++i) {
+      ScriptObjectMirror obj = wrap(list[i]);
+      ZipEntry zipEntry = new ZipEntry(obj.getMember("name").toString());
+      zip.putNextEntry(zipEntry);
+
+      if (obj.hasMember("content")) {
+        String content = (String) obj.getMember("content");
+        zip.write(content.getBytes(IConstant.CHARSET));
+        continue;
+      }
+
+      if (obj.hasMember("path")) {
+        String ipath = (String) obj.getMember("path");
+        try (FileInfo in = PrimitiveOperation.me().openReadFile(base, ipath)) {
+          Tool.copy(in.input, zip, false);
+        }
+        continue;
+      }
+
+      throw new XBosonException("Nothing to write zip file. " +
+              "list[{ name, content, path }], must set content or path.");
+    }
+
+    zip.closeEntry();
+    zip.finish();
+    zip.flush();
+
+    PrimitiveOperation.me().updateFile(dir, file, buf.openInputStream());
+    return file;
   }
 
 

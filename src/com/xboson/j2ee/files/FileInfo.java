@@ -20,6 +20,7 @@ import com.xboson.db.SqlResult;
 import com.xboson.util.Tool;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 
 
 public class FileInfo implements AutoCloseable {
@@ -29,8 +30,9 @@ public class FileInfo implements AutoCloseable {
 
   public transient String type;
   public transient long last_modified;
-  public transient InputStream input;
   private transient SqlResult db_conn;
+  public transient InputStream input;
+  public transient OutputStream output;
 
 
   /**
@@ -53,8 +55,10 @@ public class FileInfo implements AutoCloseable {
   public void close() throws Exception {
     Tool.close(input);
     Tool.close(db_conn);
+    Tool.close(output);
     input = null;
     db_conn = null;
+    output = null;
   }
 
 

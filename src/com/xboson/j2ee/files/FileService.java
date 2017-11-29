@@ -134,7 +134,7 @@ public class FileService extends HttpServlet {
     }
 
     String dir_name = Directory.get(req);
-    try (FileInfo info = PrimitiveOperation.me().openFile(dir_name, file_name)) {
+    try (FileInfo info = PrimitiveOperation.me().openReadFile(dir_name, file_name)) {
       resp.setDateHeader("Last-Modified", info.last_modified);
       resp.setContentType(info.type);
       Tool.copy(info.input, resp.getOutputStream(), true);
