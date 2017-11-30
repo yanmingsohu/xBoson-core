@@ -45,6 +45,7 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 
@@ -670,9 +671,10 @@ public class SysImpl extends RuntimeUnitImpl {
     ScriptObjectMirror ret  = createJSList();
     Set<String> allset      = array2Set(all, parent_attr);
     Set<String> filterset   = array2Set(filter, parent_attr);
+    int jsi = ret.size() - 1;
 
     for (int i=0; i<filter.length; ++i) {
-      ret.setSlot(ret.size(), filter[i]);
+      ret.setSlot(++jsi, filter[i]);
     }
 
     for (int i=0; i<all.length; ++i) {
@@ -681,7 +683,7 @@ public class SysImpl extends RuntimeUnitImpl {
         Object pk = String.valueOf( cobj.getMember(child_attr) );
 
         if (allset.contains(pk) && filterset.contains(pk) == false) {
-          ret.setSlot(ret.size(), all[i]);
+          ret.setSlot(++jsi, all[i]);
         }
       }
     }
@@ -820,35 +822,13 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
-/////////////////////////////////////////////////////////////// ---- //
-// Not implements Functions
-/////////////////////////////////////////////////////////////// ---- //
-
-  public String setReportData(String fileName, Object[] data,
-                              String tmpPath, String downPath) {
-    throw new UnsupportedOperationException("setReportData");
-  }
-
-
-  public String convertCsvToXls(Object... p) {
-    throw new UnsupportedOperationException("convertCsvToXls");
-  }
-
-
-  /**
-   * 没有 api 用到这个函数
-   */
-  public void bizLog(String logid, Object... parms) {
-    throw new UnsupportedOperationException("bizLog");
-  }
-
-
   /**
    * 压缩 list 到 path 目录中, 动态生成文件.
    * 尝试提前打开 blob 输出流, 而不是将数据堆积在内存.
    *
-   * @param list 要压缩的数据列表
-   * @param path 保存目录
+   * @param list 要压缩的数据列表, 数据结构: [{name: 压缩项目名, content: 内容字符串,
+   *             path: 读取文件路径}, {..}, ...], content/path 只能选一个使用.
+   * @param path 保存目录, 基于当前用户目录的子目录
    * @return 返回生成的文件名
    */
   public String listToZip(Object[] list, final String path) throws Exception {
@@ -892,13 +872,61 @@ public class SysImpl extends RuntimeUnitImpl {
 
 
   /**
-   * 解压缩文件, 返回解压的数据 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   * 解压缩文件, 返回解压的数据
    *
-   * @param path 压缩文件路径
+   * @param path 压缩文件路径, 基于当前用户目录的子目录
    * @param filename 压缩文件名
    * @return 解压的 list 数据对象
    */
-  public Object[] zipToList(String path, String filename) {
-    throw new UnsupportedOperationException("zipToList");
+  public Object zipToList(String path, String filename) throws Exception {
+    String base = Directory.get(cd);
+    String dir  = Tool.normalize( base + '/' + path);
+    ScriptObjectMirror arr = createJSList();
+    int reti = arr.size()-1;
+
+    try (FileInfo file = PrimitiveOperation.me().openReadFile(dir, filename)) {
+      ZipInputStream zip = new ZipInputStream(file.input);
+
+      for (;;) {
+        ZipEntry entry = zip.getNextEntry();
+        if (entry == null)
+          break;
+
+        ScriptObjectMirror jentry = createJSObject();
+        arr.setSlot(++reti, jentry);
+        jentry.setMember("name", entry.getName());
+
+        StringBufferOutputStream buf = new StringBufferOutputStream();
+        Tool.copy(zip, buf, false);
+        jentry.setMember("content", buf.toString());
+      }
+
+      zip.close();
+    }
+    return arr;
+  }
+
+
+/////////////////////////////////////////////////////////////// ---- //
+// Not implements Functions
+/////////////////////////////////////////////////////////////// ---- //
+
+
+  public String setReportData(String fileName, Object[] data,
+                              String tmpPath, String downPath) {
+    throw new UnsupportedOperationException("setReportData");
+  }
+
+
+  public String convertCsvToXls(Object... p) {
+    throw new UnsupportedOperationException("convertCsvToXls");
+  }
+
+
+  /**
+   * 没有 api 用到这个函数
+   */
+  public void bizLog(String logid, Object... parms) {
+    throw new UnsupportedOperationException("bizLog");
   }
 }

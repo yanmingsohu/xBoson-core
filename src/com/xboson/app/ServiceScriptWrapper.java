@@ -26,10 +26,13 @@ import com.xboson.script.EnvironmentFactory;
 import com.xboson.script.IEnvironment;
 import com.xboson.util.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.objects.Global;
+import jdk.nashorn.internal.runtime.Context;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.sql.SQLException;
 
 
 public class ServiceScriptWrapper implements IConstant {
@@ -71,16 +74,19 @@ public class ServiceScriptWrapper implements IConstant {
    */
   public void run(CallData cd, Module jsmod, ConnectConfig orgdb) {
     ScriptObjectMirror call = (ScriptObjectMirror) jsmod.exports;
-    if (! call.isFunction()) {
+    if (! call.isFunction())
       throw new XBosonException("Script wrapper fail.");
+
+    try (SqlImpl sql = new SqlImpl(cd, orgdb)) {
+      SysImpl sys = new SysImpl(cd, orgdb);
+      CacheImpl cache = new CacheImpl(cd);
+      HttpImpl http = new HttpImpl(cd);
+
+      call.call(jsmod.exports, sys, sql, cache, http);
+
+    } catch (Exception e) {
+      throw new XBosonException(e);
     }
-
-    SqlImpl sql = new SqlImpl(cd);
-    SysImpl sys = new SysImpl(cd, orgdb);
-    CacheImpl cache = new CacheImpl(cd);
-    HttpImpl http = new HttpImpl(cd);
-
-    call.call(jsmod.exports, sys, sql, cache, http);
   }
 
 

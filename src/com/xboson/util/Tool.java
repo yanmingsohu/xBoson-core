@@ -172,7 +172,7 @@ public final class Tool {
   public static String formatDate(Date d) {
     SimpleDateFormat f = dataformat.get();
     if (f == null) {
-      f = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+      f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
       dataformat.set(f);
     }
     return f.format(d);

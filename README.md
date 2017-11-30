@@ -1,6 +1,13 @@
 # 大数据平台 v2
 
-Java JDK 8, Tomcat 9, Servlet 4.0,
+Java JDK 8, Tomcat 9, Servlet 4.0.
+
+
+# 需要做:
+
+* js 沙箱每次一个独立默认上下文.(当前为 app 共用且锁死).
+* blob 保存时直接写入db, 而不在内存堆积.
+* 所有的权限限制. 
 
 
 # JAR 依赖

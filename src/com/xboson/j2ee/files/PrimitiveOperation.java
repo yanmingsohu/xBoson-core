@@ -143,8 +143,9 @@ public class PrimitiveOperation {
 
   /**
    * 修改已有文件, 比 updateFile 效率更高, 无需再内存中堆积数据.
+   * [需要 blob 字段有足够的空间才能写入]
    *
-   * @deprecated 需要 blob 字段有足够的空间才能写入(需要进一步测试)
+   * @deprecated 该方法不能工作, 需要进一步测试
    * @param dir
    * @param file
    * @return 向返回的流写入数据

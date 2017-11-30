@@ -38,12 +38,13 @@ function warp(_json) {
   // https://developer.mozilla.org/zh-CN/docs/Web/JavaScript
   //        /Reference/Global_Objects/JSON/stringify#toJSON_方法
   //
-  function stringify(obj) {
-    var ret = _json.stringify(obj);
+  function stringify(obj, a, b) {
+    var ret = _json.stringify(obj, a, b);
     if (ret) return ret;
 
     if (obj && ret == undefined && typeof obj.toJSON == 'function') {
       return obj.toJSON();
     }
+    return ret;
   }
 }

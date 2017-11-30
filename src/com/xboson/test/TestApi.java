@@ -46,9 +46,10 @@ public class TestApi extends Test {
     sub("Test app pool");
 
     RunApi ra = new RunApi();
-    ra.run("test_double", "test-sys");
+//    ra.run("test_double", "test-sys");
 //    ra.run("test_double", "list0");
 //    ra.run("test_double", "tree0");
+    ra.run("test_double", "test-sql");
   }
 
 
