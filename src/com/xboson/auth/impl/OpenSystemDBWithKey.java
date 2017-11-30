@@ -19,6 +19,7 @@ package com.xboson.auth.impl;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.IAWhere;
 import com.xboson.auth.IAWho;
+import com.xboson.been.XBosonException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -34,8 +35,12 @@ public class OpenSystemDBWithKey implements IAWhere {
 
   public static IAResource wrap(String key) {
     return new IAResource() {
-      public URI toURI() throws URISyntaxException {
-        return new URI(key);
+      public URI toURI() {
+        try {
+          return new URI(key);
+        } catch (URISyntaxException e) {
+          throw new XBosonException(e);
+        }
       }
     };
   }

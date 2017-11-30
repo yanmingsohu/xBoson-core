@@ -31,6 +31,6 @@ public interface IAResource {
    *
    * @see File#toURI() 该方法名称的来源
    */
-  URI toURI() throws URISyntaxException;
+  URI toURI();
 
 }

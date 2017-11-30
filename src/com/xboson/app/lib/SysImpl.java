@@ -19,9 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
-import com.xboson.db.DbmsFactory;
 import com.xboson.db.SqlCachedResult;
-import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.files.Directory;
 import com.xboson.j2ee.files.FileInfo;
@@ -40,7 +38,6 @@ import org.supercsv.prefs.CsvPreference;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.sql.Blob;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -538,10 +535,12 @@ public class SysImpl extends RuntimeUnitImpl {
       for (int i = 0; i < list.length; ++i) {
         if (list[i] instanceof Map) {
           csv.write((Map) list[i], header);
-        } else if (list[i] instanceof ScriptObject) {
+        }
+        else if (list[i] instanceof ScriptObject) {
           ScriptObjectMirror js = wrap(list[i]);
           csv.write(js, header);
-        } else {
+        }
+        else {
           throw new XBosonException("bad type:" + list[i]);
         }
       }

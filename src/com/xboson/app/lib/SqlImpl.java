@@ -20,10 +20,9 @@ import com.xboson.auth.AuthFactory;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.OpenSystemDBWithKey;
 import com.xboson.been.CallData;
-import com.xboson.db.ConnectConfig;
-import com.xboson.db.DbmsFactory;
-import com.xboson.db.IDialect;
-import com.xboson.db.IDriver;
+import com.xboson.db.*;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -209,14 +208,31 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public void connection(String key) {
-    PermissionSystem.apply(cd.sess.login_user,
-            OpenSystemDBWithKey.class, OpenSystemDBWithKey.wrap(key));
+  public void connection(String key) throws SQLException {
+    ConnectConfig db =  SysConfig.me().readConfig().db;
+    String userid = cd.sess.login_user.userid;
+
+    try (SqlResult sr = SqlReader.query(
+            "open_db_with_userid", db, key, userid)) {
+      ResultSet rs = sr.getResult();
+      rs.next();
+
+      ConnectConfig connsetting = new ConnectConfig();
+      connsetting.setDbid(rs.getInt("dbid"));
+      connsetting.setHost(rs.getString("host"));
+      connsetting.setPort(rs.getString("port"));
+      connsetting.setUsername(rs.getString("username"));
+      connsetting.setPassword(rs.getString("password"));
+      connsetting.setDatabase(rs.getString("database"));
+
+      Connection newconn = DbmsFactory.me().open(connsetting);
+      Tool.close(conn);
+      conn = newconn;
+    }
   }
 
 
   public void connection(String url, String user, String ps) {
-    //
   }
 
 
