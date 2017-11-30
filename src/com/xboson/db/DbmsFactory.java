@@ -88,6 +88,7 @@ public class DbmsFactory extends OnExitHandle {
 
     idmap.put(dr.id(), dr);
     namemap.put(dr.name(), dr);
+    namemap.put(dr.driverClassName(), dr);
   }
 
 

@@ -17,14 +17,68 @@
 package com.xboson.app.lib;
 
 import com.xboson.script.IJSObject;
-import com.xboson.script.JSObject;
 
 
-public class MapImpl extends JSObject implements IJSObject {
+public class MapImpl extends RuntimeUnitImpl implements IJSObject {
+
+
+  public MapImpl() {
+    super(null);
+  }
+
 
   @Override
   public String env_name() {
     return "map";
+  }
+
+
+  @Override
+  public boolean freeze() {
+    return true;
+  }
+
+
+  @Override
+  public void init() {
+  }
+
+
+  @Override
+  public void destory() {
+  }
+
+
+  public Object get(Object map, String key) {
+    return wrap(map).getMember(key);
+  }
+
+
+  public Object put(Object map, String k, Object v) {
+    wrap(map).setMember(k, v);
+    return map;
+  }
+
+
+  public Object putAll(Object tar, Object src) {
+    wrap(tar).putAll(wrap(src));
+    return tar;
+  }
+
+
+  public Object remove(Object map, Object key) {
+    wrap(map).remove(key);
+    return map;
+  }
+
+
+  public boolean containsKey(Object map, String key) {
+    return wrap(map).hasMember(key);
+  }
+
+
+  public int size(Object map) {
+    return wrap(map).size();
   }
 
 }

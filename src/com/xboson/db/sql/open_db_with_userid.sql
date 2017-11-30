@@ -1,14 +1,14 @@
 /*
  查询数据库连接, 并判断当前用户是否能操作
  成功返回一行数据库连接信息
-*/
+ */
 select
        CONVERT(s.dbtype, signed) `dbid`,
        s.dhost `host`,
        s.dport `port`,
        s.user_name `username`,
        s.pass  `password`,
-       o.orgid `database`
+       s.en    `database`
   from
        sys_pl_drm_ds001 s
   join

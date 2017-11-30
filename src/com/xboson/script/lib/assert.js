@@ -65,9 +65,7 @@ function _deep_loop(actual, expected, eqfn) {
 
     if (actual.length == expected.length) {
       for (var i=0; i<actual.length; ++i) {
-        if (actual[i] != expected[i]) {
-          throw new AssertionError();
-        }
+        _deep_loop(actual[i], expected[i], eqfn);
       }
     }
   } else {

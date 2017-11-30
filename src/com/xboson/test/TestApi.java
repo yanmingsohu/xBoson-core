@@ -49,7 +49,9 @@ public class TestApi extends Test {
 //    ra.run("test_double", "test-sys");
 //    ra.run("test_double", "list0");
 //    ra.run("test_double", "tree0");
-    ra.run("test_double", "test-sql");
+//    ra.run("test_double", "test-sql");
+//    ra.run("test_double", "map0");
+    ra.run("test_double", "list1");
   }
 
 
@@ -118,7 +120,6 @@ public class TestApi extends Test {
       org = ap.getOrg("a297dfacd7a84eab9656675f61750078");
       app = org.getApp("a9943b0fb1e141b3a3ce7e886d407f5b");
     }
-
 
     void run(String module_id, String api_id) throws IOException {
       sub("Run Script", module_id, api_id);

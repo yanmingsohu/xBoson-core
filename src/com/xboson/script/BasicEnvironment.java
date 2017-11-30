@@ -96,7 +96,11 @@ public class BasicEnvironment implements IEnvironment {
 
     while (it.hasNext()) {
       IJSObject o = it.next();
-      o.destory();
+      try {
+        o.destory();
+      } catch(Exception e) {
+        log.error("Destory", o, e);
+      }
       it.remove();
     }
   }

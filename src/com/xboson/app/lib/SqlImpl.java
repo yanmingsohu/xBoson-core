@@ -16,10 +16,8 @@
 
 package com.xboson.app.lib;
 
-import com.xboson.auth.AuthFactory;
-import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.OpenSystemDBWithKey;
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
 import com.xboson.db.*;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.util.SysConfig;
@@ -27,7 +25,6 @@ import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.sql.*;
-import java.util.Calendar;
 
 
 /**
@@ -204,7 +201,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
     Tool.close(conn);
     this.conn = DbmsFactory.me().open(orgdb);
     IDriver d = DbmsFactory.me().getDriver(orgdb);
-    setDBType(d);
+    setDBType(d.id());
   }
 
 
@@ -228,11 +225,21 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
       Connection newconn = DbmsFactory.me().open(connsetting);
       Tool.close(conn);
       conn = newconn;
+      setDBType(connsetting.getDbid());
     }
   }
 
 
-  public void connection(String url, String user, String ps) {
+  /**
+   * 没有建立连接池
+   */
+  public void connection(String url, String user, String ps) throws SQLException {
+    Connection newconn = DriverManager.getConnection(url, user, ps);
+    if (!newconn.isValid(1000)) {
+      throw new XBosonException("Cannot connect to url");
+    }
+    Tool.close(conn);
+    conn = newconn;
   }
 
 
@@ -241,12 +248,13 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  private void setDBType(IDriver d) {
-    int id = d.id();
+  private void setDBType(int id) {
     if (id < 10) {
       _dbType = "0" + id;
-    } else {
+    } else if (id < 100) {
       _dbType = Integer.toString(id);
+    } else {
+      throw new XBosonException("db type id > 100");
     }
   }
 

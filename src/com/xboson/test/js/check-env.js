@@ -103,3 +103,7 @@ assert.eq(b[2], 3);
 //
 assert.eq(module.filename, __filename, 'filename fail');
 assert(module.paths, 'paths fail');
+
+
+assert(map, "cannot get 'map' object");
+assert.eq('function', typeof map.get, 'map.get()');

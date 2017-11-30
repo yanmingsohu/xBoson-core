@@ -28,6 +28,7 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
+import com.xboson.app.lib.MapImpl;
 import com.xboson.been.Module;
 import com.xboson.fs.FileSystemFactory;
 import com.xboson.fs.IVirtualFileSystem;
@@ -62,7 +63,8 @@ public class TestScript extends Test {
    * @throws Exception - 测试失败抛出异常
    */
 	public void fullTest() throws Exception {
-    IEnvironment env = EnvironmentFactory.createBasic();
+    BasicEnvironment env = EnvironmentFactory.createBasic();
+    env.setEnvObject(MapImpl.class);
 
     String fsid = "test";
     URL basepath = this.getClass().getResource("./js/");

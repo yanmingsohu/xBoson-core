@@ -26,27 +26,25 @@ import com.xboson.script.EnvironmentFactory;
 import com.xboson.script.IEnvironment;
 import com.xboson.util.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.internal.objects.Global;
-import jdk.nashorn.internal.runtime.Context;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.sql.SQLException;
 
 
 public class ServiceScriptWrapper implements IConstant {
 
   private static final byte[] warp0 =
-          "module.exports = (function(sys, sql, cache, http) {".getBytes(CHARSET);
+          "module.exports = (function(sys, sql, cache, http, map) {"
+                  .getBytes(CHARSET);
 
   private static final byte[] warp1 =
           "});".getBytes(CHARSET);
 
   private static final Class[] libs = new Class[] {
+          // MapImpl.class, // 'map' 名称的对象无法设置到环境中, 奇怪 !
           DateImpl.class,
           ListImpl.class,
-          MapImpl.class,
   };
 
   private IEnvironment env;
@@ -74,15 +72,17 @@ public class ServiceScriptWrapper implements IConstant {
    */
   public void run(CallData cd, Module jsmod, ConnectConfig orgdb) {
     ScriptObjectMirror call = (ScriptObjectMirror) jsmod.exports;
-    if (! call.isFunction())
+
+    if (! call.isFunction() )
       throw new XBosonException("Script wrapper fail.");
 
-    try (SqlImpl sql = new SqlImpl(cd, orgdb)) {
-      SysImpl sys = new SysImpl(cd, orgdb);
+    try (SqlImpl sql  = new SqlImpl(cd, orgdb)) {
+      SysImpl sys     = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd);
-      HttpImpl http = new HttpImpl(cd);
+      HttpImpl http   = new HttpImpl(cd);
+      MapImpl map     = new MapImpl();
 
-      call.call(jsmod.exports, sys, sql, cache, http);
+      call.call(jsmod.exports, sys, sql, cache, http, map);
 
     } catch (Exception e) {
       throw new XBosonException(e);
