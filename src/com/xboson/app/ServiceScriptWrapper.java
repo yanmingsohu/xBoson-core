@@ -21,30 +21,35 @@ import com.xboson.been.CallData;
 import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
-import com.xboson.script.BasicEnvironment;
-import com.xboson.script.EnvironmentFactory;
-import com.xboson.script.IEnvironment;
+import com.xboson.script.*;
 import com.xboson.util.IConstant;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import javax.script.ScriptException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 
-public class ServiceScriptWrapper implements IConstant {
+public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
   private static final byte[] warp0 =
-          "module.exports = (function(sys, sql, cache, http, map) {"
+          "module.exports = (function(sys, sql, cache, http) {"
                   .getBytes(CHARSET);
 
   private static final byte[] warp1 =
           "});".getBytes(CHARSET);
 
   private static final Class[] libs = new Class[] {
-          // MapImpl.class, // 'map' 名称的对象无法设置到环境中, 奇怪 !
+          MapImpl.class,
           DateImpl.class,
           ListImpl.class,
+  };
+
+  private static final String[] configuration_script = new String[] {
+          "lib/array_sort_comparator.js",
   };
 
   private IEnvironment env;
@@ -59,6 +64,16 @@ public class ServiceScriptWrapper implements IConstant {
 
   public IEnvironment getEnvironment() {
     return env;
+  }
+
+
+  public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
+    for (int i=0; i<configuration_script.length; ++i) {
+      String filepath = configuration_script[i];
+      box.setFilename(filepath);
+      box.eval(Tool.readFileFromResource(
+              getClass(), filepath).openInputStream());
+    }
   }
 
 
@@ -80,9 +95,8 @@ public class ServiceScriptWrapper implements IConstant {
       SysImpl sys     = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd);
       HttpImpl http   = new HttpImpl(cd);
-      MapImpl map     = new MapImpl();
 
-      call.call(jsmod.exports, sys, sql, cache, http, map);
+      call.call(jsmod.exports, sys, sql, cache, http);
 
     } catch (Exception e) {
       throw new XBosonException(e);

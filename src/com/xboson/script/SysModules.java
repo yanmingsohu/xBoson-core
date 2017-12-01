@@ -20,6 +20,7 @@ import com.xboson.been.Module;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
 import java.io.IOException;
@@ -106,9 +107,7 @@ public class SysModules implements ISysModuleProvider {
    * @param jsfile - js 文件路径, 相对于 SysModules 类
    */
   public void loadLib(String name, String jsfile) throws IOException {
-    InputStream r = getClass().getResourceAsStream(jsfile);
-    StringBufferOutputStream buf = new StringBufferOutputStream();
-    buf.write(r);
+    StringBufferOutputStream buf = Tool.readFileFromResource(getClass(), jsfile);
     jscode.put(name, buf.toString());
   }
 

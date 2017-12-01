@@ -33,16 +33,13 @@ import com.xboson.fs.IVirtualFileSystem;
 public class Application implements ICodeRunner {
 	
 	private Sandbox sandbox;
-	@SuppressWarnings("unused")
-	private IEnvironment env;
 	private IVirtualFileSystem vfs;
 	private Map<String, WarpdScript> modcache;
 
 	
 	public Application(IEnvironment env, IVirtualFileSystem vfs) throws ScriptException {
-		this.env = env;
 		this.vfs = vfs;
-		modcache = new HashMap<String, WarpdScript>();
+		modcache = new HashMap<>();
 		sandbox  = SandboxFactory.create();
 		
 		sandbox.bootstrap();
@@ -50,11 +47,16 @@ public class Application implements ICodeRunner {
 		sandbox.bootstrapEnvReady();
 		sandbox.bootstrapEnd();
 	}
-	
-	
-	public Module run(String modname, String apiname) throws IOException, ScriptException {
-		return run('/' + modname + '/' + apiname);
-	}
+
+
+  /**
+   * 使用配置器配置当前的沙箱, 沙箱已经初始化并配置为锁定状态
+   * @param configurator
+   * @throws ScriptException
+   */
+	public void config(IConfigSandbox configurator) throws ScriptException {
+    configurator.config(sandbox, this);
+  }
 	
 	
 	/**

@@ -50,7 +50,7 @@ public class TestApi extends Test {
 //    ra.run("test_double", "list0");
 //    ra.run("test_double", "tree0");
 //    ra.run("test_double", "test-sql");
-//    ra.run("test_double", "map0");
+    ra.run("test_double", "map0");
     ra.run("test_double", "list1");
   }
 

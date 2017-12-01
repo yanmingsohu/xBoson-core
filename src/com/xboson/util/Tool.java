@@ -18,6 +18,7 @@ package com.xboson.util;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -461,4 +462,19 @@ public final class Tool {
     return id.nextId();
   }
 
+
+  /**
+   * 利用类加载器加载 class 中的文件, 并返回缓冲区
+   */
+  public static StringBufferOutputStream readFileFromResource(
+          Class<?> base, String filepath) {
+
+    try (InputStream r = base.getResourceAsStream(filepath)) {
+      StringBufferOutputStream buf = new StringBufferOutputStream();
+      buf.write(r, false);
+      return buf;
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
+  }
 }

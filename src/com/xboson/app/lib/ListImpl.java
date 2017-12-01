@@ -18,7 +18,6 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.IJSObject;
-import jdk.nashorn.api.scripting.AbstractJSObject;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.runtime.Context;
@@ -29,7 +28,7 @@ import java.util.Iterator;
 public class ListImpl extends RuntimeUnitImpl implements IJSObject {
 
   public final static String RISE = "0";
-  public Object array_sort_comparator;
+  public Object array_sort_implement_js;
 
 
   public ListImpl() {
@@ -179,7 +178,14 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
 
 
   public Object sort(NativeArray arr, String... param) {
-    NativeArray.sort(arr, array_sort_comparator);
+    if (array_sort_implement_js == null)
+      throw new XBosonException.NotExist("sort function not init");
+
+    ScriptObjectMirror sort = wrap(array_sort_implement_js);
+    if (! sort.isFunction() )
+      throw new XBosonException.NotExist("sort function fail.");
+
+    sort.call(arr, param);
     return arr;
   }
 

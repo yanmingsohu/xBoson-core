@@ -38,10 +38,15 @@ public class StringBufferOutputStream extends OutputStream {
    * @throws IOException
    */
   public void write(InputStream src) throws IOException {
+    write(src, true);
+  }
+
+
+  public void write(InputStream src, boolean closeInput) throws IOException {
     if (src == null) {
       throw new XBosonException.NullParamException("InputStream src");
     }
-    Tool.copy(src, this, true);
+    Tool.copy(src, this, closeInput);
   }
 
 
