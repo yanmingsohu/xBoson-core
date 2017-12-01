@@ -32,7 +32,7 @@ import java.sql.*;
  */
 public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
-  private Connection conn;
+  private Connection __conn;
   private ConnectConfig orgdb;
 
   public ScriptObjectMirror result;
@@ -42,20 +42,27 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   public SqlImpl(CallData cd, ConnectConfig orgdb) throws SQLException {
     super(cd);
     this.orgdb = orgdb;
-    connection();
   }
 
 
-  public int query(String sql, Object[] param) throws SQLException {
+  private Connection getConnection() throws Exception {
+    if (__conn == null) {
+      connection();
+    }
+    return __conn;
+  }
+
+
+  public int query(String sql, Object[] param) throws Exception {
     return query(sql, param, "result");
   }
 
 
   public int query(String sql, Object[] param, String save_to)
-          throws SQLException {
+          throws Exception {
     if (result == null) result = createJSObject();
 
-    PreparedStatement ps = conn.prepareStatement(sql);
+    PreparedStatement ps = getConnection().prepareStatement(sql);
     ScriptObjectMirror arr = createJSList();
     result.setMember(save_to, arr);
 
@@ -103,19 +110,20 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public int update(String sql, Object[] param, String commit) throws SQLException {
+  public int update(String sql, Object[] param, String commit) throws Exception {
     boolean is_commit = commit.equals("1") || commit.equalsIgnoreCase("true");
     return update(sql, param, is_commit);
   }
 
 
-  public int update(String sql, Object[] param) throws SQLException {
+  public int update(String sql, Object[] param) throws Exception {
     return update(sql, param, true);
   }
 
 
   public int update(String sql, Object[] param, boolean commit)
-          throws SQLException {
+          throws Exception {
+    Connection conn = getConnection();
     conn.setAutoCommit(commit);
     PreparedStatement ps = conn.prepareStatement(sql);
 
@@ -129,7 +137,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public int updateBatch(String sql, Object[] param_grp, boolean commit)
-          throws SQLException {
+          throws Exception {
+    Connection conn = getConnection();
     conn.setAutoCommit(commit);
     PreparedStatement ps = conn.prepareStatement(sql);
     int total = 0;
@@ -150,8 +159,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public Object metaData(String sql) throws SQLException {
-    PreparedStatement ps = conn.prepareStatement(sql);
+  public Object metaData(String sql) throws Exception {
+    PreparedStatement ps = getConnection().prepareStatement(sql);
     ResultSetMetaData meta = ps.getMetaData();
     int column_count = meta.getColumnCount();
     ScriptObjectMirror attr_list = createJSList(column_count);
@@ -175,19 +184,19 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public void commit() throws SQLException {
-    conn.commit();
+  public void commit() throws Exception {
+    getConnection().commit();
   }
 
 
-  public void rollback() throws SQLException {
-    conn.rollback();
+  public void rollback() throws Exception {
+    getConnection().rollback();
   }
 
 
-  public String currentDBTimeString() throws SQLException {
+  public String currentDBTimeString() throws Exception {
     IDialect dialect = DbmsFactory.me().getDriver(orgdb);
-    Statement stat = conn.createStatement();
+    Statement stat = getConnection().createStatement();
     ResultSet rs = stat.executeQuery(dialect.nowSql());
     if (rs.next()) {
       Timestamp d = rs.getTimestamp(1);
@@ -197,15 +206,15 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public void connection() throws SQLException {
-    Tool.close(conn);
-    this.conn = DbmsFactory.me().open(orgdb);
+  public void connection() throws Exception {
+    close();
+    this.__conn = DbmsFactory.me().open(orgdb);
     IDriver d = DbmsFactory.me().getDriver(orgdb);
     setDBType(d.id());
   }
 
 
-  public void connection(String key) throws SQLException {
+  public void connection(String key) throws Exception {
     ConnectConfig db =  SysConfig.me().readConfig().db;
     String userid = cd.sess.login_user.userid;
 
@@ -223,8 +232,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
       connsetting.setDatabase(rs.getString("database"));
 
       Connection newconn = DbmsFactory.me().open(connsetting);
-      Tool.close(conn);
-      conn = newconn;
+      close();
+      __conn = newconn;
       setDBType(connsetting.getDbid());
     }
   }
@@ -233,13 +242,14 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   /**
    * 没有建立连接池
    */
-  public void connection(String url, String user, String ps) throws SQLException {
+  public void connection(String url, String user, String ps) throws Exception {
     Connection newconn = DriverManager.getConnection(url, user, ps);
     if (!newconn.isValid(1000)) {
       throw new XBosonException("Cannot connect to url");
     }
-    Tool.close(conn);
-    conn = newconn;
+    close();
+    __conn = newconn;
+    _dbType = "x";
   }
 
 
@@ -266,7 +276,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    Tool.close(conn);
-    conn = null;
+    Tool.close(__conn);
+    __conn = null;
   }
 }

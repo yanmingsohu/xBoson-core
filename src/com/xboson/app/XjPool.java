@@ -55,6 +55,7 @@ public abstract class XjPool<E> {
         ret = pool.get(name);
         if (ret == null) {
           ret = createItem(name);
+          pool.put(name, ret);
         }
       }
     }
