@@ -16,13 +16,16 @@
 
 package com.xboson.test;
 
+import com.xboson.app.AppFactory;
 import com.xboson.app.AppPool;
 import com.xboson.app.XjApp;
 import com.xboson.app.XjOrg;
 import com.xboson.app.lib.SysImpl;
+import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
 import com.xboson.been.LoginUser;
 import com.xboson.been.SessionData;
+import com.xboson.fs.IVirtualFileSystem;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.test.impl.TestServletRequest;
@@ -46,7 +49,7 @@ public class TestApi extends Test {
     sub("Test app pool");
 
     RunApi ra = new RunApi();
-//    ra.run("test_double", "test-sys");
+    ra.run("test_double", "test-sys");
 //    ra.run("test_double", "list0");
 //    ra.run("test_double", "tree0");
 //    ra.run("test_double", "test-sql");
@@ -70,8 +73,8 @@ public class TestApi extends Test {
   }
 
 
-  public void show_code(XjApp app, String path) throws IOException {
-    ByteBuffer buf = app.readFile(path);
+  public void show_code(IVirtualFileSystem fs, String path) throws IOException {
+    ByteBuffer buf = fs.readFile(path);
     String code = new String(buf.array());
     printCode(code);
   }
@@ -112,24 +115,23 @@ public class TestApi extends Test {
 
 
   class RunApi {
-    CallData cd;
-    XjApp app;
-    XjOrg org;
-    AppPool ap;
+    ApiCall ac;
 
     RunApi() throws Exception {
-      ap = new AppPool();
-      org = ap.getOrg("a297dfacd7a84eab9656675f61750078");
-      app = org.getApp("a9943b0fb1e141b3a3ce7e886d407f5b");
+      ac = new ApiCall();
+      ac.org = "a297dfacd7a84eab9656675f61750078";
+      ac.app = "a9943b0fb1e141b3a3ce7e886d407f5b";
     }
 
     void run(String module_id, String api_id) throws IOException {
       sub("Run Script", module_id, api_id);
       try {
-        cd = simulationCallData();
-        app.run(cd, module_id, api_id);
+        ac.mod = module_id;
+        ac.api = api_id;
+        ac.call = simulationCallData();
+        AppFactory.me().call(ac);
       } catch(Exception e) {
-        show_code(app, XjApp.toFile(module_id, api_id));
+//        show_code(app, XjApp.toFile(module_id, api_id));
         fail(e);
         e.printStackTrace();
       }

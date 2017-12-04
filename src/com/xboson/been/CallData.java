@@ -24,6 +24,7 @@ import com.xboson.j2ee.container.XResponse;
 
 
 /**
+ * http 请求数据的包装.
  * 全部属性公共不可变; 提供参数获取的便捷方法并检查格式.
  */
 public class CallData implements IBean {

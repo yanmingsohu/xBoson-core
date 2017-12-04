@@ -16,9 +16,11 @@
 
 package com.xboson.service;
 
+import com.xboson.app.AppFactory;
 import com.xboson.app.AppPool;
 import com.xboson.app.XjApp;
 import com.xboson.app.XjOrg;
+import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
 import com.xboson.been.UrlSplit;
 import com.xboson.j2ee.container.XPath;
@@ -44,18 +46,11 @@ public class App extends XService {
 
 	@Override
 	public void service(CallData data) throws ServletException, IOException {
-    UrlSplit sp = data.url.clone();
-    sp.setErrorMessage(PATH_FOTMAT);
-    sp.withoutSlash(true);
-
-    String orgid = sp.getName();
-	  String appid = sp.next();
-    String modid = sp.next();
-    String api   = sp.next();
-
-//    XjOrg org = app_pool.getWithCreate(orgid);
-//    XjApp app = org.getWithCreate(appid);
-    //....
+    AppFactory af = AppFactory.me();
+	  data.url.setErrorMessage(PATH_FOTMAT);
+    ApiCall ac = af.parse(data.url);
+    ac.call = data;
+    af.call(ac);
 	}
 
 }

@@ -54,8 +54,8 @@ public class SysImpl extends RuntimeUnitImpl {
   /**
    * 公共属性
    */
-  public final RequestImpl request;
-  public final RequestParametersImpl requestParameterMap;
+  public final Object request;
+  public final Object requestParameterMap;
 
   private ConnectConfig orgdb;
   private Map<String, Object> retData;

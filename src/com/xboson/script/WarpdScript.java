@@ -21,6 +21,8 @@ import javax.script.ScriptException;
 
 import com.xboson.been.Module;
 
+import com.xboson.been.XBosonException;
+import com.xboson.util.IConstant;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 
 import java.nio.ByteBuffer;
@@ -30,15 +32,17 @@ public class WarpdScript {
 
 	private AbstractJSObject jso;
 	private Sandbox box;
-	private String code;
 	private Module module;
 	private CompiledScript cs;
 	private String filename;
   private ICodeRunner crun;
 	private Object warpreturn;
-	
-	
-	WarpdScript(Sandbox box, String code, String filename) throws ScriptException {
+	private ByteBuffer code;
+	private String strcode;
+
+
+	WarpdScript(Sandbox box, ByteBuffer code, String filename)
+					throws ScriptException {
 		this.box  	  = box;
 		this.code 	  = code;
 		this.module   = new Module();
@@ -47,8 +51,13 @@ public class WarpdScript {
 	}
 
 
-	WarpdScript(Sandbox box, ByteBuffer code, String filename) throws ScriptException {
-		this(box, new String(code.array()), filename);
+	WarpdScript(Sandbox box, String code, String filename)
+					throws ScriptException {
+		this.box  	  = box;
+		this.strcode  = code;
+		this.module   = new Module();
+		this.filename = filename;
+		warp();
 	}
 	
 	
@@ -57,16 +66,34 @@ public class WarpdScript {
 		cs = box.compile(
 				"__warp_main(function(require, module, __dirname"
         + ", __filename, exports, console) {"
-				+ code 
+				+ getStringCode()
 				+ "\n})");
+	}
+
+
+	private String getStringCode() {
+		if (strcode != null) {
+			return strcode;
+		}
+		else if (code != null) {
+			strcode = new String(code.array(), IConstant.CHARSET);
+			return strcode;
+		}
+		else {
+			throw new XBosonException("can not get code");
+		}
 	}
 	
 	
-	public Object call() throws ScriptException {
-		jso = (AbstractJSObject) cs.eval();
-    warpreturn = jso.call(module, module, crun);
-		module.loaded = true;
-		return warpreturn;
+	public Object call() {
+		try {
+			jso = (AbstractJSObject) cs.eval();
+			warpreturn = jso.call(module, module, crun);
+			module.loaded = true;
+			return warpreturn;
+		} catch(Exception e) {
+			throw new JScriptException(e, code);
+		}
 	}
 	
 		

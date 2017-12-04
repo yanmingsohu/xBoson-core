@@ -16,25 +16,23 @@
 
 package com.xboson.test;
 
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.script.ScriptEngineFactory;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-
 import com.xboson.app.lib.MapImpl;
 import com.xboson.been.Module;
 import com.xboson.fs.FileSystemFactory;
 import com.xboson.fs.IVirtualFileSystem;
-import com.xboson.fs.LocalFileSystem;
 import com.xboson.script.*;
+import com.xboson.util.CodeFormater;
 import com.xboson.util.StringBufferOutputStream;
+
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 
 /**
@@ -42,10 +40,6 @@ import com.xboson.util.StringBufferOutputStream;
  */
 public class TestScript extends Test {
 
-	
-	public TestScript() throws ScriptException {
-	}
-	
 
 	public void test() throws Exception {
 //		independent_sandbox();
@@ -55,7 +49,22 @@ public class TestScript extends Test {
 		hack();
     fullTest();
 //    t10000();
+		error_format();
 	}
+
+
+	public void error_format() throws Exception {
+	  String filename = "/error.js";
+    IVirtualFileSystem vfs = null;
+    try {
+      vfs = createVFS();
+      Application app = createBasicApplication(vfs);
+      app.run(filename);
+    } catch (Exception e) {
+      Exception x = new JScriptException(e);
+      x.printStackTrace();
+    }
+  }
 
 
   /**
@@ -63,23 +72,35 @@ public class TestScript extends Test {
    * @throws Exception - 测试失败抛出异常
    */
 	public void fullTest() throws Exception {
+    IVirtualFileSystem vfs = createVFS();
+    Application app = createBasicApplication(vfs);
+    app.run("/index.js");
+	}
+
+
+	public Application createBasicApplication(IVirtualFileSystem vfs)
+          throws Exception {
     BasicEnvironment env = EnvironmentFactory.createBasic();
     env.setEnvObject(MapImpl.class);
 
+    Object attr = vfs.readAttribute("/index.js");
+    msg("File Attribute:", attr);
+
+    Application app = new Application(env, vfs);
+    return app;
+  }
+
+
+  public IVirtualFileSystem createVFS() throws URISyntaxException {
     String fsid = "test";
     URL basepath = this.getClass().getResource("./js/");
     msg("Base path:", basepath);
 
-		FileSystemFactory fsf = FileSystemFactory.me();
-		fsf.addLocalFileSystem(basepath, fsid);
-		IVirtualFileSystem vfs = fsf.open(fsid);
-
-		Object attr = vfs.readAttribute("/index.js");
-		msg("File Attribute:", attr);
-		
-		Application app = new Application(env, vfs);
-		app.run("/index.js");
-	}
+    FileSystemFactory fsf = FileSystemFactory.me();
+    fsf.addLocalFileSystem(basepath, fsid);
+    IVirtualFileSystem vfs = fsf.open(fsid);
+    return vfs;
+  }
 
 
 	/** 安全检查, 已经移动到 js/check-safe.js */
