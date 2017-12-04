@@ -58,6 +58,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
   public ServiceScriptWrapper() throws IOException {
     BasicEnvironment basic = EnvironmentFactory.createBasic();
     basic.setEnvObjectList(libs);
+    basic.insertConfiger(this);
     this.env = basic;
   }
 

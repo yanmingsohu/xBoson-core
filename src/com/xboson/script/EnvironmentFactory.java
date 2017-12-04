@@ -29,7 +29,21 @@ public class EnvironmentFactory {
   private EnvironmentFactory() {}
 
 
+  /**
+   * 创建 nodejs 环境.
+   */
   public static BasicEnvironment createBasic() throws IOException {
+    BasicEnvironment env = new BasicEnvironment();
+    configEnv(env);
+    return env;
+  }
+
+
+  /**
+   * 将 env 配置为 nodejs 环境.
+   */
+  public static BasicEnvironment configEnv(BasicEnvironment env)
+          throws IOException {
     SysModules sysmod = new SysModules();
 
     sysmod.regClass("console",
@@ -62,7 +76,7 @@ public class EnvironmentFactory {
     sysmod.loadLib("uuid",
             "lib/uuid.js");
 
-    BasicEnvironment env = new BasicEnvironment(sysmod);
+    env.insertConfiger(sysmod);
     env.setEnvObject(Console.class);
 
     return env;

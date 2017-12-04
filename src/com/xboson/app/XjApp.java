@@ -53,7 +53,6 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
     try {
       this.ssw = new ServiceScriptWrapper();
       runtime = new Application(ssw.getEnvironment(), this);
-      runtime.config(ssw);
     } catch (IOException|ScriptException e) {
       throw new XBosonException(e);
     }

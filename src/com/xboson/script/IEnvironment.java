@@ -23,6 +23,29 @@ package com.xboson.script;
  */
 public interface IEnvironment extends IConfigSandbox {
 
-  ISysModuleProvider getModuleProvider();
+  /**
+   * 插入一个配置器, 当应用启动后将配置到应用的沙箱中去.
+   */
+  void insertConfiger(IConfigSandbox cs);
+
+
+  /**
+   * 将对象注册到全局, 可以在上下文直接引用, 在必要时初始化唯一实例
+   * @param jsobj
+   */
+  void setEnvObject(Class<? extends IJSObject> jsobj);
+
+
+  /**
+   * @see #setEnvObject(Class)
+   * @param list 将所有对象注册到全局.
+   */
+  void setEnvObjectList(Class<? extends IJSObject>[] list);
+
+
+  /**
+   * 释放内存
+   */
+  void destory();
 
 }

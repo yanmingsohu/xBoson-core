@@ -17,9 +17,7 @@
 
 package com.xboson.script;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import javax.script.Bindings;
 import javax.script.ScriptException;
@@ -29,30 +27,41 @@ import com.xboson.log.LogFactory;
 
 
 /**
- * 创建非常简单的工具类, 方便调试, 含有网络连接的复杂对象环境可以继承该类
+ * 创建基础 js 环境, 并提供可配置的接口,
+ * 含有网络连接的复杂对象环境可以继承该类.
  */
 public class BasicEnvironment implements IEnvironment {
 
-  private Log log = LogFactory.create();
+  private final Log log;
   private List<IJSObject> objs;
-  private ISysModuleProvider smp;
+  private Set<IConfigSandbox> configer;
 
 
+  /**
+   * 创建一个空环境
+   */
   public BasicEnvironment() {
-    this(new SysModules());
-  }
-
-
-  public BasicEnvironment(ISysModuleProvider p) {
-    smp = p;
-    objs = new ArrayList<IJSObject>();
+    log      = LogFactory.create();
+    objs     = new ArrayList<>(30);
+    configer = new HashSet<>(10);
   }
 
 
   /**
-   * @see #setEnvObject(Class)
-   * @param list 将所有对象注册到全局.
+   * 创建环境并将一个沙箱配置器加入环境中
+   * @param p
    */
+  public BasicEnvironment(IConfigSandbox p) {
+    this();
+    insertConfiger(p);
+  }
+
+
+  public void insertConfiger(IConfigSandbox cs) {
+    configer.add(cs);
+  }
+
+
   public void setEnvObjectList(Class<? extends IJSObject>[] list) {
     for (int i=0; i<list.length; ++i) {
       setEnvObject(list[i]);
@@ -60,10 +69,6 @@ public class BasicEnvironment implements IEnvironment {
   }
 
 
-  /**
-   * 将对象注册到全局, 可以在上下文直接引用, 在必要时初始化唯一实例
-   * @param c
-   */
   public void setEnvObject(Class<? extends IJSObject> c) {
     try {
       IJSObject jso = (IJSObject) c.newInstance();
@@ -77,16 +82,28 @@ public class BasicEnvironment implements IEnvironment {
 
   public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
     Bindings bind = box.getBindings();
-    Iterator<IJSObject> it = objs.iterator();
 
+    //
+    // 配置 js 库对象.
+    //
+    Iterator<IJSObject> it = objs.iterator();
     while (it.hasNext()) {
       IJSObject o = it.next();
       String name = o.env_name();
       bind.put(name, o);
     }
 
-    if (smp != null) {
-      smp.config(box, runner);
+    //
+    // 使用配置器配置沙箱
+    //
+    Iterator<IConfigSandbox> it_config = configer.iterator();
+    while (it_config.hasNext()) {
+      IConfigSandbox ics = it_config.next();
+      try {
+        ics.config(box, runner);
+      } catch (Exception e) {
+        log.error("Config sanbox", ics, e);
+      }
     }
   }
 
@@ -103,6 +120,9 @@ public class BasicEnvironment implements IEnvironment {
       }
       it.remove();
     }
+
+    configer = null;
+    objs = null;
   }
 
 
@@ -111,9 +131,4 @@ public class BasicEnvironment implements IEnvironment {
     destory();
   }
 
-
-  @Override
-  public ISysModuleProvider getModuleProvider() {
-    return smp;
-  }
 }
