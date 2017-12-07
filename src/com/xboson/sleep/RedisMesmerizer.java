@@ -45,9 +45,9 @@ import java.util.TimerTask;
  */
 public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
-  private final static String KEY = "RedisMesmerizer.IMesmerizer";
-  private final static String BEGIN_OVER_CURSOR = "0";
-  private final static int TIMEOUT = 3000;
+  public final static String KEY = "RedisMesmerizer.IMesmerizer";
+  public final static String BEGIN_OVER_CURSOR = "0";
+  public final static int TIMEOUT = 3000;
   private static RedisMesmerizer instance;
 
   private Log log = LogFactory.create();

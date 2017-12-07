@@ -56,6 +56,7 @@ public class SysImpl extends RuntimeUnitImpl {
    */
   public final Object request;
   public final Object requestParameterMap;
+  public ScriptObjectMirror result;
 
   private ConnectConfig orgdb;
   private Map<String, Object> retData;

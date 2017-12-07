@@ -17,18 +17,86 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.db.ConnectConfig;
+import com.xboson.util.IConstant;
 import com.xboson.util.Password;
+import com.xboson.util.SysConfig;
+
+import java.io.IOException;
 
 
 public class SeImpl extends RuntimeUnitImpl {
 
+  private RedisImpl redis;
+  private ConnectConfig sysdb;
+
+
   public SeImpl(CallData cd) {
     super(cd);
+    redis = new RedisImpl("/sys/");
   }
 
 
   public String encodePlatformPassword(String uid, String date, String ps) {
     String md5ps = Password.md5lowstr(ps);
     return Password.v1(uid, md5ps, date);
+  }
+
+
+  public void setCache(String region, String key, Object val, int exp) {
+    String str = jsonStringify(val);
+    redis.set(region, key, str, exp);
+  }
+
+
+  public Object getCache(String region, String key) {
+    String s = redis.get(region, key);
+    return jsonParse(s);
+  }
+
+
+  public Object delCache(String region, String key) {
+    redis.del(region, key);
+    return key;
+  }
+
+
+  public Object delAllCache(String region, String[] keys) throws IOException {
+    return redis.delAll(region, keys);
+  }
+
+
+  public Object cacheKeys(String region, String pattern) {
+    return redis.keys(createJSList(), region, pattern);
+  }
+
+
+  public String dbType() {
+    if (sysdb == null) {
+      sysdb = SysConfig.me().readConfig().db;
+    }
+    int t = sysdb.getDbid();
+    if (t < 10) return "0" + t;
+    return String.valueOf(t);
+  }
+
+
+  public boolean isPlatformOrg(String id) {
+    return IConstant.SYS_ORG.equalsIgnoreCase(id);
+  }
+
+
+  public Object localDb() {
+    return null;
+  }
+
+
+  public Object query(String sql, String[] param, String key) {
+    return query(sql, param, key, false);
+  }
+
+
+  public Object query(String sql, String[] param, String key, boolean sw) {
+    throw new UnsupportedOperationException();
   }
 }

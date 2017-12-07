@@ -100,6 +100,8 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       HttpImpl http   = new HttpImpl(cd);
       SeImpl se       = null;
 
+      sql._setSysRef(sys);
+
       if (AppFactory.me().who().isRoot()) {
         se = new SeImpl(cd);
       }

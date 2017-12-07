@@ -38,6 +38,11 @@ public interface IConstant extends IDict {
   Charset CHARSET = Charset.forName(CHARSET_NAME);
 
   /**
+   * 平台机构的机构 ID
+   */
+  String SYS_ORG = "a297dfacd7a84eab9656675f61750078";
+
+  /**
    * 常用加密/摘要算法名字
    */
   String MD5_NAME       = "MD5";

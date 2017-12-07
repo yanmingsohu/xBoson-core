@@ -34,8 +34,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   private Connection __conn;
   private ConnectConfig orgdb;
+  private SysImpl sys;
 
-  public ScriptObjectMirror result;
   public String _dbType;
 
 
@@ -53,6 +53,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
+  public void _setSysRef(SysImpl sys) {
+    this.sys = sys;
+  }
+
+
   public int query(String sql, Object[] param) throws Exception {
     return query(sql, param, "result");
   }
@@ -60,11 +65,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   public int query(String sql, Object[] param, String save_to)
           throws Exception {
-    if (result == null) result = createJSObject();
+    if (sys.result == null) sys.result = createJSObject();
 
     PreparedStatement ps = getConnection().prepareStatement(sql);
     ScriptObjectMirror arr = createJSList();
-    result.setMember(save_to, arr);
+    sys.result.setMember(save_to, arr);
 
     for (int i=1; i<=param.length; ++i) {
       Object p = param[i-1];
@@ -106,7 +111,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
    */
   public int queryPaging(String sql, Object[] param, int pageNum, int pageSize,
                          String save_to, int totalCount) {
-    return 0;
+    throw new UnsupportedOperationException();
   }
 
 

@@ -17,9 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
-import com.xboson.sleep.RedisMesmerizer;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Transaction;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
 
@@ -29,12 +27,12 @@ import java.io.IOException;
  */
 public class CacheImpl extends RuntimeUnitImpl {
 
-  private final String key_prefix;
+  private RedisImpl redis;
 
 
   public CacheImpl(CallData cd, String orgid) {
     super(cd);
-    key_prefix = "/user_space/" + orgid + '/';
+    redis = new RedisImpl("/user_space/" + orgid + '/');
   }
 
 
@@ -44,51 +42,29 @@ public class CacheImpl extends RuntimeUnitImpl {
 
 
   public void set(String region, String key, Object value, int exp) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      String tkey = key_prefix + region;
-
-      client.hset(tkey, key, jsonStringify(value));
-      if (exp > 0) {
-        client.expire(tkey, exp);
-      }
-    }
+    String str = jsonStringify(value);
+    redis.set(region, key, str, exp);
   }
 
 
   public Object get(String region, String key) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      String tkey = key_prefix + region;
-      String v = client.hget(tkey, key);
-      return jsonParse(v);
-    }
+    String s = redis.get(region, key);
+    return jsonParse(s);
   }
 
 
   public Object del(String region, String key) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      String tkey = key_prefix + region;
-      client.hdel(tkey, key);
-      return null;
-    }
+    redis.del(region, key);
+    return key;
   }
 
 
   public Object delAll(String region, String[] keys) throws IOException {
-    try (Jedis client = RedisMesmerizer.me().open();
-         Transaction t = client.multi() )
-    {
-      String tkey = key_prefix + region;
-      for (int i=0; i<keys.length; ++i) {
-        t.hdel(tkey, keys[i]);
-      }
-      return t.exec();
-    }
+    return redis.delAll(region, keys);
   }
 
 
   public Object keys(String region) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      return client.hkeys(key_prefix + region);
-    }
+    return redis.keys(createJSList(), region);
   }
 }
