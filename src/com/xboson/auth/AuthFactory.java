@@ -16,9 +16,6 @@
 
 package com.xboson.auth;
 
-import com.xboson.auth.impl.ThreadContext;
-import com.xboson.been.XBosonException;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,31 +36,10 @@ public class AuthFactory {
 
 
   private Map<Class, IAWhere> whereMap;
-  private Map<String, Class> who_context_types;
-  private ThreadLocal<ILoginContext> context_thread;
-  private String default_who_context;
 
 
   private AuthFactory() {
     whereMap = new HashMap<>();
-    who_context_types = new HashMap<>();
-    context_thread = new ThreadLocal<>();
-
-    //
-    // 登入上下文初始化列表
-    //
-    reg(ThreadContext.class);
-  }
-
-
-  public void reg(Class<? extends ILoginContext> lc) {
-    try {
-      ILoginContext c = lc.newInstance();
-      who_context_types.put(c.contextName(), lc);
-      setDefaultWhoContext(c.contextName());
-    } catch (Exception e) {
-      System.err.println("REG ILoginContext " + e);
-    }
   }
 
 
@@ -88,57 +64,4 @@ public class AuthFactory {
     return ret;
   }
 
-
-  /**
-   * 初始化一个当前线程的 who 上下文
-   * @param data
-   */
-  public void initWhoContext(String context_name, Object data) {
-    try {
-      Class cl = who_context_types.get(context_name);
-      ILoginContext context = (ILoginContext) cl.newInstance();
-      context.contextIn(data);
-      context_thread.set(context);
-    } catch(Exception e) {
-      throw new XBosonException("initWhoContext()", e);
-    }
-  }
-
-
-  public void initWhoContext(Object data) {
-    initWhoContext(default_who_context, data);
-  }
-
-
-  /**
-   * 退出当前 who 上下文
-   * @param data
-   */
-  public void outWhoContext(Object data) {
-    ILoginContext context = context_thread.get();
-    context.contextOut(data);
-  }
-
-
-  /**
-   * 使用名称设置默认上下文类型
-   */
-  public void setDefaultWhoContext(String name) {
-    if (!who_context_types.containsKey(name)) {
-      throw new XBosonException("Not a valid context name: " + name);
-    }
-    default_who_context = name;
-  }
-
-
-  /**
-   * 返回当前上下文
-   */
-  public ILoginContext whoContext() {
-    ILoginContext whoc = context_thread.get();
-    if (whoc == null) {
-      throw new PermissionException("not init context on this thread");
-    }
-    return whoc;
-  }
 }

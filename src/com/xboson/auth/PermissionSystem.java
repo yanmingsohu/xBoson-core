@@ -67,19 +67,4 @@ public class PermissionSystem {
   }
 
 
-  /**
-   * 在需要做权限检查的地方调用这个函数;
-   * IAWho 主体从当前上下文中取得, 动作从缓冲区创建.
-   *
-   * @param where 检查权限的位置对象的类类型, 该对象会被缓冲
-   * @param res 主体请求的资源
-   *
-   * @see #apply(IAWho, IAWhere, IAResource) 完整的调用
-   * @see AuthFactory#initWhoContext(String, Object) 初始化上下文
-   */
-  public static void apply(Class<? extends IAWhere> where, IAResource res) {
-    IAWho who = AuthFactory.me().whoContext().whois();
-    apply(who, where, res);
-  }
-
 }
