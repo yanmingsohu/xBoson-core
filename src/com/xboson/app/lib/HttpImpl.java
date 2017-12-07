@@ -130,7 +130,8 @@ public class HttpImpl extends RuntimeUnitImpl {
   }
 
 
-  public String encode(String val, String charset) throws UnsupportedEncodingException {
+  public String encode(String val, String charset)
+          throws UnsupportedEncodingException {
     return URLEncoder.encode(val, charset);
   }
 
@@ -140,7 +141,8 @@ public class HttpImpl extends RuntimeUnitImpl {
   }
 
 
-  public String decode(String val, String charset) throws UnsupportedEncodingException {
+  public String decode(String val, String charset)
+          throws UnsupportedEncodingException {
     return URLDecoder.decode(val, charset);
   }
 

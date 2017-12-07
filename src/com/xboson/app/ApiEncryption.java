@@ -26,7 +26,7 @@ import com.xboson.util.Password;
 class ApiEncryption {
 
   private static AES2 ekey;
-  private static AES2 iekey;
+//  private static AES2 iekey;
 
 
   static {
@@ -35,8 +35,8 @@ class ApiEncryption {
       String encode = Password.encodeSha256(code, "zr_zy秘");
       ekey = new AES2(code + encode);
 
-      String ieCode = "import&&export";
-      iekey = new AES2(ieCode);
+//      String ieCode = "import&&export";
+//      iekey = new AES2(ieCode);
     } catch(Exception e) {
       e.printStackTrace();
       System.exit(2);
