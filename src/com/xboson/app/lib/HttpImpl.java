@@ -18,15 +18,16 @@ package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
 import com.xboson.util.IConstant;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.objects.NativeJSON;
+import okhttp3.*;
 
-import javax.servlet.http.Cookie;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -34,7 +35,11 @@ import java.util.Map;
  */
 public class HttpImpl extends RuntimeUnitImpl {
 
-  private Map<String, Cookie> cookies;
+  public static final MediaType JSON
+          = MediaType.parse("application/json; charset=utf-8");
+
+  private Map<String, javax.servlet.http.Cookie> cookies;
+  private OkHttpClient hc;
 
 
   public HttpImpl(CallData cd) {
@@ -90,10 +95,10 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   private void parseCookie() {
     cookies = new HashMap<>();
-    Cookie[] arr = cd.req.getCookies();
+    javax.servlet.http.Cookie[] arr = cd.req.getCookies();
 
     for (int i=0; i<arr.length; ++i) {
-      Cookie ck = arr[i];
+      javax.servlet.http.Cookie ck = arr[i];
       cookies.put(ck.getName(), ck);
     }
   }
@@ -118,7 +123,7 @@ public class HttpImpl extends RuntimeUnitImpl {
 
 
   public void setCookie(String name, String value, int maxAgeSecond, String path) {
-    Cookie ck = new Cookie(name, value);
+    javax.servlet.http.Cookie ck = new javax.servlet.http.Cookie(name, value);
     ck.setMaxAge(maxAgeSecond);
     ck.setPath(path);
     cd.resp.addCookie(ck);
@@ -157,13 +162,166 @@ public class HttpImpl extends RuntimeUnitImpl {
   }
 
 
-  public Object get(String url, Object param, String type, Object header) {
-    return null;
+  public Object get(String url) throws IOException {
+    return get(url, null, "string", null);
   }
 
 
-  public Object post(String url, Object body, Object param, String type, Object header) {
-    return null;
+  public Object get(String url, Object param) throws IOException {
+    return get(url, param, "string", null);
+  }
+
+
+  public Object get(String url, Object param, String type) throws IOException {
+    return get(url, param, type, null);
+  }
+
+
+  public Object get(String url, Object param, String type, Object header)
+          throws IOException {
+    return post(url, null, param, type, header);
+  }
+
+
+  public Object post(String url) throws IOException {
+    return post(url, null, null, "string", null);
+  }
+
+
+  public Object post(String url, Object bodydata) throws IOException {
+    return post(url, bodydata, null, "string", null);
+  }
+
+
+  public Object post(String url, Object bodydata, Object param)
+          throws IOException {
+    return post(url, bodydata, param, "string", null);
+  }
+
+
+  public Object post(String url, Object bodydata, Object param,
+                     String type) throws IOException {
+    return post(url, bodydata, param, type, null);
+  }
+
+
+  public Object post(String url, Object bodydata, Object param,
+                     String type, Object header) throws IOException {
+    HttpUrl.Builder url_build = HttpUrl.parse(url).newBuilder();
+    if (param != null) {
+      addParm(url_build, param);
+    }
+
+    HttpUrl urlobj = url_build.build();
+    Request.Builder build = new Request.Builder();
+    build.url(urlobj);
+
+    if (bodydata != null) {
+      String bodystr = parseBodyParm(bodydata, type);
+      RequestBody body = RequestBody.create(JSON, bodystr);
+      build.post(body);
+    }
+
+    if (header != null) {
+      addHeader(build, header);
+    }
+
+    Response resp = openClient().newCall(build.build()).execute();
+    ResponseBody body = resp.body();
+
+    ScriptObjectMirror ret = createJSObject();
+    ret.setMember("code", resp.code());
+    ret.setMember("cookie", parseCookies(urlobj, resp));
+    ret.setMember("data", parseData(body, type));
+    ret.setMember("header", parseRespHeader(resp));
+    return ret;
+  }
+
+
+  private Object parseData(ResponseBody body, String type) throws IOException {
+    switch (type.toLowerCase()) {
+      case "json":
+        return NativeJSON.parse(this, body.string(), null);
+
+      case "xml":
+        return Tool.createXmlStream().fromXML(body.string());
+
+      case "string":
+      default:
+        return body.string();
+    }
+  }
+
+
+  private String parseBodyParm(Object d, String type) {
+    switch (type.toLowerCase()) {
+      case "json":
+        return String.valueOf(
+                NativeJSON.stringify(this, d, null, null));
+
+      case "xml":
+        return Tool.createXmlStream().toXML(d);
+
+      case "string":
+      default:
+        return String.valueOf(d);
+    }
+  }
+
+
+  private Object parseRespHeader(Response resp) {
+    Headers hs = resp.headers();
+    Iterator<String> names = hs.names().iterator();
+    ScriptObjectMirror ret = createJSObject();
+
+    while (names.hasNext()) {
+      String name = names.next();
+      ret.setMember(name, hs.get(name));
+    }
+    return ret;
+  }
+
+
+  private Object parseCookies(HttpUrl urlobj, Response resp) {
+    List<String> cookieStrings = resp.headers("Set-Cookie");
+    ScriptObjectMirror ck = createJSObject();
+
+    for(int i=0, size = cookieStrings.size(); i < size; ++i) {
+      Cookie cookie = Cookie.parse(urlobj, cookieStrings.get(i));
+      ck.setMember(cookie.name(), cookie.value());
+    }
+    return ck;
+  }
+
+
+  private void addParm(HttpUrl.Builder url_build, Object param) {
+    ScriptObjectMirror js = wrap(param);
+    Iterator<String> names = js.keySet().iterator();
+    while (names.hasNext()) {
+      String name = names.next();
+      url_build.addQueryParameter(name, String.valueOf(js.getMember(name)));
+    }
+  }
+
+
+  private void addHeader(Request.Builder build, Object headers) {
+    ScriptObjectMirror js = wrap(headers);
+    Iterator<String> names = js.keySet().iterator();
+    while (names.hasNext()) {
+      String name = names.next();
+      build.addHeader(name, String.valueOf(js.getMember(name)));
+    }
+  }
+
+
+  private OkHttpClient openClient() {
+    if (hc == null) {
+      //
+      // 这个对象可能很昂贵
+      //
+      hc = new OkHttpClient();
+    }
+    return hc;
   }
 
 

@@ -21,16 +21,17 @@ import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
 import com.xboson.util.ChineseInital;
-import com.xboson.util.SnowflakeIdWorker;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
@@ -50,6 +51,18 @@ public class TestTool extends Test {
     // check_string_hash();
     test_chinese();
     test_id();
+    test_http_get();
+  }
+
+
+  public void test_http_get() throws Exception {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder()
+            .url("http://bing.com")
+            .build();
+
+    Response response = client.newCall(request).execute();
+    msg("GET", response.body().string().substring(0, 300), "...");
   }
 
 

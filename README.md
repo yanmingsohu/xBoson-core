@@ -40,6 +40,9 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
     
 * (CSV 转换)
     -- (super-csv-2.4.0.jar)[https://github.com/super-csv/super-csv]
+    
+* (HTTP 客户端)
+    -- (okhttp-3.9.1.jar)[http://square.github.io/okhttp/]
 
 		
 # URL 映射约定
