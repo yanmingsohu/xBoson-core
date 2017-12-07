@@ -68,7 +68,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
 
 
   void run(CallData cd, Module jsmodule) {
-    ssw.run(cd, jsmodule, org.getOrgDb());
+    ssw.run(cd, jsmodule, org);
   }
 
 

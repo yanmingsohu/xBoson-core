@@ -59,6 +59,7 @@ public class TestApi extends Test {
 //    ra.run("test_double", "list1");
 //    ra.run("test_double", "date0");
     ra.run("test_double", "http0");
+    ra.run("test_double", "cache0");
   }
 
 

@@ -31,7 +31,12 @@ import java.util.*;
 public class TestServletRequest implements HttpServletRequest {
 
   Map<String, Object> attr = new HashMap<>();
+  Hashtable<String, String> header = new Hashtable<>();
 
+
+  public TestServletRequest() {
+
+  }
 
   @Override
   public String getAuthType() {
@@ -65,7 +70,7 @@ public class TestServletRequest implements HttpServletRequest {
 
   @Override
   public Enumeration<String> getHeaderNames() {
-    return null;
+    return header.keys();
   }
 
 

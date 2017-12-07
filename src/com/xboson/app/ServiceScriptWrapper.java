@@ -84,17 +84,19 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
    *
    * @param cd 请求数据, 应答对象
    * @param jsmod 编译好的模块
-   * @param orgdb 针对机构的数据库连接
+   * @param org 机构
    */
-  public void run(CallData cd, Module jsmod, ConnectConfig orgdb) {
+  public void run(CallData cd, Module jsmod, XjOrg org) {
     ScriptObjectMirror call = (ScriptObjectMirror) jsmod.exports;
 
     if (! call.isFunction() )
       throw new XBosonException("Script wrapper fail.");
 
+    ConnectConfig orgdb = org.getOrgDb();
+
     try (SqlImpl sql  = new SqlImpl(cd, orgdb)) {
       SysImpl sys     = new SysImpl(cd, orgdb);
-      CacheImpl cache = new CacheImpl(cd);
+      CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
 
       call.call(jsmod.exports, sys, sql, cache, http);

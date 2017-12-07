@@ -20,7 +20,6 @@ import com.xboson.been.CallData;
 import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.internal.objects.NativeJSON;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -68,6 +67,11 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   public int port() {
     return cd.req.getServerPort();
+  }
+
+
+  public String uri() {
+    return cd.req.getRequestURI();
   }
 
 
@@ -241,7 +245,7 @@ public class HttpImpl extends RuntimeUnitImpl {
   private Object parseData(ResponseBody body, String type) throws IOException {
     switch (type.toLowerCase()) {
       case "json":
-        return NativeJSON.parse(this, body.string(), null);
+        return jsonParse(body.string());
 
       case "xml":
         return Tool.createXmlStream().fromXML(body.string());
@@ -256,8 +260,7 @@ public class HttpImpl extends RuntimeUnitImpl {
   private String parseBodyParm(Object d, String type) {
     switch (type.toLowerCase()) {
       case "json":
-        return String.valueOf(
-                NativeJSON.stringify(this, d, null, null));
+        return jsonStringify(d);
 
       case "xml":
         return Tool.createXmlStream().toXML(d);

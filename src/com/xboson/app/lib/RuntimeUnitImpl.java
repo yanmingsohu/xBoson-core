@@ -20,7 +20,9 @@ import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeArray;
+import jdk.nashorn.internal.objects.NativeJSON;
 import jdk.nashorn.internal.runtime.Context;
 import jdk.nashorn.internal.runtime.PropertyMap;
 import jdk.nashorn.internal.runtime.ScriptObject;
@@ -132,5 +134,23 @@ public abstract class RuntimeUnitImpl {
       }
     }
     return ret;
+  }
+
+
+  /**
+   * 针对 js 内部对象字符串化
+   */
+  protected String jsonStringify(Object o) {
+    o = ScriptUtils.unwrap(o);
+    o = NativeJSON.stringify(this, o, null, null);
+    return String.valueOf(o);
+  }
+
+
+  /**
+   * 解析 json 字符串转换为 js 内部对象
+   */
+  protected Object jsonParse(String str) {
+    return NativeJSON.parse(this, str, null);
   }
 }

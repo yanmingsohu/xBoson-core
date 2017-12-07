@@ -224,13 +224,12 @@ public class SysImpl extends RuntimeUnitImpl {
 
 
   public Object instanceFromJson(String str) {
-    return NativeJSON.parse(this, str, null);
+    return jsonParse(str);
   }
 
 
   public Object jsonFromInstance(Object obj) {
-    return NativeJSON.stringify(this,
-            ScriptUtils.unwrap(obj), null, null);
+    return jsonStringify(obj);
   }
 
 

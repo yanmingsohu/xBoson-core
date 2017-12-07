@@ -17,6 +17,9 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.sleep.RedisMesmerizer;
+import jdk.nashorn.internal.objects.NativeJSON;
+import redis.clients.jedis.Jedis;
 
 
 /**
@@ -24,7 +27,61 @@ import com.xboson.been.CallData;
  */
 public class CacheImpl extends RuntimeUnitImpl {
 
-  public CacheImpl(CallData cd) {
+  private final String key_prefix;
+
+
+  public CacheImpl(CallData cd, String orgid) {
     super(cd);
+    key_prefix = "/user_space/" + orgid + '/';
+  }
+
+
+  public void set(String region, String key, Object value) {
+    set(region, key, value, 7200);
+  }
+
+
+  public void set(String region, String key, Object value, int exp) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      String tkey = key_prefix + region;
+
+      client.hset(tkey, key, jsonStringify(value));
+      if (exp > 0) {
+        client.expire(tkey, exp);
+      }
+    }
+  }
+
+
+  public Object get(String region, String key) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      String tkey = key_prefix + region;
+      String v = client.hget(tkey, key);
+      return jsonParse(v);
+    }
+  }
+
+
+  public Object del(String region, String key) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      String tkey = key_prefix + region;
+      client.hdel(tkey, key);
+      return null;
+    }
+  }
+
+
+  public Object delAll(String region) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      client.del(key_prefix + region);
+      return null;
+    }
+  }
+
+
+  public Object keys(String region) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      return client.hkeys(key_prefix + region);
+    }
   }
 }

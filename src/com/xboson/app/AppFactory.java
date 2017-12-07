@@ -18,6 +18,7 @@ package com.xboson.app;
 
 import com.xboson.been.ApiCall;
 import com.xboson.been.UrlSplit;
+import com.xboson.been.XBosonException;
 import com.xboson.script.JScriptException;
 
 
@@ -43,7 +44,7 @@ public class AppFactory {
     } catch (JScriptException jse) {
       throw jse;
     } catch (Exception e) {
-      throw new JScriptException(e);
+      throw new XBosonException(e);
     }
   }
 

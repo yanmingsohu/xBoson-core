@@ -30,79 +30,79 @@ import java.nio.ByteBuffer;
 
 public class WarpdScript {
 
-	private AbstractJSObject jso;
-	private Sandbox box;
-	private Module module;
-	private CompiledScript cs;
-	private String filename;
+  private AbstractJSObject jso;
+  private Sandbox box;
+  private Module module;
+  private CompiledScript cs;
+  private String filename;
   private ICodeRunner crun;
-	private Object warpreturn;
-	private ByteBuffer code;
-	private String strcode;
+  private Object warpreturn;
+  private ByteBuffer code;
+  private String strcode;
 
 
-	WarpdScript(Sandbox box, ByteBuffer code, String filename)
-					throws ScriptException {
-		this.box  	  = box;
-		this.code 	  = code;
-		this.module   = new Module();
-		this.filename = filename;
-		warp();
-	}
+  WarpdScript(Sandbox box, ByteBuffer code, String filename)
+          throws ScriptException {
+    this.box  	  = box;
+    this.code 	  = code;
+    this.module   = new Module();
+    this.filename = filename;
+    warp();
+  }
 
 
-	WarpdScript(Sandbox box, String code, String filename)
-					throws ScriptException {
-		this.box  	  = box;
-		this.strcode  = code;
-		this.module   = new Module();
-		this.filename = filename;
-		warp();
-	}
-	
-	
-	private void warp() throws ScriptException {
-	  box.setFilename(filename);
-		cs = box.compile(
-				"__warp_main(function(require, module, __dirname"
+  WarpdScript(Sandbox box, String code, String filename)
+          throws ScriptException {
+    this.box  	  = box;
+    this.strcode  = code;
+    this.module   = new Module();
+    this.filename = filename;
+    warp();
+  }
+
+
+  private void warp() throws ScriptException {
+    box.setFilename(filename);
+    cs = box.compile(
+        "__warp_main(function(require, module, __dirname"
         + ", __filename, exports, console) {"
-				+ getStringCode()
-				+ "\n})");
-	}
+        + getStringCode()
+        + "\n})");
+  }
 
 
-	private String getStringCode() {
-		if (strcode != null) {
-			return strcode;
-		}
-		else if (code != null) {
-			strcode = new String(code.array(), IConstant.CHARSET);
-			return strcode;
-		}
-		else {
-			throw new XBosonException("can not get code");
-		}
-	}
-	
-	
-	public Object call() {
-		try {
-			jso = (AbstractJSObject) cs.eval();
-			warpreturn = jso.call(module, module, crun);
-			module.loaded = true;
-			return warpreturn;
-		} catch(Exception e) {
-			throw new JScriptException(e, code);
-		}
-	}
-	
-		
-	public Module getModule() {
-		return module;
-	}
-	
-	
-	public void setCodeRunner(ICodeRunner crun) {
-		this.crun = crun;
-	}
+  private String getStringCode() {
+    if (strcode != null) {
+      return strcode;
+    }
+    else if (code != null) {
+      strcode = new String(code.array(), IConstant.CHARSET);
+      return strcode;
+    }
+    else {
+      throw new XBosonException("can not get code");
+    }
+  }
+
+
+  public Object call() {
+    try {
+      jso = (AbstractJSObject) cs.eval();
+      warpreturn = jso.call(module, module, crun);
+      module.loaded = true;
+      return warpreturn;
+    } catch(Exception e) {
+      throw new JScriptException(e, code);
+    }
+  }
+
+
+  public Module getModule() {
+    return module;
+  }
+
+
+  public void setCodeRunner(ICodeRunner crun) {
+    this.crun = crun;
+  }
 }
