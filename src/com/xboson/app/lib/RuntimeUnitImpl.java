@@ -141,8 +141,10 @@ public abstract class RuntimeUnitImpl {
    * 针对 js 内部对象字符串化
    */
   protected String jsonStringify(Object o) {
-    o = ScriptUtils.unwrap(o);
-    o = NativeJSON.stringify(this, o, null, null);
+    if (o != null) {
+      o = ScriptUtils.unwrap(o);
+      o = NativeJSON.stringify(this, o, null, null);
+    }
     return String.valueOf(o);
   }
 
@@ -151,6 +153,8 @@ public abstract class RuntimeUnitImpl {
    * 解析 json 字符串转换为 js 内部对象
    */
   protected Object jsonParse(String str) {
+    if (str == null)
+      return null;
     return NativeJSON.parse(this, str, null);
   }
 }

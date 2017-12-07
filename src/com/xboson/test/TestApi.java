@@ -60,6 +60,7 @@ public class TestApi extends Test {
 //    ra.run("test_double", "date0");
     ra.run("test_double", "http0");
     ra.run("test_double", "cache0");
+    ra.run("test_double", "se0");
   }
 
 
@@ -68,7 +69,7 @@ public class TestApi extends Test {
     TestServletResponse resp = new TestServletResponse();
     XResponse xr = new XResponse(req, resp);
     SessionData sd = new SessionData();
-    sd.login_user = new LoginUser();
+    sd.login_user = new Admin();
     sd.login_user.pid = "e3e5cf168dd24b44ba4b72775d5fb215";
     sd.login_user.userid = "root";
     req.setAttribute(SessionData.attrname, sd);
@@ -138,6 +139,13 @@ public class TestApi extends Test {
         fail(e);
         e.printStackTrace();
       }
+    }
+  }
+
+
+  static class Admin extends LoginUser {
+    public boolean isRoot() {
+      return true;
     }
   }
 }

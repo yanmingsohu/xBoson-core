@@ -18,8 +18,10 @@ package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
 import com.xboson.sleep.RedisMesmerizer;
-import jdk.nashorn.internal.objects.NativeJSON;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Transaction;
+
+import java.io.IOException;
 
 
 /**
@@ -71,10 +73,15 @@ public class CacheImpl extends RuntimeUnitImpl {
   }
 
 
-  public Object delAll(String region) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      client.del(key_prefix + region);
-      return null;
+  public Object delAll(String region, String[] keys) throws IOException {
+    try (Jedis client = RedisMesmerizer.me().open();
+         Transaction t = client.multi() )
+    {
+      String tkey = key_prefix + region;
+      for (int i=0; i<keys.length; ++i) {
+        t.hdel(tkey, keys[i]);
+      }
+      return t.exec();
     }
   }
 

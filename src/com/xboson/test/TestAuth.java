@@ -33,7 +33,6 @@ public class TestAuth extends Test {
 
   public void test() throws Throwable {
     cc = TestDS.connect_config();
-    framework();
     password();
     sql_reader();
   }
@@ -75,29 +74,6 @@ public class TestAuth extends Test {
       Password.v1(userid, pstrue, date);
     }
     endTime("100000 count encode password");
-  }
-
-
-  public void framework() throws Exception {
-    AuthFactory af = AuthFactory.me();
-    af.initWhoContext(null);
-    ILoginContext context = af.whoContext();
-    Who who = new Who("1");
-    context.login(who);
-
-    Res res = new Res("1");
-    PermissionSystem.apply(Where.class, res);
-    msg(res.toURI() + " pass");
-
-    new Throws(PermissionException.class) {
-      public void run() throws Throwable {
-        Res res2 = new Res("2");
-        PermissionSystem.apply(Where.class, res2);
-      }
-    };
-
-    context.logout(who);
-    af.outWhoContext(null);
   }
 
 

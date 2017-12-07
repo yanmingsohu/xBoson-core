@@ -16,6 +16,7 @@
 
 package com.xboson.app;
 
+import com.xboson.auth.IAWho;
 import com.xboson.been.ApiCall;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
@@ -29,22 +30,31 @@ public class AppFactory {
 
   private static AppFactory instance;
   private AppPool app_pool;
+  private ThreadLocal<IAWho> who;
 
 
   private AppFactory() {
     app_pool = new AppPool();
+    who = new ThreadLocal<>();
   }
 
 
   public void call(ApiCall ac) {
     try {
+      who.set(ac.call.sess.login_user);
+
       XjOrg org = app_pool.getOrg(ac.org);
       XjApp app = org.getApp(ac.app);
       app.run(ac.call, ac.mod, ac.api);
+
     } catch (JScriptException jse) {
       throw jse;
+
     } catch (Exception e) {
       throw new XBosonException(e);
+
+    } finally {
+      who.set(null);
     }
   }
 
@@ -63,6 +73,19 @@ public class AppFactory {
     ret.mod = sp.next();
     ret.api = sp.next();
     return ret;
+  }
+
+
+  /**
+   * 在任何位置都可以安全调用该方法, 返回当前登录的用户,
+   * 如果没有用户登录会抛出异常.
+   */
+  public IAWho who() {
+    IAWho r = who.get();
+    if (r == null) {
+      throw new XBosonException("not login");
+    }
+    return r;
   }
 
 

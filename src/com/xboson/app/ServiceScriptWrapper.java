@@ -36,7 +36,7 @@ import java.nio.ByteBuffer;
 public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
   private static final byte[] warp0 =
-          "module.exports = (function(sys, sql, cache, http) {"
+          "module.exports = (function(sys, sql, cache, http, se) {"
                   .getBytes(CHARSET);
 
   private static final byte[] warp1 =
@@ -98,8 +98,13 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       SysImpl sys     = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
+      SeImpl se       = null;
 
-      call.call(jsmod.exports, sys, sql, cache, http);
+      if (AppFactory.me().who().isRoot()) {
+        se = new SeImpl(cd);
+      }
+
+      call.call(jsmod.exports, sys, sql, cache, http, se);
 
     } catch (Exception e) {
       throw new XBosonException(e);
