@@ -77,6 +77,14 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
+  public void bindResult(String name, Object value) {
+    if (result == null)
+      result = createJSObject();
+
+    result.setMember(name, value);
+  }
+
+
   public void addRetData(Object o, String key) {
     if (o instanceof ScriptObjectMirror) {
       retData.put(key, new ScriptObjectMirrorJsonConverter.Warp(o));

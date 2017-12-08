@@ -20,6 +20,8 @@ import com.xboson.auth.IAWho;
 import com.xboson.been.ApiCall;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.script.JScriptException;
 
 
@@ -31,24 +33,27 @@ public class AppFactory {
   private static AppFactory instance;
   private AppPool app_pool;
   private ThreadLocal<IAWho> who;
+  private Log log;
 
 
   private AppFactory() {
     app_pool = new AppPool();
     who = new ThreadLocal<>();
+    log = LogFactory.create();
   }
 
 
   public void call(ApiCall ac) {
     try {
       who.set(ac.call.sess.login_user);
+      log.debug("Call::", ac.org, '/', ac.app, '/', ac.mod, '/', ac.api);
 
       XjOrg org = app_pool.getOrg(ac.org);
       XjApp app = org.getApp(ac.app);
       app.run(ac.call, ac.mod, ac.api);
 
-    } catch (JScriptException jse) {
-      throw jse;
+    } catch (XBosonException x) {
+      throw x;
 
     } catch (Exception e) {
       throw new XBosonException(e);
@@ -68,7 +73,7 @@ public class AppFactory {
     UrlSplit sp = url.clone();
     sp.withoutSlash(true);
 
-    ret.org = sp.getName();
+    ret.org = sp.next();
     ret.app = sp.next();
     ret.mod = sp.next();
     ret.api = sp.next();

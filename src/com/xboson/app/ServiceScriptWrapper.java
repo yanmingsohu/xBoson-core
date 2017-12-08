@@ -25,11 +25,13 @@ import com.xboson.script.*;
 import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.runtime.ECMAException;
 
+import javax.script.Bindings;
 import javax.script.ScriptException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
 
@@ -75,6 +77,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       box.eval(Tool.readFileFromResource(
               getClass(), filepath).openInputStream());
     }
+    bindApiConstant(box, IApiConstant.class);
   }
 
 
@@ -95,18 +98,24 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     ConnectConfig orgdb = org.getOrgDb();
 
     try (SqlImpl sql  = new SqlImpl(cd, orgdb)) {
-      SysImpl sys     = new SysImpl(cd, orgdb);
+      SysImpl sys = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd, org.id());
-      HttpImpl http   = new HttpImpl(cd);
-      SeImpl se       = null;
+      HttpImpl http = new HttpImpl(cd);
+      SeImpl se = null;
 
       sql._setSysRef(sys);
 
       if (AppFactory.me().who().isRoot()) {
-        se = new SeImpl(cd);
+        se = new SeImpl(cd, sys);
       }
 
       call.call(jsmod.exports, sys, sql, cache, http, se);
+
+    } catch (ECMAException ec) {
+      throw new JScriptException(ec);
+
+    } catch (XBosonException x) {
+      throw x;
 
     } catch (Exception e) {
       throw new XBosonException(e);
@@ -128,6 +137,21 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       return ByteBuffer.wrap( buf.toByteArray() );
     } catch (IOException e) {
       throw new XBosonException(e);
+    }
+  }
+
+
+  private void bindApiConstant(Sandbox box, Class constants) {
+    Field[] fs = constants.getFields();
+    Bindings bind = box.getBindings();
+
+    for (int i=0; i<fs.length; ++i) {
+      try {
+        Field f = fs[i];
+        bind.put(f.getName(), f.get(null));
+      } catch (IllegalAccessException e) {
+        throw new XBosonException(e);
+      }
     }
   }
 }

@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.been.Page;
 import com.xboson.been.XBosonException;
 import com.xboson.db.*;
 import com.xboson.db.sql.SqlReader;
@@ -35,6 +36,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   private Connection __conn;
   private ConnectConfig orgdb;
   private SysImpl sys;
+  private QueryImpl query_impl;
 
   public String _dbType;
 
@@ -42,6 +44,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   public SqlImpl(CallData cd, ConnectConfig orgdb) throws SQLException {
     super(cd);
     this.orgdb = orgdb;
+    this.query_impl = new QueryImpl(() -> getConnection(), this);
   }
 
 
@@ -65,36 +68,9 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   public int query(String sql, Object[] param, String save_to)
           throws Exception {
-    if (sys.result == null) sys.result = createJSObject();
-
-    PreparedStatement ps = getConnection().prepareStatement(sql);
     ScriptObjectMirror arr = createJSList();
-    sys.result.setMember(save_to, arr);
-
-    for (int i=1; i<=param.length; ++i) {
-      Object p = param[i-1];
-      ps.setObject(i, p);
-    }
-
-    ResultSet rs = ps.executeQuery();
-    ResultSetMetaData meta = rs.getMetaData();
-    int column = meta.getColumnCount();
-    int row_count = 0;
-    int arri = arr.size()-1;
-
-    while (rs.next()) {
-      ScriptObjectMirror row = createJSObject();
-      arr.setSlot(++arri, row);
-      ++row_count;
-
-      for (int c = 1; c<=column; ++c) {
-        row.setMember(meta.getColumnLabel(c), rs.getObject(c));
-      }
-    }
-
-    rs.close();
-    ps.close();
-    return row_count;
+    sys.bindResult(save_to, arr);
+    return query_impl.query(arr, sql, param);
   }
 
 
@@ -110,8 +86,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
    * @return
    */
   public int queryPaging(String sql, Object[] param, int pageNum, int pageSize,
-                         String save_to, int totalCount) {
-    throw new UnsupportedOperationException();
+                         String save_to, int totalCount) throws Exception {
+    ScriptObjectMirror arr = createJSList();
+    sys.bindResult(save_to, arr);
+    Page page = new Page(pageNum, pageSize, totalCount);
+    return query_impl.queryPaging(arr, sql, param, page);
   }
 
 

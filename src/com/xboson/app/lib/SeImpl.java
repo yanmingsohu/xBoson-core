@@ -18,22 +18,46 @@ package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.DbmsFactory;
 import com.xboson.util.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
+import java.sql.Connection;
 
 
 public class SeImpl extends RuntimeUnitImpl {
 
+  private ConnectConfig __sysdb;
+  private Connection __conn;
   private RedisImpl redis;
-  private ConnectConfig sysdb;
+  private QueryImpl query;
+  private SysImpl sys;
 
 
-  public SeImpl(CallData cd) {
+  public SeImpl(CallData cd, SysImpl sys) {
     super(cd);
-    redis = new RedisImpl("/sys/");
+    this.redis = new RedisImpl("/sys/");
+    this.query = new QueryImpl(() -> getConnection(), this);
+    this.sys = sys;
+  }
+
+
+  private Connection getConnection() throws Exception {
+    if (__conn == null) {
+      __conn = DbmsFactory.me().open(getConfig());
+    }
+    return __conn;
+  }
+
+
+  public ConnectConfig getConfig() {
+    if (__sysdb == null) {
+      __sysdb = SysConfig.me().readConfig().db;
+    }
+    return __sysdb;
   }
 
 
@@ -72,10 +96,7 @@ public class SeImpl extends RuntimeUnitImpl {
 
 
   public String dbType() {
-    if (sysdb == null) {
-      sysdb = SysConfig.me().readConfig().db;
-    }
-    int t = sysdb.getDbid();
+    int t = getConfig().getDbid();
     if (t < 10) return "0" + t;
     return String.valueOf(t);
   }
@@ -87,16 +108,33 @@ public class SeImpl extends RuntimeUnitImpl {
 
 
   public Object localDb() {
-    return null;
+    throw new UnsupportedOperationException("localDb");
   }
 
 
-  public Object query(String sql, String[] param, String key) {
+  public Object query(String sql, String[] param, String key) throws Exception {
     return query(sql, param, key, false);
   }
 
 
-  public Object query(String sql, String[] param, String key, boolean sw) {
-    throw new UnsupportedOperationException();
+  public Object query(String sql, String[] param, String save_to, boolean sw)
+          throws Exception {
+    if (sw)
+      throw new UnsupportedOperationException("不支持替换 schema");
+
+    ScriptObjectMirror arr = createJSList();
+    sys.bindResult(save_to, arr);
+    return query.query(arr, sql, param);
   }
+
+
+  public void logTopic(String org, String dataset, String tableName, String field) {
+    throw new UnsupportedOperationException("logTopic");
+  }
+
+
+  public void reloadProperties() {
+    throw new UnsupportedOperationException("reloadProperties");
+  }
+
 }

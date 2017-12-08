@@ -75,8 +75,12 @@ public abstract class RuntimeUnitImpl {
    * @return
    */
   protected ScriptObjectMirror wrap(Object obj) {
-    return (ScriptObjectMirror)
-            ScriptObjectMirror.wrap(obj, Context.getGlobal());
+    Object ret = ScriptObjectMirror.wrap(obj, Context.getGlobal());
+    if (ret instanceof ScriptObjectMirror) {
+      return (ScriptObjectMirror) ret;
+    } else {
+      throw new XBosonException.BadParameter("object", "not js object");
+    }
   }
 
 
