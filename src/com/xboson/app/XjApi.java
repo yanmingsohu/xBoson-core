@@ -97,21 +97,12 @@ public class XjApi implements IDict {
 
 
   /**
-   * 解码脚本, 同时去掉脚本的前后特殊符号 "<%...%>"
+   * 解码脚本, 在必要时对代码进行修正.
    */
   private void decode(String str) {
     content = ApiEncryption.decryptApi(str);
-
-    int len = content.length - 1;
-    if (content[0] == 60
-            && content[1] == 37
-            && content[len-1] == 37
-            && content[len] == 62)
-    {
-      content[0    ] = 32; // 13 = CR (carriage return) 回车键
-      content[1    ] = 32; // 32 = (space) 空格
-      content[len-1] = 13;
-      content[len  ] = 13;
+    if (SourceFix.fixBeginEnd(content)) {
+      content = SourceFix.fixFor(content);
     }
   }
 

@@ -125,14 +125,14 @@ public abstract class RuntimeUnitImpl {
    * @param objs js 对象数组
    * @param attrName 每个对象使用该属性的值作为 set 的 key
    */
-  protected Set<String> array2Set(Object[] objs, String attrName) {
+  protected Set<String> array2Set(ScriptObjectMirror objs, String attrName) {
     if (Tool.isNulStr(attrName))
       throw new XBosonException.NullParamException("String attrName");
 
     Set<String> ret = new HashSet<>();
 
-    for (int i=0; i<objs.length; ++i) {
-      ScriptObjectMirror cobj = wrap(objs[i]);
+    for (int i=0; i<objs.size(); ++i) {
+      ScriptObjectMirror cobj = wrap(objs.getSlot(i));
       if (cobj.hasMember(attrName)) {
         ret.add( String.valueOf(cobj.getMember(attrName)) );
       }
@@ -160,5 +160,14 @@ public abstract class RuntimeUnitImpl {
     if (str == null)
       return null;
     return NativeJSON.parse(this, str, null);
+  }
+
+
+  /**
+   * ScriptObjectMirror 不应该直接传到 js 环境, 应该把底层 js 对象传递,
+   * 通过该方法获取 ScriptObjectMirror 包装的底层对象.
+   */
+  protected Object unwrap(Object mirror) {
+    return ScriptObjectMirror.unwrap(mirror, Context.getGlobal());
   }
 }

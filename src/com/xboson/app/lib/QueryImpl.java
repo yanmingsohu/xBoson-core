@@ -17,6 +17,8 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.Page;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.sql.Connection;
@@ -45,7 +47,6 @@ public class QueryImpl {
   /**
    * 针对 js 环境, 执行 sql 查询
    *
-   * @param runtime 用于创建对象
    * @param list 结果集将绑定在 list 上
    * @param sql 查询
    * @param param 参数绑定
@@ -54,12 +55,13 @@ public class QueryImpl {
    */
   public int query(ScriptObjectMirror list, String sql, Object[] param)
           throws Exception {
-
     PreparedStatement ps = sc.open().prepareStatement(sql);
 
-    for (int i=1; i<=param.length; ++i) {
-      Object p = param[i-1];
-      ps.setObject(i, p);
+    if (param != null) {
+      for (int i = 1; i <= param.length; ++i) {
+        Object p = param[i - 1];
+        ps.setObject(i, p);
+      }
     }
 
     ResultSet rs = ps.executeQuery();
@@ -70,7 +72,7 @@ public class QueryImpl {
 
     while (rs.next()) {
       ScriptObjectMirror row = runtime.createJSObject();
-      list.setSlot(++arri, row);
+      list.setSlot(++arri, runtime.unwrap(row));
       ++row_count;
 
       for (int c = 1; c<=column; ++c) {

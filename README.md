@@ -8,6 +8,8 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * js 沙箱每次一个独立默认上下文.(当前为 app 共用且锁死).
 * blob 保存时直接写入db, 而不在内存堆积.
 * 所有的权限限制. 
+* 平台接口 adduser/activetenantuser/changepasswdforce/changepasswd
+* 登录攻击, api 攻击
 
 
 # JAR 依赖
