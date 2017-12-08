@@ -52,6 +52,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
   private static final String[] configuration_script = new String[] {
           "lib/array_sort_comparator.js",
+          "lib/transform_tree_data.js",
   };
 
   private IEnvironment env;

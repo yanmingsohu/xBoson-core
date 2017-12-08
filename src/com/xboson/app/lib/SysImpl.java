@@ -25,12 +25,15 @@ import com.xboson.j2ee.files.Directory;
 import com.xboson.j2ee.files.FileInfo;
 import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.j2ee.resp.XmlResponse;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Buffer;
 import com.xboson.util.*;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeJSON;
+import jdk.nashorn.internal.runtime.Context;
 import jdk.nashorn.internal.runtime.ScriptObject;
 import org.supercsv.io.CsvMapReader;
 import org.supercsv.io.CsvMapWriter;
@@ -61,6 +64,8 @@ public class SysImpl extends RuntimeUnitImpl {
   private ConnectConfig orgdb;
   private Map<String, Object> retData;
   private ScriptObjectMirror printList;
+  private ScriptObjectMirror transformTreeDataFunction;
+  private ScriptObjectMirror getRelatedTreeDataFunction;
 
 
   public SysImpl(CallData cd, ConnectConfig orgdb) {
@@ -81,7 +86,7 @@ public class SysImpl extends RuntimeUnitImpl {
     if (result == null)
       result = createJSObject();
 
-    result.setMember(name, value);
+    result.setMember(name, unwrap(value));
   }
 
 
@@ -627,74 +632,30 @@ public class SysImpl extends RuntimeUnitImpl {
    * @param dataList 原始数据
    * @param parent_key 父节点属性名称
    * @param child_key 子节点属性名称
-   * @param keyname 生成的子节点数组
+   * @param key_name 生成的子节点数组
    * @return 返回 tree 格式的数据
    */
-  public Object transformTreeData(Object[] dataList, String parent_key,
-                                  String child_key, String keyname) {
-    Map<String, ScriptObjectMirror> mapping = new HashMap<>(dataList.length);
-    ScriptObjectMirror root = createJSList();
-
-    for (int i=0; i<dataList.length; ++i) {
-      ScriptObjectMirror cobj = wrap(dataList[i]);
-      String pkey = cobj.getMember(parent_key).toString();
-      mapping.put(pkey, cobj);
-
-      Object ckey = cobj.getMember(child_key);
-      if (ckey == null || Tool.isNulStr(ckey.toString())) {
-        root.setSlot(root.size(), cobj);
-      }
+  public Object transformTreeData(Object dataList, String parent_key,
+                                  String child_key, String key_name) {
+    if (transformTreeDataFunction == null) {
+      Object function = Context.getGlobal().get("transformTreeData");
+      transformTreeDataFunction = wrap(function);
     }
 
-    for (int i=0; i<dataList.length; ++i) {
-      ScriptObjectMirror cobj = wrap(dataList[i]);
-      Object chkey = cobj.getMember(child_key);
-
-      if (chkey != null) {
-        ScriptObjectMirror parent = mapping.get(chkey.toString());
-
-        if (parent != null) {
-          ScriptObjectMirror child_list;
-          if (parent.hasMember(keyname)) {
-            child_list = (ScriptObjectMirror) parent.getMember(keyname);
-          } else {
-            child_list = createJSList();
-            parent.setMember(keyname, child_list);
-          }
-
-          child_list.setSlot(child_list.size(), dataList[i]);
-        }
-      }
-    }
-    return root;
+    return transformTreeDataFunction.call(
+            null, dataList, parent_key, child_key, key_name);
   }
 
 
-  /**
-   * !!! 这个实现可能不正确 !!!
-   */
-  public Object getRelatedTreeData(Object[] all, Object[] filter,
+  public Object getRelatedTreeData(Object all, Object filter,
                                    String parent_attr, String child_attr) {
-    ScriptObjectMirror ret  = createJSList();
-    Set<String> allset      = array2Set(all, parent_attr);
-    Set<String> filterset   = array2Set(filter, parent_attr);
-    int jsi = ret.size() - 1;
-
-    for (int i=0; i<filter.length; ++i) {
-      ret.setSlot(++jsi, filter[i]);
+    if (getRelatedTreeDataFunction == null) {
+      Object func = Context.getGlobal().get("getRelatedTreeData");
+      getRelatedTreeDataFunction = wrap(func);
     }
 
-    for (int i=0; i<all.length; ++i) {
-      ScriptObjectMirror cobj = wrap(all[i]);
-      if (cobj.hasMember(child_attr)) {
-        Object pk = String.valueOf( cobj.getMember(child_attr) );
-
-        if (allset.contains(pk) && filterset.contains(pk) == false) {
-          ret.setSlot(++jsi, all[i]);
-        }
-      }
-    }
-    return ret;
+    return getRelatedTreeDataFunction.call(
+            null, all, filter, parent_attr, child_attr);
   }
 
 

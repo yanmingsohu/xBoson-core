@@ -20,6 +20,7 @@ import com.xboson.been.Page;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.runtime.Context;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -76,7 +77,8 @@ public class QueryImpl {
       ++row_count;
 
       for (int c = 1; c<=column; ++c) {
-        row.setMember(meta.getColumnLabel(c), rs.getObject(c));
+        Object d = ScriptObjectMirror.wrap(rs.getObject(c), Context.getGlobal());
+        row.setMember(meta.getColumnLabel(c), d);
       }
     }
 
