@@ -121,7 +121,7 @@ public class Striker extends HttpFilter {
       } else {
         String msg = e.getMessage();
         if (msg != null) {
-          jr.setData(e.getMessage());
+          jr.setData(msg);
         } else {
           jr.setData(e.toString());
         }

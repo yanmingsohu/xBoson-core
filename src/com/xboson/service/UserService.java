@@ -24,9 +24,13 @@ import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
+import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Transaction;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
@@ -38,7 +42,10 @@ import java.util.Map;
 @XPath("/user")
 public class UserService extends XService implements IDict {
 
-  private static final String MSG
+  public static final int IP_BAN_COUNT = 10;
+  public static final int IP_WAIT_TIMEOUT = 10; // 分钟
+
+  public static final String MSG
           = "Provide sub-service name '/user/[sub service]'";
 
 
@@ -54,8 +61,13 @@ public class UserService extends XService implements IDict {
 	public void login(CallData data) throws Exception {
 	  if (isLogin(data)) {
       data.xres.bindResponse("openid", data.sess.login_user.userid);
-      data.xres.responseMsg("用户已经登录", 1002);
+      data.xres.responseMsg("用户已经登录", 0);
       return;
+    }
+
+    if (checkIpBan(data)) {
+      data.xres.responseMsg("登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
+	    return;
     }
 
     final String md5ps  = data.getString("password", 6, 40);
@@ -64,12 +76,23 @@ public class UserService extends XService implements IDict {
     Config cf = SysConfig.me().readConfig();
     LoginUser lu = searchUser(userid, md5ps, cf);
 
+    if (data.sess.captchaCode != null) {
+      String c = data.getString("c", 0, 20);
+      if (! c.equalsIgnoreCase( data.sess.captchaCode )) {
+        data.xres.responseMsg("验证码错误", 10);
+        ipLoginFail(data);
+        return;
+      }
+    }
+
     if (lu == null) {
       data.xres.responseMsg("用户不存在", 1014);
+      ipLoginFail(data);
       return;
     }
     if (! ZR001_ENABLE.equals(lu.status)) {
       data.xres.responseMsg("用户已锁定", 1007);
+      ipLoginFail(data);
       return;
     }
 
@@ -146,6 +169,35 @@ public class UserService extends XService implements IDict {
     }
 
     return lu;
+  }
+
+
+  /**
+   * ip 登录失败次数超限返回 true
+   */
+  private boolean checkIpBan(CallData cd) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      String key = "/ip-ban/" + cd.req.getRemoteAddr();
+      String v = client.get(key);
+      if (v == null) return false;
+      return Integer.parseInt(v) >= IP_BAN_COUNT;
+    }
+  }
+
+
+  /**
+   * 记录一次 ip 失败登录次数
+   */
+  private void ipLoginFail(CallData cd) {
+	  try (Jedis client = RedisMesmerizer.me().open();
+         Transaction t = client.multi() ) {
+	    String key = "/ip-ban/" + cd.req.getRemoteAddr();
+	    t.incr(key);
+	    t.expire(key, IP_WAIT_TIMEOUT * 60);
+	    t.exec();
+    } catch (IOException e) {
+      throw new XBosonException(e);
+    }
   }
 
 

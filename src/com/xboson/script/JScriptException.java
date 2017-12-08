@@ -28,7 +28,9 @@ import java.util.List;
 
 /**
  * JS 脚本异常.
- * (若多层包装可能会丢失堆栈)
+ * (若多层包装可能会丢失堆栈, 应该在 cache 时针对 ECMAException 做单独处理)
+ *
+ * @see ECMAException
  */
 public class JScriptException extends XBosonException {
 

@@ -33,6 +33,7 @@ public class SessionData implements IBean, IBinData, ITimeout {
 
   public LoginUser login_user;
   public String id;
+  public String captchaCode;
 
   public long loginTime;
   public long endTime;

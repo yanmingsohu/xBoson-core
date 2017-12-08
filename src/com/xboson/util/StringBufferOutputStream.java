@@ -28,8 +28,20 @@ import java.util.Arrays;
  */
 public class StringBufferOutputStream extends OutputStream {
 
-  private byte[] buf = new byte[1024];
+  public static final int DEFAULT_SIZE = 1024;
+
+  private byte[] buf;
   private int pos = 0;
+
+
+  public StringBufferOutputStream() {
+    this(DEFAULT_SIZE);
+  }
+
+
+  public StringBufferOutputStream(int init_size) {
+    this.buf = new byte[init_size];
+  }
 
 
   /**

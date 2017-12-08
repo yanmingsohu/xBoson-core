@@ -36,21 +36,23 @@ public class App extends XService {
   private static final String PATH_FOTMAT
           = "Path format: /app/{org id}/{app id}/{module id}/{api name}";
 
-	private AppPool app_pool;
+  private AppPool app_pool;
 
 
-	public App() {
-	  app_pool = new AppPool();
+  public App() {
+    app_pool = new AppPool();
   }
 
 
-	@Override
-	public void service(CallData data) throws ServletException, IOException {
+  @Override
+  public void service(CallData data) throws ServletException, IOException {
     AppFactory af = AppFactory.me();
-	  data.url.setErrorMessage(PATH_FOTMAT);
+    data.url.setErrorMessage(PATH_FOTMAT);
+
     ApiCall ac = af.parse(data.url);
     ac.call = data;
+
     af.call(ac);
-	}
+  }
 
 }

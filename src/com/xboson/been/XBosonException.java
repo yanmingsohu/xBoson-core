@@ -45,7 +45,7 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
   }
 
   public XBosonException(String s, XBosonException throwable) {
-    super(s, throwable);
+    super(s, throwable.getCause());
     setCode(throwable.code);
   }
 
@@ -54,7 +54,7 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
   }
 
   public XBosonException(XBosonException o) {
-    super(o.getMessage(), o);
+    super(o.getMessage(), o.getCause());
     setCode(o.code);
   }
 

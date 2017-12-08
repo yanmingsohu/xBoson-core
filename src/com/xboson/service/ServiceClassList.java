@@ -25,6 +25,7 @@ public interface ServiceClassList {
   static Class<?>[] list = new Class<?>[] {
 					App.class,
 					UserService.class,
+          Captcha.class,
   };
 
 }

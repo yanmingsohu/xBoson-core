@@ -24,6 +24,7 @@ import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.util.IConstant;
 import jdk.nashorn.api.scripting.AbstractJSObject;
+import jdk.nashorn.internal.runtime.ECMAException;
 
 import java.nio.ByteBuffer;
 
@@ -91,8 +92,12 @@ public class WarpdScript {
       warpreturn = jso.call(module, module, crun);
       module.loaded = true;
       return warpreturn;
-    } catch(Exception e) {
-      throw new JScriptException(e, code);
+
+    } catch (ECMAException ec) {
+      throw new JScriptException(ec);
+
+    } catch (Exception e) {
+      throw new XBosonException(e);
     }
   }
 
