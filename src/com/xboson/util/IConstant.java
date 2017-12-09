@@ -43,6 +43,11 @@ public interface IConstant extends IDict {
   String SYS_ORG = "a297dfacd7a84eab9656675f61750078";
 
   /**
+   * 平台应用前缀, 这些应用总是在平台机构上运行
+   */
+  String SYS_APP_PREFIX = "ZYAPP_";
+
+  /**
    * 常用加密/摘要算法名字
    */
   String MD5_NAME       = "MD5";

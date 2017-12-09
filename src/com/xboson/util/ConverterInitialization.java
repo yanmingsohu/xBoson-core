@@ -24,6 +24,7 @@ import com.xboson.been.ResponseRoot;
 import com.xboson.been.XmlDataMap;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import com.xboson.util.converter.ScriptObjectMirrorXmlConverter;
+import com.xboson.util.converter.TimestampJsonConverter;
 import com.xboson.util.converter.XmlDataMapConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -68,6 +69,7 @@ public final class ConverterInitialization {
    */
   public static void initJSON(com.squareup.moshi.Moshi.Builder jsbuilded) {
     ScriptObjectMirrorJsonConverter.registerAdapter(jsbuilded);
+    TimestampJsonConverter.registerAdapter(jsbuilded);
   }
 
 

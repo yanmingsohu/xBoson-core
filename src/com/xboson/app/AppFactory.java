@@ -23,23 +23,31 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.JScriptException;
+import com.xboson.util.IConstant;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
  * 作为全局脚本的入口, 维护所有运行着的沙箱/应用池
  */
-public class AppFactory {
+public class AppFactory implements IConstant {
 
   private static AppFactory instance;
   private AppPool app_pool;
   private ThreadLocal<IAWho> who;
+  private ThreadLocal<String> orgid;
+  private ThreadLocal<Map<String, String>> exparam;
   private Log log;
 
 
   private AppFactory() {
-    app_pool = new AppPool();
-    who = new ThreadLocal<>();
-    log = LogFactory.create();
+    log       = LogFactory.create();
+    app_pool  = new AppPool();
+    who       = new ThreadLocal<>();
+    orgid     = new ThreadLocal<>();
+    exparam   = new ThreadLocal<>();
   }
 
 
@@ -47,6 +55,12 @@ public class AppFactory {
     try {
       who.set(ac.call.sess.login_user);
       log.debug("Call::", ac.org, '/', ac.app, '/', ac.mod, '/', ac.api);
+
+      make_extend_parameter(ac);
+      orgid.set(ac.org);
+      if (ac.app.startsWith(SYS_APP_PREFIX)) {
+        ac.org = SYS_ORG;
+      }
 
       XjOrg org = app_pool.getOrg(ac.org);
       XjApp app = org.getApp(ac.app);
@@ -61,6 +75,32 @@ public class AppFactory {
     } finally {
       who.set(null);
     }
+  }
+
+
+  private void make_extend_parameter(ApiCall ac) {
+    Map<String, String> ex = new HashMap<>();
+    exparam.set(ex);
+    ex.put("org", ac.org);
+    ex.put("app", ac.app);
+    ex.put("mod", ac.mod);
+  }
+
+
+  /**
+   * 返回扩展请求参数
+   * @return
+   */
+  public Map<String, String> getExtendParameter() {
+    return exparam.get();
+  }
+
+
+  /**
+   * 返回当前请求的 org-id, 当前 api 可能在另一个机构中.
+   */
+  public String currendOrg() {
+    return orgid.get();
   }
 
 

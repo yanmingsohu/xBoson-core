@@ -77,7 +77,7 @@ public class XjApi implements IDict {
   private void init() {
     Object[] parm = new Object[] { app.getID(), mod.id(), id };
 
-    try (SqlResult res = org.queryRoot("open_api.sql", parm)) {
+    try (SqlResult res = org.query("open_api.sql", parm)) {
       ResultSet rs = res.getResult();
       if (rs.next()) {
         if (! ZR001_ENABLE.equals(rs.getString("status")) ) {

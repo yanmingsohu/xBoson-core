@@ -9,7 +9,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * blob 保存时直接写入db, 而不在内存堆积.
 * 所有的权限限制. 
 * 平台接口 adduser/activetenantuser/changepasswdforce/changepasswd
-* 登录攻击, api 攻击
+* 请求 api 's' 参数表示测试
 
 
 # JAR 依赖

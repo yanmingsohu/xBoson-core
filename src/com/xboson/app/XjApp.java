@@ -81,7 +81,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
 
 
   private void init_app() {
-    try (SqlResult res = org.queryRoot("open_app.sql", id)) {
+    try (SqlResult res = org.query("open_app.sql", id)) {
       ResultSet rs = res.getResult();
       if (rs.next()) {
         if (!ZR001_ENABLE.equals(rs.getString("status"))) {
@@ -92,7 +92,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
         throw new XBosonException("找不到应用 " + id);
       }
     } catch (SQLException e) {
-      e.printStackTrace();
+      throw new XBosonException(e);
     }
   }
 

@@ -42,7 +42,7 @@ public class XjModule extends XjPool<XjApi> implements IDict {
 
 
   private void init_module() {
-    try (SqlResult res = org.queryRoot("open_module.sql", app.getID(), id)) {
+    try (SqlResult res = org.query("open_module.sql", app.getID(), id)) {
       ResultSet rs = res.getResult();
       if (rs.next()) {
         if (! ZR001_ENABLE.equals(rs.getString("status")) ) {

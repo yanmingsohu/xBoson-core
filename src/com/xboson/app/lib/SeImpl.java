@@ -35,13 +35,15 @@ public class SeImpl extends RuntimeUnitImpl {
   private RedisImpl redis;
   private QueryImpl query;
   private SysImpl sys;
+  private String orgid;
 
 
-  public SeImpl(CallData cd, SysImpl sys) {
+  public SeImpl(CallData cd, SysImpl sys, String currentOrg) {
     super(cd);
     this.redis = new RedisImpl("/sys/");
     this.query = new QueryImpl(() -> getConnection(), this);
     this.sys = sys;
+    this.orgid = currentOrg;
   }
 
 
@@ -107,8 +109,18 @@ public class SeImpl extends RuntimeUnitImpl {
   }
 
 
+  public boolean isPlatformOrg() {
+    return isPlatformOrg(orgid);
+  }
+
+
   public Object localDb() {
     throw new UnsupportedOperationException("localDb");
+  }
+
+
+  public Object query(String sql, String[] param) throws Exception {
+    return query(sql, param, "result", false);
   }
 
 

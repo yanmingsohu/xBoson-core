@@ -42,15 +42,19 @@ import java.util.Map;
 @XPath("/user")
 public class UserService extends XService implements IDict {
 
-  public static final int IP_BAN_COUNT = 10;
+  public static final int IP_BAN_COUNT    = 10;
   public static final int IP_WAIT_TIMEOUT = 10; // 分钟
+  public static final int IP_NEED_CAPTCHA = 5;
 
   public static final String MSG
           = "Provide sub-service name '/user/[sub service]'";
 
+  private Config cf;
+
 
   public void service(CallData data) throws Exception {
     subService(data, MSG);
+    cf = SysConfig.me().readConfig();
   }
 
 
@@ -65,18 +69,19 @@ public class UserService extends XService implements IDict {
       return;
     }
 
-    if (checkIpBan(data)) {
-      data.xres.responseMsg("登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
+    final int login_count = checkIpBan(data);
+    if (login_count >= IP_BAN_COUNT) {
+      data.xres.responseMsg(
+              "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
 	    return;
     }
 
     final String md5ps  = data.getString("password", 6, 40);
     final String userid = data.getString("userid",   4, 50);
 
-    Config cf = SysConfig.me().readConfig();
     LoginUser lu = searchUser(userid, md5ps, cf);
 
-    if (data.sess.captchaCode != null) {
+    if (login_count >= IP_NEED_CAPTCHA) {
       String c = data.getString("c", 0, 20);
       if (! c.equalsIgnoreCase( data.sess.captchaCode )) {
         data.xres.responseMsg("验证码错误", 10);
@@ -110,7 +115,7 @@ public class UserService extends XService implements IDict {
     }
 
     data.sess.login_user = null;
-    data.xres.responseMsg("已登出", 0);
+    data.xres.responseMsg("已登出", 1007);
     data.sess.destoryFlag();
   }
 
@@ -128,6 +133,25 @@ public class UserService extends XService implements IDict {
 
       data.xres.setData(ret);
       data.xres.response();
+    }
+  }
+
+
+  public void get_havinguser(CallData data) throws Exception {
+    if (!isLogin(data)) {
+      data.xres.responseMsg("未登录", 1000);
+      return;
+    }
+
+    String userid = data.req.getParameter("userid");
+    String tel    = data.req.getParameter("tel");
+    String email  = data.req.getParameter("email");
+
+    Object[] parmbind = new Object[] { userid, tel, email };
+    String[] ret = new String[1];
+
+    try (SqlResult sr = SqlReader.query("login.sql", cf.db, parmbind)) {
+      data.xres.setData( sr.resultToList() );
     }
   }
 
@@ -175,12 +199,12 @@ public class UserService extends XService implements IDict {
   /**
    * ip 登录失败次数超限返回 true
    */
-  private boolean checkIpBan(CallData cd) {
+  private int checkIpBan(CallData cd) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       String key = "/ip-ban/" + cd.req.getRemoteAddr();
       String v = client.get(key);
-      if (v == null) return false;
-      return Integer.parseInt(v) >= IP_BAN_COUNT;
+      if (v == null) return 0;
+      return Integer.parseInt(v);
     }
   }
 

@@ -45,6 +45,11 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
   private ConnectConfig rootdb;
 
 
+  /**
+   * 创建机构
+   * @param dbcc root 权限数据库连接配置
+   * @param orgid 当前机构 id
+   */
   XjOrg(ConnectConfig dbcc, String orgid) {
     this.orgid = orgid;
     this.rootdb = dbcc;
@@ -131,7 +136,7 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
             Tool.uuid.ds(), orgid, rootdb.getDbid(), orgid,
             rootdb.getHost(), rootdb.getPort(), un, ps };
 
-    String sql = SqlReader.read("open_org_db.sql");
+    String sql = SqlReader.read("create_db_conf.sql");
     SqlResult res = SqlResult.query(conn, sql, parm);
     if (!res.isUpdate()) {
       throw new XBosonException("创建机构 db 用户失败");
@@ -174,6 +179,9 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
   }
 
 
+  /**
+   * 使用 root 权限的数据连接来查询
+   */
   public SqlResult queryRoot(String sqlfile, Object ...parm) {
     return SqlReader.query(sqlfile, rootdb, parm);
   }

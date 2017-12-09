@@ -16,8 +16,12 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppFactory;
 import com.xboson.been.CallData;
 import jdk.nashorn.api.scripting.AbstractJSObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -27,21 +31,28 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
 public class RequestImpl extends AbstractJSObject {
 
   private CallData cd;
+  private Map<String, String> extendParameter;
 
 
   public RequestImpl(CallData cd) {
     this.cd = cd;
+    this.extendParameter = AppFactory.me().getExtendParameter();
   }
 
 
   @Override
   public boolean hasMember(String name) {
-    return cd.req.getParameter(name) != null;
+    return cd.req.getParameter(name) != null
+            || extendParameter.containsKey(name);
   }
 
 
   @Override
   public Object getMember(String name) {
-    return cd.req.getParameter(name);
+    Object ret = cd.req.getParameter(name);
+    if (ret == null) {
+      ret = extendParameter.get(name);
+    }
+    return ret;
   }
 }
