@@ -60,6 +60,7 @@ public class SysImpl extends RuntimeUnitImpl {
   public final Object request;
   public final Object requestParameterMap;
   public ScriptObjectMirror result;
+  public final boolean xboson = true;
 
   private ConnectConfig orgdb;
   private Map<String, Object> retData;

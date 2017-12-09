@@ -260,3 +260,17 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   }
 }
 ```
+
+# UI 修改
+
+/t/paas/login.js
+/t/paas/login.html
+/t/paas/main.js
+/t/paas/main.html
+/t/paas/lib/js/zy/zy.js
+/t/paas/lib/html/zy_meny.js
+
+
+# Api 修改
+
+/ZYAPP_LOGIN/ZYMODULE_LOGIN/orgmenu

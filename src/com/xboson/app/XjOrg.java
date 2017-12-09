@@ -23,6 +23,7 @@ import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
 
 import java.sql.Connection;
@@ -35,14 +36,16 @@ import java.sql.Statement;
  * 为机构创建一个有限权限的数据库用户, 并将连接配置保存在表中,
  * 使用这个有限权限的连接开发 api.
  */
-public class XjOrg extends XjPool<XjApp> implements IDict {
+public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
 
+  /** sys_pl_drm_ds001.flg 必须是 9 才可以打开数据库. */
   public static final String XBOSON_TYPE = "9";
 
   private String orgid;
   private String name;
   private ConnectConfig orgdb;
   private ConnectConfig rootdb;
+  private boolean isSysOrg;
 
 
   /**
@@ -53,6 +56,7 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
   XjOrg(ConnectConfig dbcc, String orgid) {
     this.orgid = orgid;
     this.rootdb = dbcc;
+    this.isSysOrg = SYS_ORG.equalsIgnoreCase(orgid);
 
     try (Connection conn = DbmsFactory.me().open(rootdb)) {
       check_org(conn);
@@ -175,6 +179,7 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
    * 使用机构权限的数据库连接来查询
    */
   public SqlResult query(String sqlfile, Object ...parm) {
+    if (isSysOrg) return queryRoot(sqlfile, parm);
     return SqlReader.query(sqlfile, orgdb, parm);
   }
 
@@ -193,6 +198,7 @@ public class XjOrg extends XjPool<XjApp> implements IDict {
 
 
   ConnectConfig getOrgDb() {
+    if (isSysOrg) return rootdb;
     return orgdb;
   }
 
