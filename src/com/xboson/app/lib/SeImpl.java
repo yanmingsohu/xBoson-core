@@ -41,7 +41,7 @@ public class SeImpl extends RuntimeUnitImpl {
   public SeImpl(CallData cd, SysImpl sys, String currentOrg) {
     super(cd);
     this.redis = new RedisImpl("/sys/");
-    this.query = new QueryImpl(() -> getConnection(), this);
+    this.query = QueryFactory.create(() -> getConnection(), this);
     this.sys = sys;
     this.orgid = currentOrg;
   }

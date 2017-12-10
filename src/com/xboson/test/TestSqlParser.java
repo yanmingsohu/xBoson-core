@@ -16,10 +16,7 @@
 
 package com.xboson.test;
 
-import com.xboson.db.analyze.IUnit;
-import com.xboson.db.analyze.IUnitListener;
-import com.xboson.db.analyze.ParsedData;
-import com.xboson.db.analyze.SqlParser;
+import com.xboson.db.analyze.*;
 
 
 public class TestSqlParser extends Test {
@@ -215,17 +212,15 @@ public class TestSqlParser extends Test {
 
 
   private void testSqlParse(String sql, String...tableNames) {
-    sub(sql);
-    ParsedData pd = SqlParser.parse(sql);
-    ParseChecker pc = new ParseChecker(tableNames);
+    sub(sql, "(length:", sql.length() +")");
 
-    try {
+    try (SqlParserCached.ParsedDataHandle pd = SqlParserCached.parse(sql)) {
+      ParseChecker pc = new ParseChecker(tableNames);
       SqlParser.tableNames(pd, pc);
       pc.checkCount();
 
       msg(SqlParser.stringify(pd));
     } catch (Error e) {
-      red(pd.toString());
       throw e;
     }
   }
@@ -234,8 +229,12 @@ public class TestSqlParser extends Test {
   /**
    *  100000 Used Time  1254 ms, Used Memory:95
    * 1000000 Used Time 10265 ms
+   *
+   * 加缓存:
+   *  100000 Used Time   679 ms, Used Memory:109
+   * 1000000 Used Time  4914 ms, Used Memory:490
    */
-  private void testSpeed() {
+  private void testSpeed() throws Exception {
     String sql = "DELETE FROM t1\n" +
                     "WHERE s11 > ANY\n" +
                     " (SELECT COUNT(*) /* no hint */ FROM t2\n" +
@@ -253,9 +252,10 @@ public class TestSqlParser extends Test {
     beginTime();
     int count = 1000000;
     for (int i=0; i<count; ++i) {
-      ParsedData pd = SqlParser.parse(sql); // 90% 的开销
+      SqlParserCached.ParsedDataHandle pd = SqlParserCached.parse(sql); // 90% 的开销
       SqlParser.tableNames(pd, donothing);
       SqlParser.stringify(pd);
+      pd.close();
     }
     endTime(count);
     memuse();

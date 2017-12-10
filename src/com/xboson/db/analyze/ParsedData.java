@@ -25,14 +25,12 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * sql 解析后生成的语法树
+ */
 public class ParsedData {
   private List<IUnit> units;
   private IUnit lastKeyUnit;
-
-
-  public ParsedData(List<IUnit> units) {
-    this.units = units;
-  }
 
 
   public ParsedData() {
@@ -113,6 +111,9 @@ public class ParsedData {
   }
 
 
+  /**
+   * 获取所有的组件
+   */
   public List<IUnit> getUnits() {
     return units;
   }

@@ -30,6 +30,8 @@ import com.xboson.event.Names;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import okio.Buffer;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 
 public class SysConfig {
@@ -174,5 +176,31 @@ public class SysConfig {
 			dir.mkdirs();
 			log.info("Make dir", dirname);
 		}
+	}
+
+
+	/**
+	 * 基于 10000 并发来设计的缓存池, 过多的对象利用不上.
+	 */
+	public static GenericObjectPoolConfig defaultPoolConfig() {
+		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
+		config.setMaxTotal(-1);
+		config.setMaxIdle(10000);
+		config.setEvictorShutdownTimeoutMillis(100);
+		config.setBlockWhenExhausted(false);
+		return config;
+	}
+
+
+	/**
+	 * @see #defaultPoolConfig()
+	 */
+	public static GenericKeyedObjectPoolConfig defaultKeyPoolConfig() {
+		GenericKeyedObjectPoolConfig config = new GenericKeyedObjectPoolConfig();
+		config.setMaxTotalPerKey(-1);
+		config.setMaxIdlePerKey(10000);
+		config.setEvictorShutdownTimeoutMillis(1);
+		config.setBlockWhenExhausted(false);
+		return config;
 	}
 }

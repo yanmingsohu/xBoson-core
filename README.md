@@ -183,6 +183,9 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
     /* 启用后, 每天凌晨同步本地 UI 文件 */
   "enableUIFileSync": false,
   
+    /* 系统表数组, 这个配置来自原平台 config.properties -> PL_TBLS 字段 */
+  "sysTableList": ["sys_tenant", "sys_tenant_user", "..."],
+  
   /* 数据库连接池的设置 */
   "dbpool": {
       /* 默认值 true ,当资源耗尽时,是否阻塞等待获取资源 */

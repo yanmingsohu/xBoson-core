@@ -16,20 +16,14 @@
 
 package com.xboson.test;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Paths;
-
 import com.squareup.moshi.JsonWriter;
 import com.xboson.been.Config;
-import com.xboson.db.DBPoolConfig;
 import com.xboson.util.DefaultConfig;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import okio.Buffer;
-import redis.clients.jedis.JedisPoolConfig;
+
+import java.io.IOException;
 
 
 public class TestConfig extends Test {

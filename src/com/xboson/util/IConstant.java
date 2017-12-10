@@ -48,6 +48,11 @@ public interface IConstant extends IDict {
   String SYS_APP_PREFIX = "ZYAPP_";
 
   /**
+   * 平台表前缀, 不会被 sql 替换
+   */
+  String SYS_TABLE_NOT_REPLACE = "sys_pl_";
+
+  /**
    * 常用加密/摘要算法名字
    */
   String MD5_NAME       = "MD5";

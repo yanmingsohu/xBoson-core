@@ -44,7 +44,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   public SqlImpl(CallData cd, ConnectConfig orgdb) throws SQLException {
     super(cd);
     this.orgdb = orgdb;
-    this.query_impl = new QueryImpl(() -> getConnection(), this);
+    this.query_impl = QueryFactory.create(() -> getConnection(), this);
   }
 
 
@@ -109,7 +109,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
           throws Exception {
     Connection conn = getConnection();
     conn.setAutoCommit(commit);
-    PreparedStatement ps = conn.prepareStatement(sql);
+    PreparedStatement ps = conn.prepareStatement(query_impl.replaceSql(sql));
 
     for (int i=1; i<=param.length; ++i) {
       Object p = param[i-1];
@@ -124,7 +124,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
           throws Exception {
     Connection conn = getConnection();
     conn.setAutoCommit(commit);
-    PreparedStatement ps = conn.prepareStatement(sql);
+    PreparedStatement ps = conn.prepareStatement(query_impl.replaceSql(sql));
     int total = 0;
 
     for (int g = 0; g<param_grp.length; ++g) {
@@ -144,7 +144,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public Object metaData(String sql) throws Exception {
-    PreparedStatement ps = getConnection().prepareStatement(sql);
+    PreparedStatement ps = getConnection().prepareStatement(query_impl.replaceSql(sql));
     ResultSetMetaData meta = ps.getMetaData();
     int column_count = meta.getColumnCount();
     ScriptObjectMirror attr_list = createJSList(column_count);

@@ -31,9 +31,9 @@ public class ChineseInital {
           2302, 2433, 2594, 2787, 3106, 3212, 3472, 3635, 3722, 3730, 3858,
           4027, 4086, 4390, 4558, 4684, 4925, 5249, 5590};
 
-  private final static String[] letters = {"a", "b", "c", "d", "e",
-          "f", "g", "h", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s",
-          "t", "w", "x", "y", "z"};
+  private final static String[] letters = {  "a", "b", "c", "d", "e",
+          "f", "g", "h", "j", "k", "l", "m", "n", "o", "p", "q", "r",
+          "s", "t", "w", "x", "y", "z"};
 
   private final static Map<String, String> cache = new HashMap<>();
 

@@ -16,6 +16,8 @@
 
 package com.xboson.db.analyze;
 
+import com.xboson.util.Tool;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -91,7 +93,7 @@ public class SqlKeyWords {
   });
 
 
-  static Set<Character> notation = arr2set(new char[] {
+  static Set<Character> notation = Tool.arr2set(new Character[] {
           ' ', '\t', '\n', '(', ')', ',', '{', '}', ';',
   });
 
@@ -100,15 +102,6 @@ public class SqlKeyWords {
     Set<String> set = new HashSet<>();
     for (int i=0; i<arr.length; ++i) {
       set.add(arr[i].toUpperCase());
-    }
-    return set;
-  }
-
-
-  public static Set<Character> arr2set(char[] arr) {
-    Set<Character> set = new HashSet<>();
-    for (int i=0; i<arr.length; ++i) {
-      set.add(arr[i]);
     }
     return set;
   }

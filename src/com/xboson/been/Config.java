@@ -52,6 +52,8 @@ public class Config implements IBean {
   public boolean uiListDir        = false;
   public String uiWelcome         = null;
 
+  public String[] sysTableList;
+
   public JedisPoolConfig jedispool;
   public DBPoolConfig dbpool;
   public ConnectConfig db;

@@ -26,6 +26,9 @@ import java.util.Iterator;
  */
 public class SqlParser {
 
+  /**
+   * 不是完整的词法解析器实现, 仅用于替换表格名称.
+   */
   public static ParsedData parse(String sql) {
     ParsedData pd = new ParsedData();
 
@@ -122,6 +125,15 @@ public class SqlParser {
   }
 
 
+  public static void tableNames(SqlParserCached.ParsedDataHandle handle,
+                                IUnitListener ul) {
+    tableNames(handle.pd, ul);
+  }
+
+
+  /**
+   * 将语法树还原为 sql 文
+   */
   public static String stringify(ParsedData pd) {
     StringBuilder out = new StringBuilder();
     Iterator<IUnit> it = pd.getUnits().iterator();
@@ -129,5 +141,13 @@ public class SqlParser {
       out.append(it.next().stringify());
     }
     return out.toString();
+  }
+
+
+  /**
+   * @see #stringify(ParsedData)
+   */
+  public static String stringify(SqlParserCached.ParsedDataHandle handle) {
+    return stringify(handle.pd);
   }
 }

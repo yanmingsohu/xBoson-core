@@ -20,9 +20,7 @@ import com.xboson.been.XBosonException;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.commons.pool2.impl.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -39,8 +37,11 @@ public class DateParserFactory {
   private static GenericObjectPool<Calendar> calendars;
 
   static {
-    pool = new GenericKeyedObjectPool<>(new DateParserPool());
-    calendars = new GenericObjectPool(new CalendarPool());
+    pool = new GenericKeyedObjectPool<>(new DateParserPool(),
+            SysConfig.defaultKeyPoolConfig());
+
+    calendars = new GenericObjectPool(new CalendarPool(),
+            SysConfig.defaultPoolConfig());
   }
 
 

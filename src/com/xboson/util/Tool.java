@@ -477,4 +477,16 @@ public final class Tool {
       throw new XBosonException(e);
     }
   }
+
+
+  /**
+   * 将 T 类型数组转换为 Set, 没有附加的处理
+   */
+  public static<T> Set<T> arr2set(T[] arr) {
+    Set<T> set = new HashSet<>();
+    for (int i=0; i<arr.length; ++i) {
+      set.add(arr[i]);
+    }
+    return set;
+  }
 }

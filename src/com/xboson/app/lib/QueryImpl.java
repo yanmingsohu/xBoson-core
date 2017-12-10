@@ -28,8 +28,15 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
 
+/**
+ * 使用 QueryFactory 来创建该对象的实例
+ * @see QueryFactory
+ */
 public class QueryImpl {
 
+  /**
+   * QueryImpl 通过该接口打开数据库连接
+   */
   public interface SqlConnect {
     Connection open() throws Exception;
   }
@@ -93,4 +100,11 @@ public class QueryImpl {
     throw new UnsupportedOperationException("queryPaging");
   }
 
+
+  /**
+   * 在必要时会替换 sql 中的元素
+   */
+  public String replaceSql(String sql) {
+    return sql;
+  }
 }

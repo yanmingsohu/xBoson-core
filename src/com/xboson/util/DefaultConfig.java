@@ -27,6 +27,12 @@ import redis.clients.jedis.JedisPoolConfig;
 
 public final class DefaultConfig {
 
+  public static final String default_sys_tables = "sys_tenant,sys_tenant_user," +
+          "sys_base_tbl,sys_config,sys_server,sys_system,sys_sqls,sys_userinfo," +
+          "sys_user_identity,mdm_personal_info,mdm_org,sys_eeb_run_conf," +
+          "sys_eeb_work_node,sys_eeb_jobgroup,sys_eeb_varnish,sys_eeb_sche," +
+          "sys_eeb_statistics,sys_eeb_detail";
+
   /**
    * 将配置设置成为默认设置
    */
@@ -49,6 +55,7 @@ public final class DefaultConfig {
     c.uiProviderClass   = LocalFileMapping.class.getName();
     c.uiUrl             = "/ui";
     c.clusterNodeID     = 0;
+    c.sysTableList      = default_sys_tables.split(",");
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
     j.setMaxIdle(10);
