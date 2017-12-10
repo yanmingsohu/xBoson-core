@@ -16,10 +16,7 @@
 
 package com.xboson.test;
 
-import com.xboson.app.AppFactory;
-import com.xboson.app.AppPool;
-import com.xboson.app.XjApp;
-import com.xboson.app.XjOrg;
+import com.xboson.app.AppContext;
 import com.xboson.app.lib.SysImpl;
 import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
@@ -130,7 +127,7 @@ public class TestApi extends Test {
         ac.mod = module_id;
         ac.api = api_id;
         ac.call = simulationCallData();
-        AppFactory.me().call(ac);
+        AppContext.me().call(ac);
       } catch(Exception e) {
 //        show_code(app, XjApp.toFile(module_id, api_id));
         fail(e);

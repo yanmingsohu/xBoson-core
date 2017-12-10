@@ -10,6 +10,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 所有的权限限制. 
 * 平台接口 adduser/activetenantuser/changepasswdforce/changepasswd
 * 请求 api 's' 参数表示测试
+* api 沙箱超时管理, 内存管理.
 
 
 # JAR 依赖

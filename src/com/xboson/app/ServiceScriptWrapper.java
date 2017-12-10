@@ -99,16 +99,16 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     ConnectConfig orgdb = org.getOrgDb();
 
     try (SqlImpl sql  = new SqlImpl(cd, orgdb)) {
-      SysImpl sys = new SysImpl(cd, orgdb);
+      SysImpl sys     = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd, org.id());
-      HttpImpl http = new HttpImpl(cd);
-      SeImpl se = new SeImpl(cd, sys, org.id());
+      HttpImpl http   = new HttpImpl(cd);
+      SeImpl se       = null;
 
       sql._setSysRef(sys);
 
-//      if (AppFactory.me().who().isRoot()) {
-//        se = new SeImpl(cd, sys, org.id());
-//      }
+      if (org.isSysORG()) {
+        se = new SeImpl(cd, sys, org.id());
+      }
 
       call.call(jsmod.exports, sys, sql, cache, http, se);
 

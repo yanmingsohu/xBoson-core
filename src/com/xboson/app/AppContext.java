@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-12-4 上午8:26
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/AppFactory.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/AppContext.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -22,7 +22,6 @@ import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.script.JScriptException;
 import com.xboson.util.IConstant;
 
 import java.util.HashMap;
@@ -32,15 +31,15 @@ import java.util.Map;
 /**
  * 作为全局脚本的入口, 维护所有运行着的沙箱/应用池
  */
-public class AppFactory implements IConstant {
+public class AppContext implements IConstant {
 
-  private static AppFactory instance;
+  private static AppContext instance;
   private AppPool app_pool;
   private ThreadLocal<ThreadLocalData> ttld;
   private Log log;
 
 
-  private AppFactory() {
+  private AppContext() {
     log       = LogFactory.create();
     app_pool  = new AppPool();
     ttld      = new ThreadLocal<>();
@@ -108,7 +107,7 @@ public class AppFactory implements IConstant {
   /**
    * 返回当前请求的 org-id, 当前 api 可能在另一个机构中.
    */
-  public String currendOrg() {
+  public String originalOrg() {
     return ttld.get().orgid;
   }
 
@@ -145,18 +144,19 @@ public class AppFactory implements IConstant {
 
   /**
    * 当 org 被替换后, 返回 ture.
-   * 替换的 org
+   * 替换的 org 通过 originalOrg() 可以得到, 只在 sys 机构时发生, 用于 sys 机构中的
+   * api 访问其他机构中的表.
    */
   public boolean isReplaceOrg() {
     return ttld.get().replaceOrg;
   }
 
 
-  public static AppFactory me() {
+  public static AppContext me() {
     if (instance == null) {
-      synchronized (AppFactory.class) {
+      synchronized (AppContext.class) {
         if (instance == null) {
-          instance = new AppFactory();
+          instance = new AppContext();
         }
       }
     }

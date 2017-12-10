@@ -16,13 +16,10 @@
 
 package com.xboson.service;
 
-import com.xboson.app.AppFactory;
+import com.xboson.app.AppContext;
 import com.xboson.app.AppPool;
-import com.xboson.app.XjApp;
-import com.xboson.app.XjOrg;
 import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
-import com.xboson.been.UrlSplit;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 
@@ -46,7 +43,7 @@ public class App extends XService {
 
   @Override
   public void service(CallData data) throws ServletException, IOException {
-    AppFactory af = AppFactory.me();
+    AppContext af = AppContext.me();
     data.url.setErrorMessage(PATH_FOTMAT);
 
     ApiCall ac = af.parse(data.url);

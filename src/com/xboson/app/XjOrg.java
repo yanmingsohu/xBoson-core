@@ -69,6 +69,14 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
 
 
   /**
+   * 是系统机构返回 true
+   */
+  public boolean isSysORG() {
+    return isSysOrg;
+  }
+
+
+  /**
    * 创建或获取缓存的 app
    * @param id app-id
    * @return app

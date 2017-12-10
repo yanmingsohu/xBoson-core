@@ -176,7 +176,7 @@ public class Test {
 
   public static String _string(Object [] arr) {
     if (arr == null) return "";
-    if (arr.length == 1) return arr[0].toString();
+    if (arr.length == 1) return String.valueOf(arr[0]);
 
     StringBuilder out = new StringBuilder();
     for (int i=0; i<arr.length; ++i) {

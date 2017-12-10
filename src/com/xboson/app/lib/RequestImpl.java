@@ -16,17 +16,18 @@
 
 package com.xboson.app.lib;
 
-import com.xboson.app.AppFactory;
+import com.xboson.app.AppContext;
 import com.xboson.been.CallData;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 
-import java.util.HashMap;
 import java.util.Map;
 
 
 /**
  * sys.request 的实现,
  * 对属性的读取映射到 http 参数上.
+ *
+ * 自定义参数优先级高于 http 参数.
  */
 public class RequestImpl extends AbstractJSObject {
 
@@ -36,22 +37,22 @@ public class RequestImpl extends AbstractJSObject {
 
   public RequestImpl(CallData cd) {
     this.cd = cd;
-    this.extendParameter = AppFactory.me().getExtendParameter();
+    this.extendParameter = AppContext.me().getExtendParameter();
   }
 
 
   @Override
   public boolean hasMember(String name) {
-    return cd.req.getParameter(name) != null
-            || extendParameter.containsKey(name);
+    return extendParameter.containsKey(name)
+            || cd.req.getParameter(name) != null;
   }
 
 
   @Override
   public Object getMember(String name) {
-    Object ret = cd.req.getParameter(name);
+    Object ret = extendParameter.get(name);
     if (ret == null) {
-      ret = extendParameter.get(name);
+      ret = cd.req.getParameter(name);
     }
     return ret;
   }
