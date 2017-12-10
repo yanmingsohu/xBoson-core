@@ -58,6 +58,15 @@ public class AppFactory implements IConstant {
 
       make_extend_parameter(ac);
       orgid.set(ac.org);
+
+      //
+      // 利用 app 名称判断是否调用平台机构 api, 此时 org 可以是另一个机构, 这种跨机构
+      // 调用 api 的行为只支持平台机构; 此时 api 以 root 的数据库权限启动, 而参数中
+      // 的 org 仍然是原先机构的 id.
+      //
+      // 即使 org 是其他机构, 运行的仍然是平台机构中的 api, 所以不会有代码越权访问资源,
+      // 必须保证平台机构 api 逻辑安全.
+      //
       if (ac.app.startsWith(SYS_APP_PREFIX)) {
         ac.org = SYS_ORG;
       }

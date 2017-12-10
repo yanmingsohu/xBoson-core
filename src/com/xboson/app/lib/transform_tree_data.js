@@ -49,21 +49,51 @@ function transformTreeData(list, primary_key, parent_ref_key, child_list_key) {
 
 
 function getRelatedTreeData(all, filter, primary_key, parent_ref_key) {
-  var ret = [];
-  var mapping = {};
+  var filter_set    = {};
+  var all_map       = {};
+  var result        = [];
+  var pending_list  = [];
+  var processed_map = {};
+  var processed_map_size = 0;
 
   for (var i=0; i<filter.length; ++i) {
-    mapping[ filter[i][primary_key] ] = filter[i];
+    var data = filter[i];
+    filter_set[ data[primary_key] ] = 1;
+    result.push(data);
+    pending_list.push(data);
   }
 
   for (var i=0; i<all.length; ++i) {
-    var ref = all[i];
-    var main = mapping[ ref[primary_key] ];
-    if (main) {
-      ret.push(main);
-    } else {
-      ret.push(ref);
-    }
+    var data = all[i];
+    all_map[ data[primary_key] ] = data;
   }
-  return ret;
+
+  check_parent_ref();
+
+  while (processed_map_size > 0) {
+    for (var n in processed_map) {
+      pending_list.push(processed_map[n]);
+    }
+    processed_map = {};
+    processed_map_size = 0;
+    check_parent_ref();
+  }
+
+return result;
+
+  function check_parent_ref() {
+    for (var i=0; i<pending_list.length; ++i) {
+      var parent_key_id = pending_list[i][parent_ref_key];
+      if (!parent_key_id) continue;
+      
+      var parentData = all_map[parent_key_id];
+      if (parentData && filter_set[parent_key_id] != 1) {
+        processed_map[parent_key_id] = parentData;
+        filter_set[parent_key_id] = 1;
+        result.push(parentData);
+        ++processed_map_size;
+      }
+    }
+    pending_list = [];
+  }
 }
