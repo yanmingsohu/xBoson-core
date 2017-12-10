@@ -36,28 +36,27 @@ public class AppFactory implements IConstant {
 
   private static AppFactory instance;
   private AppPool app_pool;
-  private ThreadLocal<IAWho> who;
-  private ThreadLocal<String> orgid;
-  private ThreadLocal<Map<String, String>> exparam;
+  private ThreadLocal<ThreadLocalData> ttld;
   private Log log;
 
 
   private AppFactory() {
     log       = LogFactory.create();
     app_pool  = new AppPool();
-    who       = new ThreadLocal<>();
-    orgid     = new ThreadLocal<>();
-    exparam   = new ThreadLocal<>();
+    ttld      = new ThreadLocal<>();
   }
 
 
   public void call(ApiCall ac) {
     try {
-      who.set(ac.call.sess.login_user);
+      ThreadLocalData tld = new ThreadLocalData();
+      ttld.set(tld);
+      tld.who = ac.call.sess.login_user;
+
       log.debug("Call::", ac.org, '/', ac.app, '/', ac.mod, '/', ac.api);
 
       make_extend_parameter(ac);
-      orgid.set(ac.org);
+      tld.orgid = ac.org;
 
       //
       // 利用 app 名称判断是否调用平台机构 api, 此时 org 可以是另一个机构, 这种跨机构
@@ -69,6 +68,7 @@ public class AppFactory implements IConstant {
       //
       if (ac.app.startsWith(SYS_APP_PREFIX)) {
         ac.org = SYS_ORG;
+        tld.replaceOrg = true;
       }
 
       XjOrg org = app_pool.getOrg(ac.org);
@@ -82,14 +82,14 @@ public class AppFactory implements IConstant {
       throw new XBosonException(e);
 
     } finally {
-      who.set(null);
+      ttld.set(null);
     }
   }
 
 
   private void make_extend_parameter(ApiCall ac) {
     Map<String, String> ex = new HashMap<>();
-    exparam.set(ex);
+    ttld.get().exparam = ex;
     ex.put("org", ac.org);
     ex.put("app", ac.app);
     ex.put("mod", ac.mod);
@@ -101,7 +101,7 @@ public class AppFactory implements IConstant {
    * @return
    */
   public Map<String, String> getExtendParameter() {
-    return exparam.get();
+    return ttld.get().exparam;
   }
 
 
@@ -109,7 +109,7 @@ public class AppFactory implements IConstant {
    * 返回当前请求的 org-id, 当前 api 可能在另一个机构中.
    */
   public String currendOrg() {
-    return orgid.get();
+    return ttld.get().orgid;
   }
 
 
@@ -135,11 +135,20 @@ public class AppFactory implements IConstant {
    * 如果没有用户登录会抛出异常.
    */
   public IAWho who() {
-    IAWho r = who.get();
+    IAWho r = ttld.get().who;
     if (r == null) {
       throw new XBosonException("not login");
     }
     return r;
+  }
+
+
+  /**
+   * 当 org 被替换后, 返回 ture.
+   * 替换的 org
+   */
+  public boolean isReplaceOrg() {
+    return ttld.get().replaceOrg;
   }
 
 
@@ -152,5 +161,13 @@ public class AppFactory implements IConstant {
       }
     }
     return instance;
+  }
+
+
+  private class ThreadLocalData {
+    Map<String, String> exparam;
+    IAWho who;
+    String orgid;
+    boolean replaceOrg;
   }
 }
