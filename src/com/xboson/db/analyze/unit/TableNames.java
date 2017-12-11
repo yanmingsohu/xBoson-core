@@ -16,14 +16,14 @@
 
 package com.xboson.db.analyze.unit;
 
-import com.xboson.db.analyze.UnitType;
+import com.xboson.db.analyze.UnitOperating;
 
 
 public class TableNames extends KeyWord {
 
   public TableNames(String key) {
     super(key);
-    setType(UnitType.TableBeginName);
+    setOperating(UnitOperating.TableBeginName);
   }
 
 }

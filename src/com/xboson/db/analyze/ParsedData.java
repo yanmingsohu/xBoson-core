@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class ParsedData {
   private List<IUnit> units;
-  private IUnit lastKeyUnit;
+  private IUnit lastKeyWordUnit;
 
 
   public ParsedData() {
@@ -43,17 +43,17 @@ public class ParsedData {
 
     if (SqlKeyWords.beginTable.contains(up_unit)) {
       TableNames nn = new TableNames(unit);
-      nn.setParent(lastKeyUnit);
+      nn.setParent(lastKeyWordUnit);
       units.add(nn);
-      lastKeyUnit = nn;
+      lastKeyWordUnit = nn;
     }
     else if (SqlKeyWords.key.contains(up_unit)) {
       IUnit nn = new KeyWord(unit);
-      nn.setParent(lastKeyUnit);
+      nn.setParent(lastKeyWordUnit);
       units.add(nn);
 
       if (! SqlKeyWords.skipParent.contains(up_unit)) {
-        lastKeyUnit = nn;
+        lastKeyWordUnit = nn;
       }
     }
     else {
@@ -64,31 +64,31 @@ public class ParsedData {
 
   public void addExp(String unit) {
     IUnit nn = new Expression(unit);
-    nn.setParent(lastKeyUnit);
+    nn.setParent(lastKeyWordUnit);
     units.add(nn);
   }
 
 
   public void add(IUnit n) {
     units.add(n);
-    checkType(n);
+    checkOperating(n);
   }
 
 
-  private void checkType(IUnit n) {
-    final UnitType t = n.getType();
+  private void checkOperating(IUnit n) {
+    final UnitOperating t = n.getOperating();
 
-    if (t == UnitType.ResetUseParent) {
-      if (lastKeyUnit != null) {
-        lastKeyUnit = lastKeyUnit.getParent();
+    if (t == UnitOperating.ResetUseParent) {
+      if (lastKeyWordUnit != null) {
+        lastKeyWordUnit = lastKeyWordUnit.getParent();
       }
     }
-    else if (t == UnitType.ClearParent) {
-      lastKeyUnit = null;
+    else if (t == UnitOperating.ClearParent) {
+      lastKeyWordUnit = null;
     }
-    else if (t == UnitType.ResetUseParentWhenAs) {
-      if (lastKeyUnit != null && lastKeyUnit.getData().equals("AS")) {
-        lastKeyUnit = lastKeyUnit.getParent();
+    else if (t == UnitOperating.ResetUseParentWhenAs) {
+      if (lastKeyWordUnit != null && lastKeyWordUnit.getData().equals("AS")) {
+        lastKeyWordUnit = lastKeyWordUnit.getParent();
       }
     }
   }

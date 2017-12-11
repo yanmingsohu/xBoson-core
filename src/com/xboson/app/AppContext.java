@@ -50,20 +50,11 @@ public class AppContext implements IConstant {
    * 该方法支持嵌套请求, 前一个请求的参数会被保留在 ThreadLocalData.nestedCall 中.
    */
   public void call(ApiCall ac) {
+    log.debug("Call::", ac.org, '/', ac.app, '/', ac.mod, '/', ac.api);
+
     try {
-      ThreadLocalData tld = new ThreadLocalData();
-      tld.who = ac.call.sess.login_user;
-
-      ThreadLocalData previous = ttld.get();
-      if (previous != null) {
-        tld.nestedCall = previous;
-      }
-      ttld.set(tld);
-
-      log.debug("Call::", ac.org, '/', ac.app, '/', ac.mod, '/', ac.api);
-
+      ThreadLocalData tld = createLocalData(ac);
       make_extend_parameter(ac);
-      tld.orgid = ac.org;
 
       //
       // 利用 app 名称判断是否调用平台机构 api, 此时 org 可以是另一个机构, 这种跨机构
@@ -92,6 +83,20 @@ public class AppContext implements IConstant {
       ThreadLocalData current = ttld.get();
       ttld.set(current.nestedCall);
     }
+  }
+
+
+  private ThreadLocalData createLocalData(ApiCall ac) {
+    ThreadLocalData tld = new ThreadLocalData();
+    tld.who = ac.call.sess.login_user;
+    tld.orgid = ac.org;
+
+    ThreadLocalData previous = ttld.get();
+    if (previous != null) {
+      tld.nestedCall = previous;
+    }
+    ttld.set(tld);
+    return tld;
   }
 
 

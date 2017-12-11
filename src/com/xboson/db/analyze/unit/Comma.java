@@ -17,7 +17,7 @@
 package com.xboson.db.analyze.unit;
 
 import com.xboson.db.analyze.AbsNotation;
-import com.xboson.db.analyze.UnitType;
+import com.xboson.db.analyze.UnitOperating;
 
 
 public class Comma extends AbsNotation {
@@ -27,7 +27,7 @@ public class Comma extends AbsNotation {
 
   public Comma() {
     super(COMMA);
-    type = UnitType.ResetUseParentWhenAs;
+    type = UnitOperating.ResetUseParentWhenAs;
   }
 
 }

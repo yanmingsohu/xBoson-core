@@ -17,9 +17,6 @@
 package com.xboson.been;
 
 import com.thoughtworks.xstream.annotations.XStreamAlias;
-import com.xboson.util.Tool;
-
-import java.util.HashMap;
 
 
 /**

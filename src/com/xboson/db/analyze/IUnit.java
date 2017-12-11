@@ -40,8 +40,8 @@ public interface IUnit<T> {
   IUnit getParent();
 
 
-  void setType(UnitType t);
-  UnitType getType();
+  void setOperating(UnitOperating t);
+  UnitOperating getOperating();
 
 
   /**

@@ -283,9 +283,9 @@ public class TestSqlParser extends Test {
         throw new AssertionError(info);
       }
       eq(rightTableNames[index], u.getData(), info);
-      msg("OK", info);
+      msg("--- OK", info);
       ++index;
-      u.setData("CHANGE." + u.getData());
+      u.setData("<CHANGE>." + u.getData());
     }
 
     public void checkCount() {

@@ -19,7 +19,7 @@ package com.xboson.db.analyze;
 
 public abstract class AbsUnit<E> implements IUnit<E> {
   protected IUnit parent;
-  protected UnitType type;
+  protected UnitOperating type;
 
 
   @Override
@@ -29,13 +29,13 @@ public abstract class AbsUnit<E> implements IUnit<E> {
 
 
   @Override
-  public void setType(UnitType t) {
+  public void setOperating(UnitOperating t) {
     this.type = t;
   }
 
 
   @Override
-  public UnitType getType() {
+  public UnitOperating getOperating() {
     return type;
   }
 

@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-12-10 上午11:55
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/db/analyze/UnitType.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/db/analyze/UnitOperating.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -19,7 +19,7 @@ package com.xboson.db.analyze;
 /**
  * 表示操作类型描述, 与上下文相关
  */
-public enum UnitType {
+public enum UnitOperating {
   TableBeginName,
   Nothing,
   ResetUseParent,

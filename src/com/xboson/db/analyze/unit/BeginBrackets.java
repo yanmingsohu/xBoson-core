@@ -17,13 +17,13 @@
 package com.xboson.db.analyze.unit;
 
 import com.xboson.db.analyze.AbsNotation;
-import com.xboson.db.analyze.UnitType;
+import com.xboson.db.analyze.UnitOperating;
 
 
 public class BeginBrackets extends AbsNotation {
 
   public BeginBrackets() {
     super("(");
-    type = UnitType.ClearParent;
+    type = UnitOperating.ClearParent;
   }
 }
