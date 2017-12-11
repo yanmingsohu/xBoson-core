@@ -52,9 +52,13 @@ public class UserService extends XService implements IDict {
   private Config cf;
 
 
+  public UserService() {
+    cf = SysConfig.me().readConfig();
+  }
+
+
   public void service(CallData data) throws Exception {
     subService(data, MSG);
-    cf = SysConfig.me().readConfig();
   }
 
 
@@ -79,7 +83,7 @@ public class UserService extends XService implements IDict {
     final String md5ps  = data.getString("password", 6, 40);
     final String userid = data.getString("userid",   4, 50);
 
-    LoginUser lu = searchUser(userid, md5ps, cf);
+    LoginUser lu = searchUser(userid, md5ps);
 
     if (login_count >= IP_NEED_CAPTCHA) {
       String c = data.getString("c", 0, 20);
@@ -126,7 +130,6 @@ public class UserService extends XService implements IDict {
 	    return;
     }
 
-    Config cf = SysConfig.me().readConfig();
     try (SqlCachedResult scr = new SqlCachedResult(cf.db)) {
       List<Map<String, Object>> ret =
 	        scr.query(SqlReader.read("user0003"), data.sess.login_user.pid);
@@ -138,9 +141,10 @@ public class UserService extends XService implements IDict {
 
 
   public void get_havinguser(CallData data) throws Exception {
-    if (!isLogin(data)) {
-      data.xres.responseMsg("未登录", 1000);
-      return;
+    final int call_count = checkIpBan(data);
+    if (call_count >= IP_BAN_COUNT) {
+      data.xres.responseMsg(
+              "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
     }
 
     String userid = data.req.getParameter("userid");
@@ -150,13 +154,14 @@ public class UserService extends XService implements IDict {
     Object[] parmbind = new Object[] { userid, tel, email };
     String[] ret = new String[1];
 
-    try (SqlResult sr = SqlReader.query("login.sql", cf.db, parmbind)) {
+    try (SqlResult sr = SqlReader.query("having_user.sql", cf.db, parmbind)) {
       data.xres.setData( sr.resultToList() );
+      data.xres.response();
     }
   }
 
 
-	private LoginUser searchUser(String userid, String md5ps, Config cf)
+	private LoginUser searchUser(String userid, String md5ps)
           throws SQLException {
     //
     // 把 userid 分别假设为 userid/tel/email 查出哪个算哪个

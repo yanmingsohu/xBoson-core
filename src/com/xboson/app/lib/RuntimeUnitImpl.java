@@ -173,4 +173,28 @@ public abstract class RuntimeUnitImpl {
   protected Object unwrap(Object mirror) {
     return ScriptObjectMirror.unwrap(mirror, Context.getGlobal());
   }
+
+
+  /**
+   * 返回非空字符串, 否则会抛出异常
+   */
+  protected String getNNStringAttr(ScriptObjectMirror mir, String attrName) {
+    String s = (String) mir.getMember(attrName);
+    if (Tool.isNulStr(s)) {
+      throw new XBosonException.NullParamException("String " + attrName);
+    }
+    return s;
+  }
+
+
+  /**
+   * 返回字符串, 非字符串类型或 Undefined 返回 null.
+   */
+  protected String getStringAttr(ScriptObjectMirror mir, String attrName) {
+    Object o = mir.getMember(attrName);
+    if (o instanceof String) {
+      return (String) o;
+    }
+    return null;
+  }
 }

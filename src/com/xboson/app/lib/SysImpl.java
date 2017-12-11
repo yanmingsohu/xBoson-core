@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.ErrorCodeMessage;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
@@ -51,8 +52,12 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * 每次请求一个实例
+ * (openid 就是 userid)
  */
 public class SysImpl extends RuntimeUnitImpl {
+
+  public static final String NULSTR = "";
+  public static final String NULNULSTR = "null";
 
   /**
    * 公共属性
@@ -67,6 +72,7 @@ public class SysImpl extends RuntimeUnitImpl {
   private ScriptObjectMirror printList;
   private ScriptObjectMirror transformTreeDataFunction;
   private ScriptObjectMirror getRelatedTreeDataFunction;
+  private ScriptObjectMirror setRetListFunction;
 
 
   public SysImpl(CallData cd, ConnectConfig orgdb) {
@@ -75,6 +81,17 @@ public class SysImpl extends RuntimeUnitImpl {
     this.request = new RequestImpl(cd);
     this.retData = new HashMap<>();
     this.requestParameterMap = new RequestParametersImpl(cd);
+  }
+
+
+  /**
+   * 不初始化任何对象
+   * @deprecated 仅用于测试
+   */
+  public SysImpl() {
+    super(null);
+    request = null;
+    requestParameterMap = null;
   }
 
 
@@ -100,10 +117,20 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
+  public void setRetData(String code) throws IOException {
+    setRetData(Integer.parseInt(code));
+  }
+
+
   public void setRetData(String code, String msg, String ...parm)
           throws IOException {
     int c = Integer.parseInt(code);
     setRetData(c, msg, parm);
+  }
+
+
+  public void setRetData(int code) throws IOException {
+    setRetData(code, ErrorCodeMessage.get(code));
   }
 
 
@@ -176,6 +203,11 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
+  public String getUserIdByOpenId(String open_id) {
+    return open_id;
+  }
+
+
   public Object getUserOrgList() throws Exception {
     List<Map<String, Object>> ret;
     try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
@@ -224,6 +256,11 @@ public class SysImpl extends RuntimeUnitImpl {
 
   public String randomString(int len) {
     return Tool.randomString(len);
+  }
+
+
+  public String currentTimeString() {
+    return Tool.formatDate(new Date());
   }
 
 
@@ -576,51 +613,14 @@ public class SysImpl extends RuntimeUnitImpl {
    * @param associate [[k1, k2],[...], ...] k1 是 plist 属性名, k2 是 clist 属性名.
    * @param keyname 在 plist 中创建的数组属性名称
    */
-  public void setRetList(Object[] plist, Object[] clist,
-                         Object[] associate, String keyname) {
-    Map<String, ScriptObjectMirror> cache = new HashMap<>(clist.length);
-    final int PARENT_KEY = 0;
-    final int CHILD_KEY = 1;
-
-    for (int i=0; i<clist.length; ++i) {
-      ScriptObjectMirror cobj = wrap(clist[i]);
-      StringBuilder allkey = new StringBuilder();
-
-      for (int a=0; a<associate.length; ++a) {
-        ScriptObjectMirror ass = wrap(associate[a]);
-        String key = (String) ass.getSlot(CHILD_KEY);
-        Object val = cobj.get(key);
-        String pkey = (String) ass.getSlot(PARENT_KEY);
-        allkey.append(pkey).append('=').append(val).append(';');
-      }
-
-      String complex_key = allkey.toString();
-      ScriptObjectMirror arr = cache.get(complex_key);
-      if (arr == null) {
-        arr = createJSList();
-        cache.put(complex_key, arr);
-      }
-      arr.setSlot(arr.size(), clist[i]);
+  public void setRetList(Object plist, Object clist,
+                         Object associate, Object keyname) {
+    if (setRetListFunction == null) {
+      Object func = Context.getGlobal().get("setRetList");
+      setRetListFunction = wrap(func);
     }
 
-    for (int i=0; i<plist.length; ++i) {
-      ScriptObjectMirror pobj = wrap(plist[i]);
-      StringBuilder allkey = new StringBuilder();
-
-      for (int a=0; a<associate.length; ++a) {
-        ScriptObjectMirror ass = wrap(associate[a]);
-        String key = (String) ass.getSlot(PARENT_KEY);
-        Object val = pobj.get(key);
-        allkey.append(key).append('=').append(val).append(';');
-      }
-
-      Object cobj = cache.get(allkey.toString());
-      if (cobj != null) {
-        pobj.put(keyname, cobj);
-      } else {
-        pobj.put(keyname, createJSList());
-      }
-    }
+    setRetListFunction.call(null, plist, clist, associate, keyname);
   }
 
 
@@ -648,6 +648,9 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
+  /**
+   * 迷之算法
+   */
   public Object getRelatedTreeData(Object all, Object filter,
                                    String parent_attr, String child_attr) {
     if (getRelatedTreeDataFunction == null) {
@@ -715,8 +718,8 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
-  public int size(ScriptObject js) {
-    return js.size();
+  public int size(Object js) {
+    return wrap(js).size();
   }
 
 
@@ -780,8 +783,14 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
+  /**
+   * 对于 null 返回 "", 对于 "null" 也返回 "", 否则返回 s.trim()
+   */
   public String trim(String s) {
-    return s.trim();
+    if (s == null) return NULSTR;
+    s = s.trim();
+    if (s.equals(NULNULSTR)) return NULSTR;
+    return s;
   }
 
 

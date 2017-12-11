@@ -16,12 +16,20 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppContext;
+import com.xboson.app.InnerXResponse;
+import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
+import com.xboson.been.ResponseRoot;
+import com.xboson.been.XBosonException;
+import com.xboson.j2ee.container.XResponse;
 import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import okhttp3.*;
+import sun.font.Script;
 
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -157,12 +165,77 @@ public class HttpImpl extends RuntimeUnitImpl {
 
 
   public Object platformGet(Object api, Object param, Object header) {
-    return null;
+    return platformPost(api, null, param, header);
   }
 
 
-  public Object platformPost(Object api, Object body, Object param, Object header) {
-    return null;
+  public Object platformGet(Object api, Object param) {
+    return platformPost(api, null, param, null);
+  }
+
+
+  public Object platformGet(Object api) {
+    return platformPost(api, null, null, null);
+  }
+
+
+  public Object platformPost(Object api) {
+    return platformPost(api, null, null, null);
+  }
+
+
+  public Object platformPost(Object api, Object body) {
+    return platformPost(api, body, null, null);
+  }
+
+
+  public Object platformPost(Object api, Object body, Object param) {
+    return platformPost(api, body, param, null);
+  }
+
+
+  /**
+   * 该方法通过内部直接调用 api, 可以跨 org 调用.
+   */
+  public Object platformPost(Object japi, Object jbody,
+                             Object jparam, Object jheader) {
+
+    ApiCall ac = new ApiCall();
+    ScriptObjectMirror api = wrap(japi);
+    ac.app = getNNStringAttr(api, "app");
+    ac.mod = getNNStringAttr(api, "mod");
+    ac.api = getNNStringAttr(api, "api");
+    ac.org = getStringAttr(api, "org");
+    ac.exparam = new HashMap<>();
+
+    ScriptObjectMirror ret = createJSObject();
+    try {
+      XResponse xr = new InnerXResponse(ret);
+      ac.call = new CallData(cd, xr);
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
+
+    if (ac.org == null) {
+      ac.org = AppContext.me().originalOrg();
+    }
+
+    if (jparam != null) {
+      ScriptObjectMirror param = wrap(jparam);
+      ac.exparam = param;
+    }
+
+    if (jbody != null) {
+      ScriptObjectMirror body = wrap(jbody);
+      if (ac.exparam == null) {
+        ac.exparam = body;
+      } else {
+        ac.exparam.putAll(body);
+      }
+    }
+
+    AppContext.me().call(ac);
+    return ret;
   }
 
 

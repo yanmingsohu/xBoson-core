@@ -233,6 +233,9 @@ public class TestSqlParser extends Test {
    * 加缓存:
    *  100000 Used Time   679 ms, Used Memory:109
    * 1000000 Used Time  4914 ms, Used Memory:490
+   *
+   * 不要尝试在遍历 ParsedData 时用 class 直接判断代替 instanceof,
+   * 那样反而会降低速度, 并且在继承上容易出错.
    */
   private void testSpeed() throws Exception {
     String sql = "DELETE FROM t1\n" +
@@ -244,20 +247,18 @@ public class TestSqlParser extends Test {
                     "     (SELECT 50,11*s1 FROM t4 UNION SELECT 50,77 FROM\n" +
                     "      (SELECT * FROM t5) AS t5)));";
 
-    IUnitListener donothing = new IUnitListener() {
-      public void on(IUnit u) {
-      }
-    };
+    IUnitListener donothing = unit -> { return; };
 
     beginTime();
-    int count = 1000000;
+    int count = 100000;
     for (int i=0; i<count; ++i) {
-      SqlParserCached.ParsedDataHandle pd = SqlParserCached.parse(sql); // 90% 的开销
+      // 80% 的开销
+      SqlParserCached.ParsedDataHandle pd = SqlParserCached.parse(sql);
       SqlParser.tableNames(pd, donothing);
       SqlParser.stringify(pd);
       pd.close();
     }
-    endTime(count);
+    endTime("Loop", count);
     memuse();
   }
 
@@ -288,7 +289,7 @@ public class TestSqlParser extends Test {
     }
 
     public void checkCount() {
-      eq(rightTableNames.length, index, "bad table name count");
+      eq(rightTableNames.length, index, "table name count");
     }
   }
 }

@@ -6,40 +6,51 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-12-4 上午8:33
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/ApiCall.java
+// 文件创建日期: 17-12-11 下午3:54
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/InnerXResponse.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.been;
+package com.xboson.app;
 
+import com.xboson.j2ee.container.XResponse;
+
+import java.io.IOException;
 import java.util.Map;
 
 
 /**
- * 封装对 api 的调用
+ * 内部应答对象, 对应答的调用不做任何动作, 不会真的给客户端应答,
+ * 仅保存应答数据, 并通过方法返回它们.
  */
-public class ApiCall implements IBean {
+public class InnerXResponse extends XResponse {
 
-  /** HTTP 请求参数 */
-  public CallData call;
+  private boolean isResponsed;
+  private Map<String, Object> root;
 
-  /** 机构 id */
-  public String org;
 
-  /** 应用 id */
-  public String app;
+  public InnerXResponse(Map<String, Object> root) {
+    super(root);
+    this.root = root;
+  }
 
-  /** 模块 id */
-  public String mod;
 
-  /** 接口 id */
-  public String api;
+  @Override
+  public void response() throws IOException {
+    isResponsed = true;
+  }
 
-  /** 扩展请求参数, 优先级高于 http 参数, 可以 null */
-  public Map<String, Object> exparam;
 
+  @Override
+  public boolean isResponsed() {
+    return isResponsed;
+  }
+
+
+  public Map<String, Object> getResponseRoot() {
+    return root;
+  }
 }

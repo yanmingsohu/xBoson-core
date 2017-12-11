@@ -29,21 +29,41 @@ import com.xboson.j2ee.container.XResponse;
  */
 public class CallData implements IBean {
 
-	public final HttpServletRequest req;
-	public final HttpServletResponse resp; 
-	public final UrlSplit url;
-	public final XResponse xres;
-	public final SessionData sess;
-	
-	
-	public CallData(HttpServletRequest req, HttpServletResponse resp)
-					throws ServletException {
-		this.req  = req;
-		this.resp = resp;
-		this.xres = XResponse.get(req);
-		this.sess = SessionData.get(req);
-		this.url  = new UrlSplit(req);
-	}
+  public final HttpServletRequest req;
+  public final HttpServletResponse resp;
+  public final UrlSplit url;
+  public final XResponse xres;
+  public final SessionData sess;
+
+
+  /**
+   * 从 http 请求中创建
+   */
+  public CallData(HttpServletRequest req, HttpServletResponse resp)
+          throws ServletException {
+    this.req  = req;
+    this.resp = resp;
+    this.xres = XResponse.get(req);
+    this.sess = SessionData.get(req);
+    this.url  = new UrlSplit(req);
+  }
+
+
+  /**
+   * 复制一个 CallData 并定制 XResponse 对象
+   *
+   * @param cd 复制来源
+   * @param xr 主要目的是定制一个 XResponse 对象
+   * @throws ServletException
+   */
+  public CallData(CallData cd, XResponse xr)
+          throws ServletException {
+    this.req  = cd.req;
+    this.resp = cd.resp;
+    this.xres = xr;
+    this.sess = cd.sess;
+    this.url  = cd.url;
+  }
 
 
   /**
@@ -55,11 +75,11 @@ public class CallData implements IBean {
    * @param max 最大长度, < max
    * @return 返回这个参数
    */
-	public String getString(String name, int min, int max) {
-	  String v = req.getParameter(name);
-	  if (v == null) {
-	    if (min <= 0) {
-	      return v;
+  public String getString(String name, int min, int max) {
+    String v = req.getParameter(name);
+    if (v == null) {
+      if (min <= 0) {
+        return v;
       } else {
         throw new XBosonException.BadParameter(
                 name, "Can not be null");
@@ -67,9 +87,9 @@ public class CallData implements IBean {
     }
 
     v = v.trim();
-	  final int len = v.length();
-	  if (len < min) {
-	    throw new XBosonException.BadParameter(
+    final int len = v.length();
+    if (len < min) {
+      throw new XBosonException.BadParameter(
               name,"length is greater than " + min);
     }
     if (len >= max) {

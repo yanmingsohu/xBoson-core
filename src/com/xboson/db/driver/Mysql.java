@@ -46,7 +46,8 @@ public class Mysql extends NullDriver implements IDriver {
     return "jdbc:mysql://"
             + config.getHost() + ":"
             + config.getPort() + "/"
-            + config.getDatabase();
+            + config.getDatabase()
+            + "?zeroDateTimeBehavior=convertToNull";
   }
 
 

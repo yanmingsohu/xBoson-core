@@ -158,7 +158,8 @@ public class DbmsFactory extends OnExitHandle {
       return cp.getProxy();
     } catch(Exception e) {
       log.error("open fail", e);
-      throw new XBosonException.XSqlException("open connection", e);
+      throw new XBosonException.XSqlException(
+              "open connection " + config.host +":"+ config.port, e);
     }
   }
 
@@ -188,6 +189,10 @@ public class DbmsFactory extends OnExitHandle {
   public IDriver getDriver(ConnectConfig config) {
     IDriver dr = null;
 
+    if (namemap.size() <= 0) {
+      throw new XBosonException("No DB driver in Factory");
+    }
+
     if (config.dbname != null) {
       dr = namemap.get(config.dbname);
       if (dr != null && config.dbid == null) {
@@ -201,9 +206,6 @@ public class DbmsFactory extends OnExitHandle {
     }
 
     if (dr == null) {
-      if (namemap.size() <= 0) {
-        throw new XBosonException("no db driver");
-      }
       throw new XBosonException.NullParamException(
               "config.dbname[dbid] " + config);
     }

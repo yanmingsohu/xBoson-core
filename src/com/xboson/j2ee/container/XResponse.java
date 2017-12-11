@@ -43,7 +43,7 @@ public class XResponse {
 	
 	private HttpServletRequest request;
 	private HttpServletResponse response;
-	private ResponseRoot ret_root;
+	private Map<String, Object> ret_root;
 	private IXResponse res_impl;
 	private boolean is_responsed = false;
 
@@ -65,12 +65,28 @@ public class XResponse {
       this.res_impl = ResponseTypes.get();
     }
 	}
-	
-	
+
+
+  /**
+   * 默认会使用 ResponseRoot 来作为数据保存容器, 该对象可以正确的转换为 json/xml 字符串.
+   * @see ResponseRoot
+   */
 	public XResponse() {
-		this.ret_root = new ResponseRoot();
-    ret_root.put("code", 0);
+	  this(new ResponseRoot());
 	}
+
+
+  /**
+   * 初始化, 并设置一个数据保存容器
+   * @param root
+   */
+	public XResponse(Map<String, Object> root) {
+	  if (root == null) {
+	    throw new XBosonException.NullParamException("Map<String, Object> root");
+    }
+    this.ret_root = root;
+    ret_root.put("code", 0);
+  }
 	
 	
 	public static XResponse get(HttpServletRequest request)
@@ -161,7 +177,6 @@ public class XResponse {
    */
   public void setCode(int code) {
     ret_root.put("code", code);
-    // ret_root.put("ret", Integer.toString(code));
   }
 
 

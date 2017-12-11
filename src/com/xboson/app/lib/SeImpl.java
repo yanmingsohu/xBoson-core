@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
+import com.xboson.db.IDriver;
 import com.xboson.util.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
@@ -40,7 +41,7 @@ public class SeImpl extends RuntimeUnitImpl {
 
   public SeImpl(CallData cd, SysImpl sys, String currentOrg) {
     super(cd);
-    this.redis = new RedisImpl("/sys/");
+    this.redis = new RedisImpl("/sys");
     this.query = QueryFactory.create(() -> getConnection(), this);
     this.sys = sys;
     this.orgid = currentOrg;
@@ -81,6 +82,12 @@ public class SeImpl extends RuntimeUnitImpl {
   }
 
 
+  public Object delCache(String region) {
+    redis.del(region);
+    return region;
+  }
+
+
   public Object delCache(String region, String key) {
     redis.del(region, key);
     return key;
@@ -98,7 +105,11 @@ public class SeImpl extends RuntimeUnitImpl {
 
 
   public String dbType() {
-    int t = getConfig().getDbid();
+    return dbType(getConfig().getDbid());
+  }
+
+
+  public String dbType(int t) {
     if (t < 10) return "0" + t;
     return String.valueOf(t);
   }
@@ -115,7 +126,17 @@ public class SeImpl extends RuntimeUnitImpl {
 
 
   public Object localDb() {
-    throw new UnsupportedOperationException("localDb");
+    ConnectConfig db = getConfig();
+    IDriver drv = DbmsFactory.me().getDriver(db);
+    String url = drv.getUrl(db);
+
+    ScriptObjectMirror info = createJSObject();
+    info.setMember("url",       url);
+    info.setMember("user",      db.getUsername());
+    info.setMember("password",  db.getPassword());
+    info.setMember("dbtype",    dbType(db.getDbid()));
+    info.setMember("owner",     orgid);
+    return unwrap(info);
   }
 
 
@@ -147,6 +168,11 @@ public class SeImpl extends RuntimeUnitImpl {
 
   public void reloadProperties() {
     throw new UnsupportedOperationException("reloadProperties");
+  }
+
+
+  public boolean isAuthorizedBizModel(String modelcd) {
+    throw new UnsupportedOperationException("isAuthorizedBizModel");
   }
 
 }

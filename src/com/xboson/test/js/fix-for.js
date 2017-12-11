@@ -21,3 +21,18 @@ for (role in roleList) {
     list.add(rParams,[roleid,row["menuid"],"1",dt,dt]);
   }
 }
+
+
+
+sql=sql+" order by a.id desc";
+sql.queryPaging(sql,params,pagenum,pagesize,"data");
+//操作详细
+for(r in sys.result.data){
+    var op_detail="";
+    var before_json=sys.instanceFromJson(r.before_json);
+    var after_json=sys.instanceFromJson(r.after_json);
+    //00101 元数据注册
+    if(r.operation_type=="00101"){
+        op_detail="新增元数据类："+r.typecd+"-"+r.typenm;
+    }
+}

@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -50,6 +51,7 @@ public class TestScript extends Test {
     fullTest();
 //    t10000();
 		error_format();
+    test_functions_apply();
 	}
 
 
@@ -64,6 +66,19 @@ public class TestScript extends Test {
       Exception x = new JScriptException(e);
       x.printStackTrace();
     }
+  }
+
+
+  public void test_functions_apply() throws Exception {
+	  sub("test_functions_apply");
+    Sandbox sandbox = SandboxFactory.create();
+    sandbox.bootstrap();
+    IEnvironment env = EnvironmentFactory.createBasic();
+    env.setEnvObject(JsObj.class);
+    env.config(sandbox, null);
+    sandbox.warp("Function.call.apply(t.functions, [t, 1, 2]);" +
+            "var fn = Function.bind.apply(t.functions, [t]);\n" +
+            "Function.call.apply(fn, [null,2,3]);").call();
   }
 
 
@@ -285,4 +300,20 @@ public class TestScript extends Test {
 	public static void main(String[] args) throws Throwable {
 		new TestScript();
 	}
+
+
+	static public class JsObj implements IJSObject {
+    public String env_name() {
+      return "t";
+    }
+    public boolean freeze() {
+      return false;
+    }
+    public void init() {}
+    public void destory() {}
+
+    public void functions(Object... a) {
+      sub("functions call:", Arrays.toString(a));
+    }
+  }
 }

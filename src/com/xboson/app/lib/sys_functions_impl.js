@@ -97,3 +97,49 @@ return result;
     pending_list = [];
   }
 }
+
+
+function setRetList(plist, clist, associate, keyname) {
+  var PARENT_KEY = 0;
+  var CHILD_KEY  = 1;
+  var cache = {};
+
+  for (var i=0; i<clist.length; ++i) {
+    var cobj = clist[i];
+    var allkey = [];
+
+    for (var a=0; a<associate.length; ++a) {
+      var ass = associate[a];
+      var key = ass[CHILD_KEY];
+      var pkey = ass[PARENT_KEY];
+      var val = cobj[key];
+      allkey.push(pkey, '=', val, ';');
+    }
+
+    var complex_key = allkey.join('');
+    var arr = cache[complex_key];
+    if (!arr) {
+      cache[complex_key] = arr = [];
+    }
+    arr.push(clist[i]);
+  }
+
+  for (var i=0; i<plist.length; ++i) {
+    var pobj = plist[i];
+    var allkey = [];
+
+    for (var a=0; a<associate.length; ++a) {
+      var ass = associate[a];
+      var key = ass[PARENT_KEY];
+      var val = pobj[key];
+      allkey.push(key, '=', val, ';');
+    }
+
+    var cobj = cache[ allkey.join('') ];
+    if (cobj) {
+      pobj[keyname] = cobj;
+    } else {
+      pobj[keyname] = [];
+    }
+  }
+}

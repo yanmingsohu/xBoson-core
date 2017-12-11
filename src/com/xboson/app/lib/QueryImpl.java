@@ -84,8 +84,7 @@ public class QueryImpl {
       ++row_count;
 
       for (int c = 1; c<=column; ++c) {
-        Object d = ScriptObjectMirror.wrap(rs.getObject(c), Context.getGlobal());
-        row.setMember(meta.getColumnLabel(c), d);
+        row.setMember(meta.getColumnLabel(c), rs.getObject(c));
       }
     }
 
@@ -98,6 +97,7 @@ public class QueryImpl {
   public int queryPaging(ScriptObjectMirror list, String sql, Object[] param,
                          Page p) throws Exception {
     throw new UnsupportedOperationException("queryPaging");
+//    return 0;
   }
 
 

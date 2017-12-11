@@ -48,11 +48,13 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
           MapImpl.class,
           DateImpl.class,
           ListImpl.class,
+          ModuleHandleContext.class,
   };
 
   private static final String[] configuration_script = new String[] {
           "lib/array_sort_comparator.js",
-          "lib/transform_tree_data.js",
+          "lib/sys_functions_impl.js",
+          "lib/string_functions.js",
   };
 
   private IEnvironment env;
@@ -105,6 +107,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       SeImpl se       = null;
 
       sql._setSysRef(sys);
+      ModuleHandleContext.register("sql", sql);
 
       if (org.isSysORG()) {
         se = new SeImpl(cd, sys, org.id());

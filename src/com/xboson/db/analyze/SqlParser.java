@@ -23,6 +23,9 @@ import java.util.Iterator;
 
 /**
  * sql 词法分析器, 不做任何语法检查
+ *
+ * (不要尝试在遍历 ParsedData 时用 class 直接判断代替 instanceof,
+ *  那样反而会降低速度, 并且在继承上容易出错.)
  */
 public class SqlParser {
 

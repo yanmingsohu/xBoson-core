@@ -35,9 +35,13 @@ public interface IApiConstant {
   String _CACHE_REGION_SYS_CONFIG_      = "/sys-config";
   String _CACHE_REGION_SCHEDULE_        = "/sche";
   String _CACHE_REGION_BIZ_MODEL_       = "/biz-model";
+  String _CACHE_REGION_DATASET_         = "/dataset";
+  String _CACHE_REGION_SYSTEM_          = "/system";
+
   String _CACHE_KEY_READY_              = "/ready";
   String _CACHE_KEY_INIT_ORG_V_         = "/org-v";
   String _CACHE_KEY_INIT_ORG_           = "/org";
+
   String _ORGID_PLATFORM_               = IConstant.SYS_ORG;
 
 }

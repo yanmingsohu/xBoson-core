@@ -65,6 +65,14 @@ public class RedisImpl {
   }
 
 
+  public void del(String region) {
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      String tkey = key_prefix + region;
+      client.del(tkey);
+    }
+  }
+
+
   public List<Object> delAll(String region, String[] keys) throws IOException {
     try (Jedis client = RedisMesmerizer.me().open();
          Transaction t = client.multi() )

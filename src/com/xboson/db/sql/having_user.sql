@@ -1,5 +1,5 @@
 select
-  count(1)
+  count(1) as count
 from
   sys_userinfo
 where

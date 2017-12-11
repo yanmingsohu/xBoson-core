@@ -32,7 +32,7 @@ import java.util.Map;
 public class RequestImpl extends AbstractJSObject {
 
   private CallData cd;
-  private Map<String, String> extendParameter;
+  private Map<String, Object> extendParameter;
 
 
   public RequestImpl(CallData cd) {

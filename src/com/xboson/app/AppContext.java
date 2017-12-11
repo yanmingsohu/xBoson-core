@@ -46,11 +46,19 @@ public class AppContext implements IConstant {
   }
 
 
+  /**
+   * 该方法支持嵌套请求, 前一个请求的参数会被保留在 ThreadLocalData.nestedCall 中.
+   */
   public void call(ApiCall ac) {
     try {
       ThreadLocalData tld = new ThreadLocalData();
-      ttld.set(tld);
       tld.who = ac.call.sess.login_user;
+
+      ThreadLocalData previous = ttld.get();
+      if (previous != null) {
+        tld.nestedCall = previous;
+      }
+      ttld.set(tld);
 
       log.debug("Call::", ac.org, '/', ac.app, '/', ac.mod, '/', ac.api);
 
@@ -81,13 +89,17 @@ public class AppContext implements IConstant {
       throw new XBosonException(e);
 
     } finally {
-      ttld.set(null);
+      ThreadLocalData current = ttld.get();
+      ttld.set(current.nestedCall);
     }
   }
 
 
   private void make_extend_parameter(ApiCall ac) {
-    Map<String, String> ex = new HashMap<>();
+    Map<String, Object> ex = ac.exparam;
+    if (ex == null) {
+      ex = new HashMap<>();
+    }
     ttld.get().exparam = ex;
     ex.put("org", ac.org);
     ex.put("app", ac.app);
@@ -99,7 +111,7 @@ public class AppContext implements IConstant {
    * 返回扩展请求参数
    * @return
    */
-  public Map<String, String> getExtendParameter() {
+  public Map<String, Object> getExtendParameter() {
     return ttld.get().exparam;
   }
 
@@ -165,7 +177,8 @@ public class AppContext implements IConstant {
 
 
   private class ThreadLocalData {
-    Map<String, String> exparam;
+    ThreadLocalData nestedCall;
+    Map<String, Object> exparam;
     IAWho who;
     String orgid;
     boolean replaceOrg;

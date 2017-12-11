@@ -27,6 +27,7 @@ import com.xboson.j2ee.container.XResponse;
 import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.test.impl.TestServletRequest;
 import com.xboson.test.impl.TestServletResponse;
+import com.xboson.util.IConstant;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -84,9 +85,7 @@ public class TestApi extends Test {
     double[] list = new double[] {20.5, 10.0, 50.5, 10.0};
     int[] ign = new int[] {1, 3};
 
-    CallData cd = simulationCallData();
-
-    SysImpl sys = new SysImpl(cd, null);
+    SysImpl sys = new SysImpl();
 
     for (int i=0; i<100000; ++i) {
       int r = sys.lotteryRate(list, ign);
@@ -112,13 +111,18 @@ public class TestApi extends Test {
   }
 
 
-  class RunApi {
+  static class RunApi {
     ApiCall ac;
 
     RunApi() throws Exception {
+      this("a297dfacd7a84eab9656675f61750078",
+              "a9943b0fb1e141b3a3ce7e886d407f5b");
+    }
+
+    public RunApi(String org, String app) throws Exception {
       ac = new ApiCall();
-      ac.org = "a297dfacd7a84eab9656675f61750078";
-      ac.app = "a9943b0fb1e141b3a3ce7e886d407f5b";
+      ac.org = org;
+      ac.app = app;
     }
 
     void run(String module_id, String api_id) throws IOException {
@@ -129,7 +133,7 @@ public class TestApi extends Test {
         ac.call = simulationCallData();
         AppContext.me().call(ac);
       } catch(Exception e) {
-//        show_code(app, XjApp.toFile(module_id, api_id));
+        // show_code(app, XjApp.toFile(module_id, api_id));
         fail(e);
         e.printStackTrace();
       }

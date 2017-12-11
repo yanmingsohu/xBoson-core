@@ -33,6 +33,8 @@ import java.sql.*;
  */
 public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
+  public final static int PAGE_DEFAULT_COUNT = -1;
+
   private Connection __conn;
   private ConnectConfig orgdb;
   private SysImpl sys;
@@ -91,6 +93,20 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
     sys.bindResult(save_to, arr);
     Page page = new Page(pageNum, pageSize, totalCount);
     return query_impl.queryPaging(arr, sql, param, page);
+  }
+
+
+  public int queryPaging(String sql, Object[] param, int pageNum, int pageSize,
+                         String save_to) throws Exception {
+    return queryPaging(sql, param, pageNum, pageSize,
+            save_to, PAGE_DEFAULT_COUNT);
+  }
+
+
+  public int queryPaging(String sql, Object[] param, int pageNum, int pageSize)
+                         throws Exception {
+    return queryPaging(sql, param, pageNum, pageSize,
+            "result", PAGE_DEFAULT_COUNT);
   }
 
 
