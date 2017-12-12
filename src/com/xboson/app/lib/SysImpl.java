@@ -58,13 +58,12 @@ public class SysImpl extends RuntimeUnitImpl {
   /**
    * 公共属性
    */
+  public final boolean xboson = true;
   public final Object request;
   public final Object requestParameterMap;
   public ScriptObjectMirror result;
-  public final boolean xboson = true;
 
   private ConnectConfig orgdb;
-  private Map<String, Object> retData;
   private ScriptObjectMirror printList;
   private ScriptObjectMirror transformTreeDataFunction;
   private ScriptObjectMirror getRelatedTreeDataFunction;
@@ -75,7 +74,6 @@ public class SysImpl extends RuntimeUnitImpl {
     super(cd);
     this.orgdb = orgdb;
     this.request = new RequestImpl(cd);
-    this.retData = new HashMap<>();
     this.requestParameterMap = new RequestParametersImpl(cd);
   }
 
@@ -91,25 +89,29 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
+  /**
+   * 该方法将直接把数据压入应答数据集中, 而非不等待 setRetData 进行压入
+   */
+  void bindResult(String name, Object value) {
+    if (value instanceof ScriptObjectMirror) {
+      value = new ScriptObjectMirrorJsonConverter.Warp(value);
+    } else if (value instanceof ScriptObject) {
+      value = new ScriptObjectMirrorJsonConverter.Warp(wrap(value));
+    }
+    cd.xres.bindResponse(name, value);
+  }
+
+
   public void addRetData(Object o) {
     addRetData(o, "result");
   }
 
 
-  public void bindResult(String name, Object value) {
+  public void addRetData(Object value, String name) {
     if (result == null)
       result = createJSObject();
 
     result.setMember(name, unwrap(value));
-  }
-
-
-  public void addRetData(Object o, String key) {
-    if (o instanceof ScriptObjectMirror) {
-      retData.put(key, new ScriptObjectMirrorJsonConverter.Warp(o));
-    } else {
-      retData.put(key, o);
-    }
   }
 
 
@@ -134,9 +136,19 @@ public class SysImpl extends RuntimeUnitImpl {
           throws IOException {
     cd.xres.setCode(code);
     cd.xres.setMessage(msg);
-    for (int i=0; i<parm.length; ++i) {
-      String name = parm[i];
-      cd.xres.bindResponse(name, retData.get(name));
+
+    if (result != null) {
+      for (int i = 0; i < parm.length; ++i) {
+        String name = parm[i];
+        Object value = result.get(name);
+        bindResult(name, value);
+
+        String cname = name + _COUNT_SUFFIX_;
+        Object count = result.get(cname);
+        if (count != null) {
+          bindResult(cname, count);
+        }
+      }
     }
     cd.xres.response();
   }

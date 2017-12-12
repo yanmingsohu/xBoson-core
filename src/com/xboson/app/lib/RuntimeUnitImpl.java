@@ -35,7 +35,7 @@ import java.util.Set;
 /**
  * js 运行时抽象基类
  */
-public abstract class RuntimeUnitImpl {
+public abstract class RuntimeUnitImpl implements IApiConstant {
 
   /**
    * 请求数据包装对象, 子类直接使用

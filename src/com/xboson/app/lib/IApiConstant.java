@@ -43,5 +43,7 @@ public interface IApiConstant {
   String _CACHE_KEY_INIT_ORG_           = "/org";
 
   String _ORGID_PLATFORM_               = IConstant.SYS_ORG;
+  String _COUNT_SUFFIX_                 = "_count";
+  String _COUNT_NAME_                   = "count";
 
 }

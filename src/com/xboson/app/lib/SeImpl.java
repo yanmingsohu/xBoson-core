@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppContext;
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
@@ -161,18 +162,28 @@ public class SeImpl extends RuntimeUnitImpl {
   }
 
 
-  public void logTopic(String org, String dataset, String tableName, String field) {
-    throw new UnsupportedOperationException("logTopic");
+  public boolean isAuthorizedBizModel(String modelcd) {
+    return redis.getRoleInfo(ResourceRoleTypes.MODEL, modelcd) != null;
   }
 
 
+  public boolean isAuthorizedUI(String pageid) {
+    return redis.getRoleInfo(ResourceRoleTypes.PAGE, pageid) != null;
+  }
+
+
+  /**
+   * 日志系统已经替换, 不实现
+   */
+  public void logTopic(String org, String dataset, String tableName, String field) {
+    throw new UnsupportedOperationException("Log system not use zookeeper");
+  }
+
+
+  /**
+   * 没有被调用过, 不实现
+   */
   public void reloadProperties() {
     throw new UnsupportedOperationException("reloadProperties");
   }
-
-
-  public boolean isAuthorizedBizModel(String modelcd) {
-    throw new UnsupportedOperationException("isAuthorizedBizModel");
-  }
-
 }

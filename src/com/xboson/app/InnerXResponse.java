@@ -53,4 +53,11 @@ public class InnerXResponse extends XResponse {
   public Map<String, Object> getResponseRoot() {
     return root;
   }
+
+
+  @Override
+  public void setCode(int code) {
+    super.setCode(code);
+    root.put("ret", Integer.toString(code));
+  }
 }

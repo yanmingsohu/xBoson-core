@@ -16,6 +16,8 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppContext;
+import com.xboson.been.LoginUser;
 import com.xboson.sleep.RedisMesmerizer;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import redis.clients.jedis.Jedis;
@@ -24,10 +26,12 @@ import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.Transaction;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
-public class RedisImpl {
+public class RedisImpl implements IApiConstant {
 
   private final String key_prefix;
 
@@ -122,5 +126,29 @@ public class RedisImpl {
       }
     }
     return list;
+  }
+
+
+  /**
+   * 返回当前用户角色, 对资源类型的访问权限数据
+   *
+   * @param type 资源类型
+   * @param resourceId 资源的主键
+   * @return 在 redis 中存储的值, 可能是 "0"
+   */
+  public Object getRoleInfo(ResourceRoleTypes type, String resourceId) {
+    LoginUser user = (LoginUser) AppContext.me().who();
+
+    try (Jedis j = RedisMesmerizer.me().open()) {
+      Iterator<String> it = user.roles.iterator();
+      while (it.hasNext()) {
+        String key = it.next() + type + resourceId;
+        String ret = j.hget(_CACHE_REGION_RBAC_, key);
+        if (ret != null) {
+          return ret;
+        }
+      }
+    }
+    return null;
   }
 }

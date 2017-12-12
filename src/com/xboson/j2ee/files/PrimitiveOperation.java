@@ -183,7 +183,7 @@ public class PrimitiveOperation {
 
 
   /**
-   * 创建一个任务对象, 执行后删除今天之前的所有临时文件
+   * 创建一个任务对象, 执行后删除2天之前的所有临时文件
    */
   public CleanTask createCleanTask() {
     return new CleanTask();

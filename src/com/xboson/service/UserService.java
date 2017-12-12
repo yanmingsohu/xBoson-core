@@ -35,6 +35,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -104,6 +105,8 @@ public class UserService extends XService implements IDict {
       ipLoginFail(data);
       return;
     }
+
+    lu.roles = userRoles(lu.pid);
 
     data.sess.login_user = lu;
     lu.password = null;
@@ -225,6 +228,20 @@ public class UserService extends XService implements IDict {
 	    t.expire(key, IP_WAIT_TIMEOUT * 60);
 	    t.exec();
     } catch (IOException e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  private List<String> userRoles(String pid) {
+    try (SqlResult sr = SqlReader.query("user_roles_list.sql", cf.db, pid)) {
+      ResultSet rs = sr.getResult();
+      List<String> roles = new ArrayList<>();
+      while (rs.next()) {
+        roles.add(rs.getString("roleid"));
+      }
+      return roles;
+    } catch (SQLException e) {
       throw new XBosonException(e);
     }
   }

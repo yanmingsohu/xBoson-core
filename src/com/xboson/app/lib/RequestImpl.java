@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.been.CallData;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 
 import java.util.Map;
@@ -53,6 +54,10 @@ public class RequestImpl extends AbstractJSObject {
     Object ret = extendParameter.get(name);
     if (ret == null) {
       ret = cd.req.getParameter(name);
+    }
+    if (ret instanceof String) {
+      if (Tool.isNulStr((String) ret))
+        return null;
     }
     return ret;
   }

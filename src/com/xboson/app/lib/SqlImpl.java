@@ -71,7 +71,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   public int query(String sql, Object[] param, String save_to)
           throws Exception {
     ScriptObjectMirror arr = createJSList();
-    sys.bindResult(save_to, arr);
+    sys.addRetData(arr, save_to);
     return query_impl.query(arr, sql, param);
   }
 
@@ -90,10 +90,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   public int queryPaging(String sql, Object[] param, int pageNum, int pageSize,
                          String save_to, int totalCount) throws Exception {
     ScriptObjectMirror arr = createJSList();
-    sys.bindResult(save_to, arr);
+    sys.addRetData(arr, save_to);
     Page page = new Page(pageNum, pageSize, totalCount);
     int total = query_impl.queryPaging(arr, sql, param, page, __currdb);
-    sys.bindResult(save_to + "_count", total);
+    sys.addRetData(total, save_to + _COUNT_SUFFIX_);
+    sys.bindResult(_COUNT_NAME_, total);
     return total;
   }
 

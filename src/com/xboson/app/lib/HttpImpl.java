@@ -164,32 +164,34 @@ public class HttpImpl extends RuntimeUnitImpl {
   }
 
 
-  public Object platformGet(Object api, Object param, Object header) {
+  public Object platformGet(Object api, Object param, Object header)
+          throws ServletException {
     return platformPost(api, null, param, header);
   }
 
 
-  public Object platformGet(Object api, Object param) {
+  public Object platformGet(Object api, Object param) throws ServletException {
     return platformPost(api, null, param, null);
   }
 
 
-  public Object platformGet(Object api) {
+  public Object platformGet(Object api) throws ServletException {
     return platformPost(api, null, null, null);
   }
 
 
-  public Object platformPost(Object api) {
+  public Object platformPost(Object api) throws ServletException {
     return platformPost(api, null, null, null);
   }
 
 
-  public Object platformPost(Object api, Object body) {
+  public Object platformPost(Object api, Object body) throws ServletException {
     return platformPost(api, body, null, null);
   }
 
 
-  public Object platformPost(Object api, Object body, Object param) {
+  public Object platformPost(Object api, Object body, Object param)
+          throws ServletException {
     return platformPost(api, body, param, null);
   }
 
@@ -197,8 +199,9 @@ public class HttpImpl extends RuntimeUnitImpl {
   /**
    * 该方法通过内部直接调用 api, 可以跨 org 调用.
    */
-  public Object platformPost(Object japi, Object jbody,
-                             Object jparam, Object jheader) {
+  public Object platformPost(Object japi,   Object jbody,
+                             Object jparam, Object jheader)
+          throws ServletException {
 
     ApiCall ac = new ApiCall();
     ScriptObjectMirror api = wrap(japi);
@@ -209,12 +212,13 @@ public class HttpImpl extends RuntimeUnitImpl {
     ac.exparam = new HashMap<>();
 
     ScriptObjectMirror ret = createJSObject();
-    try {
-      XResponse xr = new InnerXResponse(ret);
-      ac.call = new CallData(cd, xr);
-    } catch (Exception e) {
-      throw new XBosonException(e);
-    }
+    ScriptObjectMirror data = createJSObject();
+    ret.setMember("data",   data);
+    ret.setMember("code",   200);
+    ret.setMember("cookie", null);
+    ret.setMember("header", null);
+    XResponse xr = new InnerXResponse(data);
+    ac.call = new CallData(cd, xr);
 
     if (ac.org == null) {
       ac.org = AppContext.me().originalOrg();
@@ -307,9 +311,9 @@ public class HttpImpl extends RuntimeUnitImpl {
     ResponseBody body = resp.body();
 
     ScriptObjectMirror ret = createJSObject();
-    ret.setMember("code", resp.code());
+    ret.setMember("code",   resp.code());
     ret.setMember("cookie", parseCookies(urlobj, resp));
-    ret.setMember("data", parseData(body, type));
+    ret.setMember("data",   parseData(body, type));
     ret.setMember("header", parseRespHeader(resp));
     return ret;
   }

@@ -1,4 +1,4 @@
 DELETE FROM
     `sys_upload_files`
 WHERE
-    `update-time` < CURDATE();
+    `update-time` < DATE_SUB(CURDATE(), interval 2 day)

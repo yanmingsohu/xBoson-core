@@ -119,6 +119,10 @@ public class TestApi extends Test {
               "a9943b0fb1e141b3a3ce7e886d407f5b");
     }
 
+    public RunApi(String app) throws Exception {
+      this(IConstant.SYS_ORG, app);
+    }
+
     public RunApi(String org, String app) throws Exception {
       ac = new ApiCall();
       ac.org = org;
