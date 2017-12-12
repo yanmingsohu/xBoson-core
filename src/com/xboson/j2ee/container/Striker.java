@@ -102,7 +102,6 @@ public class Striker extends HttpFilter {
       chain.doFilter(request, response);
 
     } catch(Throwable e) {
-      log.debug(e.getMessage());
       response.setStatus(500);
 
       //
@@ -116,15 +115,17 @@ public class Striker extends HttpFilter {
       }
 
       if (debug) {
+        StringBuilder out = new StringBuilder();
+        showStack(e, out);
         jr.setError(e);
-        e.printStackTrace();
+        log.error(out);
       } else {
         String msg = e.getMessage();
-        if (msg != null) {
-          jr.setData(msg);
-        } else {
-          jr.setData(e.toString());
+        if (msg == null) {
+          msg = e.toString();
         }
+        jr.setData(msg);
+        log.error(msg);
       }
 
       do {
@@ -137,6 +138,31 @@ public class Striker extends HttpFilter {
       } while(e != null);
 
       jr.response();
+    }
+  }
+
+
+  private void showStack(Throwable e, StringBuilder out) {
+    StackTraceElement[] st = e.getStackTrace();
+    out.append(e.toString());
+    boolean bypass = false;
+
+    for (int i=0; i<st.length; ++i) {
+      StackTraceElement t = st[i];
+      if (t.getClassName().startsWith("com.xboson")) {
+        out.append("\n\t");
+        out.append(t.toString());
+        bypass = false;
+      } else if (!bypass) {
+        out.append("\n\t...");
+        bypass = true;
+      }
+    }
+
+    Throwable c = e.getCause();
+    if (c != null) {
+      out.append("Cause BY ");
+      showStack(c, out);
     }
   }
 }

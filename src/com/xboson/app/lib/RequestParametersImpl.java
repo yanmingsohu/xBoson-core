@@ -20,6 +20,9 @@ import com.xboson.been.CallData;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 
 
+/**
+ * 总是返回 http 参数的数组形式
+ */
 public class RequestParametersImpl extends AbstractJSObject {
 
   private CallData cd;
