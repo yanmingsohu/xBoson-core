@@ -16,6 +16,7 @@
 
 package com.xboson.db.driver;
 
+import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDriver;
 import com.xboson.db.NullDriver;
@@ -60,5 +61,16 @@ public class Mysql extends NullDriver implements IDriver {
   @Override
   public String createCatalog(String name) {
     return "CREATE DATABASE `" + name + "`";
+  }
+
+
+  @Override
+  public String limitResult(String sql, Page page) {
+    return limit(sql, page);
+  }
+
+
+  public static String limit(String sql, Page page) {
+    return sql +" Limit "+ page.offset +","+ page.pageSize;
   }
 }

@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.Page;
+import com.xboson.db.ConnectConfig;
 import com.xboson.db.analyze.IUnit;
 import com.xboson.db.analyze.IUnitListener;
 import com.xboson.db.analyze.SqlParser;
@@ -57,8 +58,8 @@ public class ReplaceOrgQueryImpl extends QueryImpl
 
   @Override
   public int queryPaging(ScriptObjectMirror list, String sql,
-                         Object[] param, Page p) throws Exception {
-    return super.queryPaging(list, replaceSql(sql), param, p);
+                         Object[] param, Page p, ConnectConfig cc) throws Exception {
+    return super.queryPaging(list, replaceSql(sql), param, p, cc);
   }
 
 

@@ -44,9 +44,7 @@ public class SqlParser {
       if (ch == '\r') continue;
 
       if (ch == '\'' || ch == '\"') {
-        if (sql.charAt(i-1) != '\\') {
-          inString = !inString;
-        }
+        inString = !inString;
       }
 
       if (SqlKeyWords.notation.contains(ch)) {

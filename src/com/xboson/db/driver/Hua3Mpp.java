@@ -16,6 +16,7 @@
 
 package com.xboson.db.driver;
 
+import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDriver;
 import com.xboson.db.NullDriver;
@@ -55,4 +56,9 @@ public class Hua3Mpp extends NullDriver implements IDriver {
     return 5258;
   }
 
+
+  @Override
+  public String limitResult(String sql, Page page) {
+    return Mysql.limit(sql, page);
+  }
 }

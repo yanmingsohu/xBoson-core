@@ -16,6 +16,7 @@
 
 package com.xboson.db.driver;
 
+import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.NullDriver;
 import com.xboson.util.SysConfig;
@@ -60,4 +61,9 @@ public class H2 extends NullDriver {
     return 0;
   }
 
+
+  @Override
+  public String limitResult(String sql, Page page) {
+    return Mysql.limit(sql, page);
+  }
 }

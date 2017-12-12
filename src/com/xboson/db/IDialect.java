@@ -16,10 +16,17 @@
 
 package com.xboson.db;
 
+import com.xboson.been.Page;
+
+
 /**
  * 方言接口, 定义各种方言语句
  */
 public interface IDialect {
+
+  String TOTAL_SIZE_COLUMN = "total_size";
+  String NOW_TIME_COLUMN = "_now_";
+
 
   /**
    * 返回 SQL 文, 用来查询数据库服务器的当前时间, 列名为 _now_
@@ -32,5 +39,25 @@ public interface IDialect {
    * Catalog 在 mysql 中是 schema, 在 oracle 中是表空间.
    */
   String createCatalog(String name);
+
+
+  /**
+   * 将带有 select 的查询语句转换为返回一行 total_size 列的语句,
+   * total_size 列返回 selectSql 查询实际返回多少行
+   *
+   * @param selectSql - 带有 select 的 sql 文.
+   * @return 转换后的 sql 文
+   */
+  String count(String selectSql);
+
+
+  /**
+   * 限制结果集的返回行数, 包装 selectSql 后
+   *
+   * @param selectSql 带有 select 的 sql 文.
+   * @param page 对结果集的限制
+   * @return 转换后的 sql 文
+   */
+  String limitResult(String selectSql, Page page);
 
 }

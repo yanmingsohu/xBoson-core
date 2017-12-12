@@ -16,6 +16,7 @@
 
 package com.xboson.db.driver;
 
+import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDriver;
 import com.xboson.db.NullDriver;
@@ -61,4 +62,9 @@ public class Inspur extends NullDriver implements IDriver {
     return "SELECT SYSDATE _now_ FROM DUAL";
   }
 
+
+  @Override
+  public String limitResult(String selectSql, Page page) {
+    return Oracle.limit(selectSql, page);
+  }
 }

@@ -16,6 +16,7 @@
 
 package com.xboson.db.driver;
 
+import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDriver;
 import com.xboson.db.NullDriver;
@@ -65,5 +66,19 @@ public class Oracle extends NullDriver implements IDriver {
   @Override
   public String createCatalog(String name) {
     return "Create Tablespace " + name;
+  }
+
+
+  @Override
+  public String limitResult(String selectSql, Page page) {
+    return limit(selectSql, page);
+  }
+
+
+  public static String limit(String sql, Page page) {
+    return "Select * From ( Select _Real_Table_.*, rownum _row_num_alias_ From (\n"
+            + sql +
+           "  \n) _Real_Table_ where rownum <= " + (page.pageSize + page.offset) +
+           "\n) where _row_num_alias_ > " + page.offset;
   }
 }

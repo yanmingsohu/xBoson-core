@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.Page;
+import com.xboson.db.*;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -95,9 +96,28 @@ public class QueryImpl {
 
 
   public int queryPaging(ScriptObjectMirror list, String sql, Object[] param,
-                         Page p) throws Exception {
-    throw new UnsupportedOperationException("queryPaging");
-//    return 0;
+                         Page p, ConnectConfig cc) throws Exception {
+    IDialect dialect = DbmsFactory.me().getDriver(cc);
+
+    if (p.totalCount <= 0) {
+      String countSql = dialect.count(sql);
+      // 不要关闭 sr, 否则 connect 也会被关闭
+      SqlResult sr = SqlResult.query(sc.open(), countSql, param);
+      ResultSet rs = sr.getResult();
+      rs.next();
+      p.totalCount = rs.getInt(IDialect.TOTAL_SIZE_COLUMN);
+      rs.close();
+    }
+
+    String limitSql;
+    if (p.totalCount > p.pageSize) {
+      limitSql = dialect.limitResult(sql, p);
+    } else {
+      limitSql = sql;
+    }
+
+    query(list, limitSql, param);
+    return p.totalCount;
   }
 
 

@@ -16,14 +16,23 @@
 
 package com.xboson.db;
 
+import com.xboson.been.Page;
+
+
 /**
  * 方言的默认实现, 都会抛出异常
  */
 public abstract class NullDriver implements IDialect, IDriver {
 
+  static final String NOW_SQL = "select now() " + NOW_TIME_COLUMN;
+  static final String COUNT_SQL_0 = "Select count(1) AS "
+          + TOTAL_SIZE_COLUMN +" From ( ";
+  static final String COUNT_SQL_1 = " ) cnt_tbl";
+
+
   @Override
   public String nowSql() {
-    return "select now() _now_";
+    return NOW_SQL;
   }
 
 
@@ -31,4 +40,15 @@ public abstract class NullDriver implements IDialect, IDriver {
     throw new UnsupportedOperationException("createCatalog");
   }
 
+
+  @Override
+  public String count(String selectSql) {
+    return COUNT_SQL_0+ selectSql + COUNT_SQL_1;
+  }
+
+
+  @Override
+  public String limitResult(String selectSql, Page page) {
+    throw new UnsupportedOperationException();
+  }
 }

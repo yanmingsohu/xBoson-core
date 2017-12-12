@@ -33,10 +33,9 @@ import java.sql.*;
  */
 public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
-  public final static int PAGE_DEFAULT_COUNT = -1;
-
   private Connection __conn;
   private ConnectConfig orgdb;
+  private ConnectConfig __currdb;
   private SysImpl sys;
   private QueryImpl query_impl;
 
@@ -46,6 +45,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   public SqlImpl(CallData cd, ConnectConfig orgdb) throws SQLException {
     super(cd);
     this.orgdb = orgdb;
+    this.__currdb = orgdb;
     this.query_impl = QueryFactory.create(() -> getConnection(), this);
   }
 
@@ -83,30 +83,32 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
    * @param param sql 文中对应的参数列表
    * @param pageNum 页号, 从 1 开始
    * @param pageSize 查询返回行数
-   * @param save_to 结果集保存到 result 的属性名
+   * @param save_to 结果集保存到 save_to 的属性名, 总行数保存在 save_to+'_count' 中.
    * @param totalCount 提供该值可以省去计算总行数
-   * @return
+   * @return 总行数
    */
   public int queryPaging(String sql, Object[] param, int pageNum, int pageSize,
                          String save_to, int totalCount) throws Exception {
     ScriptObjectMirror arr = createJSList();
     sys.bindResult(save_to, arr);
     Page page = new Page(pageNum, pageSize, totalCount);
-    return query_impl.queryPaging(arr, sql, param, page);
+    int total = query_impl.queryPaging(arr, sql, param, page, __currdb);
+    sys.bindResult(save_to + "_count", total);
+    return total;
   }
 
 
   public int queryPaging(String sql, Object[] param, int pageNum, int pageSize,
                          String save_to) throws Exception {
     return queryPaging(sql, param, pageNum, pageSize,
-            save_to, PAGE_DEFAULT_COUNT);
+            save_to, Page.PAGE_DEFAULT_COUNT);
   }
 
 
   public int queryPaging(String sql, Object[] param, int pageNum, int pageSize)
                          throws Exception {
     return queryPaging(sql, param, pageNum, pageSize,
-            "result", PAGE_DEFAULT_COUNT);
+            "result", Page.PAGE_DEFAULT_COUNT);
   }
 
 
@@ -199,7 +201,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
     Statement stat = getConnection().createStatement();
     ResultSet rs = stat.executeQuery(dialect.nowSql());
     if (rs.next()) {
-      Timestamp d = rs.getTimestamp(1);
+      Timestamp d = rs.getTimestamp(IDialect.NOW_TIME_COLUMN);
       return Tool.formatDate(d);
     }
     return null;
@@ -211,6 +213,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
     this.__conn = DbmsFactory.me().open(orgdb);
     IDriver d = DbmsFactory.me().getDriver(orgdb);
     setDBType(d.id());
+    __currdb = orgdb;
   }
 
 
@@ -234,6 +237,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
       Connection newconn = DbmsFactory.me().open(connsetting);
       close();
       __conn = newconn;
+      __currdb = connsetting;
       setDBType(connsetting.getDbid());
     }
   }

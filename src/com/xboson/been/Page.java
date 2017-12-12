@@ -18,14 +18,42 @@ package com.xboson.been;
 
 public class Page {
 
+  public final static int PAGE_DEFAULT_COUNT = -1;
+
+
+  /** 从 0 开始的页码 */
   public int pageNum;
+  /** 一页行数 */
   public int pageSize;
+  /** 总行数 */
   public int totalCount;
+  /** 从 0 开始的偏移 */
+  public int offset;
 
 
+  /**
+   * 分页数据
+   * @param pageNum 从 1 开始的页码
+   * @param pageSize
+   * @param totalCount
+   */
   public Page(int pageNum, int pageSize, int totalCount) {
-    this.pageNum = pageNum;
+    if (pageNum < 1)
+      throw new XBosonException.BadParameter(
+              "int pageNum", "Should be greater than 0");
+
+    if (pageSize < 1)
+      throw new XBosonException.BadParameter(
+              "int pageSize", "Should be greater than 0");
+
+    if (totalCount > 0) {
+      this.totalCount = totalCount;
+    } else {
+      this.totalCount = -1;
+    }
+
+    this.pageNum = pageNum - 1;
     this.pageSize = pageSize;
-    this.totalCount = totalCount;
+    this.offset = this.pageNum * this.pageSize;
   }
 }
