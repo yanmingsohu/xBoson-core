@@ -23,6 +23,7 @@ import com.xboson.been.Module;
 
 import com.xboson.been.XBosonException;
 import com.xboson.util.IConstant;
+import com.xboson.util.ReaderSet;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 import jdk.nashorn.internal.runtime.ECMAException;
 
@@ -31,6 +32,10 @@ import java.nio.ByteBuffer;
 
 public class WarpdScript {
 
+  private static final String S_WRAP0 = "__warp_main(function(" +
+          "require, module, __dirname , __filename, exports, console) {";
+  private static final String S_WRAP1 = "\n})";
+
   private AbstractJSObject jso;
   private Sandbox box;
   private Module module;
@@ -38,51 +43,40 @@ public class WarpdScript {
   private String filename;
   private ICodeRunner crun;
   private Object warpreturn;
-  private ByteBuffer code;
-  private String strcode;
+  private ReaderSet code_reader;
+
+
+  private WarpdScript(Sandbox box, String filename) {
+    this.box  	  = box;
+    this.module   = new Module();
+    this.filename = filename;
+    this.code_reader = new ReaderSet();
+  }
 
 
   WarpdScript(Sandbox box, ByteBuffer code, String filename)
           throws ScriptException {
-    this.box  	  = box;
-    this.code 	  = code;
-    this.module   = new Module();
-    this.filename = filename;
+    this(box, filename);
+    code_reader.add(S_WRAP0);
+    code_reader.add(code);
+    code_reader.add(S_WRAP1);
     warp();
   }
 
 
   WarpdScript(Sandbox box, String code, String filename)
           throws ScriptException {
-    this.box  	  = box;
-    this.strcode  = code;
-    this.module   = new Module();
-    this.filename = filename;
+    this(box, filename);
+    code_reader.add(S_WRAP0);
+    code_reader.add(code);
+    code_reader.add(S_WRAP1);
     warp();
   }
 
 
   private void warp() throws ScriptException {
     box.setFilename(filename);
-    cs = box.compile(
-        "__warp_main(function(require, module, __dirname"
-        + ", __filename, exports, console) {"
-        + getStringCode()
-        + "\n})");
-  }
-
-
-  private String getStringCode() {
-    if (strcode != null) {
-      return strcode;
-    }
-    else if (code != null) {
-      strcode = new String(code.array(), IConstant.CHARSET);
-      return strcode;
-    }
-    else {
-      throw new XBosonException("can not get code");
-    }
+    cs = box.compile(code_reader);
   }
 
 
@@ -94,7 +88,7 @@ public class WarpdScript {
       return warpreturn;
 
     } catch (ECMAException ec) {
-      throw new JScriptException(ec);
+      throw new JScriptException(ec, code_reader, 0);
 
     } catch (Exception e) {
       throw new XBosonException(e);

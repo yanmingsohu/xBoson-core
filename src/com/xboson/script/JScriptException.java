@@ -21,6 +21,8 @@ import com.xboson.util.CodeFormater;
 import jdk.nashorn.internal.runtime.ECMAErrors;
 import jdk.nashorn.internal.runtime.ECMAException;
 
+import javax.script.ScriptException;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +43,7 @@ public class JScriptException extends XBosonException {
 
 
   /**
-   * @see JScriptException#JScriptException(Exception, ByteBuffer, int)
+   * @see JScriptException#JScriptException(Exception, Reader, int)
    */
   public JScriptException(Exception fail) {
     this(fail, null, 0);
@@ -49,9 +51,9 @@ public class JScriptException extends XBosonException {
 
 
   /**
-   * @see JScriptException#JScriptException(Exception, ByteBuffer, int)
+   * @see JScriptException#JScriptException(Exception, Reader, int)
    */
-  public JScriptException(Exception fail, ByteBuffer code) {
+  public JScriptException(Exception fail, Reader code) {
     this(fail, code, 0);
   }
 
@@ -60,7 +62,7 @@ public class JScriptException extends XBosonException {
    * 该构造方法会过滤 fail 中无关的错误堆栈项.
    * 并设置一个文件行偏移.
    */
-  public JScriptException(Exception fail, ByteBuffer code, int offset) {
+  public JScriptException(Exception fail, Reader code, int offset) {
     super(fail.getMessage());
     lastFileName = null;
     lastLine = -1;
@@ -77,7 +79,7 @@ public class JScriptException extends XBosonException {
   }
 
 
-  private void collect_trace(Exception fail, ByteBuffer code) {
+  private void collect_trace(Exception fail, Reader code) {
     if (fail instanceof JScriptException) {
       setStackTrace(fail.getStackTrace());
       initCause(fail.getCause());
@@ -111,6 +113,10 @@ public class JScriptException extends XBosonException {
           trace.add( clear_trace(st[i]) );
         }
       }
+    } else if (e instanceof ScriptException) {
+      ScriptException se = (ScriptException) e;
+      lastLine = se.getLineNumber();
+      lastFileName = se.getFileName();
     }
 
     Throwable t = e.getCause();

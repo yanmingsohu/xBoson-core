@@ -19,6 +19,7 @@ package com.xboson.script;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.ByteBuffer;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -29,6 +30,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
 import com.xboson.script.safe.SafeBinding;
+import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
 import sun.font.Script;
 
@@ -116,11 +118,11 @@ public class Sandbox {
   }
 
 
-  public CompiledScript compile(String code) throws ScriptException {
+  public CompiledScript compile(Reader code) throws ScriptException {
     try {
       return cpl.compile(code);
     } catch(ScriptException e) {
-      throw new JScriptException(e);
+      throw new JScriptException(e, code, 0);
     }
   }
 

@@ -30,12 +30,19 @@ import java.util.List;
 public class CodeFormater {
 
   private static final byte ENTER = (byte)'\n';
-  private ByteBuffer code;
   private List<Integer> line_saved;
+  private Reader reader;
 
 
   public CodeFormater(ByteBuffer code) {
-    this.code = code;
+    ReaderSet r = new ReaderSet();
+    r.add(code);
+    this.reader = r;
+  }
+
+
+  public CodeFormater(Reader reader) {
+    this.reader = reader;
   }
 
 
@@ -70,23 +77,38 @@ public class CodeFormater {
       return null;
     }
 
-    int begin = line_saved.get(i-1) + 1;
-    int end   = line_saved.get(i) - 1;
-    return new String(code.array(), begin, end-begin, IConstant.CHARSET);
+    try {
+      reader.reset();
+      int begin = line_saved.get(i - 1) + 1;
+      int end = line_saved.get(i) - 1;
+      char[] buf = new char[end - begin];
+      reader.read(buf);
+      return new String(buf);
+    } catch (IOException e) {
+      throw new XBosonException(e);
+    }
   }
 
 
   private void parseLine() {
     line_saved = new ArrayList<>(100);
     line_saved.add(-1);
-    byte[] buf = code.array();
 
-    for (int i=0; i<buf.length; ++i) {
-      if (buf[i] == ENTER) {
-        line_saved.add(i);
+    try {
+      reader.reset();
+      int ch = reader.read();
+      int i = 0;
+      while (ch >= 0) {
+        if (ch == ENTER) {
+          line_saved.add(i);
+        }
+        ++i;
+        ch = reader.read();
       }
+      line_saved.add(i);
+    } catch (IOException e) {
+      throw new XBosonException(e);
     }
-    line_saved.add(buf.length);
   }
 
 
