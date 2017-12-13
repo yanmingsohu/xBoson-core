@@ -24,19 +24,19 @@ import java.util.Map;
  */
 public class ApiCall implements IBean {
 
-  /** HTTP 请求参数 */
+  /** 必须, HTTP 请求参数 */
   public CallData call;
 
-  /** 机构 id */
+  /** 必须, 机构 id */
   public String org;
 
-  /** 应用 id */
+  /** 必须, 应用 id */
   public String app;
 
-  /** 模块 id */
+  /** 必须, 模块 id */
   public String mod;
 
-  /** 接口 id */
+  /** 必须, 接口 id */
   public String api;
 
   /** 扩展请求参数, 优先级高于 http 参数, 可以 null */

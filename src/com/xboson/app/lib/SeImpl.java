@@ -26,11 +26,12 @@ import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;
 
 
-public class SeImpl extends RuntimeUnitImpl {
+public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   private ConnectConfig __sysdb;
   private Connection __conn;
@@ -185,5 +186,14 @@ public class SeImpl extends RuntimeUnitImpl {
    */
   public void reloadProperties() {
     throw new UnsupportedOperationException("reloadProperties");
+  }
+
+
+  @Override
+  public void close() throws Exception {
+    if (__conn != null) {
+      __conn.close();
+      __conn = null;
+    }
   }
 }

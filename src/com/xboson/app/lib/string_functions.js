@@ -33,7 +33,7 @@ function __bind_sql_functions(func_name_list) {
       for (var i=0; i<arguments.length; ++i) {
         arg.push(arguments[i]);
       }
-      Function.call.apply(sql[ func_name ], arg);
+      return Function.call.apply(sql[ func_name ], arg);
     }
 
   });

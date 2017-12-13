@@ -36,8 +36,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   private Connection __conn;
   private ConnectConfig orgdb;
   private ConnectConfig __currdb;
-  private SysImpl sys;
   private QueryImpl query_impl;
+  private SysImpl sys;
 
   public String _dbType;
 
@@ -281,7 +281,9 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    Tool.close(__conn);
-    __conn = null;
+    if (__conn != null) {
+      __conn.close();
+      __conn = null;
+    }
   }
 }
