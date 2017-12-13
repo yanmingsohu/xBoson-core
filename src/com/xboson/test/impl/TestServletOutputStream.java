@@ -16,12 +16,26 @@
 
 package com.xboson.test.impl;
 
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
+import com.xboson.util.StringBufferOutputStream;
+
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 
 
 public class TestServletOutputStream extends ServletOutputStream {
+  private Log log;
+  private StringBufferOutputStream out;
+
+
+  public TestServletOutputStream(Log log) {
+    this.log = log;
+    out = new StringBufferOutputStream(1000);
+  }
 
   @Override
   public boolean isReady() {
@@ -31,12 +45,23 @@ public class TestServletOutputStream extends ServletOutputStream {
 
   @Override
   public void setWriteListener(WriteListener writeListener) {
-
   }
 
 
   @Override
   public void write(int i) throws IOException {
-    System.out.write(i);
+    out.write(i);
+  }
+
+
+  @Override
+  public void flush() throws IOException {
+    close();
+  }
+
+
+  @Override
+  public void close() throws IOException {
+    log.info(out.toString());
   }
 }

@@ -165,4 +165,19 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
       return path;
     }
   }
+
+
+  /**
+   * 找不到服务错误
+   */
+  static public class NoService extends XBosonException {
+    private String serviceName = null;
+    public NoService(String serviceName) {
+      super("Not found sub Service: " + serviceName);
+      this.serviceName = serviceName;
+    }
+    public String getServiceName() {
+      return serviceName;
+    }
+  }
 }

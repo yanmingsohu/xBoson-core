@@ -33,6 +33,7 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import jdk.nashorn.internal.runtime.ECMAErrors;
 
 
 /**
@@ -75,8 +76,11 @@ public class Striker extends HttpFilter {
   }
 
 
-  protected void doFilter(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+  protected void doFilter(HttpServletRequest request,
+                          HttpServletResponse response,
+                          FilterChain chain)
           throws IOException, ServletException {
+
     response.setCharacterEncoding("utf8");
     request.setCharacterEncoding("utf8");
     XResponse jr = null;
@@ -103,66 +107,74 @@ public class Striker extends HttpFilter {
 
     } catch(Throwable e) {
       response.setStatus(500);
-
-      //
-      // 初始化失败的情况
-      //
-      if (jr == null) {
-        Writer out = response.getWriter();
-        out.write("System Fail:\n");
-        out.write(e.getMessage());
-        return;
-      }
-
-      if (debug) {
-        StringBuilder out = new StringBuilder();
-        showStack(e, out);
-        jr.setError(e);
-        log.error(out);
-      } else {
-        String msg = e.getMessage();
-        if (msg == null) {
-          msg = e.toString();
-        }
-        jr.setData(msg);
-        log.error(msg);
-      }
-
-      do {
-        if (e instanceof XBosonException) {
-          XBosonException xe = (XBosonException) e;
-          jr.setCode(xe.getCode());
-          break;
-        }
-        e = e.getCause();
-      } while(e != null);
-
-      jr.response();
+      responseError(e, jr, response);
     }
   }
 
 
-  private void showStack(Throwable e, StringBuilder out) {
-    StackTraceElement[] st = e.getStackTrace();
-    out.append(e.toString());
-    boolean bypass = false;
-
-    for (int i=0; i<st.length; ++i) {
-      StackTraceElement t = st[i];
-      if (t.getClassName().startsWith("com.xboson")) {
-        out.append("\n\t");
-        out.append(t.toString());
-        bypass = false;
-      } else if (!bypass) {
-        out.append("\n\t...");
-        bypass = true;
+  private void responseError(Throwable e, XResponse jr, HttpServletResponse response) {
+    //
+    // 初始化失败的情况
+    //
+    if (jr == null) {
+      try {
+        Writer out = response.getWriter();
+        out.write("{ \"code\": 999, \"msg\": \"System Fail: ");
+        out.write(e.getMessage());
+        out.write("\" }");
+        log.error("XResponse is null", e);
+      } catch (IOException e1) {
+        log.debug("XResponse is null, open writer fail", e1);
       }
+      return;
     }
 
-    Throwable c = e.getCause();
-    if (c != null) {
-      out.append("Cause BY ");
-      showStack(c, out);
+    if (debug) {
+      showStack(e, jr);
+    } else {
+      showMessage(e, jr);
     }
+
+    findCode(e, jr);
+
+    try {
+      jr.response();
+    } catch (IOException e1) {
+      //
+      // 当客户端已经断开连接, 可能抛出错误, 这个错误并不重要.
+      //
+      log.debug("XResponse response fail", e1);
+    }
+  }
+
+
+  private void findCode(Throwable e, XResponse jr) {
+    do {
+      if (e instanceof XBosonException) {
+        XBosonException xe = (XBosonException) e;
+        jr.setCode(xe.getCode());
+        break;
+      }
+      e = e.getCause();
+    } while(e != null);
+  }
+
+
+  private void showMessage(Throwable e, XResponse jr) {
+    String msg = e.getMessage();
+    if (msg == null) {
+      msg = e.toString();
+    }
+    jr.setData(msg);
+    log.error(msg);
+  }
+
+
+  private void showStack(Throwable e, XResponse jr) {
+    StringBuilder out = new StringBuilder();
+    Tool.xbosonStack(e, out);
+    String msg = out.toString();
+    jr.setData(msg);
+    log.error(msg);
   }
 }

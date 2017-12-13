@@ -14,21 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.init;
+package com.xboson.app;
 
-import com.xboson.app.AppContext;
 import com.xboson.been.ApiCall;
-import com.xboson.been.CallData;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.test.TestApi;
-import com.xboson.test.impl.TestServletRequest;
-import com.xboson.test.impl.TestServletResponse;
 import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 
 /**
@@ -37,8 +30,18 @@ import javax.servlet.http.HttpServletResponse;
 public class SystemStartupScript implements IConstant, Runnable {
 
   private Log log;
+  private static boolean is_init = false;
 
-  public SystemStartupScript() {
+
+  public static void me() {
+    if (is_init) return;
+    is_init = true;
+    SystemStartupScript sss = new SystemStartupScript();
+    sss.start();
+  }
+
+
+  private SystemStartupScript() {
     log = LogFactory.create();
   }
 

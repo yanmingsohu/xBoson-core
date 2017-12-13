@@ -22,6 +22,7 @@ import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.script.*;
+import com.xboson.util.CloseableSet;
 import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -30,6 +31,7 @@ import jdk.nashorn.internal.runtime.ECMAException;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -100,7 +102,8 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
     ConnectConfig orgdb = org.getOrgDb();
 
-    try (SqlImpl sql  = new SqlImpl(cd, orgdb)) {
+    try (CloseableSet cs = new CloseableSet()) {
+      SqlImpl sql     = cs.add(new SqlImpl(cd, orgdb));
       SysImpl sys     = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
@@ -110,7 +113,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       ModuleHandleContext.register("sql", sql);
 
       if (org.isSysORG()) {
-        se = new SeImpl(cd, sys, org.id());
+        se = cs.add(new SeImpl(cd, sys, org.id()));
       }
 
       call.call(jsmod.exports, sys, sql, cache, http, se);

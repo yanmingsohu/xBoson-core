@@ -40,16 +40,6 @@ public class MainServlet extends HttpServlet {
 	private final Log log = LogFactory.create();
 
 
-	private void checkLoging(CallData cd) {
-	  if (cd.sess.login_user == null) {
-	    throw new XBosonException("please login");
-    }
-    if (cd.sess.login_user.pid == null) {
-      throw new XBosonException("invaild login state");
-    }
-  }
-
-
   /**
 	 * 参数通过 URL 传递
 	 */
@@ -65,7 +55,7 @@ public class MainServlet extends HttpServlet {
 		}
 
 		if (sv.needLogin()) {
-      checkLoging(cd);
+      sv.checkLoging(cd);
     }
 
     log.debug(cd.url.getName(), sv.getClass().getName());

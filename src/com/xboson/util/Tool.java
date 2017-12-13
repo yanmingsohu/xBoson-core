@@ -31,6 +31,7 @@ import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Uuid;
+import jdk.nashorn.internal.runtime.ECMAErrors;
 
 
 public final class Tool {
@@ -127,6 +128,43 @@ public final class Tool {
     e.printStackTrace(ps);
     ps.flush();
     return sw.toString();
+  }
+
+
+  /**
+   * 堆栈只保留 xboson 对象, 和脚本消息, Cause 中的消息也会被包含
+   */
+  public static void xbosonStack(Throwable e, StringBuilder out) {
+    StackTraceElement[] st = e.getStackTrace();
+    out.append(e.toString());
+    boolean bypass = false;
+
+    for (int i=0; i<st.length; ++i) {
+      StackTraceElement t = st[i];
+      if (t.getClassName().startsWith("com.xboson")
+              || ECMAErrors.isScriptFrame(t))
+      {
+        out.append("\n\t");
+        out.append(t.toString());
+        bypass = false;
+      } else if (!bypass) {
+        out.append("\n\t...");
+        bypass = true;
+      }
+    }
+
+    Throwable c = e.getCause();
+    if (c != null) {
+      out.append("Cause BY ");
+      xbosonStack(c, out);
+    }
+  }
+
+
+  public static String xbosonStack(Throwable e) {
+    StringBuilder out = new StringBuilder();
+    xbosonStack(e, out);
+    return out.toString();
   }
 
 

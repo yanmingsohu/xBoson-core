@@ -16,11 +16,13 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppContext;
 import com.xboson.app.ErrorCodeMessage;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlCachedResult;
+import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.files.Directory;
 import com.xboson.j2ee.files.FileInfo;
@@ -38,6 +40,7 @@ import org.supercsv.prefs.CsvPreference;
 
 import java.io.*;
 import java.math.BigDecimal;
+import java.sql.ResultSet;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -54,6 +57,10 @@ public class SysImpl extends RuntimeUnitImpl {
 
   public static final String NULSTR = "";
   public static final String NULNULSTR = "null";
+
+  private static final String ORG_SQL_NAME = "user_org_list.sql";
+  private static final String USER_ID_TO_PID_SQL = "user_id_to_pid.sql";
+  private static final String ADMIN_FLAG_SQL = "user_admin_flag.sql";
 
   /**
    * 公共属性
@@ -111,6 +118,9 @@ public class SysImpl extends RuntimeUnitImpl {
     if (result == null)
       result = createJSObject();
 
+    if (Tool.isNulStr(name))
+      return;
+
     result.setMember(name, unwrap(value));
   }
 
@@ -161,7 +171,7 @@ public class SysImpl extends RuntimeUnitImpl {
 
   public String getUserPID(String userid) throws Exception {
     try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
-      String sql = SqlReader.read("user_id_to_pid.sql");
+      String sql = SqlReader.read(USER_ID_TO_PID_SQL);
       List<Map<String, Object>> rows = scr.query(sql, userid);
       if (rows.size() > 0) {
         Map<String, Object> o = rows.get(0);
@@ -176,7 +186,7 @@ public class SysImpl extends RuntimeUnitImpl {
     Map<String, Object> ret = new HashMap<>(users.length);
 
     try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
-      String sql = SqlReader.read("user_id_to_pid.sql");
+      String sql = SqlReader.read(USER_ID_TO_PID_SQL);
 
       for (int i=0; i<users.length; ++i) {
         List<Map<String, Object>> rows = scr.query(sql, users[i]);
@@ -192,7 +202,7 @@ public class SysImpl extends RuntimeUnitImpl {
 
   public Object getUserAdminFlag() throws Exception {
     try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
-      String sql = SqlReader.read("user_admin_flag.sql");
+      String sql = SqlReader.read(ADMIN_FLAG_SQL);
 
       List<Map<String, Object>> rows = scr.query(
               sql, cd.sess.login_user.pid, orgdb.getDatabase());
@@ -217,11 +227,17 @@ public class SysImpl extends RuntimeUnitImpl {
 
 
   public Object getUserOrgList() throws Exception {
-    List<Map<String, Object>> ret;
-    try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
-      ret = scr.query(SqlReader.read("user0003"), cd.sess.login_user.pid);
+    return getUserOrgList(cd.sess.login_user.userid);
+  }
+
+
+  public Object getUserOrgList(String userid) throws Exception {
+    ScriptObjectMirror retList = createJSList();
+    try (SqlResult sr = SqlReader.query(ORG_SQL_NAME, orgdb, userid)) {
+      ResultSet rs = sr.getResult();
+      copyToList(retList, rs);
     }
-    return ret;
+    return unwrap(retList);
   }
 
 
@@ -269,6 +285,23 @@ public class SysImpl extends RuntimeUnitImpl {
 
   public String currentTimeString() {
     return Tool.formatDate(new Date());
+  }
+
+
+  /**
+   * 特别不理解为什么 sys 上也有这个方法,
+   * 该方法与 se.encodePlatformPassword 区别是 ps 已经 md5
+   */
+  public String encodePlatformPassword(String uid, String date, String ps) {
+    if (! AppContext.me().originalOrg().equalsIgnoreCase(IConstant.SYS_ORG)) {
+      throw new XBosonException("No auth call encodePlatformPassword()");
+    }
+    return Password.v1(uid, ps, date);
+  }
+
+
+  public String getCurrentTimeString() {
+    return currentTimeString();
   }
 
 

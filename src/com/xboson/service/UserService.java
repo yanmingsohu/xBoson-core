@@ -16,6 +16,7 @@
 
 package com.xboson.service;
 
+import com.xboson.app.AppContext;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
@@ -58,8 +59,24 @@ public class UserService extends XService implements IDict {
   }
 
 
+  /**
+   * 除了登录/登出方法外, 其他 api 都是写在脚本中的.
+   */
   public void service(CallData data) throws Exception {
-    subService(data, MSG);
+    try {
+      subService(data, MSG);
+    } catch (XBosonException.NoService ns) {
+      checkLoging(data);
+
+      ApiCall ac = new ApiCall();
+      ac.org  = data.getString("org", 0, 100);
+      ac.app  = data.getString("app", 1, 100);
+      ac.mod  = data.getString("mod", 1, 100);
+      ac.api  = ns.getServiceName();
+      ac.call = data;
+
+      AppContext.me().call(ac);
+    }
   }
 
 
@@ -124,43 +141,6 @@ public class UserService extends XService implements IDict {
     data.sess.login_user = null;
     data.xres.responseMsg("已登出", 1007);
     data.sess.destoryFlag();
-  }
-
-
-	public void getuserorg(CallData data) throws Exception {
-	  if (!isLogin(data)) {
-	    data.xres.responseMsg("未登录", 1000);
-	    return;
-    }
-
-    try (SqlCachedResult scr = new SqlCachedResult(cf.db)) {
-      List<Map<String, Object>> ret =
-	        scr.query(SqlReader.read("user0003"), data.sess.login_user.pid);
-
-      data.xres.setData(ret);
-      data.xres.response();
-    }
-  }
-
-
-  public void get_havinguser(CallData data) throws Exception {
-    final int call_count = checkIpBan(data);
-    if (call_count >= IP_BAN_COUNT) {
-      data.xres.responseMsg(
-              "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
-    }
-
-    String userid = data.req.getParameter("userid");
-    String tel    = data.req.getParameter("tel");
-    String email  = data.req.getParameter("email");
-
-    Object[] parmbind = new Object[] { userid, tel, email };
-    String[] ret = new String[1];
-
-    try (SqlResult sr = SqlReader.query("having_user.sql", cf.db, parmbind)) {
-      data.xres.setData( sr.resultToList() );
-      data.xres.response();
-    }
   }
 
 

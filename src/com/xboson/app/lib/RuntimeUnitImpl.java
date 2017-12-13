@@ -27,6 +27,9 @@ import jdk.nashorn.internal.runtime.Context;
 import jdk.nashorn.internal.runtime.PropertyMap;
 import jdk.nashorn.internal.runtime.ScriptObject;
 
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -196,5 +199,15 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       return (String) o;
     }
     return null;
+  }
+
+
+  /**
+   * 便捷方法
+   * @see QueryImpl#copyToList(RuntimeUnitImpl, ScriptObjectMirror, ResultSet)
+   */
+  public int copyToList(ScriptObjectMirror list, ResultSet rs)
+          throws SQLException {
+    return QueryImpl.copyToList(this, list, rs);
   }
 }

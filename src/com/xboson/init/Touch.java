@@ -16,6 +16,7 @@
 
 package com.xboson.init;
 
+import com.xboson.app.SystemStartupScript;
 import com.xboson.auth.AuthFactory;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.sql.SqlReader;
@@ -51,6 +52,7 @@ public final class Touch {
     AuthFactory.me();
     DbmsFactory.me().registeringDefaultDriver();
     SqlReader.me();
+    SystemStartupScript.me();
   }
 
 

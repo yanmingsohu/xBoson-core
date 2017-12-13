@@ -59,6 +59,17 @@ public class TestApi extends Test {
   }
 
 
+  /**
+   * 方便调用系统 api 进行测试
+   */
+  public void test_sys_api(String app, String mod, String api) throws Exception {
+    sub("Test sys api:", app, '/', mod, '/', api);
+
+    RunApi ra = new RunApi(app);
+    ra.run(mod, api);
+  }
+
+
   public static CallData simulationCallData() throws Exception {
     TestServletRequest req = new TestServletRequest();
     TestServletResponse resp = new TestServletResponse();

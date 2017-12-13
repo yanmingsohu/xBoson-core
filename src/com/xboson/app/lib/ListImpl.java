@@ -58,46 +58,52 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public Object range(NativeArray arr, int begin, int end) {
-    return NativeArray.slice(arr, begin, end);
+  public Object range(Object arr, int begin, int end) {
+    return NativeArray.slice(unwrap(arr), begin, end);
   }
 
 
-  public Object removeAt(NativeArray arr, int remove_index) {
-    NativeArray.splice(arr, remove_index, 1);
+  public Object removeAt(Object arr, int remove_index) {
+    NativeArray.splice(unwrap(arr), remove_index, 1);
     return arr;
   }
 
 
-  public Object add(NativeArray arr, Object val) {
-    NativeArray.push(arr, val);
+  public Object add(Object arr, Object val) {
+    try {
+      NativeArray.push(unwrap(arr), unwrap(val));
+      return arr;
+    } catch(Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
+  }
+
+
+  public Object addAt(Object arr, Object val, int index) {
+    NativeArray.splice(unwrap(arr), index, 0 , unwrap(val));
     return arr;
   }
 
 
-  public Object addAt(NativeArray arr, Object val, int index) {
-    NativeArray.splice(arr, index, 0 , val);
-    return arr;
-  }
-
-
-  public Object addAll(NativeArray arr, NativeArray src) {
-    int end = src.size();
+  public Object addAll(Object arr, Object src) {
+    ScriptObjectMirror jsarr = wrap(src);
+    int end = jsarr.size();
     for (int i=0; i<end; ++i) {
-      NativeArray.push(arr, src.get(i));
+      NativeArray.push(unwrap(arr), unwrap(jsarr.getSlot(i)));
     }
     return arr;
   }
 
 
-  public Object reverse(NativeArray arr) {
-    NativeArray.reverse(arr);
+  public Object reverse(Object arr) {
+    NativeArray.reverse(unwrap(arr));
     return arr;
   }
 
 
-  public String toString(NativeArray arr, Object sp) {
-    return NativeArray.join(arr, sp);
+  public String toString(Object arr, Object sp) {
+    return NativeArray.join(unwrap(arr), unwrap(sp));
   }
 
 
@@ -162,14 +168,15 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public Object remove(NativeArray arr, Object removeVal) {
-    int end = arr.size();
+  public Object remove(Object arr, Object removeVal) {
+    ScriptObjectMirror jsarr = wrap(arr);
+    int end = jsarr.size();
     removeVal = ScriptObjectMirror.wrap(removeVal, Context.getGlobal());
 
     for (int i=0; i<end; ++i) {
-      Object o = arr.get(i);
+      Object o = jsarr.getSlot(i);
       if (_equals(removeVal, o)) {
-        NativeArray.splice(arr, i, 1);
+        NativeArray.splice(unwrap(arr), i, 1);
         continue;
       }
     }
@@ -177,7 +184,7 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public Object sort(NativeArray arr, String... param) {
+  public Object sort(Object arr, String... param) {
     if (array_sort_implement_js == null)
       throw new XBosonException.NotExist("sort function not init");
 
@@ -185,7 +192,7 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
     if (! sort.isFunction() )
       throw new XBosonException.NotExist("sort function fail.");
 
-    sort.call(arr, param);
+    sort.call(unwrap(arr), param);
     return arr;
   }
 

@@ -23,10 +23,7 @@ import com.xboson.log.LogFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.Context;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
+import java.sql.*;
 
 
 /**
@@ -39,6 +36,10 @@ public class QueryImpl {
    * QueryImpl 通过该接口打开数据库连接
    */
   public interface SqlConnect {
+    /**
+     * 该方法在必要时创建数据库连接, 之后会缓存该连接, 并在后续调用返回缓存的连接.
+     * 返回的连接不可以关闭, 连接返回的资源可以关闭.
+     */
     Connection open() throws Exception;
   }
 
@@ -74,20 +75,7 @@ public class QueryImpl {
     }
 
     ResultSet rs = ps.executeQuery();
-    ResultSetMetaData meta = rs.getMetaData();
-    int column = meta.getColumnCount();
-    int row_count = 0;
-    int arri = list.size()-1;
-
-    while (rs.next()) {
-      ScriptObjectMirror row = runtime.createJSObject();
-      list.setSlot(++arri, runtime.unwrap(row));
-      ++row_count;
-
-      for (int c = 1; c<=column; ++c) {
-        row.setMember(meta.getColumnLabel(c), rs.getObject(c));
-      }
-    }
+    int row_count = copyToList(runtime, list, rs);
 
     rs.close();
     ps.close();
@@ -118,6 +106,41 @@ public class QueryImpl {
 
     query(list, limitSql, param);
     return p.totalCount;
+  }
+
+
+  /**
+   * 将结果集中的数据灌入 list 中, 每行都是一个 js 对象.
+   *
+   * @param list 结果集放入 list 中并返回
+   * @param rs db 查询结果集, 不关闭
+   * @return 放入 list 中的行数
+   */
+  public static int copyToList(RuntimeUnitImpl rt,
+                               ScriptObjectMirror list,
+                               ResultSet rs)
+          throws SQLException {
+
+    ResultSetMetaData meta = rs.getMetaData();
+    int column = meta.getColumnCount();
+    int row_count = 0;
+    int arri = list.size() - 1;
+
+    String[] columnLabels = new String[column+1];
+    for (int c = 1; c <= column; ++c) {
+      columnLabels[c] = meta.getColumnLabel(c);
+    }
+
+    while (rs.next()) {
+      ScriptObjectMirror row = rt.createJSObject();
+      list.setSlot(++arri, rt.unwrap(row));
+      ++row_count;
+
+      for (int c = 1; c <= column; ++c) {
+        row.setMember(columnLabels[c], rs.getObject(c));
+      }
+    }
+    return row_count;
   }
 
 

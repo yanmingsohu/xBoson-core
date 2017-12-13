@@ -18,6 +18,7 @@ package com.xboson.test.impl;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.StringBufferOutputStream;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
@@ -29,7 +30,13 @@ import java.util.Locale;
 
 
 public class TestServletResponse implements HttpServletResponse {
-  Log log = LogFactory.create("TSR");
+  Log log = LogFactory.create("InnerServletResponse");
+  TestServletOutputStream out;
+
+  public TestServletResponse() {
+    log = LogFactory.create("InnerServletResponse");
+    out = new TestServletOutputStream(log);
+  }
 
   @Override
   public void addCookie(Cookie cookie) {
@@ -171,13 +178,13 @@ public class TestServletResponse implements HttpServletResponse {
 
   @Override
   public ServletOutputStream getOutputStream() throws IOException {
-    return new TestServletOutputStream();
+    return out;
   }
 
 
   @Override
   public PrintWriter getWriter() throws IOException {
-    return new PrintWriter(System.out);
+    return new PrintWriter(out);
   }
 
 
@@ -219,6 +226,7 @@ public class TestServletResponse implements HttpServletResponse {
 
   @Override
   public void flushBuffer() throws IOException {
+    out.flush();
   }
 
 

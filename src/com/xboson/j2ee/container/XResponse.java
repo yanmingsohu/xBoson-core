@@ -24,6 +24,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.xboson.app.ErrorCodeMessage;
 import com.xboson.been.NameCache;
 import com.xboson.been.ResponseRoot;
 import com.xboson.been.XBosonException;
@@ -46,6 +47,7 @@ public class XResponse {
 	private Map<String, Object> ret_root;
 	private IXResponse res_impl;
 	private boolean is_responsed = false;
+	private boolean is_set_msg = false;
 
 	
 	public XResponse(HttpServletRequest request, HttpServletResponse response)
@@ -148,6 +150,7 @@ public class XResponse {
    */
   public void setMessage(String msg) {
     ret_root.put("msg", msg);
+    is_set_msg = true;
   }
 
 
@@ -183,7 +186,7 @@ public class XResponse {
   /**
    * 转换错误消息到返回对象
    */
-  public void setError(Throwable e) throws IOException {
+  public void setError(Throwable e) {
     setData(Tool.miniStack(e, 5));
     setDatatype(e.getClass());
     setMessage(e.getMessage());
@@ -230,7 +233,14 @@ public class XResponse {
    */
 	public void response() throws IOException {
 	  if (is_responsed)
-	    throw new XBosonException("Is responsed, Dont do it for the second time");
+	    throw new XBosonException("Is responsed, Don't do it second time");
+
+	  if (!is_set_msg) {
+	    Object code = ret_root.get("code");
+	    if (code != null && code instanceof Integer) {
+        setMessage( ErrorCodeMessage.get((int) code) );
+      }
+    }
 
     res_impl.response(request, response, ret_root);
     is_responsed = true;

@@ -30,6 +30,8 @@ import java.util.List;
 public class CodeFormater {
 
   private static final char ENTER = '\n';
+  private static final String NULSTR = "";
+
   private List<Integer> line_saved;
   private Reader reader;
   private StringBuilder strbuf;
@@ -81,6 +83,10 @@ public class CodeFormater {
     int begin = line_saved.get(i - 1) + 1;
     int end = line_saved.get(i) - 1;
     int len = end - begin;
+
+    if (len <= 0) {
+      return NULSTR;
+    }
 
     char[] buf = new char[len];
     strbuf.getChars(begin, end, buf, 0);
