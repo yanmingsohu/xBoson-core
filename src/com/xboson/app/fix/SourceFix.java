@@ -73,16 +73,15 @@ public class SourceFix {
             new S_BeginBrackets(),
             new S_Space(),
             new S_KeyVar(),
-            new S_Symbol("keyName"),
+            new S_Symbol("key"),
             new S_Space(),
             new S_KeyIN(),
             new S_Space(),
-//            new S_Symbol("objectName"),
-            new S_Expression(),
+            new S_Expression("exp"),
             new S_EndBrackets(),
             new S_SpaceEnter(),
             new S_BeginScope(),
-            new S_Output(),
+            new S_For_Output("key", "exp"),
     };
 
     Map<String, String> data = new HashMap<>();
@@ -326,16 +325,22 @@ public class SourceFix {
   }
 
 
-  static class S_Output extends SState {
+  static class S_For_Output extends SState {
     static int id = 0;
+    String varName, expName;
+
+    public S_For_Output(String varName, String expName) {
+      this.varName = varName;
+      this.expName = expName;
+    }
 
     @Override
     public int read(byte ch) {
       try {
         StringBuffer buf = new StringBuffer(50);
         String indexName = "__index_" + (++id) + "_";
-        String keyName = data.get("keyName");
-        String objName = data.get("exp");
+        String keyName = data.get(varName);
+        String objName = data.get(expName);
 
         buf.append("for (var ");
         buf.append(indexName);
@@ -362,6 +367,11 @@ public class SourceFix {
   static class S_Expression extends SState {
     private StringBuilder exp;
     private int state = 0;
+    private String saveto;
+
+    public S_Expression(String saveto) {
+      this.saveto = saveto;
+    }
 
     @Override
     public int read(byte ch) {
@@ -371,7 +381,7 @@ public class SourceFix {
       }
       if (ch == ')') {
         state = 0;
-        data.put("exp", exp.toString());
+        data.put(saveto, exp.toString());
         return NEXT_AND_BACK;
       }
       if (ch == '\n') {
