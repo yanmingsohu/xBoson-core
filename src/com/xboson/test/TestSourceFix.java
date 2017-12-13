@@ -31,6 +31,7 @@ public class TestSourceFix extends Test {
     msg("Source:", "\n"+ buf.toString());
 
     byte[] fix = SourceFix.fixFor(buf.toBytes());
+    fix = SourceFix.fixJavaCall(fix);
     sub("Fix:", line, "\n"+ new String(fix));
   }
 

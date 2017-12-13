@@ -33,4 +33,8 @@ public abstract class SState implements ISState {
   public void setOutput(OutputStream out) {
     this.out = out;
   }
+
+  public boolean isSpace(byte ch) {
+    return ch == ' ' || ch == '\n' || ch == '\t' || ch == ';';
+  }
 }

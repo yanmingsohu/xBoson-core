@@ -17,18 +17,23 @@
 package com.xboson.app.fix;
 
 import com.xboson.app.fix.state.*;
-import com.xboson.been.XBosonException;
 import com.xboson.util.StringBufferOutputStream;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**
- * 代码修正
+ * 代码修正.
+ * (字符串中的代码能够识别; 注释中的代码将被替换)
  */
 public class SourceFix {
+
+  /**
+   * 用静态对象比较速度更快
+   */
+  private static final String K = "key";
+  private static final String E = "exp";
+  private static final String O = "object";
+  private static final String F = "func";
+  private static final String A = "args";
 
 
   /**
@@ -56,7 +61,7 @@ public class SourceFix {
    * 修正 beetl 中 for 循环与 js 不兼容.
    *
    * "for (row in MAP) {"
-   * 变换为:
+   * 重写为:
    * "for (var _index_ in MAP) { var row = MAP[_index_];"
    */
   public static byte[] fixFor(byte[] content) {
@@ -69,15 +74,15 @@ public class SourceFix {
             new S_BeginBrackets(),
             new S_Space(),
             new S_KeyVar(),
-            new S_Symbol("key"),
+            new S_Symbol(K),
             new S_Space(),
             new S_KeyIN(),
             new S_Space(),
-            new S_Expression("exp"),
+            new S_Expression(E),
             new S_EndBrackets(),
             new S_SpaceEnter(),
             new S_BeginScope(),
-            new S_For_Output("key", "exp"),
+            new S_For_Output(K, E),
     };
 
     JsParser.rewrite(content, buf, all_state);
@@ -85,4 +90,27 @@ public class SourceFix {
   }
 
 
+  /**
+   * 修正 beetl 中对象的 java 函数调用语法,
+   * 语法: @object.func(args0, args1)
+   * 重写为: __inner_call("func-name", object, args0, args1)
+   */
+  public static byte[] fixJavaCall(byte[] content) {
+    int size = (int) (content.length * 1.7);
+    StringBufferOutputStream buf = new StringBufferOutputStream(size);
+
+    SState[] all_state = new SState[] {
+            new S_BeginNotation('@'),
+            new S_Symbol(O),
+            new S_Notation('.'),
+            new S_Symbol(F),
+            new S_BeginBrackets(),
+            new S_DynArgument(A),
+            new S_EndBrackets(),
+            new S_JavaCallOutput(O, F, A),
+    };
+
+    JsParser.rewrite(content, buf, all_state);
+    return buf.toBytes();
+  }
 }

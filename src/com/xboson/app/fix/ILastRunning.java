@@ -6,43 +6,18 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-12-13 下午6:29
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/fix/state/S_for.java
+// 文件创建日期: 17-12-13 下午7:46
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/fix/ILastRunning.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.app.fix.state;
+package com.xboson.app.fix;
 
-import com.xboson.app.fix.SState;
-
-
-public class S_for extends SState {
-  private int s = 0;
-  private byte pch = 0;
-
-  public int read(byte ch) {
-    if (s == 0) {
-      if (ch == 'f' && isSpace(pch)) {
-        s = 1;
-        return BEGIN;
-      } else {
-        pch = ch;
-        return NOTHING;
-      }
-    }
-    if (s == 1 && ch == 'o') {
-      s = 2;
-      return KEEP;
-    }
-    if (s == 2 && ch == 'r') {
-      s = 0;
-      pch = 0;
-      return NEXT;
-    }
-    s = 0;
-    return RESET;
-  }
+/**
+ * 当文档结束, 又恰好停在继承该接口的状态节点上, 将使用 read(0) 来调用该节点
+ */
+public interface ILastRunning extends ISState {
 }

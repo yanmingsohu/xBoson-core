@@ -216,6 +216,11 @@ public class SysImpl extends RuntimeUnitImpl {
   }
 
 
+  public Object getUserAdminFlag(String userid, String org) {
+    throw new UnsupportedOperationException();
+  }
+
+
   public String getUserIdByOpenId() {
     return cd.sess.login_user.userid;
   }

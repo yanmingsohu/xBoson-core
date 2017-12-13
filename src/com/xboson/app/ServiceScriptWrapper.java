@@ -57,6 +57,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
           "lib/array_sort_comparator.js",
           "lib/sys_functions_impl.js",
           "lib/string_functions.js",
+          "lib/inner_call.js",
   };
 
   private IEnvironment env;

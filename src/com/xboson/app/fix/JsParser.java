@@ -41,9 +41,11 @@ public class JsParser {
                              SState[] role)
   {
     int size = (int) (content.length * 1.7);
-    int state = 0;
+    int step = 0;
     int resetIndex = 0;
     int stateIndex = 0;
+    boolean in_quotation = false;
+    byte quotation_mark = 0;
 
     Map<String, String> data = new HashMap<>();
     ISState currentState = role[0];
@@ -54,9 +56,33 @@ public class JsParser {
     }
 
     try {
+      int directive = ISState.INIT;
+
       for (int i = 0; i < content.length; ++i) {
         byte ch = content[i];
-        int directive = currentState.read(ch);
+
+        //
+        // 当在字符串中, 不做任何额外的处理
+        //
+        if (step == 0) {
+          if (in_quotation) {
+            if (ch == quotation_mark && content[i - 1] != '\\') {
+              in_quotation = false;
+            }
+            output.write(ch);
+            continue;
+          } else if (ch == '\'' || ch == '\"') {
+            in_quotation = true;
+            quotation_mark = ch;
+            output.write(ch);
+            continue;
+          }
+        }
+
+        //
+        // 让状态机读取一个字符并指示下一步操作
+        //
+        directive = currentState.read(ch);
 
         if (directive == SState.BEGIN) {
           stateIndex = i;
@@ -76,10 +102,10 @@ public class JsParser {
             stateIndex = i+1;
           }
 
-          if (++state >= role.length) {
-            state = 0;
+          if (++step >= role.length) {
+            step = 0;
           }
-          currentState = role[state];
+          currentState = role[step];
           continue;
         }
         else if (directive == SState.RESET) {
@@ -87,11 +113,15 @@ public class JsParser {
             output.write(content[resetIndex]);
             ++resetIndex;
           }
-          state = 0;
-          currentState = role[state];
+          step = 0;
+          currentState = role[step];
         }
 
         output.write(ch);
+      }
+
+      if (currentState instanceof ILastRunning) {
+        currentState.read((byte) 0);
       }
     } catch(IOException e) {
       throw new XBosonException(e);

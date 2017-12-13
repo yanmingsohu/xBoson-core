@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-12-13 下午6:30
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/fix/state/S_For_Output.java
+// 文件创建日期: 17-12-13 下午7:15
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/fix/state/S_JavaCallOutput.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -19,43 +19,45 @@ package com.xboson.app.fix.state;
 import com.xboson.app.fix.ILastRunning;
 import com.xboson.app.fix.SState;
 import com.xboson.been.XBosonException;
-import com.xboson.util.IConstant;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.io.Writer;
 
 
-public class S_For_Output extends SState implements ILastRunning {
-  private static int id = 0;
-  private String varName, expName;
+public class S_JavaCallOutput extends SState implements ILastRunning {
+  private String objName, funcName, argsName;
 
 
-  public S_For_Output(String varName, String expName) {
-    this.varName = varName;
-    this.expName = expName;
+  public S_JavaCallOutput(String obj, String func, String args) {
+    this.objName = obj;
+    this.funcName = func;
+    this.argsName = args;
   }
-
 
   @Override
   public int read(byte ch) {
-    String indexName = "__index_" + (++id) + "_";
-    String keyName = data.get(varName);
-    String objName = data.get(expName);
+    String obj = data.get(objName);
+    String fun = data.get(funcName);
+    String arg = data.get(argsName);
 
     try (Writer out = new OutputStreamWriter(super.out)) {
-      out.append("for (var ");
-      out.append(indexName);
-      out.append(" in ");
-      out.append(objName);
-      out.append(") { var ");
-      out.append(keyName);
-      out.append(" = ");
-      out.append(objName);
-      out.append("[");
-      out.append(indexName);
-      out.append("];");
+      out.append("__inner_call(");
+      out.append("\"");
+      out.append(fun);
+      out.append("\", ");
+      out.append(obj);
+      out.append(", ");
+      out.append(arg);
+      out.append(") /* ");
+
+      out.append("@");
+      out.append(obj);
+      out.append('.');
+      out.append(fun);
+      out.append('(');
+      out.append(arg);
+      out.append(") */");
     } catch (IOException e) {
       throw new XBosonException(e);
     }

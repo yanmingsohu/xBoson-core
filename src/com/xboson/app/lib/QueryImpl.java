@@ -32,6 +32,9 @@ import java.sql.*;
  */
 public class QueryImpl {
 
+  private final static String NULSTR = "";
+
+
   /**
    * QueryImpl 通过该接口打开数据库连接
    */
@@ -111,6 +114,7 @@ public class QueryImpl {
 
   /**
    * 将结果集中的数据灌入 list 中, 每行都是一个 js 对象.
+   * 当列值为 null 则放入空字符串.
    *
    * @param list 结果集放入 list 中并返回
    * @param rs db 查询结果集, 不关闭
@@ -137,7 +141,9 @@ public class QueryImpl {
       ++row_count;
 
       for (int c = 1; c <= column; ++c) {
-        row.setMember(columnLabels[c], rs.getObject(c));
+        Object d = rs.getObject(c);
+        if (d == null) d = NULSTR;
+        row.setMember(columnLabels[c], d);
       }
     }
     return row_count;

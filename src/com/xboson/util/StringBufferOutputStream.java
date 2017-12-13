@@ -95,7 +95,7 @@ public class StringBufferOutputStream extends OutputStream {
    * 在写入完成后, 调用 Writer.flush 后才能保证缓冲区同步最新的数据.
    */
   public Writer openWrite() {
-    return new OutputStreamWriter(this);
+    return new OutputStreamWriter(this, IConstant.CHARSET);
   }
 
 

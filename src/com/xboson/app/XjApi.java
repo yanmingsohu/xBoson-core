@@ -104,6 +104,7 @@ public class XjApi implements IDict {
     content = ApiEncryption.decryptApi(str);
     if (SourceFix.fixBeginEnd(content)) {
       content = SourceFix.fixFor(content);
+      content = SourceFix.fixJavaCall(content);
     }
   }
 
