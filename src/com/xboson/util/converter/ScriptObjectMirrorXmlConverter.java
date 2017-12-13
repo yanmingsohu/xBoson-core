@@ -41,16 +41,28 @@ public class ScriptObjectMirrorXmlConverter implements Converter {
 
 
   @Override
-  public void marshal(Object o, HierarchicalStreamWriter hierarchicalStreamWriter,
-                      MarshallingContext marshallingContext) {
+  public void marshal(Object o, HierarchicalStreamWriter writer,
+                      MarshallingContext context) {
     ScriptObjectMirror jsobj = (ScriptObjectMirror) o;
     if (jsobj.isFunction())
       return;
 
+    String cname = jsobj.getClassName();
+    if (cname.indexOf("Error") >= 0) {
+      Object stack = jsobj.getMember("stack");
+      if (stack != null) {
+        writer.startNode("error");
+        writer.addAttribute("type", cname);
+        writer.setValue(String.valueOf(stack));
+        writer.endNode();
+        return;
+      }
+    }
+
     if (jsobj.isArray()) {
-      mArray(jsobj, hierarchicalStreamWriter, marshallingContext);
+      mArray(jsobj, writer, context);
     } else {
-      mObject(jsobj, hierarchicalStreamWriter, marshallingContext);
+      mObject(jsobj, writer, context);
     }
   }
 

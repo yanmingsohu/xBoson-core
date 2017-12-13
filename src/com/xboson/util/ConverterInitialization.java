@@ -68,6 +68,7 @@ public final class ConverterInitialization {
     ScriptObjectMirrorJsonConverter.registerAdapter(jsbuilded);
     TimestampJsonConverter.registerAdapter(jsbuilded);
     BigDecimalConverter.registerAdapter(jsbuilded);
+    ExceptionConverter.registerAdapter(jsbuilded);
   }
 
 
