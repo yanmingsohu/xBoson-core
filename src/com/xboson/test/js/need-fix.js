@@ -36,3 +36,9 @@ for(r in sys.result.data){
         op_detail="新增元数据类："+r.typecd+"-"+r.typenm;
     }
 }
+
+
+//
+// 修正 @list.add(...)
+//
+@params.add(status)

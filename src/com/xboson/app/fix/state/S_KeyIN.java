@@ -6,36 +6,33 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-12-8 下午2:11
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/test/TestSourceFix.java
+// 文件创建日期: 17-12-13 下午6:30
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/fix/state/S_KeyIN.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.test;
+package com.xboson.app.fix.state;
 
-import com.xboson.app.fix.SourceFix;
-import com.xboson.util.StringBufferOutputStream;
-import com.xboson.util.Tool;
+import com.xboson.app.fix.SState;
 
 
-public class TestSourceFix extends Test {
+public class S_KeyIN extends SState {
 
-  @Override
-  public void test() throws Throwable {
-    StringBufferOutputStream buf =
-      Tool.readFileFromResource(this.getClass(), "js/need-fix.js");
-
-    msg("Source:", "\n"+ buf.toString());
-
-    byte[] fix = SourceFix.fixFor(buf.toBytes());
-    sub("Fix:", line, "\n"+ new String(fix));
-  }
+  private int state = 0;
 
 
-  public static void main(String [] a) {
-    new TestSourceFix();
+  public int read(byte ch) {
+    if (state == 0 && ch == 'i') {
+      ++state;
+      return KEEP;
+    }
+    if (state == 1 && ch == 'n') {
+      state = 0;
+      return NEXT;
+    }
+    return RESET;
   }
 }
