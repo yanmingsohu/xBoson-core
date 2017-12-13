@@ -20,8 +20,6 @@ import com.xboson.been.XBosonException;
 import com.xboson.util.StringBufferOutputStream;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -35,10 +33,12 @@ public class JsParser {
    * @param content 输入代码
    * @param output 输出代码
    * @param role 重写规则状态机
+   * @param data_count 状态机使用的数据数量
    */
   public static void rewrite(byte[] content,
                              StringBufferOutputStream output,
-                             SState[] role)
+                             SState[] role,
+                             int data_count)
   {
     int size = (int) (content.length * 1.7);
     int step = 0;
@@ -47,7 +47,7 @@ public class JsParser {
     boolean in_quotation = false;
     byte quotation_mark = 0;
 
-    Map<String, String> data = new HashMap<>();
+    String[] data = new String[data_count];
     ISState currentState = role[0];
 
     for (int i=0; i<role.length; ++i) {

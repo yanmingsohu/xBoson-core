@@ -22,10 +22,10 @@ import com.xboson.app.fix.SState;
 public class S_Expression extends SState {
   private StringBuilder exp;
   private int state = 0;
-  private String saveto;
+  private int savetoIndex;
 
-  public S_Expression(String saveto) {
-    this.saveto = saveto;
+  public S_Expression(int savetoIndex) {
+    this.savetoIndex = savetoIndex;
   }
 
   @Override
@@ -36,7 +36,7 @@ public class S_Expression extends SState {
     }
     if (ch == ')') {
       state = 0;
-      data.put(saveto, exp.toString());
+      data[savetoIndex] = exp.toString();
       return NEXT_AND_BACK;
     }
     if (ch == '\n') {

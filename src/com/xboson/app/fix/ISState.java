@@ -44,6 +44,6 @@ public interface ISState {
    * 读取一个字符, 返回下一次状态
    */
   int read(byte ch);
-  void setData(Map<String, String> d);
+  void setData(String[] strarr);
   void setOutput(OutputStream out);
 }

@@ -17,15 +17,14 @@
 package com.xboson.app.fix;
 
 import java.io.OutputStream;
-import java.util.Map;
 
 
 public abstract class SState implements ISState {
-  protected Map<String, String> data;
+  protected String[] data;
   protected OutputStream out;
 
   @Override
-  public void setData(Map<String, String> d) {
+  public void setData(String[] d) {
     this.data = d;
   }
 

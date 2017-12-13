@@ -23,11 +23,11 @@ public class S_Symbol extends SState {
 
   private int state = 0;
   private StringBuilder symbol;
-  private String name;
+  private int nameIndex;
 
 
-  public S_Symbol(String name) {
-    this.name = name;
+  public S_Symbol(int nameIndex) {
+    this.nameIndex = nameIndex;
   }
 
 
@@ -44,7 +44,7 @@ public class S_Symbol extends SState {
         return KEEP;
       } else {
         state = 0;
-        data.put(name, symbol.toString());
+        data[nameIndex] = symbol.toString();
         return NEXT_AND_BACK;
       }
     }

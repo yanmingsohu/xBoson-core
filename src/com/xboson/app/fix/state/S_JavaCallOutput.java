@@ -26,20 +26,20 @@ import java.io.Writer;
 
 
 public class S_JavaCallOutput extends SState implements ILastRunning {
-  private String objName, funcName, argsName;
+  private int objIndex, funcIndex, argsIndex;
 
 
-  public S_JavaCallOutput(String obj, String func, String args) {
-    this.objName = obj;
-    this.funcName = func;
-    this.argsName = args;
+  public S_JavaCallOutput(int objNameIndex, int funcNameIndex, int argsIndex) {
+    this.objIndex = objNameIndex;
+    this.funcIndex = funcNameIndex;
+    this.argsIndex = argsIndex;
   }
 
   @Override
   public int read(byte ch) {
-    String obj = data.get(objName);
-    String fun = data.get(funcName);
-    String arg = data.get(argsName);
+    String obj = data[objIndex];
+    String fun = data[funcIndex];
+    String arg = data[argsIndex];
 
     try (Writer out = new OutputStreamWriter(super.out)) {
       out.append("__inner_call(");

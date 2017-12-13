@@ -27,16 +27,6 @@ import com.xboson.util.StringBufferOutputStream;
 public class SourceFix {
 
   /**
-   * 用静态对象比较速度更快
-   */
-  private static final String K = "key";
-  private static final String E = "exp";
-  private static final String O = "object";
-  private static final String F = "func";
-  private static final String A = "args";
-
-
-  /**
    * 去掉脚本的前后特殊符号 "<%...%>",
    * 如果执行了修正操作返回 true
    */
@@ -74,18 +64,18 @@ public class SourceFix {
             new S_BeginBrackets(),
             new S_Space(),
             new S_KeyVar(),
-            new S_Symbol(K),
+            new S_Symbol(0),
             new S_Space(),
             new S_KeyIN(),
             new S_Space(),
-            new S_Expression(E),
+            new S_Expression(1),
             new S_EndBrackets(),
             new S_SpaceEnter(),
             new S_BeginScope(),
-            new S_For_Output(K, E),
+            new S_For_Output(0, 1),
     };
 
-    JsParser.rewrite(content, buf, all_state);
+    JsParser.rewrite(content, buf, all_state, 2);
     return buf.toBytes();
   }
 
@@ -101,16 +91,16 @@ public class SourceFix {
 
     SState[] all_state = new SState[] {
             new S_BeginNotation('@'),
-            new S_Symbol(O),
+            new S_Symbol(0),
             new S_Notation('.'),
-            new S_Symbol(F),
+            new S_Symbol(1),
             new S_BeginBrackets(),
-            new S_DynArgument(A),
+            new S_DynArgument(2),
             new S_EndBrackets(),
-            new S_JavaCallOutput(O, F, A),
+            new S_JavaCallOutput(0, 1, 2),
     };
 
-    JsParser.rewrite(content, buf, all_state);
+    JsParser.rewrite(content, buf, all_state, 3);
     return buf.toBytes();
   }
 }

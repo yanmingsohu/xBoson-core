@@ -26,11 +26,11 @@ public class S_DynArgument extends SState {
 
   private StringBuilder arguments;
   private int state = 0;
-  private String argNames;
+  private int argIndex;
 
 
-  public S_DynArgument(String argNames) {
-    this.argNames = argNames;
+  public S_DynArgument(int argIndex) {
+    this.argIndex = argIndex;
   }
 
   @Override
@@ -41,7 +41,7 @@ public class S_DynArgument extends SState {
       state = 1;
     } else {
       if (ch == ')') {
-        data.put(argNames, arguments.toString());
+        data[argIndex] = arguments.toString();
         state = 0;
         return NEXT_AND_BACK;
       } else {

@@ -19,30 +19,28 @@ package com.xboson.app.fix.state;
 import com.xboson.app.fix.ILastRunning;
 import com.xboson.app.fix.SState;
 import com.xboson.been.XBosonException;
-import com.xboson.util.IConstant;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.StringWriter;
 import java.io.Writer;
 
 
 public class S_For_Output extends SState implements ILastRunning {
   private static int id = 0;
-  private String varName, expName;
+  private int varIndex, expIndex;
 
 
-  public S_For_Output(String varName, String expName) {
-    this.varName = varName;
-    this.expName = expName;
+  public S_For_Output(int varName, int expName) {
+    this.varIndex = varName;
+    this.expIndex = expName;
   }
 
 
   @Override
   public int read(byte ch) {
     String indexName = "__index_" + (++id) + "_";
-    String keyName = data.get(varName);
-    String objName = data.get(expName);
+    String keyName = data[varIndex];
+    String objName = data[expIndex];
 
     try (Writer out = new OutputStreamWriter(super.out)) {
       out.append("for (var ");
