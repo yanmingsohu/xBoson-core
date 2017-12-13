@@ -43,8 +43,8 @@ public class Sandbox {
   private ScriptEngine js;
   private Bindings bind;
   private ScriptContext context;
-  private boolean ispred = false;
   private Compilable cpl;
+  private boolean ispred = false;
 
 
   Sandbox(ScriptEngine engine) throws ScriptException {
@@ -122,7 +122,7 @@ public class Sandbox {
     try {
       return cpl.compile(code);
     } catch(ScriptException e) {
-      throw new JScriptException(e, code, 0);
+      throw new JScriptException(e, code);
     }
   }
 

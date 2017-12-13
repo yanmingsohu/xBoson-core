@@ -16,17 +16,14 @@
 
 package com.xboson.script;
 
-import javax.script.CompiledScript;
-import javax.script.ScriptException;
-
 import com.xboson.been.Module;
-
 import com.xboson.been.XBosonException;
-import com.xboson.util.IConstant;
 import com.xboson.util.ReaderSet;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 import jdk.nashorn.internal.runtime.ECMAException;
 
+import javax.script.CompiledScript;
+import javax.script.ScriptException;
 import java.nio.ByteBuffer;
 
 
@@ -88,7 +85,7 @@ public class WarpdScript {
       return warpreturn;
 
     } catch (ECMAException ec) {
-      throw new JScriptException(ec, code_reader, 0);
+      throw new JScriptException(ec, code_reader);
 
     } catch (Exception e) {
       throw new XBosonException(e);

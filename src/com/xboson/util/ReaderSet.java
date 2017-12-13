@@ -103,10 +103,11 @@ public class ReaderSet extends Reader {
     while (rindex < readers.size()) {
       ReaderWrap r = readers.get(rindex);
       int rlen = r.r.read(buf, off, len);
-      if (rlen < 0) {
+
+      if (rlen <= 0) {
+        ++rindex;
         continue;
       } else {
-        ++rindex;
         len -= rlen;
         off += rlen;
         readlen += rlen;
@@ -141,11 +142,21 @@ public class ReaderSet extends Reader {
 
 
   /**
+   * 什么都不做, 通常在别的系统中会试图调用该方法来释放资源, 但是
+   * ReaderSet 被设计成支持复位后重新读取数据, 所以这里什么都不做.
+   *
+   * @see #closeAll() 真正释放资源
+   */
+  @Override
+  public void close() {
+  }
+
+
+  /**
    * 关闭所有的 Reader
    * @throws IOException
    */
-  @Override
-  public void close() throws IOException {
+  public void closeAll() throws IOException {
     if (readers == null) return;
     Iterator<ReaderWrap> it = readers.iterator();
 

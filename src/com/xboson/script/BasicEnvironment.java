@@ -24,6 +24,7 @@ import javax.script.ScriptException;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Tool;
 
 
 /**
@@ -102,7 +103,7 @@ public class BasicEnvironment implements IEnvironment {
       try {
         ics.config(box, runner);
       } catch (Exception e) {
-        log.error("Config sanbox", ics, e);
+        log.error("Config sanbox", ics, Tool.allStack(e));
       }
     }
   }

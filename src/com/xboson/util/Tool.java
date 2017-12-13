@@ -489,4 +489,28 @@ public final class Tool {
     }
     return set;
   }
+
+
+  /**
+   * 读取 reader 中所有字符到字符串缓冲区;
+   * 该方法仅用于调试, 不应该在生产环境中使用 !
+   */
+  public static StringBuilder reader2String(Reader r, String ...msg) {
+    try {
+      System.out.println();
+      StringBuilder str = new StringBuilder("\n---[BEGIN]---\n");
+      str.append(Arrays.toString(msg));
+      char[] ch = new char[256];
+      int len = r.read(ch);
+
+      while (len >0) {
+        str.append(ch, 0, len);
+        len = r.read(ch);
+      }
+      str.append("\n---[END]---\n");
+      return str;
+    } catch (IOException e) {
+      throw new XBosonException(e);
+    }
+  }
 }

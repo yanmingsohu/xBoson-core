@@ -71,13 +71,17 @@ public class StringBufferOutputStream extends OutputStream {
   }
 
 
+  /**
+   * 如果最终读取的是字符/字符串, 则 toString() 比 toBuffer()/toBytes() 更高效.
+   * @return 缓冲区转换为字符串
+   */
   public String toString() {
     return new String(buf, 0, pos);
   }
 
 
   public ByteBuffer toBuffer() {
-    return ByteBuffer.wrap(buf, 0, pos);
+    return ByteBuffer.wrap(toBytes());
   }
 
 

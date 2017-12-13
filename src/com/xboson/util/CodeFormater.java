@@ -29,9 +29,10 @@ import java.util.List;
  */
 public class CodeFormater {
 
-  private static final byte ENTER = (byte)'\n';
+  private static final char ENTER = '\n';
   private List<Integer> line_saved;
   private Reader reader;
+  private StringBuilder strbuf;
 
 
   public CodeFormater(ByteBuffer code) {
@@ -77,28 +78,27 @@ public class CodeFormater {
       return null;
     }
 
-    try {
-      reader.reset();
-      int begin = line_saved.get(i - 1) + 1;
-      int end = line_saved.get(i) - 1;
-      char[] buf = new char[end - begin];
-      reader.read(buf);
-      return new String(buf);
-    } catch (IOException e) {
-      throw new XBosonException(e);
-    }
+    int begin = line_saved.get(i - 1) + 1;
+    int end = line_saved.get(i) - 1;
+    int len = end - begin;
+
+    char[] buf = new char[len];
+    strbuf.getChars(begin, end, buf, 0);
+    return new String(buf);
   }
 
 
   private void parseLine() {
     line_saved = new ArrayList<>(100);
     line_saved.add(-1);
+    strbuf = new StringBuilder();
 
     try {
       reader.reset();
       int ch = reader.read();
       int i = 0;
       while (ch >= 0) {
+        strbuf.append((char) ch);
         if (ch == ENTER) {
           line_saved.add(i);
         }

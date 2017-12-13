@@ -46,15 +46,17 @@ public class JScriptException extends XBosonException {
    * @see JScriptException#JScriptException(Exception, Reader, int)
    */
   public JScriptException(Exception fail) {
-    this(fail, null, 0);
+    this(fail, null, OffsetLineStack.offset);
   }
 
 
   /**
+   * 该方法将出错行的偏移设置为全局 OffsetLineStack
    * @see JScriptException#JScriptException(Exception, Reader, int)
+   * @see OffsetLineStack
    */
   public JScriptException(Exception fail, Reader code) {
-    this(fail, code, 0);
+    this(fail, code, OffsetLineStack.offset);
   }
 
 
