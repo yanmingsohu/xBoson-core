@@ -68,7 +68,8 @@ get 请求使用标准的 http url 参数.
   1. "use strict" 为 js 严格模式, 严格模式完全遵守 js 语法规范.
   2. 非严格模式中, `for (v in list)` v 是对象/数组中的元素值, v__index 是索引(附加变量).
   3. 非严格模式中, `@list.add(...)` 相当于调用 Java 中 List.add(). 
-  4. 严格模式必须把 "use strict" 声明在第一行.
+  4. 非严格模式中, `list.~size` 调用预定义的虚拟属性. 
+  5. 严格模式必须把 "use strict" 声明在第一行.
 
 
 ### 特殊参数, "$format"

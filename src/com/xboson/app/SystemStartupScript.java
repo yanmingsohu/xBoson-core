@@ -31,6 +31,7 @@ public class SystemStartupScript implements IConstant, Runnable {
 
   private Log log;
   private static boolean is_init = false;
+  private static final String MSG = "Initialization Redis Data";
 
 
   public static void me() {
@@ -59,8 +60,11 @@ public class SystemStartupScript implements IConstant, Runnable {
   @Override
   public void run() {
     try {
-      log.info("缓存初始化启动..");
+      log.info(MSG, "Startup..");
 
+      //
+      // 初始化 cache 脚本所在的机构/app/模块
+      //
       ApiCall ac = new ApiCall();
       ac.org = SYS_ORG;
       ac.app = "26c0f25501d24c0993515d445e1215a5";
@@ -71,9 +75,9 @@ public class SystemStartupScript implements IConstant, Runnable {
       AppContext.me().call(ac);
       ac.call.resp.flushBuffer();
 
-      log.info("缓存初始化完成.");
+      log.info(MSG, "Success");
     } catch (Exception e) {
-      log.info("缓存初始化错误", Tool.allStack(e));
+      log.info(MSG, "Fail", Tool.allStack(e));
     }
   }
 }

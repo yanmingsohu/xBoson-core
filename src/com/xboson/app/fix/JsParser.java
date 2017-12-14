@@ -25,7 +25,7 @@ import java.io.IOException;
 /**
  * JavaScript 解析器
  */
-public class JsParser {
+public class JsParser implements IStateOperator {
 
 
   /**
@@ -56,7 +56,7 @@ public class JsParser {
     }
 
     try {
-      int directive = ISState.INIT;
+      int directive = INIT;
 
       for (int i = 0; i < content.length; ++i) {
         byte ch = content[i];
@@ -82,7 +82,7 @@ public class JsParser {
           //
           if (ch == '/' && i<content.length-1 && content[i+1] == '/') {
             int begin = i;
-            while (content[i] != '\n' && i<content.length) {
+            while (i<content.length && content[i] != '\n') {
               output.write(content[i]);
               ++i;
             }
@@ -113,19 +113,19 @@ public class JsParser {
         //
         directive = currentState.read(ch);
 
-        if (directive == SState.BEGIN) {
+        if (directive == BEGIN) {
           stateIndex = i;
           resetIndex = i;
           continue;
         }
-        else if (directive == SState.KEEP) {
+        else if (directive == KEEP) {
           continue;
         }
-        else if (directive >= SState.NEXT) {
-          if (directive == SState.NEXT_AND_BACK_ALL) {
+        else if (directive >= NEXT) {
+          if (directive == NEXT_AND_BACK_ALL) {
             i = stateIndex - 1;
           }
-          else if (directive == SState.NEXT_AND_BACK) {
+          else if (directive == NEXT_AND_BACK) {
             --i;
           } else /* if is NEXT */ {
             stateIndex = i+1;
@@ -137,11 +137,17 @@ public class JsParser {
           currentState = role[step];
           continue;
         }
-        else if (directive == SState.RESET) {
+        else if (directive == RESET) {
           while (resetIndex < i) {
             output.write(content[resetIndex]);
             ++resetIndex;
           }
+          step = 0;
+          currentState = role[step];
+        }
+        else if (directive == END) {
+          stateIndex = i;
+          resetIndex = i;
           step = 0;
           currentState = role[step];
         }

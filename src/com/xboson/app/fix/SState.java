@@ -16,6 +16,8 @@
 
 package com.xboson.app.fix;
 
+import com.xboson.app.fix.state.S_Operator;
+
 import java.io.OutputStream;
 
 
@@ -33,7 +35,20 @@ public abstract class SState implements ISState {
     this.out = out;
   }
 
-  public boolean isSpace(byte ch) {
+
+  /**
+   * 分号放在这里, 很不严谨
+   */
+  public static boolean isSpace(byte ch) {
     return ch == ' ' || ch == '\n' || ch == '\t' || ch == ';';
+  }
+
+
+  /**
+   * 是运算符符号返回 true
+   * @see S_Operator#isOperator(char)
+   */
+  public static boolean isOp(byte c) {
+    return S_Operator.isOperator((char) c);
   }
 }

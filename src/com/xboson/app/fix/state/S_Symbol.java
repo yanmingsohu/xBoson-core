@@ -21,7 +21,7 @@ import com.xboson.app.fix.SState;
 
 public class S_Symbol extends SState {
 
-  private int state = 0;
+  protected int state = 0;
   private StringBuilder symbol;
   private int nameIndex;
 

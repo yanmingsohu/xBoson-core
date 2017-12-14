@@ -6,51 +6,45 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-23 上午8:39
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/ApiEncryption.java
+// 文件创建日期: 17-12-14 下午12:10
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/fix/state/S_Operator.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.app;
+package com.xboson.app.fix.state;
 
-import com.xboson.util.AES2;
-import com.xboson.util.Password;
+import com.xboson.app.fix.SState;
+import com.xboson.util.Tool;
+
+import java.util.Set;
 
 
 /**
- * API 脚本加密/解密
+ * 运算符
  */
-public class ApiEncryption {
+public class S_Operator extends SState {
 
-  private static AES2 ekey;
-  // private static AES2 iekey;
+  private static final Set<Character> op = Tool.arr2set(new Character[] {
+          '+', '-', '*', '/', '=', '>', '<', '!', '&', '|', '%', ',', ';'
+  });
 
 
-  static {
-    try {
-      String code = "1200"; // 从配置文件读取
-      String encode = Password.encodeSha256(code, "zr_zy秘");
-      ekey = new AES2(code + encode);
+  /**
+   * c 是运算符返回 true
+   */
+  public static boolean isOperator(char c) {
+    return op.contains(c);
+  }
 
-      // String ieCode = "import&&export";
-      // iekey = new AES2(ieCode);
-    } catch(Exception e) {
-      e.printStackTrace();
-      System.exit(2);
+
+  @Override
+  public int read(byte ch) {
+    if (isOperator((char) ch)) {
+      return NEXT;
     }
+    return RESET;
   }
-
-
-  public static String encryptApi(String code) {
-    return ekey.encrypt(code);
-  }
-
-
-  public static byte[] decryptApi(String mi) {
-    return ekey.decrypt(mi);
-  }
-
 }

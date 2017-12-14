@@ -57,7 +57,9 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
           "lib/array_sort_comparator.js",
           "lib/sys_functions_impl.js",
           "lib/string_functions.js",
-          "lib/inner_call.js",
+          "lib/compatible-syntax.js",
+          "lib/strutil.js",
+          "lib/ide.js",
   };
 
   private IEnvironment env;
@@ -108,14 +110,13 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       SysImpl sys     = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
-      SeImpl se       = null;
+      SeImpl se       = (org.isSysORG())
+              ? cs.add(new SeImpl(cd, sys, org.id()))
+              : null;
 
       sql._setSysRef(sys);
       ModuleHandleContext.register("sql", sql);
-
-      if (org.isSysORG()) {
-        se = cs.add(new SeImpl(cd, sys, org.id()));
-      }
+      ModuleHandleContext.register("se",  se);
 
       call.call(jsmod.exports, sys, sql, cache, http, se);
 

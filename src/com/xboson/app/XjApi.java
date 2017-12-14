@@ -108,6 +108,7 @@ public class XjApi implements IDict {
       if (SourceFix.isStrictMode(content) == false) {
         content = SourceFix.fixFor(content);
         content = SourceFix.fixJavaCall(content);
+        content = SourceFix.fixVirtualAttr(content);
       }
     }
   }
