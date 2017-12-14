@@ -175,6 +175,7 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
     public NoService(String serviceName) {
       super("Not found sub Service: " + serviceName);
       this.serviceName = serviceName;
+      super.code = 4;
     }
     public String getServiceName() {
       return serviceName;

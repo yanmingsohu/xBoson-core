@@ -53,8 +53,11 @@ public class TestSourceFix extends Test {
     } else {
       byte[] fix = SourceFix.fixFor(src);
       fix = SourceFix.fixJavaCall(fix);
+      fix = SourceFix.fixVirtualAttr(fix);
+
       String source = new String(fix);
       test_fix_framework(source);
+      // msg(source);
     }
   }
 

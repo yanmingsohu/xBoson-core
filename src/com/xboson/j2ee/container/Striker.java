@@ -106,7 +106,6 @@ public class Striker extends HttpFilter {
       chain.doFilter(request, response);
 
     } catch(Throwable e) {
-      response.setStatus(500);
       responseError(e, jr, response);
     }
   }
@@ -174,7 +173,7 @@ public class Striker extends HttpFilter {
     StringBuilder out = new StringBuilder();
     Tool.xbosonStack(e, out);
     String msg = out.toString();
-    jr.setData(msg);
+    jr.setData(msg, StackTraceElement.class);
     log.error(msg);
   }
 }

@@ -167,11 +167,19 @@ public class XResponse {
    * 设置应答的 data/datatype 属性
    */
   public void setData(Object data) {
+    setData(data, data.getClass());
+  }
+
+
+  /**
+   * 在数据不能描述类型时调用
+   */
+  public void setData(Object data, Class type) {
     if (data == null) {
-      throw new NullPointerException("parm null");
+      throw new XBosonException.NullParamException("Object data");
     }
     ret_root.put("data", data);
-    setDatatype(data.getClass());
+    setDatatype(type);
   }
 
 

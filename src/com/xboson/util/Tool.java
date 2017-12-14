@@ -155,7 +155,7 @@ public final class Tool {
 
     Throwable c = e.getCause();
     if (c != null) {
-      out.append("Cause BY ");
+      out.append("\nCause BY ");
       xbosonStack(c, out);
     }
   }

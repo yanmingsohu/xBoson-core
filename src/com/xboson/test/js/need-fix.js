@@ -113,3 +113,36 @@ if (status != null) {
   @paramSel.add(status); // 修正
 }
 
+
+//
+// fix`__virtual_attr\(menuid_array, \"size\"\)`
+// fix`__virtual_attr\(sorting_order_array, \"size\"\)`
+//
+if(menuid_array.~size==sorting_order_array.~size){
+    var sql="update sys_menu set sorting_order=? where menuid=?";
+    var params=[];
+    var i=0;
+    while(i<menuid_array.~size){
+    }
+}
+//
+// fix`__virtual_attr\(id_array, \"size\"\)`
+//
+while(i<id_array.~size){
+}
+//
+// fix`__virtual_attr\(id_array1, \"size\"\)`
+//
+while(j<id_array1.~size){}
+//
+// fix`__virtual_attr\(apptemp, \"size\"\)`
+//
+if(apptemp.~size==0){}
+//
+// fix`__virtual_attr\(treeMod, \"size\"\)`
+//
+if(treeMod.~size==0){}
+
+// fix`dontmodify\.~size`
+// dontmodify.~size
+/* dontmodify.~size */

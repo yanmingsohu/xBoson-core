@@ -51,7 +51,7 @@ public class MainServlet extends HttpServlet {
 		XService sv = UrlMapping.getService(cd.url);
 		
 		if (sv == null) {
-			throw new ServletException("Not found service: " + cd.url.getName());
+			throw new XBosonException.NoService(cd.url.getName());
 		}
 
 		if (sv.needLogin()) {
