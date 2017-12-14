@@ -508,6 +508,10 @@ public final class Tool {
           Class<?> base, String filepath) {
 
     try (InputStream r = base.getResourceAsStream(filepath)) {
+      if (r == null) {
+        throw new XBosonException.NotExist(
+                "File not found:" + filepath);
+      }
       StringBufferOutputStream buf = new StringBufferOutputStream();
       buf.write(r, false);
       return buf;

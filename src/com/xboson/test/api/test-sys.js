@@ -67,9 +67,10 @@ if (orgList != null) {
     // var orgName = row.orgnm;
     // var orgType = row.org_type;  // "v":开发商, "t":租户
     //
-    console.log("Org ID:", orgList[row].orgid, "Name:", orgList[row].orgnm, "Type:", orgList[row].org_type);
-    assert(orgList[row]);
-    assert(orgList[row].orgid);
+    console.log("Org ID:", row.orgid, "Name:", row.orgnm, "Type:", row.org_type);
+    assert(row);
+    assert(row.orgid);
+    assert(row__index >= 0);
   }
 }
 

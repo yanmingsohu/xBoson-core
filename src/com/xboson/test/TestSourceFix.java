@@ -35,10 +35,19 @@ public class TestSourceFix extends Test {
   public void test() throws Throwable {
     test_file("js/need-fix.js", false);
     test_file("js/strict-mode.js", true);
+
+    Fix s = test_file("js/fix-fail.js");
+    eq(s.src, s.fix, "don't change");
+    msg("OK not change");
   }
 
 
-  private void test_file(String js_file_path, boolean isStrict) throws IOException {
+  private Fix test_file(String js_file_path) throws Exception {
+    return test_file(js_file_path, false);
+  }
+
+
+  private Fix test_file(String js_file_path, boolean isStrict) throws IOException {
     sub("Fix Js file:", js_file_path, "strict:", isStrict);
     StringBufferOutputStream buf =
             Tool.readFileFromResource(this.getClass(), js_file_path);
@@ -50,14 +59,16 @@ public class TestSourceFix extends Test {
     if (isStrict) {
       String source = new String(src);
       test_fix_framework(source);
+      return new Fix(source, null);
     } else {
       byte[] fix = SourceFix.fixFor(src);
       fix = SourceFix.fixJavaCall(fix);
       fix = SourceFix.fixVirtualAttr(fix);
 
-      String source = new String(fix);
-      test_fix_framework(source);
-      // msg(source);
+      String fixed_source = new String(fix);
+      test_fix_framework(fixed_source);
+      // msg(js_file_path, line, "\n"+source);
+      return new Fix(new String(src), fixed_source);
     }
   }
 
@@ -122,5 +133,15 @@ public class TestSourceFix extends Test {
 
   public static void main(String [] a) {
     new TestSourceFix();
+  }
+
+
+  static class Fix {
+    String src;
+    String fix;
+    Fix(String s, String f) {
+      src = s;
+      fix = f;
+    }
   }
 }

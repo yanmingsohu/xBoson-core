@@ -45,6 +45,7 @@ public class JsParser implements IStateOperator {
     int resetIndex = 0;
     int stateIndex = 0;
     boolean in_quotation = false;
+    boolean in_escape = false;
     byte quotation_mark = 0;
 
     String[] data = new String[data_count];
@@ -66,8 +67,15 @@ public class JsParser implements IStateOperator {
           // 当在字符串中, 不做任何额外的处理
           //
           if (in_quotation) {
-            if (ch == quotation_mark && i>0 && content[i - 1] != '\\') {
-              in_quotation = false;
+            if (ch == '\\') {
+              in_escape = !in_escape;
+            }
+            else if (ch == quotation_mark) {
+              if (in_escape) {
+                in_escape = false;
+              } else {
+                in_quotation = false;
+              }
             }
             output.write(ch);
             continue;
