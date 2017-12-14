@@ -66,6 +66,14 @@ public class CodeFormater {
   }
 
 
+  public int totalLine() {
+    if (line_saved == null) {
+      parseLine();
+    }
+    return line_saved.size();
+  }
+
+
   /**
    * 行数从 1 开始
    */
@@ -122,7 +130,7 @@ public class CodeFormater {
    * 输出代码到 out, 限制行数从 begin 到 end.
    *
    * @param out 输出流
-   * @param begin 从 0 开始, 包括第 begin 行
+   * @param begin 从 1 开始, 包括第 begin 行
    * @param end 结束行, 不包括第 end 行, <0 则一直输出到最后
    * @throws IOException
    */
@@ -159,8 +167,8 @@ public class CodeFormater {
    * 打印所有代码
    * @see #printCode(Appendable, int, int)
    */
-  public void printCode(Writer out) throws IOException {
-    printCode(out, 0, -1);
+  public void printCode(Appendable out) throws IOException {
+    printCode(out, 1, -1);
   }
 
 

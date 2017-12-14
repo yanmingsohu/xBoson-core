@@ -61,12 +61,12 @@ public class JsParser {
       for (int i = 0; i < content.length; ++i) {
         byte ch = content[i];
 
-        //
-        // 当在字符串中, 不做任何额外的处理
-        //
         if (step == 0) {
+          //
+          // 当在字符串中, 不做任何额外的处理
+          //
           if (in_quotation) {
-            if (ch == quotation_mark && content[i - 1] != '\\') {
+            if (ch == quotation_mark && i>0 && content[i - 1] != '\\') {
               in_quotation = false;
             }
             output.write(ch);
@@ -75,6 +75,35 @@ public class JsParser {
             in_quotation = true;
             quotation_mark = ch;
             output.write(ch);
+            continue;
+          }
+          //
+          // 跳过单行注释
+          //
+          if (ch == '/' && i<content.length-1 && content[i+1] == '/') {
+            int begin = i;
+            while (content[i] != '\n' && i<content.length) {
+              output.write(content[i]);
+              ++i;
+            }
+            output.write('\n');
+            continue;
+          }
+          //
+          // 跳过多行注释
+          //
+          if (ch == '/' && i<content.length-1 && content[i+1] == '*') {
+            int begin = i;
+            output.write('/');
+            output.write('*');
+            i += 2;
+            while (i < content.length) {
+              output.write(content[i]);
+              if (content[i-1] == '*' && content[i] == '/') {
+                break;
+              }
+              ++i;
+            }
             continue;
           }
         }

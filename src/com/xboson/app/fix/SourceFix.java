@@ -22,9 +22,10 @@ import com.xboson.util.StringBufferOutputStream;
 
 /**
  * 代码修正.
- * (字符串中的代码能够识别; 注释中的代码将被替换)
  */
 public class SourceFix {
+
+  public static final char[] GTRICT_MODE = "\"use strict\"".toCharArray();
 
   /**
    * 去掉脚本的前后特殊符号 "<%...%>",
@@ -48,6 +49,25 @@ public class SourceFix {
 
 
   /**
+   * 如果代码使用了严格模式, 则返回 true,
+   * 严格模式必须在第一行声明字符串 "use strict"
+   */
+  public static boolean isStrictMode(byte[] content) {
+    int i = 0, g = 0;
+    while (i < content.length && content[i] != '\n') {
+      if (content[i] == GTRICT_MODE[g]) {
+        if (++g >= GTRICT_MODE.length)
+          return true;
+      } else {
+        g = 0;
+      }
+      ++i;
+    }
+    return false;
+  }
+
+
+  /**
    * 修正 beetl 中 for 循环与 js 不兼容.
    *
    * "for (row in MAP) {"
@@ -64,6 +84,7 @@ public class SourceFix {
             new S_BeginBrackets(),
             new S_Space(),
             new S_KeyVar(),
+            new S_Space(),
             new S_Symbol(0),
             new S_Space(),
             new S_KeyIN(),

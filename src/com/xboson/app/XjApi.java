@@ -98,13 +98,17 @@ public class XjApi implements IDict {
 
 
   /**
-   * 解码脚本, 在必要时对代码进行修正.
+   * 解码脚本, 在必要时对代码进行修正;
+   * 如果代码没有被 <%...%> 包装, 一定不会修正代码,
+   * 否则非 js 严格模式会修正代码.
    */
   private void decode(String str) {
     content = ApiEncryption.decryptApi(str);
     if (SourceFix.fixBeginEnd(content)) {
-      content = SourceFix.fixFor(content);
-      content = SourceFix.fixJavaCall(content);
+      if (SourceFix.isStrictMode(content) == false) {
+        content = SourceFix.fixFor(content);
+        content = SourceFix.fixJavaCall(content);
+      }
     }
   }
 

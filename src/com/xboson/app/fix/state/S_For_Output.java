@@ -26,7 +26,6 @@ import java.io.Writer;
 
 
 public class S_For_Output extends SState implements ILastRunning {
-  private static int id = 0;
   private int varIndex, expIndex;
 
 
@@ -38,9 +37,9 @@ public class S_For_Output extends SState implements ILastRunning {
 
   @Override
   public int read(byte ch) {
-    String indexName = "__index_" + (++id) + "_";
     String keyName = data[varIndex];
     String objName = data[expIndex];
+    String indexName = keyName + "__index";
 
     try (Writer out = new OutputStreamWriter(super.out)) {
       out.append("for (var ");
