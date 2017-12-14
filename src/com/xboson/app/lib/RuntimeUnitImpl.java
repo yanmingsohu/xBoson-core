@@ -210,4 +210,27 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
           throws SQLException {
     return QueryImpl.copyToList(this, list, rs);
   }
+
+
+  /**
+   * 为 jdbc 查询参数绑定提供对象转换, 这些对象 jdbc 无法处理会抛出异常.
+   *
+   * @param o 来自 js 的对象.
+   * @return jdbc 能处理的对象.
+   */
+  public static Object getSafeObjectForQuery(Object o) {
+    if (o instanceof jdk.nashorn.internal.runtime.Undefined) {
+      return null;
+    }
+    if (o instanceof jdk.nashorn.internal.objects.NativeFunction) {
+      return null;
+    }
+    if (o instanceof Exception) {
+      return null;
+    }
+    if (o instanceof jdk.nashorn.internal.runtime.ScriptObject) {
+      return o.toString();
+    }
+    return o;
+  }
 }

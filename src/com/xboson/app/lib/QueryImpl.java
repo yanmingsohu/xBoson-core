@@ -17,11 +17,13 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.Page;
-import com.xboson.db.*;
+import com.xboson.db.ConnectConfig;
+import com.xboson.db.DbmsFactory;
+import com.xboson.db.IDialect;
+import com.xboson.db.SqlResult;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.internal.runtime.Context;
 
 import java.sql.*;
 
@@ -33,6 +35,7 @@ import java.sql.*;
 public class QueryImpl {
 
   private final static String NULSTR = "";
+  private Log log;
 
 
   /**
@@ -54,11 +57,12 @@ public class QueryImpl {
   public QueryImpl(SqlConnect sc, RuntimeUnitImpl runtime) {
     this.sc = sc;
     this.runtime = runtime;
+    this.log = LogFactory.create();
   }
 
 
   /**
-   * 针对 js 环境, 执行 sql 查询
+   * 针对 js 环境, 执行 sql 查询, 查询在参数无法解析时则绑定 null
    *
    * @param list 结果集将绑定在 list 上
    * @param sql 查询
@@ -71,9 +75,15 @@ public class QueryImpl {
     PreparedStatement ps = sc.open().prepareStatement(sql);
 
     if (param != null) {
+      Object p = null;
       for (int i = 1; i <= param.length; ++i) {
-        Object p = param[i - 1];
-        ps.setObject(i, p);
+        try {
+          p = param[i - 1];
+          ps.setObject(i, runtime.getSafeObjectForQuery(p));
+        } catch(SQLException e) {
+          log.error("PreparedStatement bind", p, e);
+          ps.setObject(i, null);
+        }
       }
     }
 

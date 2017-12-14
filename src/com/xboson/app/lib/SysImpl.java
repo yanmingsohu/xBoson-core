@@ -201,23 +201,28 @@ public class SysImpl extends RuntimeUnitImpl {
 
 
   public Object getUserAdminFlag() throws Exception {
+    return getUserAdminFlag(
+            cd.sess.login_user.userid,
+            AppContext.me().originalOrg());
+  }
+
+
+  public Object getUserAdminFlag(String userid, String org) throws Exception {
+    if (Tool.isNulStr(userid))
+      throw new XBosonException.NullParamException("String userid");
+    if (Tool.isNulStr(org))
+      throw new XBosonException.NullParamException("String org");
+
     try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
       String sql = SqlReader.read(ADMIN_FLAG_SQL);
-
-      List<Map<String, Object>> rows = scr.query(
-              sql, cd.sess.login_user.pid, orgdb.getDatabase());
+      List<Map<String, Object>> rows = scr.query(sql, userid, org);
 
       if (rows.size() > 0) {
         Map<String, Object> o = rows.get(0);
         return o.get("admin_flag");
       }
     }
-    return 0;
-  }
-
-
-  public Object getUserAdminFlag(String userid, String org) {
-    throw new UnsupportedOperationException();
+    return null;
   }
 
 
@@ -252,6 +257,11 @@ public class SysImpl extends RuntimeUnitImpl {
 
 
   public String uuid() {
+    return Tool.uuid.ds();
+  }
+
+
+  public String getUUID() {
     return Tool.uuid.ds();
   }
 

@@ -16,7 +16,8 @@
 
 package com.xboson.app.lib;
 
-import com.xboson.app.AppContext;
+import com.xboson.app.ApiEncryption;
+import com.xboson.app.fix.SourceFix;
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
@@ -26,11 +27,14 @@ import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.Arrays;
 
 
+/**
+ * 有部分扩展函数原平台没有.
+ */
 public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   private ConnectConfig __sysdb;
@@ -195,5 +199,39 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
       __conn.close();
       __conn = null;
     }
+  }
+
+
+  /**
+   * 返回解密后的脚本, 去掉了前后 "<%..%>" 符号.
+   * [原平台无该函数]
+   */
+  public String decodeApiScript(String code) {
+    byte[] c = ApiEncryption.decryptApi(code);
+    if (! SourceFix.isStrictMode(c)) {
+      if (SourceFix.isDrag(c)) {
+        int end = c.length - 3;
+        while (Character.isWhitespace(c[end]))
+          --end;
+
+        c = Arrays.copyOfRange(c, 2, end+1);
+      }
+    }
+    return new String(c, IConstant.CHARSET);
+  }
+
+
+  /**
+   * 返回加密后的脚本, 将 "<%..%>" 重新加上.
+   * [原平台无该函数]
+   */
+  public String encodeApiScript(String code) {
+    byte[] c = code.getBytes(IConstant.CHARSET);
+    if (! SourceFix.isStrictMode(c)) {
+      if (! SourceFix.isDrag(c)) {
+        code = "<%" + code + "%>";
+      }
+    }
+    return ApiEncryption.encryptApi(code);
   }
 }

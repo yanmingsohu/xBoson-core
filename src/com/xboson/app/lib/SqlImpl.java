@@ -113,9 +113,9 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public int update(String sql, Object[] param, String commit) throws Exception {
-    boolean is_commit = commit.equals("1") || commit.equalsIgnoreCase("true");
-    return update(sql, param, is_commit);
+  public int update(String sql, Object[] param, String manualCommit) throws Exception {
+    boolean mc = manualCommit.equals("1") || manualCommit.equalsIgnoreCase("true");
+    return update(sql, param, mc);
   }
 
 
@@ -124,10 +124,10 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public int update(String sql, Object[] param, boolean commit)
+  public int update(String sql, Object[] param, boolean manualCommit)
           throws Exception {
     Connection conn = getConnection();
-    conn.setAutoCommit(commit);
+    conn.setAutoCommit(!manualCommit);
     PreparedStatement ps = conn.prepareStatement(query_impl.replaceSql(sql));
 
     for (int i=1; i<=param.length; ++i) {
