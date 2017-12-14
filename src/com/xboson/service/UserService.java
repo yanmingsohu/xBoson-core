@@ -26,8 +26,10 @@ import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
@@ -39,10 +41,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 @XPath("/user")
-public class UserService extends XService implements IDict {
+public class UserService extends XService implements IDict, IConstant {
 
   public static final int IP_BAN_COUNT    = 10;
   public static final int IP_WAIT_TIMEOUT = 10; // 分钟
@@ -50,6 +53,14 @@ public class UserService extends XService implements IDict {
 
   public static final String MSG
           = "Provide sub-service name '/user/[sub service]'";
+
+  /**
+   * 跳过登录的服务名称列表
+   */
+  private static final Set<String> skipCheckLogin = Tool.arr2set(new String[] {
+          "get_havinguser",
+  });
+
 
   private Config cf;
 
@@ -66,8 +77,6 @@ public class UserService extends XService implements IDict {
     try {
       subService(data, MSG);
     } catch (XBosonException.NoService ns) {
-      checkLoging(data);
-
       ApiCall ac = new ApiCall();
       ac.org  = data.getString("org", 0, 100);
       ac.app  = data.getString("app", 1, 100);
@@ -75,7 +84,14 @@ public class UserService extends XService implements IDict {
       ac.api  = ns.getServiceName();
       ac.call = data;
 
-      AppContext.me().call(ac);
+      if (skipCheckLogin.contains(ac.api)
+              && ac.app.startsWith(SYS_APP_PREFIX)
+              && ac.mod.startsWith(SYS_MOD_PREFIX)) {
+        AppContext.me().call(ac);
+      } else {
+        checkLoging(data);
+        AppContext.me().call(ac);
+      }
     }
   }
 

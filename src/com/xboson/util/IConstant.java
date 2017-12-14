@@ -48,6 +48,11 @@ public interface IConstant extends IDict {
   String SYS_APP_PREFIX = "ZYAPP_";
 
   /**
+   * 平台模块前缀, 这些应用总是在平台机构上运行
+   */
+  String SYS_MOD_PREFIX = "ZYMODULE_";
+
+  /**
    * 平台表前缀, 不会被 sql 替换
    */
   String SYS_TABLE_NOT_REPLACE = "sys_pl_";
