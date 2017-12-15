@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
+(function() {
 //
 // 在脚本中, 经常会定义一个 sql 变量, 然后又试图使用 sql.query 执行 db 查询, 显然这是
 // 因为 beetl 的设计缺陷允许定义的 sql 变量与系统 sql 模块区分, 在 js 标准中这是绝对不
@@ -45,3 +45,5 @@ __bind_sql_functions([
   "commit", "rollback", "currentDBTimeString", "connection",
   "dbType", "msAccessConnection",
 ]);
+
+})();

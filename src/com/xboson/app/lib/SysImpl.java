@@ -50,10 +50,10 @@ import java.util.zip.ZipOutputStream;
 
 
 /**
- * 每次请求一个实例
+ * 每次请求一个实例; 在 sys 模块上调用 data 函数, 所以继承 DateImpl
  * (openid 就是 userid)
  */
-public class SysImpl extends RuntimeUnitImpl {
+public class SysImpl extends DateImpl {
 
   public static final String NULSTR = "";
   public static final String NULNULSTR = "null";

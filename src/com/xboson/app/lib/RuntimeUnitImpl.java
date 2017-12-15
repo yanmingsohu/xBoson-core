@@ -24,11 +24,8 @@ import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJSON;
 import jdk.nashorn.internal.runtime.Context;
-import jdk.nashorn.internal.runtime.PropertyMap;
-import jdk.nashorn.internal.runtime.ScriptObject;
 
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Map;
@@ -219,7 +216,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
    * @return jdbc 能处理的对象.
    */
   public static Object getSafeObjectForQuery(Object o) {
-    if (o instanceof jdk.nashorn.internal.runtime.Undefined) {
+    if (isNull(o)) {
       return null;
     }
     if (o instanceof jdk.nashorn.internal.objects.NativeFunction) {
@@ -232,5 +229,14 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       return o.toString();
     }
     return o;
+  }
+
+
+  public static boolean isNull(Object o) {
+    if (o == null)
+      return true;
+    if (o instanceof jdk.nashorn.internal.runtime.Undefined)
+      return true;
+    return false;
   }
 }

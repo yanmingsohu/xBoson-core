@@ -17,11 +17,16 @@
 package com.xboson.app.lib;
 
 import com.xboson.app.ApiEncryption;
+import com.xboson.app.ApiPath;
+import com.xboson.app.ApiTypes;
 import com.xboson.app.fix.SourceFix;
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDriver;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.event.OnFileChangeHandle;
 import com.xboson.util.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
@@ -29,6 +34,8 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 
@@ -234,4 +241,42 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     }
     return ApiEncryption.encryptApi(code);
   }
+
+
+  /**
+   * api 内容被修改, 测试环境脚本将被重新编译.
+   * [原平台无该函数]
+   */
+  public boolean sendApiChange(String content_id) throws SQLException {
+    try (SqlResult sr = SqlReader.query(
+            "api_info.sql", getConfig(), content_id);
+         ResultSet rs = sr.getResult() )
+    {
+      if (!rs.next()) {
+        return false;
+      }
+
+      String file_path = ApiPath.getPathOrgFromContext(
+              rs.getString("app"),
+              rs.getString("mod"),
+              rs.getString("api"));
+
+      String event = ApiPath.getEventPath(ApiTypes.Development, file_path);
+      OnFileChangeHandle.sendChange(event);
+    }
+    return true;
+  }
+
+
+  /**
+   * api 状态修改, 当状态为 '发布' 则生产环境的脚本将重新编译.
+   * [原平台无该函数]
+   */
+  public boolean sendApiPublish(String app, String mod, String api) {
+    String file_path = ApiPath.getPathOrgFromContext(app, mod, api);
+    String event = ApiPath.getEventPath(ApiTypes.Production, file_path);
+    OnFileChangeHandle.sendChange(event);
+    return true;
+  }
+
 }

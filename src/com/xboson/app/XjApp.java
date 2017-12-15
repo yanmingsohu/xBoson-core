@@ -61,14 +61,14 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
   }
 
 
-  Module buildJSModule(CallData cd, String path)
+  Module buildJSModule(String path)
           throws IOException, ScriptException {
     return runtime.run(path);
   }
 
 
-  void run(CallData cd, Module jsmodule) {
-    ssw.run(cd, jsmodule, org);
+  void run(CallData cd, Module jsmodule, XjApi api) {
+    ssw.run(cd, jsmodule, org, api);
   }
 
 
@@ -76,7 +76,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
           throws IOException, ScriptException {
     XjModule mod = getWithCreate(module_id);
     XjApi api = mod.getApi(api_id);
-    api.run(cd, toFile(module_id, api_id));
+    api.run(cd, ApiPath.toFile(module_id, api_id));
   }
 
 
@@ -126,6 +126,14 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
   }
 
 
+  /**
+   * 通知 app 脚本内容修改
+   */
+  public void updateApiScript(XjApi api) {
+    runtime.changed(api.getApiAttr().fullPath);
+  }
+
+
   @Override
   public String getID() {
     return id;
@@ -137,8 +145,4 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
     return "Script-FS";
   }
 
-
-  public static String toFile(String module_id, String api_id) {
-    return '/' + module_id + '/' + api_id;
-  }
 }

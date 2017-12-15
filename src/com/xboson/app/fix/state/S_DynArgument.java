@@ -36,18 +36,27 @@ public class S_DynArgument extends SState {
   @Override
   public int read(byte ch) {
     if (state == 0) {
+      if (isEndArguments(ch)) {
+        data[argIndex] = null;
+        return NEXT_AND_BACK;
+      }
+
       arguments = new StringBuilder();
-      arguments.append((char) ch);
       state = 1;
-    } else {
-      if (ch == ')') {
+    }
+    else /* state == 1 */ {
+      if (isEndArguments(ch)) {
         data[argIndex] = arguments.toString();
         state = 0;
         return NEXT_AND_BACK;
-      } else {
-        arguments.append((char) ch);
       }
     }
+    arguments.append((char) ch);
     return KEEP;
+  }
+
+
+  public static boolean isEndArguments(byte ch) {
+    return ch == ')' || ch == '}' || ch == '{' || ch == ';';
   }
 }

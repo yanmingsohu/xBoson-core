@@ -70,6 +70,21 @@ class GlobalEventContext extends InitialContext implements EventContext {
   }
 
 
+  /**
+   * 创建实例并返回, 将创建的实例以 name 为键插入 map 中.
+   */
+  public static GlobalEventContext create(String name,
+                                          Map<String, GlobalEventContext> map) {
+    try {
+      GlobalEventContext gec = new GlobalEventContext(name);
+      map.put(name, gec);
+      return gec;
+    } catch (NamingException e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
   Set<GlobalListener> getListeners() {
     return listeners;
   }
@@ -123,6 +138,9 @@ class GlobalEventContext extends InitialContext implements EventContext {
    * 只在系统内部发出消息
    */
   void emitWithoutCluster(Object data, int type, String info) {
+    if (listeners.size() < 1)
+      return;
+
     Iterator<GlobalListener> its = listeners.iterator();
 
     Binding newbind = new Binding(name, data);

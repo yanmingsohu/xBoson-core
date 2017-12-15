@@ -110,6 +110,19 @@ public final class Tool {
   }
 
 
+  /**
+   * 代替 System.out.println(..) 支持动态参数
+   */
+  public static void pl(Object...o) {
+    StringBuilder out = new StringBuilder(o.length * 10);
+    for (int i=0; i<o.length; ++i) {
+      out.append(o[i]);
+      out.append(' ');
+    }
+    System.out.println(out.toString());
+  }
+
+
   public static void println(byte[] a) {
     for (int i=0; i<a.length; ++i) {
       System.out.print(Integer.toString(a[i], 16) + " " );
@@ -133,34 +146,16 @@ public final class Tool {
 
   /**
    * 堆栈只保留 xboson 对象, 和脚本消息, Cause 中的消息也会被包含
+   * @see XBosonException#filterStack(Throwable, StringBuilder)
    */
   public static void xbosonStack(Throwable e, StringBuilder out) {
-    StackTraceElement[] st = e.getStackTrace();
-    out.append(e.toString());
-    boolean bypass = false;
-
-    for (int i=0; i<st.length; ++i) {
-      StackTraceElement t = st[i];
-      if (t.getClassName().startsWith("com.xboson")
-              || ECMAErrors.isScriptFrame(t))
-      {
-        out.append("\n\t");
-        out.append(t.toString());
-        bypass = false;
-      } else if (!bypass) {
-        out.append("\n\t...");
-        bypass = true;
-      }
-    }
-
-    Throwable c = e.getCause();
-    if (c != null) {
-      out.append("\nCause BY ");
-      xbosonStack(c, out);
-    }
+    XBosonException.filterStack(e, out);
   }
 
 
+  /**
+   * @see XBosonException#filterStack(Throwable, StringBuilder)
+   */
   public static String xbosonStack(Throwable e) {
     StringBuilder out = new StringBuilder();
     xbosonStack(e, out);

@@ -31,7 +31,8 @@ function __inner_call(_func_name, _obj) {
       return Function.call.apply(map[func_name], arguments);
     }
   } catch(e) {
-    throw new Error(list[func_name] + '(' + arguments + ') ' + e.stack);
+    throw new Error(
+        "Can not invoke @object."+ func_name +"(...), " + e.message);
   }
 }
 
@@ -47,7 +48,8 @@ var ___virtual_transform_roles = {
   arr : {
     size : function(arr) { return arr.length; },
   },
-}
+};
+Object.freeze(___virtual_transform_roles);
 
 
 //

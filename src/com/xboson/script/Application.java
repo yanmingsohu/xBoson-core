@@ -18,6 +18,7 @@ package com.xboson.script;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,7 +40,7 @@ public class Application implements ICodeRunner {
 	
 	public Application(IEnvironment env, IVirtualFileSystem vfs) throws ScriptException {
 		this.vfs = vfs;
-		modcache = new HashMap<>();
+		modcache = Collections.synchronizedMap(new HashMap<>());
 		sandbox  = SandboxFactory.create();
 		
 		sandbox.bootstrap();
@@ -60,7 +61,8 @@ public class Application implements ICodeRunner {
 	
 	
 	/**
-	 * 运行路径上的脚本, 返回脚本的运行结果
+	 * 运行路径上的脚本, 返回脚本的运行结果.
+	 * path 参数同时也是缓存 Module 时使用的主键.
 	 */
 	public Module run(String path) throws IOException, ScriptException {
 		if (path.charAt(0) != '/')
@@ -92,7 +94,7 @@ public class Application implements ICodeRunner {
 	
 	
 	/**
-	 * 通知应有, 有脚本被修改
+	 * 删除路径对应的 js 模块, 这会引起脚本重编译.
 	 */
 	public synchronized void changed(String path) {
 		WarpdScript ws = modcache.get(path);

@@ -16,6 +16,11 @@
 
 package com.xboson.been;
 
+import com.xboson.script.JScriptException;
+import com.xboson.util.CodeFormater;
+import com.xboson.util.IConstant;
+import jdk.nashorn.internal.runtime.ECMAErrors;
+
 import java.nio.file.Path;
 import java.sql.SQLException;
 
@@ -23,7 +28,13 @@ import java.sql.SQLException;
 /**
  * 异常基础类, 不需要特别捕获
  */
-public class XBosonException extends RuntimeException implements IBean, IXBosonException {
+public class XBosonException extends RuntimeException
+        implements IBean, IXBosonException, IConstant {
+
+  private static final String PREFIX = ENTER + SPSP;
+  private static final String PASS   = PREFIX + "...";
+  private static final String CAUSE  = ENTER + "Cause BY ";
+
   protected int code = 500;
 
 
@@ -68,6 +79,52 @@ public class XBosonException extends RuntimeException implements IBean, IXBosonE
 
   void setCode(int c) {
     code = c;
+  }
+
+
+  /**
+   * 堆栈只保留 xboson 对象, 和脚本消息, Cause 中的消息也会被包含
+   */
+  public static void filterStack(Throwable e, StringBuilder out) {
+    StackTraceElement[] st = e.getStackTrace();
+    out.append(e.toString());
+
+    if (e instanceof CodeFormater.JSSource
+            || e instanceof JScriptException) {
+      for (int i = 0; i < st.length; ++i) {
+        out.append(PREFIX);
+        out.append(st[i].toString());
+      }
+    } else {
+      filterStack(st, out);
+    }
+
+    Throwable c = e.getCause();
+    if (c != null) {
+      out.append(CAUSE);
+      filterStack(c, out);
+    }
+  }
+
+
+  public static void filterStack(StackTraceElement[] st, StringBuilder out) {
+    boolean bypass = false;
+
+    for (int i = 0; i < st.length; ++i) {
+      StackTraceElement t = st[i];
+
+      if (t.getClassName().startsWith("com.xboson") ||
+              ECMAErrors.isScriptFrame(t))
+      {
+        out.append(PREFIX);
+        out.append(t.toString());
+        bypass = false;
+      }
+      else if (!bypass) {
+        out.append(PASS);
+        bypass = true;
+      }
+    }
   }
 
 

@@ -17,11 +17,14 @@
 //
 // 原脚本 ide 模块
 //
-var ide = {
-  searchApiContent : _searchApiContent,
-};
-Object.freeze(ide);
+var ide = {};
 
+
+(function(ide) {
+ide.searchApiContent = _searchApiContent;
+ide.encodeApiScript = _encodeApiScript;
+ide.decodeApiScript = _decodeApiScript;
+Object.freeze(ide);
 
 //
 // 在 api 列表中搜索关键字, 并返回新的数组
@@ -54,3 +57,17 @@ function _searchApiContent(keyword, list, caseSensitive) {
   }
   return null;
 }
+
+
+function _encodeApiScript(code) {
+  var se = moduleHandleContext.get('se');
+  return se.encodeApiScript(code);
+}
+
+
+function _decodeApiScript(code) {
+  var se = moduleHandleContext.get('se');
+  return se.decodeApiScript(code);
+}
+
+})(ide);

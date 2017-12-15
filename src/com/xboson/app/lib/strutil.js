@@ -19,24 +19,27 @@
 // 为兼容原脚本而设计
 //
 var strutil = {
-  startWith   : _startWith,
-  endWith     : _endWith,
-  length      : _length,
-  subString   : _subString,
-  subStringTo : _subStringTo,
-  split       : _split,
-  contain     : _contain,
-  toUpperCase : _toUpperCase,
-  toLowerCase : _toLowerCase,
-  replace     : _replace,
-  format      : _format,
-  trim        : _trim,
-  formatDate  : _formatDate,
-  index       : _index,
-  lastIndex   : _lastIndex,
 };
-Object.freeze(strutil);
 
+
+(function(strutil) {
+
+strutil.startWith   = _startWith;
+strutil.endWith     = _endWith;
+strutil.length      = _length;
+strutil.subString   = _subString;
+strutil.subStringTo = _subStringTo;
+strutil.split       = _split;
+strutil.contain     = _contain;
+strutil.toUpperCase = _toUpperCase;
+strutil.toLowerCase = _toLowerCase;
+strutil.replace     = _replace;
+strutil.format      = _format;
+strutil.trim        = _trim;
+strutil.formatDate  = _formatDate;
+strutil.index       = _index;
+strutil.lastIndex   = _lastIndex;
+Object.freeze(strutil);
 
 function _startWith(a, b) {
   return a.startWith(b);
@@ -97,3 +100,5 @@ function _index(a, b) {
 function _lastIndex(a, b) {
   return a.lastIndexOf(b);
 }
+
+})(strutil);

@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.been.XBosonException;
 import com.xboson.script.IJSObject;
 
 import java.util.HashMap;
@@ -43,7 +44,12 @@ public class ModuleHandleContext implements IJSObject {
    * 在脚本中调用, 获取当前脚本上下文中 name 对象的引用
    */
   public Object get(String name) {
-    return getMap().get(name);
+    Object modimpl = getMap().get(name);
+    if (modimpl == null) {
+      throw new XBosonException.NotExist("Cannot get '" + name
+          +" Module, Maybe current user not enough authority.");
+    }
+    return modimpl;
   }
 
 

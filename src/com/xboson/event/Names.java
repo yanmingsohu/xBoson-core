@@ -26,30 +26,32 @@ package com.xboson.event;
  *
  * @see javax.naming.event.NamingEvent
  */
-public final class Names {
+public interface Names {
 
   /**
    * e(null, null) 容器销毁前发出
+   * @see OnExitHandle
    */
-  public static final String exit = "sys.exit";
+  String exit = "sys.exit";
 
   /**
    * c(Config, null) 配置文件读取完成后发出
    */
-  public static final String config = "sys.config_success";
+  String config = "sys.config_success";
 
   /**
    * c(null, null) 系统开始初始化之前发出
    * @see com.xboson.been.Config
    */
-  public static final String initialization = "sys.initialization";
+  String initialization = "sys.initialization";
 
   /**
    * c(Exception, String classname) 系统内部错误,
    * 如果在接受这个消息的函数中又抛出一个错误, 则之前的消息会被中断, 行为无法定义.
    * classname 是抛出这个错误的对象
+   * @see ErrorHandle
    */
-  public static final String inner_error = "sys.error";
+  String inner_error = "sys.error";
 
   /**
    * c(String filename, null)
@@ -58,6 +60,12 @@ public final class Names {
    *
    * @see com.xboson.j2ee.ui.RedisBase
    */
-  public static final String ui_file_change = "ui.file.change";
+  String ui_file_change = "ui.file.change";
+  
+  /**
+   * 文件修改事件前缀, 消息指发送给在线节点, 离线节点上线后也无法收到该消息.
+   * @see OnFileChangeHandle
+   */
+  String volatile_file_change_prifix = "v.file.change:";
 
 }

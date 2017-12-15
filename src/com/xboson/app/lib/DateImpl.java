@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.been.CallData;
 import com.xboson.script.IJSObject;
 import com.xboson.script.JSObject;
 import com.xboson.util.DateParserFactory;
@@ -26,12 +27,36 @@ import java.util.Calendar;
 import java.util.Date;
 
 
-public class DateImpl extends JSObject implements IJSObject {
+public class DateImpl extends RuntimeUnitImpl implements IJSObject {
+
+
+  public DateImpl(CallData cd) {
+    super(cd);
+  }
+
+  public DateImpl() {
+    super(null);
+  }
+
 
   @Override
   public String env_name() {
     return "date";
   }
+
+
+  @Override
+  public boolean freeze() {
+    return true;
+  }
+
+
+  @Override
+  public void init() {}
+
+
+  @Override
+  public void destory() {}
 
 
   public Object currentDate() {

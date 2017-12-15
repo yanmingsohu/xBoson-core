@@ -114,8 +114,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public int update(String sql, Object[] param, String manualCommit) throws Exception {
-    boolean mc = manualCommit.equals("1") || manualCommit.equalsIgnoreCase("true");
-    return update(sql, param, mc);
+    return update(sql, param, isManualCommit(manualCommit));
   }
 
 
@@ -139,15 +138,34 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public int updateBatch(String sql, Object[] param_grp, boolean commit)
+  public boolean isManualCommit(String flag) {
+    return flag.equals("1") || flag.equalsIgnoreCase("true");
+  }
+
+
+  public int updateBatch(String sql, Object _param_grp) throws Exception {
+    return updateBatch(sql, _param_grp, false);
+  }
+
+
+  public int updateBatch(String sql, Object _param_grp, String commitFlag)
           throws Exception {
+    return updateBatch(sql, _param_grp, isManualCommit(commitFlag));
+  }
+
+
+  public int updateBatch(String sql, Object _param_grp, boolean manualCommit)
+          throws Exception {
+    ScriptObjectMirror param_grp = wrap(_param_grp);
     Connection conn = getConnection();
-    conn.setAutoCommit(commit);
+    conn.setAutoCommit(! manualCommit);
     PreparedStatement ps = conn.prepareStatement(query_impl.replaceSql(sql));
     int total = 0;
 
-    for (int g = 0; g<param_grp.length; ++g) {
-      ScriptObjectMirror param = wrap(param_grp[g]);
+    final int len = param_grp.size();
+
+    for (int g = 0; g < len; ++g) {
+      ScriptObjectMirror param = wrap(param_grp.getSlot(g));
       final int param_len = param.size();
 
       for (int i = 1; i <= param_len; ++i) {

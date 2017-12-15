@@ -143,6 +143,38 @@ if(apptemp.~size==0){}
 //
 if(treeMod.~size==0){}
 
+
+//
+// fix`__inner_call\(\"getClass\", sys\)`
+//
+var a = [];
+var c = @sys.getClass();
+//
+// fix`__inner_call\(\"forName\", c\, \"System\"\)`
+//
+var system = @c.forName("System");
+sys.printValue(system);
+// test 1.xxxy
+
+
+//
+// fix`^\s*for \(var (\S+) in sys.split\(nodes,\",\"\)\) \{ var i = sys.split\(nodes,\",\"\)\[\1\]`
+//
+for(i in sys.split(nodes,","))
+{
+    var data = [];
+    var tmp = sys.split(i,"--");
+    list.add(data,dt);
+    list.add(data,tmp[0]);
+    list.add(data,tmp[1]);
+    list.add(data,tmp[2]);
+    list.add(params,data);
+    // edit by J.ym 17.12.15
+    se.sendApiPublish(tmp[0], tmp[1], tmp[2]);
+    inidstr = inidstr +",'"+ i + "'";
+}
+
+
 // fix`dontmodify\.~size`
 // dontmodify.~size
 /* dontmodify.~size */

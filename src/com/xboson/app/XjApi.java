@@ -22,21 +22,24 @@ import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
+import com.xboson.event.GlobalEvent;
+import com.xboson.event.OnFileChangeHandle;
 import com.xboson.fs.FileAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 
 
 /**
- * api 应该监听脚本修改事件并在脚本修改后清空缓存重新编译改变的脚本
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * api 监听脚本修改事件并在脚本修改后清空缓存重新编译改变的脚本
  */
-public class XjApi implements IDict {
+public class XjApi extends OnFileChangeHandle implements IDict {
 
   private Log log;
   private XjOrg org;
@@ -58,24 +61,28 @@ public class XjApi implements IDict {
     this.id  = id;
     this.log = LogFactory.create();
 
-    init();
+    readApiContent();
+    regApiChangeListener();
     log.debug("Api Success", id);
   }
 
 
+  /**
+   * 该方法会执行编译操作, 必要时会读取源代码
+   */
   public void run(CallData cd, String path) throws IOException, ScriptException {
     if (jsmodule == null) {
       synchronized (this) {
         if (jsmodule == null) {
-          jsmodule = app.buildJSModule(cd, path);
+          jsmodule = app.buildJSModule(path);
         }
       }
     }
-    app.run(cd, jsmodule);
+    app.run(cd, jsmodule, this);
   }
 
 
-  private void init() {
+  private void readApiContent() {
     Object[] parm = new Object[] { app.getID(), mod.id(), id };
 
     try (SqlResult res = org.query("open_api.sql", parm)) {
@@ -88,11 +95,29 @@ public class XjApi implements IDict {
         createdt = rs.getDate("createdt").getTime();
         updatedt = rs.getDate("updatedt").getTime();
         decode(rs.getString("content"));
+
+        // 下次读取属性, 值将被更新
+        attr = null;
       } else {
         throw new XBosonException("找不到 API " + id);
       }
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);
+    }
+  }
+
+
+  private void regApiChangeListener() {
+    regFileChange(ApiPath.getEventPath());
+  }
+
+
+  @Override
+  protected void onFileChange(String file_name_not_use) {
+    synchronized (this) {
+      jsmodule = null;
+      content = null;
+      app.updateApiScript(this);
     }
   }
 
@@ -115,6 +140,13 @@ public class XjApi implements IDict {
 
 
   public byte[] getCode() {
+    if (content == null) {
+      synchronized(this) {
+        if (content == null){
+          readApiContent();
+        }
+      }
+    }
     return content;
   }
 
@@ -124,10 +156,10 @@ public class XjApi implements IDict {
       synchronized (this) {
         if (attr == null) {
           attr = new FileAttr();
-          attr.fileSize   = content.length;
+          attr.fileSize   = content == null ? 0 : content.length;
           attr.fileName   = id;
           attr.pathName   = '/' + mod.id();
-          attr.fullPath   = '/' + mod.id() + '/' + id;
+          attr.fullPath   = ApiPath.toFile(mod.id(), id);
           attr.isfile     = true;
           attr.isdir      = false;
           attr.createTime = createdt;

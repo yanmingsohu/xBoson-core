@@ -29,6 +29,9 @@ import java.io.IOException;
  * redis 的底层操作, 没有目录的概念;
  * 所有的参数都不做任何前置处理, 调用者需要保证参数正确;
  * 特别是路径参数必须规范化并统一使用 unix 风格路径字符串.
+ *
+ * 如果本地文件节点下线, 使用 GlobalEvent 可能会丢失消息,
+ * 所以这里单独使用队列来实现文件修改消息.
  */
 public class RedisBase {
 

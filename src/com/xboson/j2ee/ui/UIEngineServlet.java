@@ -153,9 +153,7 @@ public class UIEngineServlet extends HttpServlet {
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
-    UrlSplit url = new UrlSplit(req);
-    log.warn("POST file ", url.getLast());
-    throw new UnsupportedOperationException(); // !!!!!!!!!!!!!!!!!!!!
+    throw new UnsupportedOperationException();
   }
 
 
@@ -167,7 +165,7 @@ public class UIEngineServlet extends HttpServlet {
           throws ServletException, IOException {
     UrlSplit url = new UrlSplit(req);
     log.warn("DELETE file ", url.getLast());
-    throw new UnsupportedOperationException(); // !!!!!!!!!!!!!!!!!!!!
+    throw new UnsupportedOperationException();
   }
 
 

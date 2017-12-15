@@ -19,6 +19,7 @@ package com.xboson.app.fix.state;
 import com.xboson.app.fix.ILastRunning;
 import com.xboson.app.fix.SState;
 import com.xboson.been.XBosonException;
+import com.xboson.util.Tool;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -26,7 +27,9 @@ import java.io.Writer;
 
 
 public class S_JavaCallOutput extends SState implements ILastRunning {
+
   private int objIndex, funcIndex, argsIndex;
+  private final static boolean output_comment = false;
 
 
   public S_JavaCallOutput(int objNameIndex, int funcNameIndex, int argsIndex) {
@@ -47,17 +50,22 @@ public class S_JavaCallOutput extends SState implements ILastRunning {
       out.append(fun);
       out.append("\", ");
       out.append(obj);
-      out.append(", ");
-      out.append(arg);
-      out.append(") /* ");
 
-      out.append("@");
-      out.append(obj);
-      out.append('.');
-      out.append(fun);
-      out.append('(');
-      out.append(arg);
-      out.append(") */");
+      if (! Tool.isNulStr(arg)) {
+        out.append(", ");
+        out.append(arg);
+      }
+      out.append(")");
+
+      if (output_comment) {
+        out.append("/* @");
+        out.append(obj);
+        out.append('.');
+        out.append(fun);
+        out.append('(');
+        out.append(arg);
+        out.append(") */");
+      }
     } catch (IOException e) {
       throw new XBosonException(e);
     }

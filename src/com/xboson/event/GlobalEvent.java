@@ -75,16 +75,11 @@ public class GlobalEvent {
     if (listener == null)
       throw new NullPointerException("listener");
 
-    try {
-      GlobalEventContext context = contexts.get(name);
-      if (context == null) {
-        context = new GlobalEventContext(name);
-        contexts.put(name, context);
-      }
-      context.on(listener);
-    } catch(Exception e) {
-      throw new RuntimeException(e);
+    GlobalEventContext context = contexts.get(name);
+    if (context == null) {
+      context = GlobalEventContext.create(name, contexts);
     }
+    context.on(listener);
   }
 
 
@@ -120,13 +115,13 @@ public class GlobalEvent {
 
 
   /**
-   * 触发事件
+   * 触发事件.
    *
    * @param name 事件名称
-   * @param data 数据
-   * @param type 数据名称
-   * @param info 扩展描述
-   * @return
+   * @param data 数据, NamingEvent.getNewBinding().getObject() 返回
+   * @param type 数据类型, NamingEvent.getType() 返回
+   * @param info 扩展描述, NamingEvent.getChangeInfo() 返回
+   * @return 忽略返回值
    */
   public synchronized boolean emit(
             String name, Object data, int type, String info) {
@@ -136,8 +131,9 @@ public class GlobalEvent {
     }
 
     GlobalEventContext context = contexts.get(name);
-    if (context == null || context.getListeners().isEmpty())
-      return false;
+    if (context == null) {
+      context = GlobalEventContext.create(name, contexts);
+    }
 
     context.emit(data, type, info);
 

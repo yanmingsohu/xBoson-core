@@ -67,7 +67,9 @@ public class MainServlet extends HttpServlet {
         cd.xres.responseMsg("unknow return", 999);
       }
     } catch(XBosonException e) {
-		  throw e;
+			throw e;
+		} catch(RuntimeException r) {
+			throw r;
     } catch(Exception e) {
 		  throw new XBosonException(e);
     }

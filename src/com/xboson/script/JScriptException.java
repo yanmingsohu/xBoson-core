@@ -18,11 +18,15 @@ package com.xboson.script;
 
 import com.xboson.been.XBosonException;
 import com.xboson.util.CodeFormater;
+import com.xboson.util.Tool;
 import jdk.nashorn.internal.runtime.ECMAErrors;
 import jdk.nashorn.internal.runtime.ECMAException;
 
 import javax.script.ScriptException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,10 +44,11 @@ public class JScriptException extends XBosonException {
   private int line_offset = 0;
   private String lastFileName;
   private int lastLine;
+  private CodeFormater cf;
 
 
   /**
-   * @see JScriptException#JScriptException(Exception, Reader, int)
+   * @see JScriptException#JScriptException(Exception, CodeFormater, int)
    */
   public JScriptException(Exception fail) {
     this(fail, null, OffsetLineStack.offset);
@@ -51,12 +56,20 @@ public class JScriptException extends XBosonException {
 
 
   /**
+   * @see JScriptException#JScriptException(Exception, CodeFormater, int)
+   */
+  public JScriptException(Exception fail, byte[] code) {
+    this(fail, new CodeFormater(ByteBuffer.wrap(code)), OffsetLineStack.offset);
+  }
+
+
+  /**
    * 该方法将出错行的偏移设置为全局 OffsetLineStack
-   * @see JScriptException#JScriptException(Exception, Reader, int)
+   * @see JScriptException#JScriptException(Exception, CodeFormater, int)
    * @see OffsetLineStack
    */
   public JScriptException(Exception fail, Reader code) {
-    this(fail, code, OffsetLineStack.offset);
+    this(fail, new CodeFormater(code), OffsetLineStack.offset);
   }
 
 
@@ -64,12 +77,13 @@ public class JScriptException extends XBosonException {
    * 该构造方法会过滤 fail 中无关的错误堆栈项.
    * 并设置一个文件行偏移.
    */
-  public JScriptException(Exception fail, Reader code, int offset) {
+  public JScriptException(Exception fail, CodeFormater cf, int offset) {
     super(fail.getMessage());
-    lastFileName = null;
-    lastLine = -1;
+    this.lastFileName = null;
+    this.lastLine = -1;
+    this.cf = cf;
     setLineOffset(offset);
-    collect_trace(fail, code);
+    collect_trace(fail);
   }
 
 
@@ -81,7 +95,7 @@ public class JScriptException extends XBosonException {
   }
 
 
-  private void collect_trace(Exception fail, Reader code) {
+  private void collect_trace(Exception fail) {
     if (fail instanceof JScriptException) {
       setStackTrace(fail.getStackTrace());
       initCause(fail.getCause());
@@ -91,8 +105,7 @@ public class JScriptException extends XBosonException {
     List<StackTraceElement> trace = new ArrayList<>();
     format_js_stack(fail, trace);
 
-    if (code != null && lastLine >= 0) {
-      CodeFormater cf = new CodeFormater(code);
+    if (cf != null && lastLine >= 0) {
       Exception source = cf.createSourceException(lastFileName, lastLine);
       if (source != null) {
         super.initCause(source);

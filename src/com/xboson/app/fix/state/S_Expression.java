@@ -23,6 +23,7 @@ public class S_Expression extends SState {
   private StringBuilder exp;
   private int state = 0;
   private int savetoIndex;
+  private int nested_count = 0;
 
   public S_Expression(int savetoIndex) {
     this.savetoIndex = savetoIndex;
@@ -34,13 +35,22 @@ public class S_Expression extends SState {
       exp = new StringBuilder();
       state = 1;
     }
-    if (ch == ')') {
-      state = 0;
-      data[savetoIndex] = exp.toString();
-      return NEXT_AND_BACK;
+
+    if (ch == '(') {
+      ++nested_count;
     }
-    if (ch == '\n') {
+    else if (ch == ')') {
+      if (nested_count > 0) {
+        --nested_count;
+      } else {
+        state = 0;
+        data[savetoIndex] = exp.toString();
+        return NEXT_AND_BACK;
+      }
+    }
+    else if (ch == '\n') {
       state = 0;
+      nested_count = 0;
       return RESET;
     }
     exp.append((char)ch);

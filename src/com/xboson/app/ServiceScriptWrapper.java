@@ -96,8 +96,9 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
    * @param cd 请求数据, 应答对象
    * @param jsmod 编译好的模块
    * @param org 机构
+   * @param api 持有源代码
    */
-  public void run(CallData cd, Module jsmod, XjOrg org) {
+  public void run(CallData cd, Module jsmod, XjOrg org, XjApi api) {
     ScriptObjectMirror call = (ScriptObjectMirror) jsmod.exports;
 
     if (! call.isFunction() )
@@ -121,7 +122,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       call.call(jsmod.exports, sys, sql, cache, http, se);
 
     } catch (ECMAException ec) {
-      throw new JScriptException(ec);
+      throw new JScriptException(ec, api.getCode());
 
     } catch (XBosonException x) {
       throw x;

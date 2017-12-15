@@ -54,6 +54,9 @@ public class XmlDataMapConverter implements Converter {
   }
 
 
+  /**
+   * 并没有严格按照规则来创建对象 !
+   */
   public Object unmarshal(HierarchicalStreamReader reader,
                           UnmarshallingContext context) {
 

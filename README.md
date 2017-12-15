@@ -8,9 +8,8 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * js 沙箱每次一个独立默认上下文.(当前为 app 共用且锁死).
 * blob 保存时直接写入db, 而不在内存堆积.
 * 所有的权限限制. 
-* 平台接口 adduser/activetenantuser/changepasswdforce/changepasswd
-* 请求 api 's' 参数表示测试
 * api 沙箱超时管理, 内存管理.
+* UI IDE.
 
 
 # JAR 依赖
@@ -70,6 +69,7 @@ get 请求使用标准的 http url 参数.
   3. 非严格模式中, `@list.add(...)` 相当于调用 Java 中 List.add(). 
   4. 非严格模式中, `list.~size` 调用预定义的虚拟属性. 
   5. 严格模式必须把 "use strict" 声明在第一行.
+  6. date 模块中的函数可以在 sys 中直接调用.
 
 
 ### 特殊参数, "$format"

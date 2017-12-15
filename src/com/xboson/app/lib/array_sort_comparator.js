@@ -14,6 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+(function() {
 //
 // 配置 list 对象的 sort 函数, 该函数的底层使用 js 实现.
 //
@@ -57,3 +58,5 @@ function array_sort_implement_js(p0) {
 }
 
 list.array_sort_implement_js = array_sort_implement_js;
+
+})();

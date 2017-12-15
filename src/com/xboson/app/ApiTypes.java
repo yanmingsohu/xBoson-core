@@ -6,24 +6,46 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-12-13 下午6:29
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/fix/state/S_SpaceEnter.java
+// 文件创建日期: 17-12-15 下午6:45
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/ApiTypes.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.app.fix.state;
-
-import com.xboson.app.fix.SState;
+package com.xboson.app;
 
 
-public class S_SpaceEnter extends SState {
-  public int read(byte ch) {
-    if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r') {
-      return KEEP;
-    }
-    return NEXT_AND_BACK;
+import java.util.HashMap;
+import java.util.Map;
+
+
+public enum ApiTypes {
+
+  Production("/API/prod", "r"),
+  Development("/API/dev", "d");
+
+
+  public final String eventPrifix;
+  public final String flag;
+
+
+  ApiTypes(String eventPrifix, String flag) {
+    this.eventPrifix = eventPrifix;
+    this.flag = flag;
+    MAP.flagMapping.put(flag, this);
+  }
+
+
+  public static ApiTypes of(String flag) {
+    ApiTypes type = MAP.flagMapping.get(flag);
+    if (type == null) type = Production;
+    return type;
+  }
+
+
+  private static class MAP {
+    static final Map<String, ApiTypes> flagMapping = new HashMap<>();
   }
 }

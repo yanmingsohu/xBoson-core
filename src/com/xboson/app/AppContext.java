@@ -34,15 +34,17 @@ import java.util.Map;
 public class AppContext implements IConstant {
 
   private static AppContext instance;
-  private AppPool app_pool;
+  private AppPool production;
+  private AppPool development;
   private ThreadLocal<ThreadLocalData> ttld;
   private Log log;
 
 
   private AppContext() {
-    log       = LogFactory.create();
-    app_pool  = new AppPool();
-    ttld      = new ThreadLocal<>();
+    log         = LogFactory.create();
+    ttld        = new ThreadLocal<>();
+    production  = new AppPool();
+    development = new AppPool();
   }
 
 
@@ -50,7 +52,7 @@ public class AppContext implements IConstant {
    * 该方法支持嵌套请求, 前一个请求的参数会被保留在 ThreadLocalData.nestedCall 中.
    */
   public void call(ApiCall ac) {
-    log.debug("Call::", ac.org, '/', ac.app, '/', ac.mod, '/', ac.api);
+    log.debug("Call::", ApiPath.getPath(ac));
 
     try {
       ThreadLocalData tld = createLocalData(ac);
@@ -69,7 +71,7 @@ public class AppContext implements IConstant {
         tld.replaceOrg = true;
       }
 
-      XjOrg org = app_pool.getOrg(ac.org);
+      XjOrg org = chooseAppPool(tld).getOrg(ac.org);
       XjApp app = org.getApp(ac.app);
       app.run(ac.call, ac.mod, ac.api);
 
@@ -86,10 +88,31 @@ public class AppContext implements IConstant {
   }
 
 
+  /**
+   * 's' 调试状态标记
+   *    d：执行最新代码并返回调试信息，
+   *    r：执行已发布代码并返回调试信息
+   */
+  private AppPool chooseAppPool(ThreadLocalData tld) {
+    ApiTypes type = ApiTypes.of( tld.ac.call.req.getParameter("s") );
+    tld.__dev_mode = type;
+
+    switch (type) {
+      case Development:
+        return development;
+
+      case Production:
+        return production;
+    }
+    throw new XBosonException.NotExist("Unknow type " + type);
+  }
+
+
   private ThreadLocalData createLocalData(ApiCall ac) {
     ThreadLocalData tld = new ThreadLocalData();
     tld.who = ac.call.sess.login_user;
     tld.orgid = ac.org;
+    tld.ac = ac;
 
     ThreadLocalData previous = ttld.get();
     if (previous != null) {
@@ -126,6 +149,22 @@ public class AppContext implements IConstant {
    */
   public String originalOrg() {
     return ttld.get().orgid;
+  }
+
+
+  /**
+   * 返回当前 api 的抽象文件路径
+   */
+  public String getCurrentApiPath() {
+    return ttld.get().getApiPath();
+  }
+
+
+  /**
+   * 返回 api 类型
+   */
+  public ApiTypes getApiModeType() {
+    return ttld.get().__dev_mode;
   }
 
 
@@ -181,11 +220,29 @@ public class AppContext implements IConstant {
   }
 
 
+  /**
+   * 线程变量保存包装器
+   */
   private class ThreadLocalData {
     ThreadLocalData nestedCall;
     Map<String, Object> exparam;
     IAWho who;
     String orgid;
+    ApiCall ac;
     boolean replaceOrg;
+
+    String __cache_path;
+    ApiTypes __dev_mode;
+
+
+    /**
+     * 返回未被替换的原始参数.
+     */
+    String getApiPath() {
+      if (__cache_path == null) {
+        __cache_path = ApiPath.getPath(exparam, ac.api);
+      }
+      return __cache_path;
+    }
   }
 }

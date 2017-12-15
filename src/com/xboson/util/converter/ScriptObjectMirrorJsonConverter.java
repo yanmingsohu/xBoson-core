@@ -21,8 +21,10 @@ import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+import com.xboson.app.lib.RuntimeUnitImpl;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeError;
 import jdk.nashorn.internal.objects.NativeTypeError;
 
@@ -73,9 +75,12 @@ public class ScriptObjectMirrorJsonConverter {
     @Override
     public void toJson(JsonWriter jsonWriter, ScriptObjectMirror jsobj)
             throws IOException {
-      if (jsobj.isFunction())
+      if (jsobj.isFunction() || RuntimeUnitImpl.isNull(jsobj)) {
+        jsonWriter.nullValue();
         return;
+      }
 
+      jsonWriter.setLenient(true);
       String cname = jsobj.getClassName();
       if (cname.indexOf("Error") >= 0) {
         Object stack = jsobj.getMember("stack");

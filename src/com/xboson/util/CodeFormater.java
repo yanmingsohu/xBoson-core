@@ -201,7 +201,7 @@ public class CodeFormater {
   /**
    * 在错误堆栈中输出源代码
    */
-  class JSSource extends XBosonException {
+  public class JSSource extends XBosonException {
     private JSSource(String code) {
       super(code);
       setStackTrace(new StackTraceElement[0]);
