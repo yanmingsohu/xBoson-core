@@ -25,7 +25,7 @@ public class S_for extends SState {
 
   public int read(byte ch) {
     if (s == 0) {
-      if (ch == 'f' && isSpace(pch)) {
+      if (ch == 'f' && isNewCodeBlock(pch)) {
         s = 1;
         return BEGIN;
       } else {

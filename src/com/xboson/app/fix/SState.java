@@ -37,10 +37,11 @@ public abstract class SState implements ISState {
 
 
   /**
-   * 分号放在这里, 很不严谨
+   * ch 是一个新代码块的结束符号返回 true
    */
-  public static boolean isSpace(byte ch) {
-    return ch == ' ' || ch == '\n' || ch == '\t' || ch == ';';
+  public static boolean isNewCodeBlock(byte ch) {
+    return ch == ' ' || ch == '\n' || ch == '\t'
+            || ch == ';' || ch == '}' || ch == '\r';
   }
 
 

@@ -34,7 +34,7 @@ public class S_BeginNotation extends SState {
   @Override
   public int read(byte ch) {
     if (state == 0) {
-      if (ch == nota && (isSpace(pch) || isOp(pch))) {
+      if (ch == nota && (isNewCodeBlock(pch) || isOp(pch))) {
         state = 1;
         return BEGIN;
       } else {

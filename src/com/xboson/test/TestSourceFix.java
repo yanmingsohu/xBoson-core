@@ -35,10 +35,17 @@ public class TestSourceFix extends Test {
   public void test() throws Throwable {
     test_file("js/need-fix.js", false);
     test_file("js/strict-mode.js", true);
+    not_modify("js/fix-not-change.js");
+  }
 
-    Fix s = test_file("js/fix-fail.js");
+
+  //
+  // js 重写后应该与源代码相同 (没有特殊语法需要被重写)
+  //
+  private void not_modify(String js_file_path) throws Exception {
+    Fix s = test_file(js_file_path);
     eq(s.src, s.fix, "don't change");
-    msg("OK not change");
+    msg("OK not change", js_file_path);
   }
 
 

@@ -55,7 +55,7 @@ public class UserService extends XService implements IDict, IConstant {
           = "Provide sub-service name '/user/[sub service]'";
 
   /**
-   * 跳过登录的服务名称列表
+   * 跳过登录检查的服务名称列表
    */
   private static final Set<String> skipCheckLogin = Tool.arr2set(new String[] {
           "get_havinguser",

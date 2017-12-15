@@ -67,19 +67,25 @@ public class JsParser implements IStateOperator {
           // 当在字符串中, 不做任何额外的处理
           //
           if (in_quotation) {
-            if (ch == '\\') {
-              in_escape = !in_escape;
+            //
+            // '\' 符号启动转义, 在转义后的任何一个符号都被吃掉
+            //
+            if (in_escape) {
+              in_escape = false;
+            }
+            else if (ch == '\\') {
+              // 一定不再转义符后面
+              in_escape = true;
             }
             else if (ch == quotation_mark) {
-              if (in_escape) {
-                in_escape = false;
-              } else {
-                in_quotation = false;
-              }
+              // 一定不再转义符后面
+              in_quotation = false;
             }
+
             output.write(ch);
             continue;
-          } else if (ch == '\'' || ch == '\"') {
+          }
+          else if (ch == '\'' || ch == '\"') {
             in_quotation = true;
             quotation_mark = ch;
             output.write(ch);
@@ -90,7 +96,7 @@ public class JsParser implements IStateOperator {
           //
           if (ch == '/' && i<content.length-1 && content[i+1] == '/') {
             int begin = i;
-            while (i<content.length && content[i] != '\n') {
+            while (i < content.length && content[i] != '\n') {
               output.write(content[i]);
               ++i;
             }
