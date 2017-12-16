@@ -17,7 +17,6 @@
 package com.xboson.service;
 
 import com.xboson.app.AppContext;
-import com.xboson.app.AppPool;
 import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
 import com.xboson.j2ee.container.XPath;
@@ -33,11 +32,8 @@ public class App extends XService {
   private static final String PATH_FOTMAT
           = "Path format: /app/{org id}/{app id}/{module id}/{api name}";
 
-  private AppPool app_pool;
-
 
   public App() {
-    app_pool = new AppPool();
   }
 
 

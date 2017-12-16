@@ -25,6 +25,7 @@ import com.xboson.init.Touch;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.ISleepwalker;
+import com.xboson.util.IConstant;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
 
@@ -32,7 +33,7 @@ import com.xboson.util.Tool;
  * 通过实现该类, 导入通用测试框架,
  * 这里的方法都没有考虑性能, 不要再非测试环境中使用.
  */
-public class Test {
+public class Test implements IConstant {
 	public static final String line =
 ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
 

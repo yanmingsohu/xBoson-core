@@ -28,6 +28,9 @@ import java.security.Principal;
 import java.util.*;
 
 
+/**
+ * 对于模拟的请求参数, 数据类型总是 json, 调试参数 's' 总是开发模式.
+ */
 public class TestServletRequest implements HttpServletRequest {
 
   Map<String, Object> attr = new HashMap<>();
@@ -283,6 +286,8 @@ public class TestServletRequest implements HttpServletRequest {
     if ("$format".equals(s)) {
       return "json";
     }
+    if ("s".equals(s))
+      return "d";
     return Tool.randomString(10);
   }
 

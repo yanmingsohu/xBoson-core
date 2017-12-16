@@ -16,6 +16,7 @@
 
 package com.xboson.app;
 
+import com.xboson.app.reader.AbsReadScript;
 import com.xboson.been.SysPlDrmDs001;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
@@ -46,17 +47,20 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
   private ConnectConfig orgdb;
   private ConnectConfig rootdb;
   private boolean isSysOrg;
+  private AbsReadScript script_reader;
 
 
   /**
    * 创建机构
    * @param dbcc root 权限数据库连接配置
    * @param orgid 当前机构 id
+   * @param script_reader 脚本读取器
    */
-  XjOrg(ConnectConfig dbcc, String orgid) {
+  XjOrg(ConnectConfig dbcc, String orgid, AbsReadScript script_reader) {
     this.orgid = orgid;
     this.rootdb = dbcc;
     this.isSysOrg = SYS_ORG.equalsIgnoreCase(orgid);
+    this.script_reader = script_reader;
 
     try (Connection conn = DbmsFactory.me().open(rootdb)) {
       check_org(conn);
@@ -210,4 +214,9 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
     return orgdb;
   }
 
+
+  public AbsReadScript getScriptReader() {
+    script_reader.bindXjorg(this);
+    return script_reader;
+  }
 }

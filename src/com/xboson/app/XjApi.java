@@ -16,24 +16,17 @@
 
 package com.xboson.app;
 
-import com.xboson.app.fix.SourceFix;
+import com.xboson.app.reader.ScriptFile;
 import com.xboson.been.CallData;
 import com.xboson.been.Module;
-import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
-import com.xboson.db.SqlResult;
-import com.xboson.event.GlobalEvent;
 import com.xboson.event.OnFileChangeHandle;
 import com.xboson.fs.FileAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Date;
 
 
 /**
@@ -46,12 +39,8 @@ public class XjApi extends OnFileChangeHandle implements IDict {
   private XjApp app;
   private XjModule mod;
   private String id;
-  private String name;
-  private byte[] content;
-  private FileAttr attr;
-  private long createdt;
-  private long updatedt;
   private Module jsmodule;
+  private ScriptFile file;
 
 
   XjApi(XjOrg org, XjApp app, XjModule mod, String id) {
@@ -64,6 +53,16 @@ public class XjApi extends OnFileChangeHandle implements IDict {
     readApiContent();
     regApiChangeListener();
     log.debug("Api Success", id);
+  }
+
+
+  private void readApiContent() {
+    file = org.getScriptReader().read(app.getID(), mod.id(), id);
+  }
+
+
+  private void regApiChangeListener() {
+    regFileChange(ApiPath.getEventPath());
   }
 
 
@@ -82,91 +81,35 @@ public class XjApi extends OnFileChangeHandle implements IDict {
   }
 
 
-  private void readApiContent() {
-    Object[] parm = new Object[] { app.getID(), mod.id(), id };
-
-    try (SqlResult res = org.query("open_api.sql", parm)) {
-      ResultSet rs = res.getResult();
-      if (rs.next()) {
-        if (! ZR001_ENABLE.equals(rs.getString("status")) ) {
-          throw new XBosonException("API 已经禁用");
-        }
-        name     = rs.getString("apinm");
-        createdt = rs.getDate("createdt").getTime();
-        updatedt = rs.getDate("updatedt").getTime();
-        decode(rs.getString("content"));
-
-        // 下次读取属性, 值将被更新
-        attr = null;
-      } else {
-        throw new XBosonException("找不到 API " + id);
-      }
-    } catch (SQLException e) {
-      throw new XBosonException.XSqlException(e);
-    }
-  }
-
-
-  private void regApiChangeListener() {
-    regFileChange(ApiPath.getEventPath());
-  }
-
-
   @Override
   protected void onFileChange(String file_name_not_use) {
     synchronized (this) {
       jsmodule = null;
-      content = null;
+      file = null;
       app.updateApiScript(this);
     }
   }
 
 
-  /**
-   * 解码脚本, 在必要时对代码进行修正;
-   * 如果代码没有被 <%...%> 包装, 一定不会修正代码,
-   * 否则非 js 严格模式会修正代码.
-   */
-  private void decode(String str) {
-    content = ApiEncryption.decryptApi(str);
-    if (SourceFix.fixBeginEnd(content)) {
-      if (SourceFix.isStrictMode(content) == false) {
-        content = SourceFix.fixFor(content);
-        content = SourceFix.fixJavaCall(content);
-        content = SourceFix.fixVirtualAttr(content);
-      }
-    }
-  }
-
-
-  public byte[] getCode() {
-    if (content == null) {
+  private ScriptFile getFile() {
+    if (file == null) {
       synchronized(this) {
-        if (content == null){
+        if (file == null){
           readApiContent();
         }
       }
     }
-    return content;
+    return file;
+  }
+
+
+  public byte[] getCode() {
+    return getFile().content;
   }
 
 
   public FileAttr getApiAttr() {
-    if (attr == null) {
-      synchronized (this) {
-        if (attr == null) {
-          attr = new FileAttr();
-          attr.fileSize   = content == null ? 0 : content.length;
-          attr.fileName   = id;
-          attr.pathName   = '/' + mod.id();
-          attr.fullPath   = ApiPath.toFile(mod.id(), id);
-          attr.isfile     = true;
-          attr.isdir      = false;
-          attr.createTime = createdt;
-          attr.modifyTime = updatedt;
-        }
-      }
-    }
-    return attr;
+    return getFile().attr;
   }
+
 }

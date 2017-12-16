@@ -27,6 +27,28 @@ public class SourceFix {
 
   public static final char[] GTRICT_MODE = "\"use strict\"".toCharArray();
 
+
+  /**
+   * 自动给代码打补丁, 该方法返回的代码适合给机器运行.
+   * 返回后参数 content 会被改动但不是最终代码, 应该丢弃.
+   *
+   * 补丁规则:
+   *    1. 去掉首位 "<%...%>"
+   *    2. 是严格模式则不做补丁.
+   *    3. 不是严格模式, 修正脚本中的方言.
+   */
+  public static byte[] autoPatch(byte[] content) {
+    if (SourceFix.fixBeginEnd(content)) {
+      if (SourceFix.isStrictMode(content) == false) {
+        content = SourceFix.fixFor(content);
+        content = SourceFix.fixJavaCall(content);
+        content = SourceFix.fixVirtualAttr(content);
+      }
+    }
+    return content;
+  }
+
+
   /**
    * 去掉脚本的前后特殊符号 "<%...%>",
    * 如果执行了修正操作返回 true;

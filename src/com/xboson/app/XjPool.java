@@ -50,6 +50,7 @@ public abstract class XjPool<E> {
       throw new XBosonException.NullParamException("String name");
     }
     E ret = pool.get(name);
+
     if (ret == null) {
       synchronized (this) {
         ret = pool.get(name);
@@ -59,13 +60,23 @@ public abstract class XjPool<E> {
         }
       }
     }
+    // beforCreateReturn(ret);
     return ret;
   }
 
 
   /**
-   * 实现该方法, 当需要创建一个新的类型实例时被调用
+   * 实现该方法, 当需要创建一个新的类型实例时被调用.
+   * 该方法实现中通常不需要额外的同步操作, 是线程安全的.
    */
   protected abstract E createItem(String name);
+
+
+//  暂时没有用到, 所以注释
+//  /**
+//   * 在 getWithCreate 方法返回前一定被调用, 默认什么都不做
+//   * @param data 创建的/缓存的对象
+//   */
+//  protected void beforCreateReturn(E data) {}
 
 }

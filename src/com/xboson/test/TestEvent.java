@@ -82,9 +82,9 @@ public class TestEvent extends Test implements GlobalListener {
 
   void test_recv() throws InterruptedException {
     msg("命令用来模拟另一个节点发送数据:");
-    red(send);
+    sub(send);
     msg("命令可以让进程退出:");
-    red(quit);
+    sub(quit);
     msg("等待另一个节点或 Redis 客户端发送来数据...");
 
     WaitRecv _wait = new WaitRecv();

@@ -16,6 +16,8 @@
 
 package com.xboson.app;
 
+import com.xboson.app.reader.AbsReadScript;
+import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.util.SysConfig;
 
@@ -26,16 +28,21 @@ import com.xboson.util.SysConfig;
 public class AppPool extends XjPool<XjOrg> {
 
   private ConnectConfig dbcc;
+  private AbsReadScript script_reader;
 
 
-  public AppPool() {
-    dbcc = SysConfig.me().readConfig().db;
+  public AppPool(AbsReadScript reader) {
+    if (reader == null) {
+      throw new XBosonException.NullParamException("AbsReadScript reader");
+    }
+    this.dbcc = SysConfig.me().readConfig().db;
+    this.script_reader = reader;
   }
 
 
   @Override
   protected XjOrg createItem(String id) {
-    return new XjOrg(dbcc, id);
+    return new XjOrg(dbcc, id, script_reader);
   }
 
 
@@ -47,5 +54,4 @@ public class AppPool extends XjPool<XjOrg> {
   public XjOrg getOrg(String id) {
     return super.getWithCreate(id);
   }
-
 }

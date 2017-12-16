@@ -21,6 +21,8 @@ import com.xboson.util.IConstant;
 
 public interface IApiConstant {
 
+  String _R_KEY_PREFIX_                 = "/sys";
+
   String _CACHE_REGION_API_             = "/api";
   String _CACHE_REGION_SYS_SQL_         = "/sql";
   String _CACHE_REGION_SYS_AUTHORITY_   = "/auth";

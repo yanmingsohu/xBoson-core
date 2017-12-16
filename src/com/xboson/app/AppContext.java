@@ -16,6 +16,8 @@
 
 package com.xboson.app;
 
+import com.xboson.app.reader.ForDevelopment;
+import com.xboson.app.reader.ForProduction;
 import com.xboson.auth.IAWho;
 import com.xboson.been.ApiCall;
 import com.xboson.been.UrlSplit;
@@ -43,8 +45,8 @@ public class AppContext implements IConstant {
   private AppContext() {
     log         = LogFactory.create();
     ttld        = new ThreadLocal<>();
-    production  = new AppPool();
-    development = new AppPool();
+    production  = new AppPool(new ForProduction());
+    development = new AppPool(new ForDevelopment());
   }
 
 

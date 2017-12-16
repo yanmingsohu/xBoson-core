@@ -282,8 +282,12 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 /t/paas/main.html
 /t/paas/lib/js/zy/zy.js
 /t/paas/lib/html/zy_meny.js
+/t/paas/ide/htmlide/ide_run.html
 
 
 # Api 修改
 
 /ZYAPP_LOGIN/ZYMODULE_LOGIN/orgmenu
+/ZYAPP_IDE/ZYMODULE_IDE/scode_x
+/ZYAPP_IDE/ZYMODULE_IDE/ucode_x
+/03229cbe4f4f11e48d6d6f51497a883b/yyxxgl/api_manage_up_x

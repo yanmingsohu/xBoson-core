@@ -6,18 +6,42 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-25 下午12:53
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/Version.java
+// 文件创建日期: 17-12-16 上午10:28
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/reader/ScriptFile.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.util;
+package com.xboson.app.reader;
 
-public class Version {
+import com.xboson.fs.FileAttr;
 
-  public final static String xBoson = "2.03";
+
+public class ScriptFile {
+
+  /**
+   * 文件属性
+   */
+  public final FileAttr attr;
+
+  /**
+   * 打过补丁的源代码
+   */
+  public final byte[] content;
+
+
+  /**
+   * 未打补丁的原始文件
+   */
+  public final String original_code;
+
+
+  public ScriptFile(byte[] content, String orgi, FileAttr attr) {
+    this.content = content;
+    this.attr = attr;
+    this.original_code = orgi;
+  }
 
 }
