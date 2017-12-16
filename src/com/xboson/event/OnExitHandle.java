@@ -19,7 +19,6 @@ package com.xboson.event;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
-import javax.naming.Name;
 import javax.naming.event.NamingEvent;
 
 /**
@@ -28,7 +27,7 @@ import javax.naming.event.NamingEvent;
 public abstract class OnExitHandle extends GLHandle {
 
   public OnExitHandle() {
-    GlobalEvent.me().on(Names.exit, this);
+    GlobalEventBus.me().on(Names.exit, this);
   }
 
 
@@ -49,7 +48,7 @@ public abstract class OnExitHandle extends GLHandle {
    * 从全局事件中, 移除自身.
    */
   public void removeExitListener() {
-    boolean rm = GlobalEvent.me().off(Names.exit, this);
+    boolean rm = GlobalEventBus.me().off(Names.exit, this);
     assert rm : "must removed";
   }
 

@@ -130,7 +130,7 @@ get 请求使用标准的 http url 参数.
 #LogFactory Config From xBoson.
 #Tue Nov 14 21:13:11 CST 2017
 
-com.xboson.event.GlobalEvent=ALL
+com.xboson.event.GlobalEventBus=ALL
 Event\:\:sys.error=OFF
 com.xboson.j2ee.container.UrlMapping=DEBUG
 /check-env.js=INHERIT

@@ -16,6 +16,9 @@
 
 package com.xboson.event;
 
+import com.xboson.util.Tool;
+
+
 /**
  * 已有的事件列表, 带有 sys 开头的消息不会在集群中路由
  *
@@ -67,5 +70,10 @@ public interface Names {
    * @see OnFileChangeHandle
    */
   String volatile_file_change_prifix = "v.file.change:";
+
+  /**
+   * 全局消息总线名称
+   */
+  String CHANNEL_PREFIX = "/com.xboson.event.GlobalEventBus/";
 
 }

@@ -17,7 +17,7 @@
 package com.xboson.test;
 
 import com.squareup.moshi.JsonAdapter;
-import com.xboson.event.GlobalEvent;
+import com.xboson.event.GlobalEventBus;
 import com.xboson.event.GlobalListener;
 import com.xboson.event.Names;
 import com.xboson.event.QuickSender;
@@ -30,7 +30,6 @@ import javax.naming.Binding;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import java.io.IOException;
-import java.util.Calendar;
 import java.util.Date;
 
 public class TestEvent extends Test implements GlobalListener {
@@ -40,7 +39,7 @@ public class TestEvent extends Test implements GlobalListener {
 
 
   public void test() throws Exception {
-    GlobalEvent ge = GlobalEvent.me();
+    GlobalEventBus ge = GlobalEventBus.me();
     ge.on("test", this);
     ge.on(Names.inner_error, this);
 
@@ -49,7 +48,7 @@ public class TestEvent extends Test implements GlobalListener {
     send(new TestData());
 
     ok(recv != null, "recive data");
-    ok(count == 3, "recive count");
+    eq(3, count, "recive count");
 
     QuickSender.emitError(new Exception("yes"), this);
 
@@ -70,13 +69,13 @@ public class TestEvent extends Test implements GlobalListener {
   }
 
 
-  private static String send = "PUBLISH \"/com.xboson.event.GlobalEventContext/recv\" " +
+  private static String send = "PUBLISH \"/com.xboson.event.GlobalEventBus/recv\" " +
           "\"{\\\"className\\\":\\\"com.xboson.test.Test$TestData\\\"," +
           "\\\"data\\\":\\\"{\\\\\\\"a\\\\\\\":957,\\\\\\\"b\\\\\\\":17165," +
           "\\\\\\\"name\\\\\\\":\\\\\\\"oEp0fi1XiKEA7w==\\\\\\\"}\\\"," +
           "\\\"from\\\":1,\\\"type\\\":3}\"";
 
-  private static String quit = "PUBLISH \"/com.xboson.event.GlobalEventContext/recv\" " +
+  private static String quit = "PUBLISH \"/com.xboson.event.GlobalEventBus/recv\" " +
           "\"{\\\"data\\\":\\\"quit\\\",\\\"from\\\":1,\\\"type\\\":3}\"";
 
 
@@ -88,7 +87,7 @@ public class TestEvent extends Test implements GlobalListener {
     msg("等待另一个节点或 Redis 客户端发送来数据...");
 
     WaitRecv _wait = new WaitRecv();
-    GlobalEvent ge = GlobalEvent.me();
+    GlobalEventBus ge = GlobalEventBus.me();
     ge.on("recv", _wait);
     ge.on(Names.inner_error, _wait);
 
@@ -142,6 +141,7 @@ public class TestEvent extends Test implements GlobalListener {
         sub("Wait to Send quit..");
         Tool.sleep(2000);
         _send_cmd(quit, client);
+        sub("Send Quit.");
       } catch (IOException e) {
         e.printStackTrace();
       }
@@ -159,7 +159,7 @@ public class TestEvent extends Test implements GlobalListener {
 
 
   void send(Object data) {
-    GlobalEvent ge = GlobalEvent.me();
+    GlobalEventBus ge = GlobalEventBus.me();
     ge.emit("test", data);
     eq(recv, data, "recive: " + recv);
   }

@@ -73,6 +73,9 @@ public class SourceFix {
    * 带有前后 "<%...%>" 符号返回 true
    */
   public static boolean isDrag(byte[] content) {
+    if (content == null || content.length < 4)
+      return false;
+
     int len = content.length - 1;
     return (content[0] == 60
             && content[1] == 37

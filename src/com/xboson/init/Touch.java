@@ -20,13 +20,13 @@ import com.xboson.app.SystemStartupScript;
 import com.xboson.auth.AuthFactory;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.fs.FileSystemFactory;
 import com.xboson.j2ee.container.UrlMapping;
 import com.xboson.log.LogFactory;
 import com.xboson.script.SandboxFactory;
 import com.xboson.sleep.RedisMesmerizer;
-import com.xboson.event.GlobalEvent;
 import com.xboson.util.SysConfig;
 
 import javax.servlet.ServletContextEvent;
@@ -42,7 +42,7 @@ public final class Touch {
  * 初始化对象列表
  ***************************************************************************/
   private static void __init__process() {
-    GlobalEvent.me();
+    GlobalEventBus.me();
     SysConfig.me();
     LogFactory.me();
     UrlMapping.me();
@@ -67,7 +67,7 @@ public final class Touch {
     if (state != S_ZERO)
       throw new RuntimeException("cannot start system");
 
-    GlobalEvent.me().emit(Names.initialization, Touch.class);
+    GlobalEventBus.me().emit(Names.initialization, Touch.class);
     __init__process();
     state = S_INITED;
   }
@@ -77,7 +77,7 @@ public final class Touch {
     if (state != S_INITED)
       throw new RuntimeException("cannot exit system");
 
-    GlobalEvent.me().emit( Names.exit, Touch.class);
+    GlobalEventBus.me().emit( Names.exit, Touch.class);
     state = S_EXIT;
   }
 

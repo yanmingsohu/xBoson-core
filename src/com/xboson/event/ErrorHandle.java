@@ -28,7 +28,7 @@ public abstract class ErrorHandle extends GLHandle implements GlobalListener {
    * 默认构造器注册到全局
    */
   public ErrorHandle() {
-    GlobalEvent.me().on(Names.inner_error, this);
+    GlobalEventBus.me().on(Names.inner_error, this);
   }
 
 

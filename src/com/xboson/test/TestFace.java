@@ -110,7 +110,7 @@ public class TestFace extends Test {
 
     rb.sendModifyNotice(path);
     Tool.sleep(10000); // 标记1
-    ok(check[0], "waiting message");
+    ok(check[0], "waiting message, (如果运行了其他节点这个测试会失败.)");
     fmh.removeModifyListener();
   }
 

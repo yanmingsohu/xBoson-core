@@ -25,7 +25,8 @@ import static com.xboson.event.Names.volatile_file_change_prifix;
 
 
 /**
- * 便捷类, 封装了文件修改事件相关操作.
+ * 封装了文件修改事件相关操作.
+ * 文件修改事件必须使用该方法来封装, 因为事件名称相同而文件名不同.
  */
 public abstract class OnFileChangeHandle extends GLHandle {
 
@@ -59,7 +60,7 @@ public abstract class OnFileChangeHandle extends GLHandle {
       throw new XBosonException("only once regFileChange()");
 
     eventName = getEventName(file_name);
-    GlobalEvent.me().on(eventName, this);
+    GlobalEventBus.me().on(eventName, this);
   }
 
 
@@ -74,7 +75,7 @@ public abstract class OnFileChangeHandle extends GLHandle {
     if (eventName == null)
       return;
 
-    boolean rm = GlobalEvent.me().off(eventName, this);
+    boolean rm = GlobalEventBus.me().off(eventName, this);
     assert rm : "must removed";
   }
 
@@ -94,6 +95,6 @@ public abstract class OnFileChangeHandle extends GLHandle {
    */
   public static void sendChange(String file) {
     String eventName = getEventName(file);
-    GlobalEvent.me().emit(eventName, file);
+    GlobalEventBus.me().emit(eventName, file);
   }
 }

@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 2017年11月11日 上午07:16:48
-// 原始文件路径: xBoson/src/com/xboson/util/GlobalEvent.java
+// 原始文件路径: xBoson/src/com/xboson/util/GlobalEventBus.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -18,37 +18,55 @@ package com.xboson.event;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Tool;
 
 import javax.naming.event.*;
 import java.util.*;
 
 /**
- * 全局事件, 线程安全的
- * !! 该对象将支持集群
+ * 全局事件总线, 线程安全的.
+ *
+ * 事件是事实的, 一个节点发送的事件将被所有节点接收, 一旦事件发送完成,
+ * 在线的所有节点一定会受到事件的副本, 离线节点在上线后一定无法接受该事件.
  */
-public class GlobalEvent {
+public class GlobalEventBus {
+
+  private static GlobalEventBus instance;
 
 
-  private static GlobalEvent instance;
-  static {
-    // 必须在 static 中初始化
-    instance = new GlobalEvent();
-  }
-  public static GlobalEvent me() {
-      return instance;
+  public static final GlobalEventBus me() {
+    if (instance == null) {
+      synchronized (GlobalEventBus.class) {
+        if (instance == null) {
+          instance = new GlobalEventBus();
+          instance.init();
+        }
+      }
+    }
+    return instance;
   }
 
 
   private Map<String, GlobalEventContext> contexts = new HashMap<>();
   private Log log  = LogFactory.create();
+  private SubscribeThread sub_thread;
+  private long myselfid;
 
 
-  private GlobalEvent() {
+  private GlobalEventBus() {
+  }
+
+
+  private void init() {
     log.info("Initialization Success");
+    myselfid = Tool.nextId();
+    sub_thread = new SubscribeThread(this, myselfid);
+    sub_thread.start();
   }
 
 
   private void destory() {
+    log.info("---------- xBoson system leaving -----------");
     Iterator<GlobalEventContext> it = contexts.values().iterator();
     while (it.hasNext()) {
       try {
@@ -57,9 +75,20 @@ public class GlobalEvent {
         log.error("Destory context", e);
       }
     }
+    sub_thread.destory();
+    sub_thread = null;
     contexts = null;
     log.info("destoryed");
     log.info("---------- xBoson system shutdown ----------");
+  }
+
+
+  protected GlobalEventContext getContext(boolean createIfNeed, String name) {
+    GlobalEventContext context = contexts.get(name);
+    if (context == null && createIfNeed) {
+      context = GlobalEventContext.create(name, contexts, myselfid);
+    }
+    return context;
   }
 
 
@@ -75,10 +104,7 @@ public class GlobalEvent {
     if (listener == null)
       throw new NullPointerException("listener");
 
-    GlobalEventContext context = contexts.get(name);
-    if (context == null) {
-      context = GlobalEventContext.create(name, contexts);
-    }
+    GlobalEventContext context = getContext(true, name);
     context.on(listener);
   }
 
@@ -130,15 +156,11 @@ public class GlobalEvent {
       throw new IllegalAccessError("The system is offline");
     }
 
-    GlobalEventContext context = contexts.get(name);
-    if (context == null) {
-      context = GlobalEventContext.create(name, contexts);
-    }
-
+    GlobalEventContext context = getContext(true, name);
     context.emit(data, type, info);
 
     // 这是个特殊的事件, 当检查到退出系统的消息后, 等待所有处理器退出
-    // 然后 GlobalEvent 执行自身的退出操作
+    // 然后 GlobalEventBus 执行自身的退出操作
     if (Names.exit.equals(name)) {
       destory();
     }

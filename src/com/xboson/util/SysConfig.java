@@ -19,13 +19,12 @@ package com.xboson.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.Config;
-import com.xboson.event.GlobalEvent;
+import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -59,7 +58,7 @@ public class SysConfig {
 			System.exit(1);
 		}
 
-		GlobalEvent.me().emit(Names.config, config);
+		GlobalEventBus.me().emit(Names.config, config);
 
 		log.info("Initialization Success");
 	}

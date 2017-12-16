@@ -27,13 +27,16 @@ import java.util.Date;
 
 public class ForProduction extends ForDevelopment {
 
+  public final static String REGION = _R_KEY_PREFIX_ + _CACHE_REGION_API_;
+
+
   @Override
   public ScriptFile read(String org, String app, String mod, String api) {
     log.debug("Script From Redis", mod, api);
 
     try (Jedis j = RedisMesmerizer.me().open()) {
       String key = (app + mod + api).toLowerCase();
-      String arr = j.hget(_R_KEY_PREFIX_ + _CACHE_REGION_API_, key);
+      String arr = j.hget(REGION, key);
 
       if (arr != null) {
         int a = arr.indexOf("\"");

@@ -34,34 +34,28 @@ import java.util.*;
 
 class GlobalEventContext extends InitialContext implements EventContext {
 
-  public final static String CHANNEL_PREFIX
-          = "/" + GlobalEventContext.class.getName() + "/";
-
   private Set<GlobalListener> listeners;
   private String name;
   private Binding oldbind;
-  private boolean skip_error;
   private Log log;
+  private boolean skip_error;
+  private final long myselfid;
 
-  private SubscribeThread sub_thread;
   private String channel_name;
-  private long id;
 
 
-  public GlobalEventContext(String name) throws NamingException {
+  public GlobalEventContext(String name, long myselfid) throws NamingException {
     super(true);
     this.listeners = Collections.synchronizedSet(new LinkedHashSet<>());
-    this.name = name;
-    this.id = (long)(Long.MAX_VALUE / 2.0 * Math.random());
-    this.log = LogFactory.create("Event::" + name);
+    this.name      = name;
+    this.log       = LogFactory.create(GlobalEventContext.class +"$"+ name);
+    this.myselfid  = myselfid;
 
     //
     // 带有 sys 开头的消息不会在集群中路由
     //
     if (name.indexOf("sys.") != 0) {
-      this.channel_name = CHANNEL_PREFIX + name;
-      sub_thread = new SubscribeThread(this);
-      sub_thread.start();
+      this.channel_name = Names.CHANNEL_PREFIX + name;
     }
 
     if (name.equals(Names.inner_error)) {
@@ -74,9 +68,10 @@ class GlobalEventContext extends InitialContext implements EventContext {
    * 创建实例并返回, 将创建的实例以 name 为键插入 map 中.
    */
   public static GlobalEventContext create(String name,
-                                          Map<String, GlobalEventContext> map) {
+                                          Map<String, GlobalEventContext> map,
+                                          long myselfid) {
     try {
-      GlobalEventContext gec = new GlobalEventContext(name);
+      GlobalEventContext gec = new GlobalEventContext(name, myselfid);
       map.put(name, gec);
       return gec;
     } catch (NamingException e) {
@@ -95,16 +90,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
   }
 
 
-  long getSourceID() {
-    return id;
-  }
-
-
   void destory() {
-    if (sub_thread != null) {
-      sub_thread.destory();
-      sub_thread = null;
-    }
     listeners = null;
     oldbind = null;
     name = null;
@@ -127,7 +113,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
 
     if (channel_name != null) {
       try (Jedis client = RedisMesmerizer.me().open()) {
-        EventPackage ep = new EventPackage(data, type, info, id);
+        EventPackage ep = new EventPackage(data, type, info, myselfid);
         client.publish(channel_name, ep.tojson());
       }
     }

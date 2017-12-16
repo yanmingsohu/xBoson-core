@@ -68,7 +68,7 @@ public class EventQueueMigrationThread extends OnExitHandle implements Runnable 
   public void run() {
     myself = Thread.currentThread();
     log.debug("Start", myself);
-    GlobalEvent ge = GlobalEvent.me();
+    GlobalEventBus ge = GlobalEventBus.me();
 
     try (Jedis client = RedisMesmerizer.me().open()) {
       while (running) {

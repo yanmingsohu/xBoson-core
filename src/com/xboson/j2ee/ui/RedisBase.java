@@ -30,7 +30,7 @@ import java.io.IOException;
  * 所有的参数都不做任何前置处理, 调用者需要保证参数正确;
  * 特别是路径参数必须规范化并统一使用 unix 风格路径字符串.
  *
- * 如果本地文件节点下线, 使用 GlobalEvent 可能会丢失消息,
+ * 如果本地文件节点下线, 使用 GlobalEventBus 可能会丢失消息,
  * 所以这里单独使用队列来实现文件修改消息.
  */
 public class RedisBase {

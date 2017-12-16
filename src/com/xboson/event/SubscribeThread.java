@@ -26,27 +26,26 @@ import redis.clients.jedis.JedisPubSub;
 
 class SubscribeThread extends JedisPubSub implements Runnable {
 
-  private String channel_name;
-  private GlobalEventContext context;
+  public final static String SUBSCRIBE_PATTERN = Names.CHANNEL_PREFIX + "*";
+
+  private GlobalEventBus bus;
   private Thread thread;
-  private long mySelfid;
-  private Jedis client;
   private Log log;
   private boolean running;
+  private final long mySelfid;
 
 
-  public SubscribeThread(GlobalEventContext context) {
-    this.channel_name = context.getChannelName();
-    this.mySelfid = context.getSourceID();
-    this.context = context;
-    this.log = LogFactory.create("SubscribeThread::" + channel_name);
-    this.running = true;
+  public SubscribeThread(GlobalEventBus bus, long mySelfid) {
+    this.mySelfid = mySelfid;
+    this.log      = LogFactory.create();
+    this.running  = true;
+    this.bus      = bus;
   }
 
 
   public void start() {
     if (thread != null) {
-      throw new RuntimeException("donot start again");
+      throw new RuntimeException("Don't start again");
     }
     running = true;
     thread = new Thread(this);
@@ -57,20 +56,25 @@ class SubscribeThread extends JedisPubSub implements Runnable {
 
   public void destory() {
     running = false;
-    unsubscribe();
+    punsubscribe();
     Tool.waitOver(thread);
     thread = null;
-    client = null;
     log.debug("destoryed");
   }
 
 
-  public void onMessage(String channel, String message) {
+  @Override
+  public void onPMessage(String pattern, String channel, String message) {
     try {
       EventPackage ep = EventPackage.fromjson(message);
       if (ep.from != mySelfid) {
         ep.parseData();
-        context.emitWithoutCluster(ep.data, ep.type, ep.info);
+        GlobalEventContext context = bus.getContext(false,
+                channel.substring(Names.CHANNEL_PREFIX.length()));
+
+        if (context != null) {
+          context.emitWithoutCluster(ep.data, ep.type, ep.info);
+        }
       }
     } catch (Exception e) {
       log.error("onMessage()", e);
@@ -81,18 +85,14 @@ class SubscribeThread extends JedisPubSub implements Runnable {
   @Override
   public void run() {
     while (running) {
-      try {
-        client = RedisMesmerizer.me().open();
-        client.subscribe(this, channel_name);
+      try (Jedis client = RedisMesmerizer.me().open()) {
+        client.psubscribe(this, SUBSCRIBE_PATTERN);
 
       } catch (Exception e) {
         log.debug("STOP", e.getMessage());
         Tool.sleep(1000);
 
       } finally {
-        // 必须在这里停止 client
-        Tool.close(client);
-        client = null;
         running = false;
       }
     }

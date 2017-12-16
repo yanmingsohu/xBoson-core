@@ -18,7 +18,7 @@ package com.xboson.j2ee.ui;
 
 import com.xboson.been.XBosonException;
 import com.xboson.event.GLHandle;
-import com.xboson.event.GlobalEvent;
+import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 
 import javax.naming.event.NamingEvent;
@@ -37,7 +37,7 @@ public class FileModifyHandle extends GLHandle {
       throw new XBosonException.NullParamException("IFileModify fm");
 
     this.fm = fm;
-    GlobalEvent.me().on(Names.ui_file_change, this);
+    GlobalEventBus.me().on(Names.ui_file_change, this);
   }
 
 
@@ -68,7 +68,7 @@ public class FileModifyHandle extends GLHandle {
    * 从全局事件移除自身
    */
   public void removeModifyListener() {
-    boolean rm = GlobalEvent.me().off(Names.ui_file_change, this);
+    boolean rm = GlobalEventBus.me().off(Names.ui_file_change, this);
     assert rm : "must removed";
   }
 }

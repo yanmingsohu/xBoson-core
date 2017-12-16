@@ -21,7 +21,7 @@ import javax.naming.event.NamingEvent;
 
 /**
  * 方便的发出错误消息的工具类,
- * 既可以使用 GlobalEvent 发出消息, 也可以调用便捷方法.
+ * 既可以使用 GlobalEventBus 发出消息, 也可以调用便捷方法.
  */
 public final class QuickSender {
 
@@ -32,7 +32,7 @@ public final class QuickSender {
    * 发出一个系统错误
    */
   public static void emitError(Exception e, Object source) {
-    GlobalEvent.me().emit(Names.inner_error, e,
+    GlobalEventBus.me().emit(Names.inner_error, e,
             NamingEvent.OBJECT_ADDED, source.getClass().getName());
   }
 
