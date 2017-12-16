@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.app.ApiEncryption;
 import com.xboson.app.ApiPath;
 import com.xboson.app.ApiTypes;
+import com.xboson.app.AppContext;
 import com.xboson.app.fix.SourceFix;
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
@@ -56,7 +57,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     super(cd);
     this.redis = new RedisImpl(IApiConstant._R_KEY_PREFIX_);
     this.query = QueryFactory.create(() -> getConnection(), this);
-    this.sys = sys;
+    this.sys   = sys;
     this.orgid = currentOrg;
   }
 
@@ -134,7 +135,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public boolean isPlatformOrg() {
-    return isPlatformOrg(orgid);
+    return isPlatformOrg(AppContext.me().originalOrg());
   }
 
 
@@ -215,14 +216,12 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    */
   public String decodeApiScript(String code) {
     byte[] c = ApiEncryption.decryptApi(code);
-    if (! SourceFix.isStrictMode(c)) {
-      if (SourceFix.isDrag(c)) {
-        int end = c.length - 3;
-        while (Character.isWhitespace(c[end]))
-          --end;
+    if (SourceFix.isDrag(c)) {
+      int end = c.length - 3;
+      while (Character.isWhitespace(c[end]))
+        --end;
 
-        c = Arrays.copyOfRange(c, 2, end+1);
-      }
+      c = Arrays.copyOfRange(c, 2, end+1);
     }
     return new String(c, IConstant.CHARSET);
   }
@@ -234,10 +233,8 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    */
   public String encodeApiScript(String code) {
     byte[] c = code.getBytes(IConstant.CHARSET);
-    if (! SourceFix.isStrictMode(c)) {
-      if (! SourceFix.isDrag(c)) {
-        code = "<%" + code + "%>";
-      }
+    if (! SourceFix.isDrag(c)) {
+      code = "<%" + code + "%>";
     }
     return ApiEncryption.encryptApi(code);
   }

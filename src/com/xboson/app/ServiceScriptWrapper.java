@@ -44,7 +44,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
                   .getBytes(CHARSET);
 
   private static final byte[] warp1 =
-          "});".getBytes(CHARSET);
+          "\n});".getBytes(CHARSET);
 
   private static final Class[] libs = new Class[] {
           MapImpl.class,
