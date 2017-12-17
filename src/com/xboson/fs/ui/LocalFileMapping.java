@@ -16,17 +16,20 @@
 
 package com.xboson.fs.ui;
 
-import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -37,25 +40,22 @@ import java.nio.file.attribute.FileTime;
  * 读取: 比较本地文件和 redis 文件修改日期, 相同返回 redis, 否则做同步后返回最新文件.
  * 写入: 更新本地文件后更新 redis 文件, 不发送任何通知.
  */
-public class LocalFileMapping implements IUIFileProvider, IFileModify {
+public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
 
+  private RedisFileMapping rfm;
   private RedisBase rb;
   private String basepath;
   private Log log;
 
 
   public LocalFileMapping() {
-    Config cf = SysConfig.me().readConfig();
-    this.basepath = cf.uiUrl;
-    this.log = LogFactory.create();
-    this.rb = new RedisBase();
+    this.basepath = SysConfig.me().readConfig().uiUrl;
+    this.log      = LogFactory.create();
+    this.rb       = new RedisBase();
+    this.rfm      = new RedisFileMapping(rb);
+
     rb.startModifyReciver(this);
-    SynchronizeFiles.start(basepath);
-
-
-    if (cf.enableUIFileSync) {
-      SynchronizeFiles.regEarlyMorningClear(basepath);
-    }
+    SynchronizeFiles.me();
   }
 
 
@@ -70,28 +70,42 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
 
   @Override
   public byte[] readFile(String path) throws IOException {
-    Path local_file = normalize(path);
-    long local = Files.getLastModifiedTime(local_file).toMillis();
-    long redis = rb.getModifyTime(path);
-    byte[] ret;
-
-    if (local == redis) {
-      ret = rb.readFile(path);
-    }
-    if (local > redis) {
-      if (Files.isDirectory(local_file)) {
-        throw new XBosonException.ISDirectory(local_file);
+    try (RedisBase.JedisSession close = rb.openSession()) {
+      Path local_file = normalize(path);
+      long local_t = -1;
+      if (Files.exists(local_file)) {
+        local_t = Files.getLastModifiedTime(local_file).toMillis();
       }
-      ret = Files.readAllBytes(local_file);
-      rb.writeFile(path, ret);
-      rb.writeModifyTime(path, local);
+
+      FileStruct redis_file = rb.getStruct(path);
+      long redis_t = redis_file != null ? redis_file.lastModify : -1;
+      byte[] ret;
+
+      if (local_t < 0 && redis_t < 0) {
+        throw new FileNotFoundException(path);
+      }
+
+      if (local_t == redis_t) {
+        rb.getContent(redis_file);
+        ret = redis_file.getFileContent();
+      }
+      else if (local_t > redis_t) {
+        if (Files.isDirectory(local_file)) {
+          throw new XBosonException.ISDirectory(local_file);
+        }
+        ret = Files.readAllBytes(local_file);
+
+        redis_file = FileStruct.createFile(path, local_t, ret);
+        rfm.writeFileWithoutNotice(redis_file);
+      }
+      else /* local < redis */ {
+        rb.getContent(redis_file);
+        ret = redis_file.getFileContent();
+        Files.write(local_file, ret);
+        Files.setLastModifiedTime(local_file, FileTime.fromMillis(redis_t));
+      }
+      return ret;
     }
-    else /* local < redis */ {
-      ret = rb.readFile(path);
-      Files.write(local_file, ret);
-      Files.setLastModifiedTime(local_file, FileTime.fromMillis(redis));
-    }
-    return ret;
   }
 
 
@@ -99,9 +113,12 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
   public long modifyTime(String path) {
     try {
       Path local_file = normalize(path);
-      long local = Files.getLastModifiedTime(local_file).toMillis();
-      long redis = rb.getModifyTime(path);
-      return local >= redis ? local : redis;
+      long local_t = Files.getLastModifiedTime(local_file).toMillis();
+
+      FileStruct redis_file = rb.getStruct(path);
+      long redis_t = redis_file != null ? redis_file.lastModify : -1;
+
+      return local_t >= redis_t ? local_t : redis_t;
     } catch(IOException e) {
       return -1;
     }
@@ -109,7 +126,15 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
 
 
   @Override
-  public void makeDir(String path) {
+  public void makeDir(String path) throws IOException {
+    Path file = normalize(path);
+    Files.createDirectories(file);
+    rfm.makeDirWithoutNotice(path);
+  }
+
+
+  @Override
+  public void noticeMakeDir(String path) {
     try {
       Path file = normalize(path);
       Files.createDirectories(file);
@@ -120,7 +145,7 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
 
 
   @Override
-  public void delete(String file) {
+  public void noticeDelete(String file) {
     Path local_file = normalize(file);
     try {
       Files.deleteIfExists(local_file);
@@ -132,8 +157,36 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
 
   @Override
   public void deleteFile(String file) {
-    delete(file);
-    rb.deleteFile(file);
+    noticeDelete(file);
+    rfm.deleteFile(file);
+  }
+
+
+  @Override
+  public Set<FileStruct> readDir(String path) {
+    Path local_file = normalize(path);
+    File f = local_file.toFile();
+    if (! f.isDirectory()) {
+      throw new XBosonException.IOError("Is not dir: " + path);
+    }
+
+    File[] files = f.listFiles();
+    Set<FileStruct> ret = new HashSet<>(files.length);
+    FileStruct fs = null;
+
+    for (int i=0; i<files.length; ++i) {
+      f = files[i];
+      if (f.isFile()) {
+        fs = FileStruct.createFile(f.getName(), f.lastModified(), null);
+        ret.add(fs);
+      } else if (f.isDirectory()) {
+        fs = FileStruct.createDir(f.getName());
+        ret.add(fs);
+      } else {
+        log.warn("Skip file is not file or dir:", f);
+      }
+    }
+    return ret;
   }
 
 
@@ -141,22 +194,23 @@ public class LocalFileMapping implements IUIFileProvider, IFileModify {
   public void writeFile(String path, byte[] bytes) throws IOException {
     Path local_file = normalize(path);
     long modified_time = System.currentTimeMillis();
+
     Files.write(local_file, bytes);
     Files.setLastModifiedTime(local_file, FileTime.fromMillis(modified_time));
-    rb.writeFile(path, bytes);
-    rb.writeModifyTime(path, modified_time);
+
+    rfm.writeFile(path, bytes, modified_time);
   }
 
 
-  /**
-   * 来自 redis 的文件变通通知, 用远程文件覆盖本地文件
-   * @param file 改动的文件路径
-   */
   @Override
-  public void modify(String file) {
-    try {
-      long mt = rb.getModifyTime(file);
-      byte[] content = rb.readFile(file);
+  public void noticeModifyContent(String file) {
+    try (RedisBase.JedisSession close = rb.openSession()) {
+      FileStruct fs = rb.getStruct(file);
+      rb.getContent(fs);
+
+      long mt = fs.lastModify;
+      byte[] content = fs.getFileContent();
+
       Path local_file = normalize(file);
       Files.write(local_file, content);
       Files.setLastModifiedTime(local_file, FileTime.fromMillis(mt));

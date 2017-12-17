@@ -250,6 +250,24 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   }
 
 
+  public static byte[] toBytes(Object obj) throws IOException {
+    ByteArrayOutputStream obyte = new ByteArrayOutputStream();
+    ObjectOutputStream oobj = new ObjectOutputStream(obyte);
+    oobj.writeObject(obj);
+    oobj.flush();
+    return obyte.toByteArray();
+  }
+
+
+  public static Object fromBytes(byte[] bin)
+          throws IOException, ClassNotFoundException
+  {
+    ByteArrayInputStream ibyte = new ByteArrayInputStream(bin);
+    ObjectInputStream iobj = new ObjectInputStream(ibyte);
+    return iobj.readObject();
+  }
+
+
   /**
    * Java 序列化
    */
@@ -262,12 +280,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         if (check_timeout(client, data, bid))
           return;
 
-        ByteArrayOutputStream obyte = new ByteArrayOutputStream();
-        ObjectOutputStream oobj = new ObjectOutputStream(obyte);
-        oobj.writeObject(data);
-        oobj.flush();
-
-        byte[] out = obyte.toByteArray();
+        byte[] out = toBytes(data);
         client.hset(KEY_BYTE, bid, out);
       } catch(IOException e) {
         log.debug("BIN.sleep", e);
@@ -283,12 +296,9 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
           return null;
         }
 
-        ByteArrayInputStream ibyte = new ByteArrayInputStream(data);
-        ObjectInputStream iobj = new ObjectInputStream(ibyte);
-
         IBinData obj = null;
         try {
-          obj = (IBinData) iobj.readObject();
+          obj = (IBinData) fromBytes(data);
         } catch(InvalidClassException ice) {
           log.debug("BIN.wake", ice);
           //

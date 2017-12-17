@@ -59,7 +59,7 @@ class SubscribeThread extends JedisPubSub implements Runnable {
     punsubscribe();
     Tool.waitOver(thread);
     thread = null;
-    log.debug("destoryed");
+    log.info("destoryed");
   }
 
 

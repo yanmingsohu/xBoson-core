@@ -17,6 +17,8 @@
 package com.xboson.app;
 
 import com.xboson.been.ApiCall;
+import com.xboson.been.XBosonException;
+import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.test.TestApi;
@@ -27,11 +29,15 @@ import com.xboson.util.Tool;
 /**
  * 这里应该调用系统启动脚本, 在单独的线程中.
  */
-public class SystemStartupScript implements IConstant, Runnable {
+public class SystemStartupScript extends OnExitHandle implements IConstant, Runnable {
 
-  private Log log;
   private static boolean is_init = false;
   private static final String MSG = "Initialization Redis Data";
+  private static int DELAYED_TIME = 2000;
+
+  private Log log;
+  private boolean stop;
+  private Thread thread;
 
 
   public static void me() {
@@ -44,22 +50,45 @@ public class SystemStartupScript implements IConstant, Runnable {
 
   private SystemStartupScript() {
     log = LogFactory.create();
+    stop = false;
+  }
+
+
+  @Override
+  protected synchronized Log getLog() {
+    return log;
+  }
+
+
+  @Override
+  protected void exit() {
+    stop = true;
+    if (thread != null) {
+      Tool.waitOver(thread);
+      thread = null;
+    }
   }
 
 
   /**
    * 启动线程进行初始化操作
    */
-  public void start() {
-    Thread t = new Thread(this);
-    t.setDaemon(true);
-    t.start();
+  public synchronized void start() {
+    if (thread == null) {
+      thread = new Thread(this);
+      thread.setDaemon(true);
+      thread.start();
+    }
   }
 
 
   @Override
   public void run() {
     try {
+      log.info("Delayed <", DELAYED_TIME, "ms >");
+      Tool.sleep(DELAYED_TIME);
+      if (stop) return;
+
       log.info(MSG, "Startup..");
 
       //
@@ -76,8 +105,11 @@ public class SystemStartupScript implements IConstant, Runnable {
       ac.call.resp.flushBuffer();
 
       log.info(MSG, "Success");
+
+    } catch (XBosonException.Closed c) {
+      log.warn(MSG, c);
     } catch (Exception e) {
-      log.info(MSG, "Fail", Tool.allStack(e));
+      log.error(MSG, "Fail", e);
     }
   }
 }

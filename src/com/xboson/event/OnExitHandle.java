@@ -33,7 +33,7 @@ public abstract class OnExitHandle extends GLHandle {
 
   public void objectChanged(NamingEvent namingEvent) {
     String name = namingEvent.getNewBinding().getName();
-    Log log = LogFactory.create(getClass());
+    Log log = getLog();
 
     switch (name) {
       case Names.exit:

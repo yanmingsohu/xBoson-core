@@ -16,7 +16,16 @@
 
 package com.xboson.fs.ui;
 
+import com.xboson.been.XBosonException;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
+import com.xboson.script.lib.Path;
+
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -29,42 +38,190 @@ import java.io.IOException;
 public class RedisFileMapping implements IUIFileProvider {
 
   private RedisBase rb;
+  private Log log;
 
 
   public RedisFileMapping() {
-    rb = new RedisBase();
+    this(new RedisBase());
+    log = LogFactory.create();
+  }
+
+
+  public RedisFileMapping(RedisBase rb) {
+    this.rb = rb;
   }
 
 
   @Override
   public byte[] readFile(String path) throws IOException {
-    return rb.readFile(path);
+    FileStruct fs = rb.getStruct(path);
+    rb.getContent(fs);
+    return fs.getFileContent();
   }
 
 
   @Override
   public long modifyTime(String path) {
-    return rb.getModifyTime(path);
+    return rb.getStruct(path).lastModify;
   }
 
 
   @Override
   public void makeDir(String path) throws IOException {
-    rb.sendCreateDirNotice(path);
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      makeDirWithoutNotice(path);
+      rb.sendCreateDirNotice(path);
+    }
+  }
+
+
+  public void makeDirWithoutNotice(String path) {
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      FileStruct dir = rb.getStruct(path);
+      if (dir == null) {
+        dir = FileStruct.createDir(path);
+        makeStructUntilRoot(dir);
+      }
+    }
   }
 
 
   @Override
   public void writeFile(String path, byte[] bytes) throws IOException {
-    rb.writeFile(path, bytes);
-    rb.writeModifyTime(path, System.currentTimeMillis());
-    rb.sendModifyNotice(path);
+    writeFile(path, bytes, System.currentTimeMillis());
+  }
+
+
+  public void writeFile(String path, byte[] bytes, long modify)
+          throws IOException {
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      FileStruct file = FileStruct.createFile(path, modify, bytes);
+      writeFileWithoutNotice(file);
+      rb.sendModifyNotice(file.path);
+    }
+  }
+
+
+  public void writeFileWithoutNotice(FileStruct file) {
+    makeStructUntilRoot(file);
+    rb.setContent(file);
+  }
+
+
+  private void removeAndUpdateParent(FileStruct fs) {
+    FileStruct parent = rb.getStruct(fs.parentPath());
+    parent.removeChild(fs.path);
+    rb.removeStruct(fs);
+    rb.saveStruct(parent);
   }
 
 
   @Override
   public void deleteFile(String file) {
-    rb.deleteFile(file);
-    rb.sendDeleteNotice(file);
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      FileStruct fs = rb.getStruct(file);
+      if (fs == null) return;
+
+      if (fs.isFile()) {
+        rb.delContent(fs);
+        removeAndUpdateParent(fs);
+      }
+      else /* Is dir */ {
+        for (String child : fs.containFiles()) {
+          deleteFile(child);
+        }
+        removeAndUpdateParent(fs);
+      }
+      rb.sendDeleteNotice(file);
+    }
+  }
+
+
+  @Override
+  public Set<FileStruct> readDir(final String path) {
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      FileStruct fs = rb.getStruct(path);
+      if (! fs.isDir()) {
+        throw new XBosonException.IOError("Is not dir: " + path);
+      }
+      Set<String> names = fs.containFiles();
+      Set<FileStruct> ret = new HashSet<>(names.size());
+
+      for (String name : names) {
+        fs = rb.getStruct(path + name);
+        if (fs != null) {
+          ret.add(fs.cloneBaseName());
+        } else {
+          log.warn("Redis file system may bad, Cannot found:",
+                  name, ", In dir:", path, ", But recorded.");
+        }
+      }
+      return ret;
+    }
+  }
+
+
+  /**
+   * 从 fs 的父节点开始创建目录, 这会检查一直到目录根节点之前的路径是否都是目录,
+   * 最后创建 fs 定义的节点. 在任意一部上失败都会抛出异常.
+   * 该方法会直接复制路径上的 struct, 如果是文件没问题, 是目录需要检查子节点问题.
+   * 该方法不发送集群消息, 本地文件系统只要收到最深层目录即可自动创建上层目录.
+   */
+  public void makeStructUntilRoot(FileStruct fs) {
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      List<String> need_create_dir = new ArrayList<>();
+      FileStruct direct_parent = null;
+
+      String pp = fs.parentPath();
+      while (pp != null) {
+        FileStruct check_fs = rb.getStruct(pp);
+        if (check_fs == null) {
+          //
+          // 创建不存在的目录
+          //
+          need_create_dir.add(pp);
+        } else if (check_fs.isFile()) {
+          //
+          // 不能在文件路径上创建子目录
+          //
+          throw new XBosonException("Contain files in " + fs.path);
+        } else if (check_fs.isDir()) {
+          //
+          // 当前向搜索到一个目录则不再继续搜索,
+          // 这个目录结构的正确由创建该目录的时候保证.
+          //
+          direct_parent = check_fs;
+          break;
+        }
+
+        pp = Path.dirname(pp);
+      }
+
+      final int size = need_create_dir.size();
+      for (int i = size - 1; i >= 0; --i) {
+        String p = need_create_dir.get(i);
+        //
+        // 更新父节点
+        //
+        if (direct_parent != null) {
+          direct_parent.addChildStruct(p);
+          rb.saveStruct(direct_parent);
+        }
+
+        FileStruct new_node = FileStruct.createDir(p);
+        rb.saveStruct(new_node);
+        direct_parent = new_node;
+      }
+
+      if (direct_parent == null && ROOT.equals(fs.path) == false) {
+        direct_parent = rb.getStruct(ROOT);
+      }
+
+      if (direct_parent != null) {
+        direct_parent.addChildStruct(fs.path);
+        rb.saveStruct(direct_parent);
+      }
+      rb.saveStruct(fs);
+    }
   }
 }

@@ -103,6 +103,8 @@ public class SqlReader {
     try {
       Connection conn = DbmsFactory.me().open(config);
       return SqlResult.query(conn, sql, parm);
+    } catch(XBosonException xe) {
+      throw xe;
     } catch(Exception e) {
       throw new XBosonException.XSqlException(sql, e);
     }

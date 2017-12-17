@@ -153,7 +153,7 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   配置文件使用 json 格式, 注意字符串使用引号包围, 最后元素的结尾不能有 '.' 符号,
   一下的注释使用 /* */ 包围, 但是 json 格式并不支持注释的使用, 所以不要复制到配置文件中.
   
-```json
+```js
 {
     /* 配置文件版本号, 随着系统升级而升级 */
   "configVersion": "1.3.1",
@@ -173,8 +173,11 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   "rootUserName": "root",
   "rootPassword": "111111",
   
-    /* ui 获取方式, 有缓冲区代理以及本地目录, 两种模式, 同一个集群中只有一个本地目录模式 */
-  "uiProviderClass": ccom.xboson.fs.ui.LocalFileMapping   /* 本地目录模式的根目录 */
+    /* ui 获取方式, 有集群缓冲区以及本地目录, 两种模式, 同一个集群中只有一个本地目录模式 */
+    /* com.xboson.fs.ui.LocalFileMapping : 本地目录 */
+    /* com.xboson.fs.ui.RedisFileMapping : 集群缓冲区 */
+  "uiProviderClass": "com.xboson.fs.ui.LocalFileMapping",   
+    /* 本地目录模式的根目录 */
   "uiUrl": "",
     /* 本地目录模式, 设置为 true 当用户请求打开目录时, 是否返回目录列表 */
   "uiListDir": true,

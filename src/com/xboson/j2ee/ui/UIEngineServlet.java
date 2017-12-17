@@ -20,6 +20,7 @@ import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
 import com.xboson.fs.ui.IUIFileProvider;
+import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.j2ee.html.HtmlBuilder;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -65,16 +66,9 @@ public class UIEngineServlet extends HttpServlet {
     this.mime = MimeTypeFactory.getFileTypeMap();
     this.baseurl = config.getServletContext().getContextPath() + MY_URL;
 
-    try {
-      Config cf = SysConfig.me().readConfig();
-      this.list_dir = cf.uiListDir;
-
-      String providerClass = cf.uiProviderClass;
-      Class cl = Class.forName(providerClass);
-      file_provider = (IUIFileProvider) cl.newInstance();
-    } catch(Exception e) {
-      throw new ServletException(e);
-    }
+    Config cf = SysConfig.me().readConfig();
+    this.list_dir = cf.uiListDir;
+    this.file_provider = UIFileFactory.openWithConfig();
   }
 
 

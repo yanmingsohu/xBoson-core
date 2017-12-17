@@ -16,9 +16,12 @@
 
 package com.xboson.fs.ui;
 
+import com.xboson.been.Config;
+import com.xboson.been.XBosonException;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import java.io.IOException;
@@ -33,6 +36,20 @@ import java.nio.file.attribute.FileTime;
 public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
   private static Thread t = null;
+  private static boolean touched;
+
+
+  public static void me() {
+    if (touched) return;
+    touched = true;
+
+    Config cf = SysConfig.me().readConfig();
+    SynchronizeFiles.start(cf.uiUrl);
+
+    if (cf.enableUIFileSync) {
+      SynchronizeFiles.regEarlyMorningClear(cf.uiUrl);
+    }
+  }
 
 
   /**
@@ -68,6 +85,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   }
 
 
+  private RedisFileMapping rfm;
   private RedisBase rb;
   private Log log;
   private Path base;
@@ -81,6 +99,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
     this.base = Paths.get(base);
     this.log  = LogFactory.create();
     this.rb   = new RedisBase();
+    this.rfm  = new RedisFileMapping(rb);
   }
 
 
@@ -88,7 +107,8 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   public void run() {
     log.info("Start Synchronize ui files", base);
     begin_time = System.currentTimeMillis();
-    try {
+
+    try (RedisBase.JedisSession close = rb.openSession()) {
       Files.walkFileTree(base, this);
     } catch (IOException e) {
       log.error(e);
@@ -99,10 +119,21 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   }
 
 
+  /**
+   * 转换为 redis 上的虚拟路径
+   * @param local
+   */
+  private String getVirtualPath(Path local) {
+    return Tool.normalize("/"+ base.relativize(local));
+  }
+
+
   @Override
   public FileVisitResult preVisitDirectory(
-          Path path, BasicFileAttributes basicFileAttributes)
+          Path local_path, BasicFileAttributes basicFileAttributes)
           throws IOException {
+    String vpath = getVirtualPath(local_path);
+    rfm.makeDirWithoutNotice(vpath);
     ++dirs;
     return FileVisitResult.CONTINUE;
   }
@@ -113,23 +144,23 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
           Path local_path, BasicFileAttributes basicFileAttributes)
           throws IOException {
 
-    //
-    // 转换为 redis 上的虚拟路径
-    //
-    String vpath = Tool.normalize("/"+ base.relativize(local_path));
+    String vpath = getVirtualPath(local_path);
 
-    long local = Files.getLastModifiedTime(local_path).toMillis();
-    long redis = rb.getModifyTime(vpath);
+    final long local_t = Files.getLastModifiedTime(local_path).toMillis();
 
-    if (local > redis) {
+    FileStruct redis_file = rb.getStruct(vpath);
+    final long redis_t = redis_file != null ? redis_file.lastModify : -1;
+
+    if (local_t > redis_t) {
       byte[] body = Files.readAllBytes(local_path);
-      rb.writeFile(vpath, body);
-      rb.writeModifyTime(vpath, local);
+      redis_file = FileStruct.createFile(vpath, local_t, body);
+      rfm.writeFileWithoutNotice(redis_file);
     }
-    else if (local < redis) {
-      byte[] body = rb.readFile(vpath);
+    else if (local_t < redis_t) {
+      rb.getContent(redis_file);
+      byte[] body = redis_file.getFileContent();
       Files.write(local_path, body);
-      Files.setLastModifiedTime(local_path, FileTime.fromMillis(redis));
+      Files.setLastModifiedTime(local_path, FileTime.fromMillis(redis_t));
     }
 
     if (++files > d) {

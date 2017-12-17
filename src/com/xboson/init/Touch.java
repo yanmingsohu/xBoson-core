@@ -77,7 +77,8 @@ public final class Touch {
     if (state != S_INITED)
       throw new RuntimeException("cannot exit system");
 
-    GlobalEventBus.me().emit( Names.exit, Touch.class);
+    LogFactory.create().info("---------- xBoson system leaving -----------");
+    GlobalEventBus.me().emit(Names.exit, Touch.class);
     state = S_EXIT;
   }
 

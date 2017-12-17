@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-19 上午11:41
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/IFileModify.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/IFileChangeListener.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -23,26 +23,26 @@ package com.xboson.fs.ui;
  *
  * @see FileModifyHandle
  */
-public interface IFileModify {
+public interface IFileChangeListener {
 
   /**
    * 通知文件改动或创建
    * @param vfile 改动的文件路径
    */
-  void modify(String vfile);
+  void noticeModifyContent(String vfile);
 
 
   /**
    * 通知目录被创建
    * @param vdirname 目录路径
    */
-  void makeDir(String vdirname);
+  void noticeMakeDir(String vdirname);
 
 
   /**
    * 通知文件被删除
    * @param vfile 删除的文件路径
    */
-  void delete(String vfile);
+  void noticeDelete(String vfile);
 
 }

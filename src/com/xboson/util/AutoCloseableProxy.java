@@ -84,7 +84,7 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
         doClose(original, proxy);
       }
     } catch(Throwable e) {
-      LogFactory.create().error("Call doClose() Fail:", e);
+      LogFactory.create().error("Call doClose() Fail:", Tool.allStack(e));
     } finally {
       original = null;
     }

@@ -16,6 +16,7 @@
 
 package com.xboson.db;
 
+import com.xboson.been.XBosonException;
 import com.xboson.util.AutoCloseableProxy;
 import org.apache.commons.pool2.KeyedObjectPool;
 
@@ -39,6 +40,12 @@ public class ConnectionProxy extends AutoCloseableProxy<Connection> {
                          Connection original,
                          ConnectConfig config) {
     super(original);
+
+    if (pool == null)
+      throw new XBosonException.NullParamException("KeyedObjectPool pool");
+    if (original == null)
+      throw new XBosonException.NullParamException("ConnectConfig config");
+
     this.pool = pool;
     this.config = config.clone();
     this.closelist = new ArrayList<>();

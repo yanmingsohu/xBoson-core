@@ -261,7 +261,7 @@ public final class Tool {
 
   public static void close(AutoCloseable c) {
     try {
-      if ( c!= null) c.close();
+      if (c != null) c.close();
     } catch(Exception e) {
       LogFactory.create().debug(e);
     }

@@ -69,11 +69,17 @@ public class DbmsFactory extends OnExitHandle {
 
 
   @Override
-  protected void exit() {
+  protected synchronized void exit() {
     pool.close();
     pool = null;
     idmap = null;
     namemap = null;
+  }
+
+
+  private void check_state() {
+    if (pool == null)
+      throw new XBosonException.Closed("DbmsFactory");
   }
 
 
@@ -126,7 +132,8 @@ public class DbmsFactory extends OnExitHandle {
    *
    * @param config host, dbname, username 属性必须有效
    */
-  public Connection openWithoutPool(ConnectConfig config) throws SQLException {
+  public Connection openWithoutPool(ConnectConfig config)
+          throws SQLException {
     if (config == null)
       throw new XBosonException.NullParamException("ConnectConfig config");
 
@@ -153,9 +160,12 @@ public class DbmsFactory extends OnExitHandle {
     String url = getUrl(dr, config);
 
     try {
-      Connection original = pool.borrowObject(config);
-      ConnectionProxy cp = new ConnectionProxy(pool, original, config);
-      return cp.getProxy();
+      synchronized (this) {
+        check_state();
+        Connection original = pool.borrowObject(config);
+        ConnectionProxy cp = new ConnectionProxy(pool, original, config);
+        return cp.getProxy();
+      }
     } catch(Exception e) {
       log.error("open fail", e);
       throw new XBosonException.XSqlException(
@@ -186,8 +196,9 @@ public class DbmsFactory extends OnExitHandle {
    * 调用该方法获取 DBMS 的驱动,
    * 该方法会尽可能补全 dbname/dbid 属性.
    */
-  public IDriver getDriver(ConnectConfig config) {
+  public synchronized IDriver getDriver(ConnectConfig config) {
     IDriver dr = null;
+    check_state();
 
     if (namemap.size() <= 0) {
       throw new XBosonException("No DB driver in Factory");
@@ -219,7 +230,9 @@ public class DbmsFactory extends OnExitHandle {
    * @param nameOrID
    * @return
    */
-  public IDriver findDriver(String nameOrID) {
+  public synchronized IDriver findDriver(String nameOrID) {
+    check_state();
+
     int id = -1;
     try {
       id = Integer.parseInt(nameOrID);

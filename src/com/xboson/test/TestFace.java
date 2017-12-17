@@ -24,9 +24,11 @@ import com.xboson.util.Tool;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Set;
 
 
 /**
+ * UI-FS 测试
  * 如果有其他的集群节点连接了 redis, 测试会失败
  */
 public class TestFace extends Test {
@@ -34,29 +36,48 @@ public class TestFace extends Test {
   private String path;
   private byte[] content;
 
+  private LocalFileMapping local;
+  private RedisFileMapping redis;
+
 
   public void test() throws Throwable {
-    path = "/ui/paas/login.html";
+    sub("Test ui file system");
+
+    local = new LocalFileMapping();
+    redis = new RedisFileMapping();
+    path  = "/ui/paas/login.html";
     LogFactory.setLevel(Level.ALL);
+
     testLocal();
     test_redis_base();
     local_and_redis();
     test_sync_files();
+    read_dir();
+  }
+
+
+  public void read_dir() {
+    sub("Read dirs");
+
+    String p = "/t/paas";
+    Set<FileStruct> ls = local.readDir(p);
+    Set<FileStruct> rs = redis.readDir(p);
+
+    msg("Local:", ls);
+    msg("Redis:", rs);
+    eq(ls, rs, "same dir");
   }
 
 
   public void test_sync_files() {
     sub("SynchronizeFiles");
-    SynchronizeFiles.start("/down1/web4node/public");
+    SynchronizeFiles.start("/down1/web4ds/public");
     SynchronizeFiles.join();
   }
 
 
   public void local_and_redis() throws Throwable {
     sub("Write use redis, read from local");
-
-    LocalFileMapping local = new LocalFileMapping();
-    RedisFileMapping redis = new RedisFileMapping();
 
     String test_dir = "/test/";
     String test_file = test_dir + "/a.js";
@@ -73,15 +94,14 @@ public class TestFace extends Test {
     ok(Arrays.equals(content, r2), "from fs");
     msg("content:", new String(r2));
 
-    Files.delete(local.normalize(test_file));
-    Files.delete(local.normalize(test_dir));
+    redis.deleteFile(test_file);
+    redis.deleteFile(test_dir);
   }
 
 
   public void testLocal() throws Throwable {
     sub("Local file system");
 
-    IUIFileProvider local = new LocalFileMapping();
     content = local.readFile(path);
     String s = new String(content);
     ok(s.indexOf("云平台登录")>=0, "html file read");
@@ -93,15 +113,16 @@ public class TestFace extends Test {
     sub("Test UI Redis base");
 
     RedisBase rb = new RedisBase();
-    rb.writeFile(path, content);
-    byte[] rbyte = rb.readFile(path);
-    ok(Arrays.equals(rbyte, content), "read/write redis");
+    FileStruct fs = FileStruct.createFile(path, 0, content);
+    rb.setContent(fs);
+    rb.getContent(fs);
+    ok(Arrays.equals(fs.getFileContent(), content), "read/write redis");
 
     final Thread curr = Thread.currentThread();
     final boolean[] check = new boolean[1];
 
     FileModifyHandle fmh = rb.startModifyReciver(new NullModifyListener() {
-      public void modify(String file) {
+      public void noticeModifyContent(String file) {
         eq(path, file, "recive modify notice");
         check[0] = true;
         curr.interrupt(); // 中断 标记1 的休眠.
@@ -115,15 +136,15 @@ public class TestFace extends Test {
   }
 
 
-  abstract class NullModifyListener implements IFileModify {
+  abstract class NullModifyListener implements IFileChangeListener {
     @Override
-    public void modify(String file) {
+    public void noticeModifyContent(String file) {
     }
     @Override
-    public void makeDir(String dirname) {
+    public void noticeMakeDir(String dirname) {
     }
     @Override
-    public void delete(String file) {
+    public void noticeDelete(String file) {
     }
   }
 

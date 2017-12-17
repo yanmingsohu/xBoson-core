@@ -29,12 +29,12 @@ import javax.naming.event.NamingEvent;
  */
 public class FileModifyHandle extends GLHandle {
 
-  private IFileModify fm;
+  private IFileChangeListener fm;
 
 
-  public FileModifyHandle(IFileModify fm) {
+  public FileModifyHandle(IFileChangeListener fm) {
     if (fm == null)
-      throw new XBosonException.NullParamException("IFileModify fm");
+      throw new XBosonException.NullParamException("IFileChangeListener fm");
 
     this.fm = fm;
     GlobalEventBus.me().on(Names.ui_file_change, this);
@@ -49,15 +49,15 @@ public class FileModifyHandle extends GLHandle {
 
     switch(mark) {
       case RedisBase.PREFIX_DIR:
-        fm.makeDir(file);
+        fm.noticeMakeDir(file);
         return;
 
       case RedisBase.PREFIX_FILE:
-        fm.modify(file);
+        fm.noticeModifyContent(file);
         return;
 
       case RedisBase.PREFIX_DEL:
-        fm.delete(file);
+        fm.noticeDelete(file);
         return;
     }
     getLog().error("Unreachable message:", mark_file, "[" + mark + "]");

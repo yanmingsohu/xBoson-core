@@ -84,4 +84,60 @@ public class Path {
     return out.toString();
   }
 
+
+  /**
+   * 返回除名称之外的完整父目录
+   */
+  public static String dirname(String path) {
+    char[] ch = path.trim().toCharArray();
+    int end = ch.length - 1;
+
+    //
+    // 去掉末尾连续的 '/'
+    //
+    while (end >= 0 && ch[end] == '/') {
+      --end;
+    }
+
+    //
+    // 找到末尾开始第一个 '/'
+    //
+    while (end >= 0 && ch[end] != '/') {
+      --end;
+    }
+
+    if (end < 0)
+      return null;
+
+    return new String(ch, 0, end);
+  }
+
+
+  /**
+   * 只返回文件部分, 目录被丢弃, 目录格式无效返回 null
+   */
+  public static String basename(String path) {
+    char[] ch = path.trim().toCharArray();
+    int end = ch.length - 1;
+
+    //
+    // 去掉末尾连续的 '/'
+    //
+    while (end >= 0 && ch[end] == '/') {
+      --end;
+    }
+
+    //
+    // 找到末尾开始第一个 '/'
+    //
+    while (end >= 0 && ch[end] != '/') {
+      --end;
+    }
+
+
+    if (++end < ch.length)
+      return new String(ch, end, ch.length - end);
+
+    return null;
+  }
 }

@@ -66,7 +66,6 @@ public class GlobalEventBus {
 
 
   private void destory() {
-    log.info("---------- xBoson system leaving -----------");
     Iterator<GlobalEventContext> it = contexts.values().iterator();
     while (it.hasNext()) {
       try {
@@ -79,7 +78,7 @@ public class GlobalEventBus {
     sub_thread = null;
     contexts = null;
     log.info("destoryed");
-    log.info("---------- xBoson system shutdown ----------");
+    log.info("---------- xBoson system Gone ----------");
   }
 
 

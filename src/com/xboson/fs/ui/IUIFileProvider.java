@@ -17,6 +17,7 @@
 package com.xboson.fs.ui;
 
 import java.io.IOException;
+import java.util.Set;
 
 
 /**
@@ -25,6 +26,9 @@ import java.io.IOException;
  * 路径为 ui 虚拟目录, 跟目录应该包含 'ui' 't' 'web' 'lib' 等目录
  */
 public interface IUIFileProvider {
+
+  String ROOT = "/";
+
 
   /**
    * 读取文件内容
@@ -69,4 +73,13 @@ public interface IUIFileProvider {
    * @param file
    */
   void deleteFile(String file);
+
+
+  /**
+   * 读取目录
+   *
+   * @param path 目录路径, 如果是文件会抛出异常
+   * @return 目录中的文件列表
+   */
+  Set<FileStruct> readDir(String path);
 }

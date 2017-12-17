@@ -16,16 +16,15 @@
 
 package com.xboson.fs.ui;
 
-import com.xboson.fs.ui.FileModifyHandle;
-import com.xboson.fs.ui.IFileModify;
-import com.xboson.fs.ui.UIEventMigrationThread;
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.IConstant;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Transaction;
 
 import java.io.IOException;
+import java.io.ObjectStreamException;
 
 
 /**
@@ -35,75 +34,113 @@ import java.io.IOException;
  *
  * 如果本地文件节点下线, 使用 GlobalEventBus 可能会丢失消息,
  * 所以这里单独使用队列来实现文件修改消息.
+ *
+ * 多个操作使用 "try (JedisSession js = openSession()) {}" 来操作.
  */
-public class RedisBase {
+public class RedisBase implements IConstant {
 
   public static final char PREFIX_FILE  = '|';
   public static final char PREFIX_DIR   = '?';
   public static final char PREFIX_DEL   = '>';
 
-  public static final String QUEUE_NAME   = "XB.UI.File.ChangeQueue";
-  public static final String CONTENT_NAME = "XB.UI.File.Content";
-  public static final String MODIFY_NAME  = "XB.UI.File.ModifyTime";
+  public static final String QUEUE_NAME    = "XB.UI.File.ChangeQueue";
+  public static final String STRUCT_NAME   = "XB.UI.File.Struct";
+  public static final String CONTENT_NAME  = "XB.UI.File.CONTENT";
 
-  public static final byte[] CONTENT_ARR  = CONTENT_NAME.getBytes();
+  public static final byte[] STRUCT_NAMEB  = STRUCT_NAME.getBytes(CHARSET);
+  public static final byte[] CONTENT_NAMEB = CONTENT_NAME.getBytes(CHARSET);
 
+  private ThreadLocal<JedisSession> jedis_session;
   private Log log;
 
 
   public RedisBase() {
     this.log = LogFactory.create();
+    this.jedis_session = new ThreadLocal<>();
   }
 
 
   /**
-   * 只是写入文件内容
+   * 将 fs 中的内容保存
    */
-  public void writeFile(String path, byte[] bytes) throws IOException {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      client.hset(CONTENT_ARR, path.getBytes(), bytes);
+  public void setContent(FileStruct fs) {
+    try (JedisSession js = openSession()) {
+      js.client.hset(CONTENT_NAMEB,
+              fs.path.getBytes(CHARSET), fs.getFileContent());
     }
   }
 
 
   /**
-   * 写入文件修改日期
+   * 读取文件内容到 fs
    */
-  public void writeModifyTime(String path, long file_modify_time) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      String time = Long.toHexString(file_modify_time);
-      client.hset(MODIFY_NAME, path, time);
+  public void getContent(FileStruct fs) {
+    if (!fs.isFile())
+      throw new XBosonException("is not file");
+
+    try (JedisSession js = openSession()) {
+      byte[] b = js.client.hget(CONTENT_NAMEB, fs.path.getBytes(CHARSET));
+      fs.setFileContent(b);
     }
+  }
+
+
+  public void delContent(FileStruct fs) {
+    if (!fs.isFile())
+      throw new XBosonException("is not file");
+
+    try (JedisSession js = openSession()) {
+      js.client.hdel(CONTENT_NAME, fs.path);
+    }
+  }
+
+  /**
+   * 创建/保存一个独立的节点, 不管有没有父节点的存在,
+   * 文件内容需要单独通过 setContent() 操作
+   */
+  public void saveStruct(FileStruct struct) {
+    try (JedisSession js = openSession()) {
+      byte[] out = RedisMesmerizer.toBytes(struct);
+      js.client.hset(STRUCT_NAMEB, struct.path.getBytes(CHARSET), out);
+
+    } catch (IOException e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  public void removeStruct(String path) {
+    try (JedisSession js = openSession()) {
+      js.client.hdel(STRUCT_NAME, path);
+    }
+  }
+
+
+  public void removeStruct(FileStruct fs) {
+    removeStruct(fs.path);
   }
 
 
   /**
-   * 读取文件
+   * 路径上没有数据返回 null
    */
-  public byte[] readFile(String path) throws IOException {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      return client.hget(CONTENT_ARR, path.getBytes());
-    }
-  }
+  public FileStruct getStruct(String path) {
+    try (JedisSession js = openSession()) {
+      byte[] bin = js.client.hget(STRUCT_NAMEB, path.getBytes(CHARSET));
+      if (bin == null || bin.length == 0)
+        return null;
 
+      return (FileStruct) RedisMesmerizer.fromBytes(bin);
 
-  public long getModifyTime(String path) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      String time = client.hget(MODIFY_NAME, path);
-      if (time != null) {
-        return Long.parseLong(time, 16);
+    } catch (ObjectStreamException e) {
+      log.warn("Read from redis but fail", e);
+      try (JedisSession js = openSession()) {
+        js.client.hdel(STRUCT_NAME, path);
       }
-    }
-    return -1;
-  }
+      return null;
 
-
-  public void deleteFile(String path) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      Transaction t = client.multi();
-      client.hdel(CONTENT_ARR, path.getBytes());
-      client.hdel(MODIFY_NAME, path);
-      t.exec();
+    } catch (IOException | ClassNotFoundException e) {
+      throw new XBosonException(e);
     }
   }
 
@@ -112,22 +149,22 @@ public class RedisBase {
    * 向队列发送文件修改通知
    */
   public void sendModifyNotice(String path) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      client.rpush(QUEUE_NAME, PREFIX_FILE + path);
+    try (JedisSession js = openSession()) {
+      js.client.rpush(QUEUE_NAME, PREFIX_FILE + path);
     }
   }
 
 
   public void sendCreateDirNotice(String dir) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      client.rpush(QUEUE_NAME, PREFIX_DIR + dir);
+    try (JedisSession js = openSession()) {
+      js.client.rpush(QUEUE_NAME, PREFIX_DIR + dir);
     }
   }
 
 
   public void sendDeleteNotice(String dir) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      client.rpush(QUEUE_NAME, PREFIX_DEL + dir);
+    try (JedisSession js = openSession()) {
+      js.client.rpush(QUEUE_NAME, PREFIX_DEL + dir);
     }
   }
 
@@ -135,10 +172,47 @@ public class RedisBase {
   /**
    * 打开一个文件修改监听器, 并尝试启动一个文件修改事件队列.
    */
-  public FileModifyHandle startModifyReciver(IFileModify fm) {
+  public FileModifyHandle startModifyReciver(IFileChangeListener fm) {
     UIEventMigrationThread.start();
     return new FileModifyHandle(fm);
   }
 
 
+  /**
+   * 打开一个 redis 事务, 或返回已经打开的事务, 支持嵌套打开
+   */
+  public JedisSession openSession() {
+    JedisSession js = jedis_session.get();
+    if (js == null) {
+      js = new JedisSession();
+      jedis_session.set(js);
+    } else {
+      ++js.nested;
+    }
+    return js;
+  }
+
+
+  /**
+   * 维护线程上打开唯一的 Jedis 连接, 使连接跨越函数调用.
+   */
+  public class JedisSession implements AutoCloseable {
+    public final Jedis client;
+    private int nested;
+
+    private JedisSession() {
+      this.client = RedisMesmerizer.me().open();
+      this.nested = 0;
+    }
+
+    @Override
+    public void close() {
+      if (nested > 0) {
+        --nested;
+      } else {
+        client.close();
+        jedis_session.remove();
+      }
+    }
+  }
 }

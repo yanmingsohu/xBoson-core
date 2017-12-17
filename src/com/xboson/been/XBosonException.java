@@ -238,4 +238,21 @@ public class XBosonException extends RuntimeException
       return serviceName;
     }
   }
+
+
+  /**
+   * 尝试访问已经关闭的资源抛出异常
+   */
+  static public class Closed extends XBosonException {
+    public Closed(String whoClosed) {
+      super(whoClosed + " is Closed or Already Quit");
+    }
+  }
+
+
+  static public class IOError extends XBosonException {
+    public IOError(String s) {
+      super(s);
+    }
+  }
 }
