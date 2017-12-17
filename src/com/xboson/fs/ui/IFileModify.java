@@ -6,39 +6,43 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-20 上午10:59
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/ui/UIEventMigrationThread.java
+// 文件创建日期: 17-11-19 上午11:41
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/IFileModify.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.ui;
-
-import com.xboson.event.EventQueueMigrationThread;
-import com.xboson.event.Names;
+package com.xboson.fs.ui;
 
 
 /**
- * ui 文件修改消息线程封装, 每个应用只运行一个线程.
+ * 仅对 ui 模块使用的文件通知器, 当其他节点对文件有操作,
+ * 会通过网络将消息发送到本地文件系统, 通过该接口接收这些消息.
  *
- * @see EventQueueMigrationThread
+ * @see FileModifyHandle
  */
-public final class UIEventMigrationThread {
+public interface IFileModify {
 
-  private static EventQueueMigrationThread mt;
+  /**
+   * 通知文件改动或创建
+   * @param vfile 改动的文件路径
+   */
+  void modify(String vfile);
 
 
-  private UIEventMigrationThread() {
-  }
+  /**
+   * 通知目录被创建
+   * @param vdirname 目录路径
+   */
+  void makeDir(String vdirname);
 
 
-  public synchronized static EventQueueMigrationThread start() {
-    if (mt == null || mt.isRunning() == false) {
-      mt = new EventQueueMigrationThread(
-              RedisBase.QUEUE_NAME, Names.ui_file_change);
-    }
-    return mt;
-  }
+  /**
+   * 通知文件被删除
+   * @param vfile 删除的文件路径
+   */
+  void delete(String vfile);
+
 }

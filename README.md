@@ -174,8 +174,7 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   "rootPassword": "111111",
   
     /* ui 获取方式, 有缓冲区代理以及本地目录, 两种模式, 同一个集群中只有一个本地目录模式 */
-  "uiProviderClass": "com.xboson.j2ee.ui.LocalFileMapping",
-    /* 本地目录模式的根目录 */
+  "uiProviderClass": ccom.xboson.fs.ui.LocalFileMapping   /* 本地目录模式的根目录 */
   "uiUrl": "",
     /* 本地目录模式, 设置为 true 当用户请求打开目录时, 是否返回目录列表 */
   "uiListDir": true,

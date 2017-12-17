@@ -16,7 +16,7 @@
 
 package com.xboson.test;
 
-import com.xboson.j2ee.ui.*;
+import com.xboson.fs.ui.*;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.util.Tool;

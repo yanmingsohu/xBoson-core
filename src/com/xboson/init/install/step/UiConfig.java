@@ -18,8 +18,8 @@ package com.xboson.init.install.step;
 
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
-import com.xboson.j2ee.ui.IUIFileProvider;
-import com.xboson.j2ee.ui.LocalFileMapping;
+import com.xboson.fs.ui.IUIFileProvider;
+import com.xboson.fs.ui.LocalFileMapping;
 import com.xboson.util.Tool;
 
 import java.io.File;

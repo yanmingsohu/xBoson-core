@@ -14,8 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.ui;
+package com.xboson.fs.ui;
 
+import com.xboson.fs.ui.FileModifyHandle;
+import com.xboson.fs.ui.IFileModify;
+import com.xboson.fs.ui.UIEventMigrationThread;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;

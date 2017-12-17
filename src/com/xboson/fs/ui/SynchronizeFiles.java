@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.ui;
+package com.xboson.fs.ui;
 
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;

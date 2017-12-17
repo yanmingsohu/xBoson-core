@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.ui;
+package com.xboson.fs.ui;
 
 import com.xboson.been.XBosonException;
 import com.xboson.event.GLHandle;
