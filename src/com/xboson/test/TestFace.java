@@ -20,11 +20,15 @@ import com.xboson.been.XBosonException;
 import com.xboson.fs.ui.*;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.LuaScript;
+import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Tool;
+import redis.clients.jedis.Jedis;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 
@@ -55,6 +59,46 @@ public class TestFace extends Test {
     local_and_redis();
     read_dir();
     test_move();
+    test_lua();
+    test_find();
+  }
+
+
+  public void test_lua() {
+    sub("Test lua base");
+    LuaScript find = LuaScript.compile("return 'ok';");
+    msg("LUA1:", find.eval());
+
+    //
+    // 删除脚本之后也能保证可以调用
+    //
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      client.scriptFlush();
+    }
+
+    msg("LUA2:", find.eval());
+  }
+
+
+  public void test_find() {
+    sub("Test find function in lua.");
+    finds(true, "Register", "register",
+            "请输入验证码", "background", "系统信息");
+
+    finds(false, "register");
+  }
+
+
+  public void finds(boolean caseSensitive, String ...what) {
+    FindContentLua find = new FindContentLua("/t");
+
+    for (int i=0; i<what.length; ++i) {
+      String str = what[i];
+      beginTime();
+      List<String> files = find.find(str, caseSensitive);
+      endTime("Find String:", "'"+ str +"'", "has", files.size(), "files");
+      msg("Find", files);
+    }
   }
 
 
