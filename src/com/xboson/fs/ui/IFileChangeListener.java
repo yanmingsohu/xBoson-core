@@ -45,4 +45,12 @@ public interface IFileChangeListener {
    */
   void noticeDelete(String vfile);
 
+
+  /**
+   * 通知文件被移动
+   * @param form 源文件名
+   * @param to 目的文件名
+   */
+  void noticeMove(String form, String to);
+
 }

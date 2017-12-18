@@ -71,7 +71,7 @@ public abstract class OnFileChangeHandle extends GLHandle {
   protected abstract void onFileChange(String file_name);
 
 
-  public void removeExitListener() {
+  public void removeFileListener() {
     if (eventName == null)
       return;
 

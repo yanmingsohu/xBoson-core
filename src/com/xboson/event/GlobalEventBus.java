@@ -75,6 +75,7 @@ public class GlobalEventBus {
       }
     }
     sub_thread.destory();
+    EmitWithoutCluster.me().destory();
     sub_thread = null;
     contexts = null;
     log.info("destoryed");
@@ -148,9 +149,7 @@ public class GlobalEventBus {
    * @param info 扩展描述, NamingEvent.getChangeInfo() 返回
    * @return 忽略返回值
    */
-  public synchronized boolean emit(
-            String name, Object data, int type, String info) {
-
+  public synchronized boolean emit(String name, Object data, int type, String info) {
     if (contexts == null) {
       throw new IllegalAccessError("The system is offline");
     }

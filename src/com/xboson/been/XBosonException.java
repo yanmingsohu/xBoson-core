@@ -21,8 +21,12 @@ import com.xboson.util.CodeFormater;
 import com.xboson.util.IConstant;
 import jdk.nashorn.internal.runtime.ECMAErrors;
 
+import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -31,9 +35,12 @@ import java.sql.SQLException;
 public class XBosonException extends RuntimeException
         implements IBean, IXBosonException, IConstant {
 
-  private static final String PREFIX = ENTER + SPSP;
-  private static final String PASS   = PREFIX + "...";
-  private static final String CAUSE  = ENTER + "Cause BY ";
+  public static final String PREFIX = ENTER + SPSP;
+  public static final String PASS   = PREFIX + "...";
+  public static final String CAUSE  = ENTER + "Cause BY ";
+
+  protected static final Set<String> repeated = new HashSet<>();
+  protected static final int repeated_max = 10000;
 
   protected int code = 500;
 
@@ -79,6 +86,20 @@ public class XBosonException extends RuntimeException
 
   void setCode(int c) {
     code = c;
+  }
+
+
+  /**
+   * 如果 t 错误已经通过该方法检查过, 则返回 true.
+   * 解决有大量重复异常被抛出后日志爆炸的情况.
+   */
+  public static boolean isChecked(Throwable t) {
+    if (t == null) return false;
+    String s = t.toString();
+    if (repeated.size() > repeated_max) {
+      repeated.clear();
+    }
+    return repeated.add(s);
   }
 
 
@@ -210,21 +231,6 @@ public class XBosonException extends RuntimeException
 
 
   /**
-   * 调用打开文件的函数的路径是一个目录时抛出异常
-   */
-  static public class ISDirectory extends XBosonException {
-    private Path path;
-    public ISDirectory(Path path) {
-      super(path + " is directory");
-      this.path = path;
-    }
-    public Path getPath() {
-      return path;
-    }
-  }
-
-
-  /**
    * 找不到服务错误
    */
   static public class NoService extends XBosonException {
@@ -251,8 +257,49 @@ public class XBosonException extends RuntimeException
 
 
   static public class IOError extends XBosonException {
-    public IOError(String s) {
-      super(s);
+    private String path;
+
+    public IOError(String why) {
+      super(why);
+      this.path = null;
+    }
+
+    public IOError(IOException e) {
+      super(e);
+      this.path = null;
+    }
+
+    public IOError(String why, Path path) {
+      this(why, path.toString());
+    }
+
+    public IOError(String why, String path) {
+      super("Target file: \""+ path +"\", "+ why);
+      this.path = path;
+    }
+
+    public String getPath() {
+      return path;
+    }
+  }
+
+
+  static public class NotFound extends IOError {
+    public NotFound(String fileName) {
+      super("Not Found", fileName);
+    }
+  }
+
+
+  /**
+   * 调用打开文件的函数的路径是一个目录时抛出异常
+   */
+  static public class ISDirectory extends IOError {
+    public ISDirectory(Path path) {
+      super("Is Directory", path);
+    }
+    public ISDirectory(String path) {
+      super("Is Directory", path);
     }
   }
 }

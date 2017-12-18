@@ -21,7 +21,6 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Path;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,6 +35,8 @@ import java.util.Set;
  *      将修改记录加入消息队列
  */
 public class RedisFileMapping implements IUIFileProvider {
+
+  public static final int ID = 1;
 
   private RedisBase rb;
   private Log log;
@@ -52,11 +53,36 @@ public class RedisFileMapping implements IUIFileProvider {
   }
 
 
+  public String normalize(String path) {
+    if (path == null)
+      return path;
+
+    path = Path.me.normalize(path);
+    if (path.charAt(path.length()-1) == '/') {
+      path = path.substring(0, path.length()-1);
+    }
+    return path;
+  }
+
+
   @Override
-  public byte[] readFile(String path) throws IOException {
-    FileStruct fs = rb.getStruct(path);
-    rb.getContent(fs);
+  public byte[] readFile(String path) {
+    FileStruct fs = readAttribute(path);
+
+    if (fs == null)
+      throw new XBosonException.NotFound(path);
+
+    readFileContent(fs);
     return fs.getFileContent();
+  }
+
+
+  @Override
+  public void readFileContent(FileStruct fs) {
+    if (fs.isDir())
+      throw new XBosonException.ISDirectory(fs.path);
+
+    rb.getContent(fs);
   }
 
 
@@ -67,44 +93,64 @@ public class RedisFileMapping implements IUIFileProvider {
 
 
   @Override
-  public void makeDir(String path) throws IOException {
+  public FileStruct readAttribute(String path) {
+    return rb.getStruct(normalize(path));
+  }
+
+
+  @Override
+  public void makeDir(String path) {
+    makeDir(path, true);
+  }
+
+
+  public void makeDir(String path, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
-      makeDirWithoutNotice(path);
-      rb.sendCreateDirNotice(path);
+      path = normalize(path);
+      FileStruct dir = rb.getStruct(path);
+
+      if (dir == null) {
+        dir = FileStruct.createDir(path);
+        makeDir(dir, notice);
+      }
     }
   }
 
 
-  public void makeDirWithoutNotice(String path) {
+  public void makeDir(FileStruct dir, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
-      FileStruct dir = rb.getStruct(path);
-      if (dir == null) {
-        dir = FileStruct.createDir(path);
-        makeStructUntilRoot(dir);
+      makeStructUntilRoot(dir);
+      if (notice) {
+        rb.sendCreateDirNotice(dir.path);
       }
     }
   }
 
 
   @Override
-  public void writeFile(String path, byte[] bytes) throws IOException {
-    writeFile(path, bytes, System.currentTimeMillis());
+  public void writeFile(String path, byte[] bytes) {
+    writeFile(path, bytes, System.currentTimeMillis(), true);
   }
 
 
-  public void writeFile(String path, byte[] bytes, long modify)
-          throws IOException {
+  public void writeFile(String path, byte[] bytes, long modify, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
+      path = normalize(path);
       FileStruct file = FileStruct.createFile(path, modify, bytes);
-      writeFileWithoutNotice(file);
-      rb.sendModifyNotice(file.path);
+      writeFile(file, notice);
     }
   }
 
 
-  public void writeFileWithoutNotice(FileStruct file) {
-    makeStructUntilRoot(file);
-    rb.setContent(file);
+  public void writeFile(FileStruct file, boolean notice) {
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      makeStructUntilRoot(file);
+      rb.setContent(file);
+
+      if (notice) {
+        rb.sendModifyNotice(file.path);
+      }
+    }
   }
 
 
@@ -117,33 +163,124 @@ public class RedisFileMapping implements IUIFileProvider {
 
 
   @Override
-  public void deleteFile(String file) {
+  public void delete(String file) {
+    delete(file, true);
+  }
+
+
+  public void delete(String file, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
+      file = normalize(file);
       FileStruct fs = rb.getStruct(file);
-      if (fs == null) return;
+
+      if (fs == null)
+        throw new XBosonException.NotFound(file);
 
       if (fs.isFile()) {
         rb.delContent(fs);
         removeAndUpdateParent(fs);
       }
       else /* Is dir */ {
-        for (String child : fs.containFiles()) {
-          deleteFile(child);
-        }
+        if (fs.containFiles().size() > 0)
+          throw new XBosonException.IOError(
+                  "Can not delete a non-empty directory");
+
         removeAndUpdateParent(fs);
       }
-      rb.sendDeleteNotice(file);
+
+      if (notice) {
+        rb.sendDeleteNotice(file);
+      }
     }
   }
 
 
   @Override
-  public Set<FileStruct> readDir(final String path) {
+  public void move(String src, String to) {
+    move(src, to, true);
+  }
+
+
+  public void move(String src, String to, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
-      FileStruct fs = rb.getStruct(path);
-      if (! fs.isDir()) {
-        throw new XBosonException.IOError("Is not dir: " + path);
+      src = normalize(src);
+      to  = normalize(to);
+      //
+      // 不能移动自己
+      //
+      if (src.equalsIgnoreCase(to))
+        throw new XBosonException.IOError("Sourc And Target is same.");
+      //
+      // 源文件必须存在
+      //
+      FileStruct srcfs = rb.getStruct(src);
+      if (srcfs == null)
+        throw new XBosonException.NotFound(src);
+      //
+      // 目标文件不能存在
+      //
+      FileStruct tofs = rb.getStruct(to);
+      if (tofs != null)
+        throw new XBosonException.IOError(
+                "The target directory already exists", to);
+      //
+      // 存储目标文件的路径上必须是目录, 并且必须存在
+      //
+      String save_to_dir = Path.me.dirname(to);
+      FileStruct save_dir = rb.getStruct(save_to_dir);
+      if (save_dir == null)
+        throw new XBosonException.NotFound(save_to_dir);
+      if (! save_dir.isDir())
+        throw new XBosonException.IOError(
+                "Cannot move to non-directory", save_to_dir);
+      //
+      // 先创建新节点再删除老节点.
+      //
+      if (srcfs.isFile()) {
+        rb.getContent(srcfs);
+        tofs = srcfs.cloneWithName(to);
+        writeFile(tofs, false);
+        delete(src, false);
       }
+      else if (srcfs.isDir()) {
+        tofs = FileStruct.createDir(to);
+        makeDir(tofs, false);
+        //
+        // 迭代所有子节点
+        //
+        Set<String> oldSubNodes = srcfs.containFiles();
+        for (String oldName : oldSubNodes) {
+          String oldPath = src + oldName;
+          String newPath = to  + oldName;
+          move(oldPath, newPath, false);
+        }
+        delete(src, false);
+      }
+      else {
+        throw new XBosonException.IOError(
+                "cannot support Unknow file type");
+      }
+
+      if (notice) {
+        rb.sendMoveNotice(src, to);
+      }
+    }
+  }
+
+
+  @Override
+  public Set<FileStruct> readDir(String path) {
+    try (RedisBase.JedisSession jsession = rb.openSession()) {
+      path = normalize(path);
+      FileStruct fs = rb.getStruct(path);
+
+      if (fs == null)
+        throw new XBosonException.NotFound(path);
+
+      if (! fs.isDir())
+        throw new XBosonException.IOError("Is not dir: " + path);
+
+
       Set<String> names = fs.containFiles();
       Set<FileStruct> ret = new HashSet<>(names.size());
 
@@ -194,7 +331,7 @@ public class RedisFileMapping implements IUIFileProvider {
           break;
         }
 
-        pp = Path.dirname(pp);
+        pp = Path.me.dirname(pp);
       }
 
       final int size = need_create_dir.size();

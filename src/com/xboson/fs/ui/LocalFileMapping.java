@@ -22,7 +22,6 @@ import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,6 +40,8 @@ import java.util.Set;
  * 写入: 更新本地文件后更新 redis 文件, 不发送任何通知.
  */
 public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
+
+  public static final int ID = 2;
 
   private RedisFileMapping rfm;
   private RedisBase rb;
@@ -69,67 +70,140 @@ public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
 
 
   @Override
-  public byte[] readFile(String path) throws IOException {
+  public byte[] readFile(String path) {
+    try (RedisBase.JedisSession close = rb.openSession()) {
+      FileStruct fs = readAttribute(path);
+      if (fs == null)
+        throw new XBosonException.NotFound(path);
+
+      readFileContent(fs);
+      return fs.getFileContent();
+    }
+  }
+
+
+  /**
+   * 在读取文件时会尝试同步本地和 redis 上的文件内容.
+   */
+  @Override
+  public void readFileContent(FileStruct fs) {
+    if (fs.isDir())
+      throw new XBosonException.ISDirectory(fs.path);
+
+    Path local_file = normalize(fs.path);
+
+    if (fs.mappingID() == ID) {
+      fs.setFileContent(readLocalFile(local_file));
+
+      if (fs.needSynchronization()) {
+        rfm.writeFile(fs, false);
+      }
+    } else {
+      rfm.readFileContent(fs);
+
+      if (fs.needSynchronization()) {
+        writeLocalFile(local_file, fs.getFileContent(), fs.lastModify);
+      }
+    }
+  }
+
+
+  private byte[] readLocalFile(Path file) {
+    try {
+      return Files.readAllBytes(file);
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
+  }
+
+
+  private void writeLocalFile(Path file, byte[] content, long modify) {
+    try {
+      Files.write(file, content);
+      Files.setLastModifiedTime(file, FileTime.fromMillis(modify));
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
+  }
+
+
+  /**
+   * 返回本地文件属性, 文件不存在或出错返回 null
+   * Path.toString 会将目录转换格式, 所以保留 path 为原始路径字符串.
+   */
+  private LocalFileStruct readLocalAttr(Path local_file, String path) {
+    File f = local_file.toFile();
+
+    if (f.exists()) {
+      try {
+        FileStruct fs;
+
+        if (f.isDirectory()) {
+          fs = FileStruct.createDir(path);
+        } else {
+          long local_t = f.lastModified();
+          fs = FileStruct.createFile(path, local_t, null);
+        }
+
+        return new LocalFileStruct(fs, true);
+
+      } catch (Exception e) {
+        log.warn("readLocalAttr()", e);
+      }
+    }
+    return null;
+  }
+
+
+  @Override
+  public FileStruct readAttribute(String path) {
     try (RedisBase.JedisSession close = rb.openSession()) {
       Path local_file = normalize(path);
-      long local_t = -1;
-      if (Files.exists(local_file)) {
-        local_t = Files.getLastModifiedTime(local_file).toMillis();
+
+      FileStruct localfs = readLocalAttr(local_file, path);
+      FileStruct redisfs = rfm.readAttribute(path);
+
+      if (localfs == null) {
+        if (redisfs != null)
+          redisfs.setSynchronization(true);
+
+        return redisfs;
+      } else if (redisfs == null) {
+        return localfs;
       }
 
-      FileStruct redis_file = rb.getStruct(path);
-      long redis_t = redis_file != null ? redis_file.lastModify : -1;
-      byte[] ret;
-
-      if (local_t < 0 && redis_t < 0) {
-        throw new FileNotFoundException(path);
+      //
+      // redisfs AND localfs Both NOT NULL
+      //
+      if (localfs.lastModify > redisfs.lastModify) {
+        return localfs;
       }
-
-      if (local_t == redis_t) {
-        rb.getContent(redis_file);
-        ret = redis_file.getFileContent();
-      }
-      else if (local_t > redis_t) {
-        if (Files.isDirectory(local_file)) {
-          throw new XBosonException.ISDirectory(local_file);
-        }
-        ret = Files.readAllBytes(local_file);
-
-        redis_file = FileStruct.createFile(path, local_t, ret);
-        rfm.writeFileWithoutNotice(redis_file);
+      else if (localfs.lastModify == redisfs.lastModify) {
+        redisfs.setSynchronization(false);
       }
       else /* local < redis */ {
-        rb.getContent(redis_file);
-        ret = redis_file.getFileContent();
-        Files.write(local_file, ret);
-        Files.setLastModifiedTime(local_file, FileTime.fromMillis(redis_t));
+        redisfs.setSynchronization(true);
       }
-      return ret;
+
+      return redisfs;
     }
   }
 
 
   @Override
   public long modifyTime(String path) {
-    try {
-      Path local_file = normalize(path);
-      long local_t = Files.getLastModifiedTime(local_file).toMillis();
-
-      FileStruct redis_file = rb.getStruct(path);
-      long redis_t = redis_file != null ? redis_file.lastModify : -1;
-
-      return local_t >= redis_t ? local_t : redis_t;
-    } catch(IOException e) {
+    FileStruct fs = readAttribute(path);
+    if (fs == null)
       return -1;
-    }
+
+    return fs.lastModify;
   }
 
 
   @Override
-  public void makeDir(String path) throws IOException {
-    Path file = normalize(path);
-    Files.createDirectories(file);
-    rfm.makeDirWithoutNotice(path);
+  public void makeDir(String path) {
+    noticeMakeDir(path);
+    rfm.makeDir(path, false);
   }
 
 
@@ -156,9 +230,28 @@ public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
 
 
   @Override
-  public void deleteFile(String file) {
+  public void noticeMove(String src, String to) {
+    Path srcp = normalize(src);
+    Path top = normalize(to);
+    try {
+      Files.move(srcp, top);
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
+  }
+
+
+  @Override
+  public void delete(String file) {
     noticeDelete(file);
-    rfm.deleteFile(file);
+    rfm.delete(file, false);
+  }
+
+
+  @Override
+  public void move(String src, String to) {
+    noticeMove(src, to);
+    rfm.move(src, to, false);
   }
 
 
@@ -166,13 +259,16 @@ public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
   public Set<FileStruct> readDir(String path) {
     Path local_file = normalize(path);
     File f = local_file.toFile();
-    if (! f.isDirectory()) {
+
+    if (! f.exists())
+      throw new XBosonException.NotFound(path);
+
+    if (! f.isDirectory())
       throw new XBosonException.IOError("Is not dir: " + path);
-    }
 
     File[] files = f.listFiles();
     Set<FileStruct> ret = new HashSet<>(files.length);
-    FileStruct fs = null;
+    FileStruct fs;
 
     for (int i=0; i<files.length; ++i) {
       f = files[i];
@@ -191,14 +287,12 @@ public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
 
 
   @Override
-  public void writeFile(String path, byte[] bytes) throws IOException {
+  public void writeFile(String path, byte[] bytes) {
     Path local_file = normalize(path);
     long modified_time = System.currentTimeMillis();
 
-    Files.write(local_file, bytes);
-    Files.setLastModifiedTime(local_file, FileTime.fromMillis(modified_time));
-
-    rfm.writeFile(path, bytes, modified_time);
+    writeLocalFile(local_file, bytes, modified_time);
+    rfm.writeFile(path, bytes, modified_time, false);
   }
 
 

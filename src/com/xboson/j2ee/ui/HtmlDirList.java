@@ -7,24 +7,29 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-20 下午1:32
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/html/HtmlBuilder.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/j2ee/html/HtmlDirList.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.html;
+package com.xboson.j2ee.ui;
 
+import com.xboson.fs.ui.FileStruct;
+import com.xboson.util.Tool;
+
+import javax.activation.FileTypeMap;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.Set;
 
 
-public class HtmlBuilder {
+public class HtmlDirList {
 
   static com.xboson.script.lib.Path tool = new com.xboson.script.lib.Path();
 
@@ -33,12 +38,12 @@ public class HtmlBuilder {
    * 生成目录列表
    *
    * @param html 输出
-   * @param local 本地路径
+   * @param files
    * @param baseurl 网络路径
    * @throws IOException
    */
-  public static void listDir(Writer html, Path local, String baseurl) throws IOException {
-    DirectoryStream<Path> dirs = Files.newDirectoryStream(local);
+  public static void toHtml(Writer html, Set<FileStruct> files, String baseurl)
+          throws IOException {
 
     html.write("<html><head>");
     style(html);
@@ -50,10 +55,12 @@ public class HtmlBuilder {
     html.write(tool.normalize(baseurl + "/../"));
     html.write("'>[..]</a></td><tr>");
 
-    for (Path p : dirs) {
+    FileTypeMap types = MimeTypeFactory.getFileTypeMap();
+
+    for (FileStruct p : files) {
       html.write("<tr>");
 
-      String name = p.getFileName().toString();
+      String name = p.path;
       html.write("<td><a href='");
       html.write(tool.normalize(baseurl + "/" + name));
       html.write("'>");
@@ -61,11 +68,11 @@ public class HtmlBuilder {
       html.write("</a></td>");
 
       html.write("<td>");
-      html.write(Files.isDirectory(p) ? "[DIR]" : "file");
+      html.write(p.isDir() ? "[DIR]" : types.getContentType(name));
       html.write("</td>");
 
       html.write("<td>");
-      html.write(Files.getLastModifiedTime(p)+"");
+      html.write(p.lastModify > 0 ? Tool.formatDate(new Date(p.lastModify)) : "");
       html.write("</td>");
 
       html.write("</tr>");
@@ -83,7 +90,7 @@ public class HtmlBuilder {
     html.write("<style>");
     html.write("body { padding: 50px } ");
     html.write("table {} ");
-    html.write("td { border-bottom:1px solid #888; padding: 3px 30px; } ");
+    html.write("td { border-bottom:1px solid #c3c3c3; padding: 3px 30px; } ");
     html.write("section { margin: 50px 0 } ");
     html.write(".right { text-align: right; color: #1e1140 } ");
     html.write("hr { border: 1px dashed  #9e971d; border-top:0; margin: 1px;} ");

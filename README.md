@@ -10,6 +10,8 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 所有的权限限制. 
 * api 沙箱超时管理, 内存管理.
 * UI IDE.
+* SqlServer 分页.
+* 接管 Tomcat.
 
 
 # JAR 依赖

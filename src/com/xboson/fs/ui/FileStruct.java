@@ -37,7 +37,8 @@ public class FileStruct implements Serializable {
   public final long lastModify;
 
   private Set<String> dir_contain;
-  transient private byte[] file_content;
+  private transient byte[] file_content;
+  private transient boolean need_synchronization;
 
 
   private FileStruct(String path, int type, long lastModify) {
@@ -47,6 +48,14 @@ public class FileStruct implements Serializable {
     this.path = path;
     this.type = type;
     this.lastModify = lastModify;
+  }
+
+
+  protected FileStruct(FileStruct fs) {
+    this(fs.path, fs.type, fs.lastModify);
+    this.dir_contain = fs.dir_contain;
+    this.file_content = fs.file_content;
+    this.need_synchronization = fs.need_synchronization;
   }
 
 
@@ -77,6 +86,10 @@ public class FileStruct implements Serializable {
   }
 
 
+  /**
+   * 当前对象必须是目录, full 必须是当前目录子节点路径,
+   * 返回去掉当前路径的子路径字符串. 当 full 不符合条件时抛出异常.
+   */
   private String childPath(String full) {
     if (type != T_DIR) {
       throw new BadPath("Is not directory");
@@ -88,12 +101,21 @@ public class FileStruct implements Serializable {
   }
 
 
+  /**
+   * 将文件或目录加入当前目录中作为子节点,
+   * 保存时将去掉当前目录前缀, 只保留子节点名称 (有前置 '/')
+   * @param fileOrDir 完整路径
+   */
   public void addChildStruct(String fileOrDir) {
     String ch = childPath(fileOrDir);
     dir_contain.add(ch);
   }
 
 
+  /**
+   * 删除当前目录中的子节点
+   * @param fileOrDir 完整路径
+   */
   public void removeChild(String fileOrDir) {
     String ch = childPath(fileOrDir);
     if (! dir_contain.remove(ch)) {
@@ -102,6 +124,9 @@ public class FileStruct implements Serializable {
   }
 
 
+  /**
+   * 返回所有子节点路径列表, 路径中不包含当前目录的路径.
+   */
   public Set<String> containFiles() {
     if (type != T_DIR) {
       throw new BadPath("Is not directory");
@@ -127,13 +152,13 @@ public class FileStruct implements Serializable {
    * 返回父路径字符串, 如果已经是父路径返回 null
    */
   public String parentPath() {
-    return Path.dirname(path);
+    return Path.me.dirname(path);
   }
 
 
-  public class BadPath extends XBosonException {
+  public class BadPath extends XBosonException.IOError {
     BadPath(String why) {
-      super("["+ path +"] " + why);
+      super(why, path);
     }
   }
 
@@ -145,13 +170,13 @@ public class FileStruct implements Serializable {
 
 
   @Override
-  public int hashCode() {
+  public final int hashCode() {
     return (int)(path.hashCode() + type + lastModify);
   }
 
 
   @Override
-  public boolean equals(Object o) {
+  public final boolean equals(Object o) {
     if (o == this)
       return true;
 
@@ -169,11 +194,42 @@ public class FileStruct implements Serializable {
    * 复制所有属性, 除了 path 只保留文件名部分,
    * 返回的对象中, 内容属性将指向同一个可变对象.
    */
-  public FileStruct cloneBaseName() {
-    String basename = Path.basename(path);
+  public final FileStruct cloneBaseName() {
+    String basename = Path.me.basename(path);
     FileStruct fs = new FileStruct(basename, type, lastModify);
     fs.dir_contain = dir_contain;
     fs.file_content = file_content;
+    fs.need_synchronization = need_synchronization;
     return fs;
+  }
+
+
+  /**
+   * 克隆所有属性除了 path 使用 newPath
+   */
+  public final FileStruct cloneWithName(String newPath) {
+    FileStruct fs = new FileStruct(newPath, type, lastModify);
+    fs.dir_contain = dir_contain;
+    fs.file_content = file_content;
+    fs.need_synchronization = need_synchronization;
+    return fs;
+  }
+
+
+  /**
+   * 返回创建该对象的 IUIFileProvider 实例 id 值, 可由子类重写
+   */
+  public int mappingID() {
+    return RedisFileMapping.ID;
+  }
+
+
+  public boolean needSynchronization() {
+    return need_synchronization;
+  }
+
+
+  public void setSynchronization(boolean need) {
+    need_synchronization = need;
   }
 }

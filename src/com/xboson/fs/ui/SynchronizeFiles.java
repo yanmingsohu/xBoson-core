@@ -18,6 +18,7 @@ package com.xboson.fs.ui;
 
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
+import com.xboson.event.OnExitHandle;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -33,10 +34,12 @@ import java.nio.file.attribute.FileTime;
 /**
  * 同步 redis 和本地文件系统中的所有文件
  */
-public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
+public final class SynchronizeFiles extends OnExitHandle
+        implements Runnable, FileVisitor<Path> {
 
   private static Thread t = null;
   private static boolean touched;
+  private static final int DELAYED_TIME = 2000;
 
 
   public static void me() {
@@ -53,11 +56,11 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
 
   /**
-   * 启动同步线程, 如果线程已经启动则立即返回,
+   * 立即启动同步线程, 如果线程已经启动则立即返回,
    * 同一个时刻只能启动一个同步线程.
    * @param path 本地文件路径
    */
-  public synchronized static void start(String path) {
+  private synchronized static void start(String path) {
     if (t != null) return;
     SynchronizeFiles sf = new SynchronizeFiles(path);
     t = new Thread(sf);
@@ -71,7 +74,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
    * 注册到凌晨事件中, 每天凌晨触发同步
    * @param path 本地文件路径
    */
-  public static void regEarlyMorningClear(final String path) {
+  private static void regEarlyMorningClear(final String path) {
     SynchronizeFiles sf = new SynchronizeFiles(path);
     EarlyMorning.add(sf);
   }
@@ -93,6 +96,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   private int files = 0;
   private int dirs  = 0;
   private int d     = 50;
+  private boolean stop;
 
 
   private SynchronizeFiles(String base) {
@@ -100,22 +104,38 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
     this.log  = LogFactory.create();
     this.rb   = new RedisBase();
     this.rfm  = new RedisFileMapping(rb);
+    this.stop = false;
   }
 
 
   @Override
   public void run() {
-    log.info("Start Synchronize ui files", base);
-    begin_time = System.currentTimeMillis();
-
     try (RedisBase.JedisSession close = rb.openSession()) {
+
+      log.info("Delayed <", DELAYED_TIME, "ms >");
+      Tool.sleep(DELAYED_TIME);
+      if (stop) return;
+
+      log.info("Start At:", base);
+      begin_time = System.currentTimeMillis();
+
+      log.info("Local TO Redis");
       Files.walkFileTree(base, this);
+
+      //
+      // Redis to Local
+      // 这个机能借助于文件修改消息队列来实现, 程序启动后将收到 redis 修改历史
+      // 将历史合并到本机目录中.
+      //
     } catch (IOException e) {
       log.error(e);
+    } finally {
+      long used = System.currentTimeMillis() - begin_time;
+      log.info("Sync Over,", files,
+               "files and", dirs, "directorys, use", used, "ms");
+      t = null;
+      removeExitListener();
     }
-    log.info("Sync Over,", files, "files and", dirs,
-            "directorys, use", System.currentTimeMillis()-begin_time, "ms");
-    t = null;
   }
 
 
@@ -133,8 +153,12 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
           Path local_path, BasicFileAttributes basicFileAttributes)
           throws IOException {
     String vpath = getVirtualPath(local_path);
-    rfm.makeDirWithoutNotice(vpath);
+    rfm.makeDir(vpath, false);
     ++dirs;
+
+    if (stop) {
+      return FileVisitResult.SKIP_SUBTREE;
+    }
     return FileVisitResult.CONTINUE;
   }
 
@@ -154,7 +178,7 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
     if (local_t > redis_t) {
       byte[] body = Files.readAllBytes(local_path);
       redis_file = FileStruct.createFile(vpath, local_t, body);
-      rfm.writeFileWithoutNotice(redis_file);
+      rfm.writeFile(redis_file, false);
     }
     else if (local_t < redis_t) {
       rb.getContent(redis_file);
@@ -189,5 +213,12 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
       log.error(e);
     }
     return FileVisitResult.CONTINUE;
+  }
+
+
+  @Override
+  protected void exit() {
+    stop = true;
+    Tool.waitOver(t);
   }
 }

@@ -33,7 +33,7 @@ public class SystemStartupScript extends OnExitHandle implements IConstant, Runn
 
   private static boolean is_init = false;
   private static final String MSG = "Initialization Redis Data";
-  private static int DELAYED_TIME = 2000;
+  private static final int DELAYED_TIME = 2000;
 
   private Log log;
   private boolean stop;

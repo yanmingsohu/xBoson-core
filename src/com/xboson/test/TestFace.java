@@ -16,6 +16,7 @@
 
 package com.xboson.test;
 
+import com.xboson.been.XBosonException;
 import com.xboson.fs.ui.*;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
@@ -48,30 +49,114 @@ public class TestFace extends Test {
     path  = "/ui/paas/login.html";
     LogFactory.setLevel(Level.ALL);
 
+    test_sync_files();
     testLocal();
     test_redis_base();
     local_and_redis();
-    test_sync_files();
     read_dir();
+    test_move();
+  }
+
+
+  public void test_move() {
+    sub("Test move");
+    final byte[] s1 = randomString(100).getBytes(CHARSET);
+    final byte[] s2 = randomString(200).getBytes(CHARSET);
+
+    del("/t2/s1.txt", "/t2/t3/t4/s2.txt", "/t2/t3/t4",
+            "/t2/t3", "/t2");
+
+    del("/m4/s1.txt", "/m4/t3/t4/s2.txt",
+            "/m4/t3/t4", "/m4/t3", "/m4");
+
+    redis.makeDir("/t2");
+    redis.makeDir("/t2/t3/t4");
+    redis.writeFile("/t2/s1.txt", s1);
+    redis.writeFile("/t2/t3/t4/s2.txt", s2);
+
+    redis.move("/t2", "/m4");
+
+    //
+    // 写入的文件不是立即就可以读取, 消息传递有延迟
+    //
+    Tool.sleep(1000);
+
+    file_eq(s1, "/m4/s1.txt");
+    file_eq(s2, "/m4/t3/t4/s2.txt");
+    dir_eq("/m4");
+    dir_eq("/m4/t3");
+    dir_eq("/m4/t3/t4");
+
+    notExists("/t2/s1.txt", "/t2/t3/t4/s2.txt", "/t2/t3/t4",
+            "/t2/t3", "/t2");
+
+    del("/m4/s1.txt", "/m4/t3/t4/s2.txt",
+            "/m4/t3/t4", "/m4/t3", "/m4");
+  }
+
+
+  /**
+   * 从两个系统中读取文件, 必须与 content 相同
+   */
+  public void file_eq(byte[] content, String fileName) {
+    byte[] s1 = redis.readFile(fileName);
+    byte[] s2 = local.readFile(fileName);
+    ok(Arrays.equals(s1, content), "redis file ok");
+    ok(Arrays.equals(s2, content), "local file ok");
+  }
+
+
+  public void notExists(String ...files) {
+    for (String file : files) {
+      FileStruct fs1 = redis.readAttribute(file);
+      FileStruct fs2 = local.readAttribute(file);
+      ok(fs1 == null, "Redis no file:" + file);
+      ok(fs2 == null, "Local no file:" + file);
+    }
+  }
+
+
+  /**
+   * 删除若干文件, 无视错误
+   */
+  public void del(String ...files) {
+    for (String name : files) {
+      try {
+        redis.delete(name);
+      } catch (Exception e) {
+        msg("DEBUG: Delete", name, e);
+      }
+    }
+  }
+
+
+  /**
+   * 从两个系统中读取目录, 目录内容相同测试正确, 否则抛出异常
+   */
+  public void dir_eq(String dir) {
+    Set<FileStruct> ls = local.readDir(dir);
+    Set<FileStruct> rs = redis.readDir(dir);
+    try {
+      ok(ls != null, "local dir");
+      ok(rs != null, "redis dir");
+      eq(ls, rs, "same dir");
+      msg("OK same dir", dir);
+    } catch (AssertionError t) {
+      msg("Local:", ls);
+      msg("Redis:", rs);
+      throw t;
+    }
   }
 
 
   public void read_dir() {
     sub("Read dirs");
-
-    String p = "/t/paas";
-    Set<FileStruct> ls = local.readDir(p);
-    Set<FileStruct> rs = redis.readDir(p);
-
-    msg("Local:", ls);
-    msg("Redis:", rs);
-    eq(ls, rs, "same dir");
+    dir_eq("/t/paas");
   }
 
 
   public void test_sync_files() {
     sub("SynchronizeFiles");
-    SynchronizeFiles.start("/down1/web4ds/public");
     SynchronizeFiles.join();
   }
 
@@ -94,8 +179,31 @@ public class TestFace extends Test {
     ok(Arrays.equals(content, r2), "from fs");
     msg("content:", new String(r2));
 
-    redis.deleteFile(test_file);
-    redis.deleteFile(test_dir);
+    delete_non_empty_dir(test_dir);
+
+    redis.delete(test_file);
+    redis.delete(test_dir);
+  }
+
+
+  /**
+   * dir 是非空目录, 删除会抛出异常, 则完成测试, 若没有异常则是系统错误
+   */
+  public void delete_non_empty_dir(String dir) {
+    sub("Check delte non-empty DIR", dir);
+    boolean checkNon = false;
+    try {
+      redis.delete(dir);
+    } catch (XBosonException.IOError io) {
+      checkNon = io.toString().indexOf("non-empty dir") >= 0;
+    }
+    if (checkNon) {
+      msg("OK, check non-empty dir");
+    } else {
+      fail("Delete non-empty dir");
+    }
+    ok(null != redis.readDir(dir), "redis not delete");
+    ok(null != local.readDir(dir), "local not delete");
   }
 
 
@@ -138,14 +246,13 @@ public class TestFace extends Test {
 
   abstract class NullModifyListener implements IFileChangeListener {
     @Override
-    public void noticeModifyContent(String file) {
-    }
+    public void noticeModifyContent(String file) {}
     @Override
-    public void noticeMakeDir(String dirname) {
-    }
+    public void noticeMakeDir(String dirname) {}
     @Override
-    public void noticeDelete(String file) {
-    }
+    public void noticeDelete(String file) {}
+    @Override
+    public void noticeMove(String form, String to) {}
   }
 
 

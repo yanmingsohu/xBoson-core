@@ -22,6 +22,8 @@ import java.util.LinkedList;
 
 public class Path {
 
+  public static final Path me = new Path();
+
 
   /**
    * 不安全的路径会抛出异常
@@ -88,7 +90,7 @@ public class Path {
   /**
    * 返回除名称之外的完整父目录
    */
-  public static String dirname(String path) {
+  public String dirname(String path) {
     char[] ch = path.trim().toCharArray();
     int end = ch.length - 1;
 
@@ -116,7 +118,7 @@ public class Path {
   /**
    * 只返回文件部分, 目录被丢弃, 目录格式无效返回 null
    */
-  public static String basename(String path) {
+  public String basename(String path) {
     char[] ch = path.trim().toCharArray();
     int end = ch.length - 1;
 

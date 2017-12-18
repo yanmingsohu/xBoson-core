@@ -59,6 +59,15 @@ public class FileModifyHandle extends GLHandle {
       case RedisBase.PREFIX_DEL:
         fm.noticeDelete(file);
         return;
+
+      case RedisBase.PREFIX_MOVE:
+        int i = file.indexOf(":");
+        if (i <= 0)
+          throw new XBosonException("Bad move event format");
+        String src = file.substring(0, i);
+        String to  = file.substring(i+1);
+        fm.noticeMove(src, to);
+        return;
     }
     getLog().error("Unreachable message:", mark_file, "[" + mark + "]");
   }

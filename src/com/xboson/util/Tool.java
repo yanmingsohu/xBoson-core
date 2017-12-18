@@ -16,22 +16,26 @@
 
 package com.xboson.util;
 
-import java.io.*;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
 import com.thoughtworks.xstream.XStream;
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
+import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Uuid;
-import jdk.nashorn.internal.runtime.ECMAErrors;
+
+import java.io.*;
+import java.net.URL;
+import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 public final class Tool {
@@ -45,8 +49,8 @@ public final class Tool {
   private static SnowflakeIdWorker id;
   private static Moshi moshi;
   private static XStream xml;
-  private static com.xboson.script.lib.Path
-          p = new com.xboson.script.lib.Path();
+  private static com.xboson.script.lib.Path p = com.xboson.script.lib.Path.me;
+  private static Log ___log;
 
   private Tool() {}
 
@@ -254,7 +258,7 @@ public final class Tool {
     try {
       if (c != null) c.close();
     } catch(Exception e) {
-      LogFactory.create().debug(e);
+      openLog().debug(e);
     }
   }
 
@@ -263,7 +267,7 @@ public final class Tool {
     try {
       if (c != null) c.close();
     } catch(Exception e) {
-      LogFactory.create().debug(e);
+      openLog().debug(e);
     }
   }
 
@@ -275,7 +279,19 @@ public final class Tool {
     try {
       if (t != null) t.join();
     } catch(Exception e) {
-      LogFactory.create().debug(e);
+      openLog().debug(e);
+    }
+  }
+
+
+  public static void waitOver(ExecutorService s) {
+    try {
+      Log log = openLog();
+      while (! s.awaitTermination(2, TimeUnit.SECONDS)) {
+        log.debug("Wait Executor Termination:", s);
+      }
+    } catch (InterruptedException e) {
+      openLog().debug(e);
     }
   }
 
@@ -434,7 +450,7 @@ public final class Tool {
     try {
       Thread.sleep(time);
     } catch(Exception e) {
-      LogFactory.create().debug(e);
+      openLog().debug(e);
     }
   }
 
@@ -549,5 +565,20 @@ public final class Tool {
     } catch (IOException e) {
       throw new XBosonException(e);
     }
+  }
+
+
+  /**
+   * 返回基于工具类的日志, 不要在外部调用.
+   */
+  static final Log openLog() {
+    if (___log == null) {
+      synchronized (Tool.class) {
+        if (___log == null) {
+          ___log = LogFactory.create();
+        }
+      }
+    }
+    return ___log;
   }
 }

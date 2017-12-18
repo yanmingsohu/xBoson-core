@@ -20,6 +20,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 
 import javax.naming.Binding;
@@ -30,10 +31,14 @@ import javax.naming.event.EventContext;
 import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingListener;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 class GlobalEventContext extends InitialContext implements EventContext {
 
+  private EmitWithoutCluster ewc;
   private Set<GlobalListener> listeners;
   private String name;
   private Binding oldbind;
@@ -50,6 +55,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
     this.name      = name;
     this.log       = LogFactory.create(GlobalEventContext.class +"$"+ name);
     this.myselfid  = myselfid;
+    this.ewc       = EmitWithoutCluster.me();
 
     //
     // 带有 sys 开头的消息不会在集群中路由
@@ -135,15 +141,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
     oldbind = newbind;
 
     while (its.hasNext()) {
-      try {
-        its.next().objectChanged(event);
-      } catch (Exception err) {
-        if (skip_error) {
-          log.warn("skip error by error");
-        } else {
-          QuickSender.emitError(err, this);
-        }
-      }
+      ewc.emit(its.next(), event, skip_error);
     }
   }
 
@@ -173,4 +171,5 @@ class GlobalEventContext extends InitialContext implements EventContext {
   public boolean targetMustExist() throws NamingException {
     return false;
   }
+
 }

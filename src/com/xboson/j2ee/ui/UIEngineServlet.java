@@ -19,9 +19,9 @@ package com.xboson.j2ee.ui;
 import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
+import com.xboson.fs.ui.FileStruct;
 import com.xboson.fs.ui.IUIFileProvider;
 import com.xboson.fs.ui.UIFileFactory;
-import com.xboson.j2ee.html.HtmlBuilder;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
@@ -33,9 +33,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.NoSuchFileException;
+import java.util.Set;
 
 
 /**
@@ -111,31 +114,35 @@ public class UIEngineServlet extends HttpServlet {
     }
 
     try {
-      String file_type = mime.getContentType(path);
-      resp.setContentType(file_type);
+      FileStruct fs = file_provider.readAttribute(path);
+      if (fs.isFile()) {
+        file_provider.readFileContent(fs);
 
-      byte[] content = file_provider.readFile(path);
-      resp.getOutputStream().write(content);
-      log.debug("Get", file_type, path);
+        String file_type = mime.getContentType(path);
+        resp.setContentType(file_type);
 
-    } catch(NoSuchFileException nofile) {
-      log.debug(nofile);
+        OutputStream out = resp.getOutputStream();
+        out.write(fs.getFileContent());
+        out.flush();
+
+        log.debug("Get File:", file_type, path);
+      }
+      else if (fs.isDir() && list_dir) {
+        resp.setContentType("text/html");
+        resp.setHeader("Cache-Control", "no-cache");
+        Set<FileStruct> files = file_provider.readDir(fs.path);
+        HtmlDirList.toHtml(resp.getWriter(), files, baseurl + path);
+      }
+
+    } catch(NoSuchFileException
+            | FileNotFoundException
+            | XBosonException.NotFound e) {
+      log.debug(e);
       resp.sendError(404, path);
 
     } catch(AccessDeniedException access) {
       log.debug(access);
       resp.sendError(406, path);
-
-    } catch(XBosonException.ISDirectory dir) {
-      log.debug(dir);
-
-      if (list_dir) {
-        resp.setContentType("text/html");
-        resp.setHeader("Cache-Control", "no-cache");
-        HtmlBuilder.listDir(resp.getWriter(), dir.getPath(), baseurl + path);
-      } else {
-        resp.sendError(403, path);
-      }
     }
   }
 

@@ -42,6 +42,7 @@ public class RedisBase implements IConstant {
   public static final char PREFIX_FILE  = '|';
   public static final char PREFIX_DIR   = '?';
   public static final char PREFIX_DEL   = '>';
+  public static final char PREFIX_MOVE  = '!';
 
   public static final String QUEUE_NAME    = "XB.UI.File.ChangeQueue";
   public static final String STRUCT_NAME   = "XB.UI.File.Struct";
@@ -133,7 +134,9 @@ public class RedisBase implements IConstant {
       return (FileStruct) RedisMesmerizer.fromBytes(bin);
 
     } catch (ObjectStreamException e) {
-      log.warn("Read from redis but fail", e);
+      if (! XBosonException.isChecked(e)) {
+        log.warn("Read from redis but fail", e);
+      }
       try (JedisSession js = openSession()) {
         js.client.hdel(STRUCT_NAME, path);
       }
@@ -165,6 +168,13 @@ public class RedisBase implements IConstant {
   public void sendDeleteNotice(String dir) {
     try (JedisSession js = openSession()) {
       js.client.rpush(QUEUE_NAME, PREFIX_DEL + dir);
+    }
+  }
+
+
+  public void sendMoveNotice(String from, String to) {
+    try (JedisSession js = openSession()) {
+      js.client.rpush(QUEUE_NAME, PREFIX_MOVE + from +':'+ to);
     }
   }
 

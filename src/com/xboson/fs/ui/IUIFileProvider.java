@@ -16,6 +16,8 @@
 
 package com.xboson.fs.ui;
 
+import com.xboson.been.XBosonException;
+
 import java.io.IOException;
 import java.util.Set;
 
@@ -31,29 +33,49 @@ public interface IUIFileProvider {
 
 
   /**
-   * 读取文件内容
+   * 快速读取文件内容, 不推荐使用; 尝试读取目录会抛出异常.
+   * 应该使用 readAttribute()/readFileContent() 的组合来读取文件.
    *
    * @param path 路径
    * @return 文件的字节内容, 文件不存在返回 null
+   * @throws XBosonException.IOError
    */
-  byte[] readFile(String path) throws IOException;
+  byte[] readFile(String path);
 
 
   /**
-   * 文件的最后修改时间
+   * 读取文件内容, 目录会抛出异常
+   * @param fs
+   * @throws XBosonException.IOError
+   */
+  void readFileContent(FileStruct fs);
+
+
+  /**
+   * 文件的最后修改时间, 使用 readAttribute() 可以返回
+   * 可用性更强的属性, 尽可能不使用该方法.
    *
    * @param path 路径
    * @return 文件修改时间, 毫秒; 如果文件不存在返回 -1.
+   * @throws XBosonException.IOError
    */
   long modifyTime(String path);
 
 
   /**
-   * 创建目录, 如果上级目录是不存在的, 在必要时会自动生成这些目录
+   * 读取路径上文件(目录)的属性, 不存在的路径返回 null.
+   * @throws XBosonException.IOError
+   */
+  FileStruct readAttribute(String path);
+
+
+  /**
+   * 创建目录, 如果上级目录是不存在的, 在必要时会自动生成这些目录.
+   * 如果目录已经存在, 则什么都不做.
    *
    * @param path 路径
    */
-  void makeDir(String path) throws IOException;
+  void makeDir(String path);
 
 
   /**
@@ -63,16 +85,28 @@ public interface IUIFileProvider {
    * @param path 文件
    * @param bytes 文件内容.
    * @throws IOException
+   * @throws XBosonException.IOError
    */
-  void writeFile(String path, byte[] bytes) throws IOException;
+  void writeFile(String path, byte[] bytes);
 
 
   /**
-   * 删除文件
+   * 删除文件/目录, 非空目录抛异常, 如果目录不存在则抛出异常.
    *
    * @param file
+   * @throws XBosonException.IOError
    */
-  void deleteFile(String file);
+  void delete(String file);
+
+
+  /**
+   * 移动文件/目录到新的目录, 如果目的目录已经存在或源目录不存在会抛出异常
+   *
+   * @param src 源目录/文件
+   * @param to 目的目录
+   * @throws XBosonException.IOError
+   */
+  void move(String src, String to);
 
 
   /**
@@ -80,6 +114,8 @@ public interface IUIFileProvider {
    *
    * @param path 目录路径, 如果是文件会抛出异常
    * @return 目录中的文件列表
+   * @throws XBosonException.IOError
    */
   Set<FileStruct> readDir(String path);
+
 }
