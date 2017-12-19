@@ -17,6 +17,7 @@
 package com.xboson.app.fix.state;
 
 import com.xboson.app.fix.SState;
+import com.xboson.util.JavaConverter;
 import com.xboson.util.Tool;
 
 import java.util.Set;
@@ -27,7 +28,7 @@ import java.util.Set;
  */
 public class S_Operator extends SState {
 
-  private static final Set<Character> op = Tool.arr2set(new Character[] {
+  private static final Set<Character> op = JavaConverter.arr2set(new Character[] {
           '+', '-', '*', '/', '=', '>', '<', '!', '&', '|', '%', ',', ';'
   });
 

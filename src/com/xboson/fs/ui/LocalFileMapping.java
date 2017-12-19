@@ -20,6 +20,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +43,8 @@ import java.util.Set;
 public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
 
   public static final int ID = 2;
+  public static final int RETRY = 3;
+  public static final int RETRY_DELAY = 1000;
 
   private RedisFileMapping rfm;
   private RedisBase rb;
@@ -121,6 +124,7 @@ public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
     try {
       Files.write(file, content);
       Files.setLastModifiedTime(file, FileTime.fromMillis(modify));
+      rb.clearContentFinderCache();
     } catch (IOException e) {
       throw new XBosonException.IOError(e);
     }
@@ -287,6 +291,18 @@ public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
 
 
   @Override
+  public FinderResult findPath(String pathName) {
+    return rb.findPath(pathName);
+  }
+
+
+  @Override
+  public FinderResult findContent(String basePath, String content, boolean cs) {
+    return rb.findContent(basePath, content, cs);
+  }
+
+
+  @Override
   public void writeFile(String path, byte[] bytes) {
     Path local_file = normalize(path);
     long modified_time = System.currentTimeMillis();
@@ -296,20 +312,41 @@ public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
   }
 
 
+  /**
+   * 尝试多次延迟读取文件内容, 因为可能有网络延迟或集群延迟.
+   * 只在同步消息中使用, 不可在实时系统中调用.
+   */
+  private FileStruct getContentTryManyTimes(String file) {
+    FileStruct fs = null;
+
+    for (int i=RETRY; i>=0; --i) {
+      fs = rb.getStruct(file);
+      if (fs != null) break;
+      Tool.sleep(RETRY_DELAY);
+      log.debug("Retry open", file, RETRY - i);
+    }
+
+    if (fs == null) {
+      throw new XBosonException.NotFound(file);
+    }
+    return fs;
+  }
+
+
   @Override
   public void noticeModifyContent(String file) {
     try (RedisBase.JedisSession close = rb.openSession()) {
-      FileStruct fs = rb.getStruct(file);
+      rb.clearContentFinderCache();
+      FileStruct fs = getContentTryManyTimes(file);
       rb.getContent(fs);
 
       long mt = fs.lastModify;
       byte[] content = fs.getFileContent();
 
       Path local_file = normalize(file);
-      Files.write(local_file, content);
-      Files.setLastModifiedTime(local_file, FileTime.fromMillis(mt));
+      writeLocalFile(local_file, content, mt);
     } catch(Exception e) {
-      log.error("Received modification:", e);
+      log.error("Received modification:", file, e);
     }
   }
 

@@ -533,18 +533,6 @@ public final class Tool {
 
 
   /**
-   * 将 T 类型数组转换为 Set, 没有附加的处理
-   */
-  public static<T> Set<T> arr2set(T[] arr) {
-    Set<T> set = new HashSet<>();
-    for (int i=0; i<arr.length; ++i) {
-      set.add(arr[i]);
-    }
-    return set;
-  }
-
-
-  /**
    * 读取 reader 中所有字符到字符串缓冲区;
    * 该方法仅用于调试, 不应该在生产环境中使用 !
    */

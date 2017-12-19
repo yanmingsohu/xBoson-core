@@ -29,7 +29,11 @@ import java.util.Set;
  */
 public interface IUIFileProvider {
 
+  /** 根路径, 也是默认路径 */
   String ROOT = "/";
+
+  /** 结果集最大数量, 超过后的数据被忽略 */
+  int MAX_RESULT_COUNT = 30;
 
 
   /**
@@ -117,5 +121,21 @@ public interface IUIFileProvider {
    * @throws XBosonException.IOError
    */
   Set<FileStruct> readDir(String path);
+
+
+  /**
+   * 模糊查询符合路径的完整路径集合, 总是大小写敏感的
+   */
+  FinderResult findPath(String pathName);
+
+
+  /**
+   * 查询文件内容, 返回文件列表
+   *
+   * @param basePath 开始目录
+   * @param content 要搜索的文本
+   * @param cs true 则启用大小写敏感
+   */
+  FinderResult findContent(String basePath, String content, boolean cs);
 
 }

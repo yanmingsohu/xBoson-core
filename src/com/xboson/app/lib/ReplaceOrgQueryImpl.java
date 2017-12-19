@@ -23,6 +23,7 @@ import com.xboson.db.analyze.IUnitListener;
 import com.xboson.db.analyze.SqlParser;
 import com.xboson.db.analyze.SqlParserCached;
 import com.xboson.util.IConstant;
+import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -45,7 +46,7 @@ public class ReplaceOrgQueryImpl extends QueryImpl
                              String replaceOrg) {
     super(sc, runtime);
     this.replaceSchemaPrefix = replaceOrg + ".";
-    this.sysTables = Tool.arr2set(SysConfig.me().readConfig().sysTableList);
+    this.sysTables = JavaConverter.arr2set(SysConfig.me().readConfig().sysTableList);
   }
 
 

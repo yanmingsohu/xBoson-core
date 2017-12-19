@@ -16,15 +16,14 @@
 
 package com.xboson.db.analyze;
 
-import com.xboson.util.Tool;
+import com.xboson.util.JavaConverter;
 
-import java.util.HashSet;
 import java.util.Set;
 
 
 public class SqlKeyWords {
 
-  static Set<String> key = arr2set(new String[] {
+  static Set<String> key = JavaConverter.arr2setUpper(new String[] {
           "ACTION", "ADD", "AFTER", "ALL", "ALTER", "ACCESSIBLE",
           "AND", "ANY", "AS", "ASC", "AT",
 
@@ -78,7 +77,7 @@ public class SqlKeyWords {
   /**
    * 该关键字不放入层级关系
    */
-  static Set<String> skipParent = arr2set(new String[] {
+  static Set<String> skipParent = JavaConverter.arr2setUpper(new String[] {
           "IF", "NOT", "EXISTS", "LIKE", "LOW_PRIORITY", "DELAYED",
           "LOW_PRIORITY", "IGNORE", "PARTITION",
   });
@@ -87,22 +86,14 @@ public class SqlKeyWords {
   /**
    * 关键字表示表名称列表开始
    */
-  static Set<String> beginTable = arr2set(new String[] {
+  static Set<String> beginTable = JavaConverter.arr2setUpper(new String[] {
           "TABLE", "INTO", "FROM", "REPLACE", "UPDATE",
           "JOIN", "OJ",
   });
 
 
-  static Set<Character> notation = Tool.arr2set(new Character[] {
+  static Set<Character> notation = JavaConverter.arr2set(new Character[] {
           ' ', '\t', '\n', '(', ')', ',', '{', '}', ';',
   });
 
-
-  public static Set<String> arr2set(String[] arr) {
-    Set<String> set = new HashSet<>();
-    for (int i=0; i<arr.length; ++i) {
-      set.add(arr[i].toUpperCase());
-    }
-    return set;
-  }
 }

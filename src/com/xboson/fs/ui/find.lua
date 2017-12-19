@@ -24,13 +24,9 @@ local key           = KEYS[1];
 local what          = ARGV[1];
 local basePath      = ARGV[2];
 local caseSensitive = ARGV[3] == "true";
-local max           = 20;
-local fileExt       = {'*.html', '*.htm', '*.css', '*.js'};
-
---table.insert(find_arr, caseSensitive);
---table.insert(find_arr, ARGV[3]);
---table.insert(find_arr, key);
---table.insert(find_arr, what);
+local max           = tonumber(ARGV[4] or 20);
+local fileExt       = { '*.html', '*.htm', '*.css', '*.js',
+                        '*.md', '*.markdown', '*.txt', '*.json' };
 
 --
 -- 转换为小写效率非常低, 低到好几十秒才能返回, 不可用.
@@ -103,9 +99,4 @@ for _, file_name_pattern in pairs(fileExt) do
 end
 
 
-if (max <= 0) then
-    table.insert(find_arr, "<More results are hidden>");
-end
-
-
-return find_arr;
+return { find_arr, basePath, what, caseSensitive, max <= 0 };

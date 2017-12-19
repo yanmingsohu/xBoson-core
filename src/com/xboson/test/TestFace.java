@@ -28,7 +28,6 @@ import redis.clients.jedis.Jedis;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 
@@ -61,6 +60,17 @@ public class TestFace extends Test {
     test_move();
     test_lua();
     test_find();
+    test_find_path();
+  }
+
+
+  public void test_find_path() {
+    sub("Test find path");
+
+    beginTime();
+    FinderResult fr = redis.findPath("/t/paas/md");
+    endTime(fr);
+    msg(fr.files);
   }
 
 
@@ -82,22 +92,33 @@ public class TestFace extends Test {
 
   public void test_find() {
     sub("Test find function in lua.");
-    finds(true, "Register", "register",
+    FindContentInRedisWithLua find = new FindContentInRedisWithLua();
+
+    finds(find, true, "Register", "register",
             "请输入验证码", "background", "系统信息");
 
-    finds(false, "register");
+    finds(find, false, "register", "系统信息");
+
+    // 带缓存
+    finds(find, false, "register", "系统信息");
   }
 
 
-  public void finds(boolean caseSensitive, String ...what) {
-    FindContentLua find = new FindContentLua("/t");
+  public void finds(FindContentInRedisWithLua find,
+          boolean caseSensitive, String ...what) {
+
+    String basedir = "/t";
 
     for (int i=0; i<what.length; ++i) {
       String str = what[i];
       beginTime();
-      List<String> files = find.find(str, caseSensitive);
-      endTime("Find String:", "'"+ str +"'", "has", files.size(), "files");
-      msg("Find", files);
+      FinderResult r =
+              find.find(basedir, str, caseSensitive);
+      endTime(r);
+      eq(caseSensitive, r.caseSensitive, "case sensitive");
+      eq(basedir, r.baseDir, "base dir");
+      int len = Math.min(5, r.files.size());
+      msg("Find", r.files.subList(0, len), "...");
     }
   }
 
@@ -131,8 +152,8 @@ public class TestFace extends Test {
     dir_eq("/m4/t3");
     dir_eq("/m4/t3/t4");
 
-    notExists("/t2/s1.txt", "/t2/t3/t4/s2.txt", "/t2/t3/t4",
-            "/t2/t3", "/t2");
+    notExists("/t2/s1.txt", "/t2/t3/t4/s2.txt",
+            "/t2/t3/t4", "/t2/t3", "/t2");
 
     del("/m4/s1.txt", "/m4/t3/t4/s2.txt",
             "/m4/t3/t4", "/m4/t3", "/m4");
@@ -225,6 +246,10 @@ public class TestFace extends Test {
 
     delete_non_empty_dir(test_dir);
 
+    //
+    // 立即删除, 本地系统读取不到修改事件
+    //
+    Tool.sleep(1000);
     redis.delete(test_file);
     redis.delete(test_dir);
   }

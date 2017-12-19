@@ -22,9 +22,16 @@ import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.IConstant;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
 import java.io.IOException;
 import java.io.ObjectStreamException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static com.xboson.fs.ui.IUIFileProvider.ROOT;
 
 
 /**
@@ -39,6 +46,9 @@ import java.io.ObjectStreamException;
  */
 public class RedisBase implements IConstant {
 
+  /** 搜索文件名称时最多返回数量, 超过的被忽略 */
+  public static final int MAX_NAME_FILE = IUIFileProvider.MAX_RESULT_COUNT;
+
   public static final char PREFIX_FILE  = '|';
   public static final char PREFIX_DIR   = '?';
   public static final char PREFIX_DEL   = '>';
@@ -51,6 +61,7 @@ public class RedisBase implements IConstant {
   public static final byte[] STRUCT_NAMEB  = STRUCT_NAME.getBytes(CHARSET);
   public static final byte[] CONTENT_NAMEB = CONTENT_NAME.getBytes(CHARSET);
 
+  private FindContentInRedisWithLua content_finder;
   private ThreadLocal<JedisSession> jedis_session;
   private Log log;
 
@@ -58,6 +69,7 @@ public class RedisBase implements IConstant {
   public RedisBase() {
     this.log = LogFactory.create();
     this.jedis_session = new ThreadLocal<>();
+    this.content_finder = new FindContentInRedisWithLua();
   }
 
 
@@ -149,11 +161,60 @@ public class RedisBase implements IConstant {
 
 
   /**
+   * 模糊查询符合路径的完整路径集合, 总是大小写敏感的
+   */
+  public FinderResult findPath(String pathName) {
+    List<String> files = new ArrayList<>();
+    int size = 0;
+
+    try (JedisSession js = openSession()) {
+      String cursor = RedisMesmerizer.BEGIN_OVER_CURSOR;
+      ScanParams sp = new ScanParams();
+      sp.match("*" + pathName + "*");
+
+      for (;;) {
+        ScanResult<Map.Entry<String, String>> sr =
+              js.client.hscan(STRUCT_NAME, cursor, sp);
+
+        for (Map.Entry<String, String> d : sr.getResult()) {
+          files.add(d.getKey());
+          if (++size >= MAX_NAME_FILE)
+            break;
+        }
+
+        if (size >= MAX_NAME_FILE)
+          break;
+
+        cursor = sr.getStringCursor();
+        if (cursor.equals(RedisMesmerizer.BEGIN_OVER_CURSOR))
+          break;
+      }
+    }
+
+    return new FinderResult(files, ROOT, pathName,
+            true, size >= MAX_NAME_FILE);
+  }
+
+
+  /**
+   * 查询文件内容, 返回文件列表, 该方法针对 redis 进行了优化
+   *
+   * @param basePath 开始目录
+   * @param content 要搜索的文本
+   * @param cs true 则启用大小写敏感
+   */
+  public FinderResult findContent(String basePath, String content, boolean cs) {
+    return content_finder.find(basePath, content, cs);
+  }
+
+
+  /**
    * 向队列发送文件修改通知
    */
   public void sendModifyNotice(String path) {
     try (JedisSession js = openSession()) {
       js.client.rpush(QUEUE_NAME, PREFIX_FILE + path);
+      clearContentFinderCache();
     }
   }
 
@@ -188,8 +249,14 @@ public class RedisBase implements IConstant {
   }
 
 
+  public void clearContentFinderCache() {
+    content_finder.clearCache();
+  }
+
+
   /**
-   * 打开一个 redis 事务, 或返回已经打开的事务, 支持嵌套打开
+   * 打开一个 redis 事务, 或返回已经打开的事务, 支持嵌套打开.
+   * 关闭 JedisSession 对象, 不要关闭其中的 client.
    */
   public JedisSession openSession() {
     JedisSession js = jedis_session.get();
@@ -207,6 +274,7 @@ public class RedisBase implements IConstant {
    * 维护线程上打开唯一的 Jedis 连接, 使连接跨越函数调用.
    */
   public class JedisSession implements AutoCloseable {
+    /** 不要直接关闭该对象, 而是关闭 JedisSession */
     public final Jedis client;
     private int nested;
 

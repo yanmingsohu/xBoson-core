@@ -29,6 +29,7 @@ import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.script.Application;
 import com.xboson.util.CodeFormater;
+import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
@@ -64,7 +65,7 @@ public class TestAllApi extends Test implements IVirtualFileSystem {
   /**
    * 即使出错也只是忽略问题, 可能是故意出错, 或是不再使用的 api.
    */
-  private final static Set<String> skip_fail = Tool.arr2set(new String[] {
+  private final static Set<String> skip_fail = JavaConverter.arr2set(new String[] {
           "/test_double/safe",
           "/user_manager/createschema",
   });

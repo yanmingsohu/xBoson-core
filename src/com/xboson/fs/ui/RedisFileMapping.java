@@ -298,6 +298,18 @@ public class RedisFileMapping implements IUIFileProvider {
   }
 
 
+  @Override
+  public FinderResult findPath(String pathName) {
+    return rb.findPath(pathName);
+  }
+
+
+  @Override
+  public FinderResult findContent(String basePath, String content, boolean cs) {
+    return rb.findContent(basePath, content, cs);
+  }
+
+
   /**
    * 从 fs 的父节点开始创建目录, 这会检查一直到目录根节点之前的路径是否都是目录,
    * 最后创建 fs 定义的节点. 在任意一部上失败都会抛出异常.

@@ -20,27 +20,23 @@ import com.xboson.app.AppContext;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
-import com.xboson.db.SqlCachedResult;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.IConstant;
+import com.xboson.util.JavaConverter;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 
@@ -57,9 +53,9 @@ public class UserService extends XService implements IDict, IConstant {
   /**
    * 跳过登录检查的服务名称列表
    */
-  private static final Set<String> skipCheckLogin = Tool.arr2set(new String[] {
-          "get_havinguser",
-  });
+  private static final Set<String> skipCheckLogin = JavaConverter.param2set(
+          "get_havinguser"
+  );
 
 
   private Config cf;

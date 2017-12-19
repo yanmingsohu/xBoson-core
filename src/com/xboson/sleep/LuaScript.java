@@ -17,6 +17,7 @@
 package com.xboson.sleep;
 
 import com.xboson.been.XBosonException;
+import com.xboson.util.JavaConverter;
 import com.xboson.util.StringBufferOutputStream;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisNoScriptException;
@@ -26,6 +27,8 @@ import redis.clients.jedis.exceptions.JedisNoScriptException;
  * 在 Redis 中运行的 Lua 脚本, 线程安全
  */
 public class LuaScript {
+
+  private final static String[] NUL_PARA = new String[0];
 
   private String luaScript;
   private String hash;
@@ -61,13 +64,10 @@ public class LuaScript {
 
 
   /**
-   * 运行脚本
-   *
-   * @param parameters 没有 key
-   * @return
+   * 运行脚本, 无参数
    */
-  public Object eval(String... parameters) {
-    return eval(0, parameters);
+  public Object eval() {
+    return eval(0);
   }
 
 
@@ -80,17 +80,18 @@ public class LuaScript {
    * @param parameters 包含 key 和参数
    * @return 结果集
    */
-  public Object eval(int keyCount, String... parameters) {
+  public Object eval(int keyCount, Object... parameters) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       if (hash == null) {
         _complie(client);
       }
 
       int retry = 2;
+      String[] ps = JavaConverter.toStringArr(parameters, NUL_PARA);
 
       do {
         try {
-          return client.evalsha(hash, keyCount, parameters);
+          return client.evalsha(hash, keyCount, ps);
         } catch (JedisNoScriptException e) {
           _complie(client);
         }
