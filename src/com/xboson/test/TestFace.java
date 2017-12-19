@@ -52,7 +52,6 @@ public class TestFace extends Test {
     path  = "/ui/paas/login.html";
     LogFactory.setLevel(Level.ALL);
 
-    test_sync_files();
     testLocal();
     test_redis_base();
     local_and_redis();
@@ -217,12 +216,6 @@ public class TestFace extends Test {
   public void read_dir() {
     sub("Read dirs");
     dir_eq("/t/paas");
-  }
-
-
-  public void test_sync_files() {
-    sub("SynchronizeFiles");
-    SynchronizeFiles.join();
   }
 
 

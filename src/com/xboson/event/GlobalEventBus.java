@@ -26,8 +26,10 @@ import java.util.*;
 /**
  * 全局事件总线, 线程安全的.
  *
- * 事件是事实的, 一个节点发送的事件将被所有节点接收, 一旦事件发送完成,
+ * 事件是实时的, 一个节点发送的事件将被所有节点接收, 一旦事件发送完成,
  * 在线的所有节点一定会受到事件的副本, 离线节点在上线后一定无法接受该事件.
+ *
+ * 该对象是系统第一个初始化的对象, 也是最后一个有效对象(销毁的对象).
  */
 public class GlobalEventBus {
 
@@ -48,24 +50,30 @@ public class GlobalEventBus {
 
 
   private Map<String, GlobalEventContext> contexts = new HashMap<>();
-  private Log log  = LogFactory.create();
   private SubscribeThread sub_thread;
+  private Log log;
   private long myselfid;
+  private boolean destoryed;
 
 
+  /**
+   * 构造时什么也不做, 初始化都在 init() 中做.
+   */
   private GlobalEventBus() {
   }
 
 
   private void init() {
-    log.info("Initialization Success");
+    log = LogFactory.create();
     myselfid = Tool.nextId();
     sub_thread = new SubscribeThread(this, myselfid);
     sub_thread.start();
+    log.info("Initialization Success");
   }
 
 
   private void destory() {
+    destoryed = true;
     Iterator<GlobalEventContext> it = contexts.values().iterator();
     while (it.hasNext()) {
       try {
@@ -75,11 +83,12 @@ public class GlobalEventBus {
       }
     }
     sub_thread.destory();
-    EmitWithoutCluster.me().destory();
-    sub_thread = null;
-    contexts = null;
+    EventLoop.me().destory();
     log.info("destoryed");
     log.info("---------- xBoson system Gone ----------");
+
+    sub_thread = null;
+    contexts = null;
   }
 
 
@@ -150,8 +159,8 @@ public class GlobalEventBus {
    * @return 忽略返回值
    */
   public synchronized boolean emit(String name, Object data, int type, String info) {
-    if (contexts == null) {
-      throw new IllegalAccessError("The system is offline");
+    if (destoryed) {
+      throw new IllegalAccessError("The system is destoryed");
     }
 
     GlobalEventContext context = getContext(true, name);

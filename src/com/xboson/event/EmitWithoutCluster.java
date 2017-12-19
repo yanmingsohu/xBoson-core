@@ -16,61 +16,26 @@
 
 package com.xboson.event;
 
-import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
-import com.xboson.util.Tool;
+import com.xboson.log.StaticLogProvider;
 
 import javax.naming.event.NamingEvent;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 
 /**
- * 仅在当前进程内发送消息, 退出时自动回收资源.
- * 全局单线程.
+ * 仅在当前进程内发送消息
  */
-public class EmitWithoutCluster {
-
-  private static EmitWithoutCluster instance;
-  private ExecutorService worker;
-  private Log log;
-
+public class EmitWithoutCluster extends StaticLogProvider {
 
   private EmitWithoutCluster() {
-    worker = Executors.newSingleThreadExecutor();
-    log = LogFactory.create();
   }
 
 
-  public static EmitWithoutCluster me() {
-    if (instance == null) {
-      synchronized (EmitWithoutCluster.class) {
-        if (instance == null) {
-          instance = new EmitWithoutCluster();
-        }
-      }
-    }
-    return instance;
+  public static void emit(GlobalListener gl, NamingEvent data, boolean skip_error) {
+    EventLoop.me().add(new PushEvent(gl, data, skip_error));
   }
 
 
-  /**
-   * 必须在 GlobalEventBus.destory() 中调用
-   */
-  void destory() {
-    worker.shutdown();
-    Tool.waitOver(worker);
-    worker = null;
-    log.info("destoryed");
-  }
-
-
-  public void emit(GlobalListener gl, NamingEvent data, boolean skip_error) {
-    worker.execute(new PushEvent(gl, data, skip_error));
-  }
-
-
-  private class PushEvent implements Runnable {
+  private static class PushEvent implements Runnable {
     private NamingEvent data;
     private GlobalListener who;
     private boolean skip_error;
@@ -87,11 +52,19 @@ public class EmitWithoutCluster {
         who.objectChanged(data);
       } catch(Exception err) {
         if (skip_error) {
-          log.warn("Skip error by error");
+          openLog(EmitWithoutCluster.class).warn(
+                  "Skip error by error", err);
         } else {
           QuickSender.emitError(err, this);
         }
       }
     }
+
+
+    @Override
+    public String toString() {
+      return "[ PushEvent: "+ data.getNewBinding() + ", TO: "+ who +" ]";
+    }
   }
+
 }

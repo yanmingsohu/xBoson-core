@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 
 class GlobalEventContext extends InitialContext implements EventContext {
 
-  private EmitWithoutCluster ewc;
   private Set<GlobalListener> listeners;
   private String name;
   private Binding oldbind;
@@ -55,7 +54,6 @@ class GlobalEventContext extends InitialContext implements EventContext {
     this.name      = name;
     this.log       = LogFactory.create(GlobalEventContext.class +"$"+ name);
     this.myselfid  = myselfid;
-    this.ewc       = EmitWithoutCluster.me();
 
     //
     // 带有 sys 开头的消息不会在集群中路由
@@ -141,7 +139,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
     oldbind = newbind;
 
     while (its.hasNext()) {
-      ewc.emit(its.next(), event, skip_error);
+      EmitWithoutCluster.emit(its.next(), event, skip_error);
     }
   }
 

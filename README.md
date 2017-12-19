@@ -12,6 +12,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * UI IDE.
 * SqlServer 分页.
 * 接管 Tomcat.
+* js 脚本多行字符串.
 
 
 # JAR 依赖

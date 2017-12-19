@@ -31,6 +31,8 @@ import com.xboson.util.SysConfig;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.util.Date;
+
 
 /**
  * 只要触摸过, 系统就能初始化 !
@@ -67,6 +69,12 @@ public final class Touch {
     if (state != S_ZERO)
       throw new RuntimeException("cannot start system");
 
+    //
+    // 日志子系统尚未初始化
+    //
+    System.out.println("[" + new Date()
+            + "] [Touch.me] ---------- xBoson system boot -----------\n");
+
     GlobalEventBus.me().emit(Names.initialization, Touch.class);
     __init__process();
     state = S_INITED;
@@ -77,7 +85,9 @@ public final class Touch {
     if (state != S_INITED)
       throw new RuntimeException("cannot exit system");
 
-    LogFactory.create().info("---------- xBoson system leaving -----------");
+    LogFactory.create().info(
+            "---------- xBoson system leaving -----------");
+
     GlobalEventBus.me().emit(Names.exit, Touch.class);
     state = S_EXIT;
   }

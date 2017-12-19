@@ -70,11 +70,17 @@ public interface IConstant extends IDict {
   int DECRYPT_MODE = Cipher.DECRYPT_MODE;
   int ENCRYPT_MODE = Cipher.ENCRYPT_MODE;
 
-  /**
-   * 两个空格到 n 个空格
-   */
-  String SP = "  ";
-  String SPSP = SP+SP;
+  /** 2个空格 */
+  String SP     = "  ";
+  /** 4个空格 */
+  String SPSP   = SP+SP;
+  /** 6个空格 */
   String SPSPSP = SP+SPSP;
-  String ENTER = "\n";
+  /** 换行 */
+  String ENTER  = "\n";
+
+  /** "初始化" */
+  String INITIALIZATION = "Initialization";
+  /** "销毁" */
+  String DESTORYED = "Destoryed";
 }

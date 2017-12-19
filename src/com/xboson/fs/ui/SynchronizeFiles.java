@@ -18,6 +18,7 @@ package com.xboson.fs.ui;
 
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
+import com.xboson.event.EventLoop;
 import com.xboson.event.OnExitHandle;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
@@ -34,59 +35,9 @@ import java.nio.file.attribute.FileTime;
 /**
  * 同步 redis 和本地文件系统中的所有文件
  */
-public final class SynchronizeFiles extends OnExitHandle
-        implements Runnable, FileVisitor<Path> {
+public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
-  private static Thread t = null;
   private static boolean touched;
-  private static final int DELAYED_TIME = 2000;
-
-
-  public static void me() {
-    if (touched) return;
-    touched = true;
-
-    Config cf = SysConfig.me().readConfig();
-    SynchronizeFiles.start(cf.uiUrl);
-
-    if (cf.enableUIFileSync) {
-      SynchronizeFiles.regEarlyMorningClear(cf.uiUrl);
-    }
-  }
-
-
-  /**
-   * 立即启动同步线程, 如果线程已经启动则立即返回,
-   * 同一个时刻只能启动一个同步线程.
-   * @param path 本地文件路径
-   */
-  private synchronized static void start(String path) {
-    if (t != null) return;
-    SynchronizeFiles sf = new SynchronizeFiles(path);
-    t = new Thread(sf);
-    t.setDaemon(true);
-    t.setPriority(Thread.MIN_PRIORITY);
-    t.start();
-  }
-
-
-  /**
-   * 注册到凌晨事件中, 每天凌晨触发同步
-   * @param path 本地文件路径
-   */
-  private static void regEarlyMorningClear(final String path) {
-    SynchronizeFiles sf = new SynchronizeFiles(path);
-    EarlyMorning.add(sf);
-  }
-
-
-  /**
-   * 等待线程结束后返回, 如果线程已经停止或没有启动则立即返回.
-   */
-  public synchronized static void join() {
-    Tool.waitOver(t);
-  }
-
 
   private RedisFileMapping rfm;
   private RedisBase rb;
@@ -96,7 +47,6 @@ public final class SynchronizeFiles extends OnExitHandle
   private int files = 0;
   private int dirs  = 0;
   private int d     = 50;
-  private boolean stop;
 
 
   private SynchronizeFiles(String base) {
@@ -104,17 +54,29 @@ public final class SynchronizeFiles extends OnExitHandle
     this.log  = LogFactory.create();
     this.rb   = new RedisBase();
     this.rfm  = new RedisFileMapping(rb);
-    this.stop = false;
+  }
+
+
+  /**
+   * 该方法仅在第一次调用时注册半夜同步和启动同步, 再次调用什么也不做.
+   */
+  public synchronized static void me() {
+    if (touched) return;
+    touched = true;
+
+    Config cf = SysConfig.me().readConfig();
+    SynchronizeFiles sf = new SynchronizeFiles(cf.uiUrl);
+    EventLoop.me().add(sf);
+
+    if (cf.enableUIFileSync) {
+      EarlyMorning.add(sf);
+    }
   }
 
 
   @Override
   public void run() {
     try (RedisBase.JedisSession close = rb.openSession()) {
-
-      log.info("Delayed <", DELAYED_TIME, "ms >");
-      Tool.sleep(DELAYED_TIME);
-      if (stop) return;
 
       log.info("Start At:", base);
       begin_time = System.currentTimeMillis();
@@ -133,8 +95,6 @@ public final class SynchronizeFiles extends OnExitHandle
       long used = System.currentTimeMillis() - begin_time;
       log.info("Sync Over,", files,
                "files and", dirs, "directorys, use", used, "ms");
-      t = null;
-      removeExitListener();
     }
   }
 
@@ -156,9 +116,6 @@ public final class SynchronizeFiles extends OnExitHandle
     rfm.makeDir(vpath, false);
     ++dirs;
 
-    if (stop) {
-      return FileVisitResult.SKIP_SUBTREE;
-    }
     return FileVisitResult.CONTINUE;
   }
 
@@ -213,12 +170,5 @@ public final class SynchronizeFiles extends OnExitHandle
       log.error(e);
     }
     return FileVisitResult.CONTINUE;
-  }
-
-
-  @Override
-  protected void exit() {
-    stop = true;
-    Tool.waitOver(t);
   }
 }

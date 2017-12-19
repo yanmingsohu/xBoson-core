@@ -25,8 +25,8 @@ import java.util.Map;
 
 
 /**
- * 线程安全的, 创建一个即可.
- * 带有缓存功能
+ * 在 redis 中检索所有文件, 寻找指定的文本内容.
+ * 线程安全的, 创建一个即可, 带有缓存功能.
  */
 public class FindContentInRedisWithLua {
 

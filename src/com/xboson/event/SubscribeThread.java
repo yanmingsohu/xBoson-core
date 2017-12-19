@@ -24,6 +24,9 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 
+/**
+ * 在独立的线程中取 redis 消息队列, 并压入另一个线程中去执行.
+ */
 class SubscribeThread extends JedisPubSub implements Runnable {
 
   public final static String SUBSCRIBE_PATTERN = Names.CHANNEL_PREFIX + "*";
@@ -54,7 +57,11 @@ class SubscribeThread extends JedisPubSub implements Runnable {
   }
 
 
-  public void destory() {
+  /**
+   * 必须且只能在 GlobalEventBus.destory() 中调用
+   * @see GlobalEventBus
+   */
+  void destory() {
     running = false;
     punsubscribe();
     Tool.waitOver(thread);

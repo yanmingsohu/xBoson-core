@@ -16,7 +16,7 @@
 
 package com.xboson.event.timer;
 
-import com.xboson.log.LogFactory;
+import com.xboson.log.StaticLogProvider;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -26,7 +26,7 @@ import java.util.TimerTask;
 /**
  * 每天凌晨都会执行, 准确时间是在明天 00:01:00 执行.
  */
-public class EarlyMorning {
+public class EarlyMorning extends StaticLogProvider {
 
   public static final Date first;
   public static final long hour24 = 24 * 60 * 60 * 1000;
@@ -47,15 +47,23 @@ public class EarlyMorning {
   }
 
 
+  /**
+   * 注册到凌晨事件中, 每天凌晨触发同步
+   * @param task
+   */
   public static void add(final TimerTask task) {
     __add(task);
-    LogFactory.create(EarlyMorning.class).info("DO", task, "Tomorrow");
+    openLog(EarlyMorning.class).info("DO", task, "Tomorrow");
   }
 
 
+  /**
+   * 注册到凌晨事件中, 每天凌晨触发同步
+   * @param task
+   */
   public static void add(final Runnable task) {
     __add(new RunnableWrap(task));
-    LogFactory.create(EarlyMorning.class).info("DO", task, "Tomorrow");
+    openLog(EarlyMorning.class).info("DO", task, "Tomorrow");
   }
 
 

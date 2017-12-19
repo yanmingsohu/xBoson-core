@@ -23,7 +23,7 @@ import com.thoughtworks.xstream.XStream;
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
+import com.xboson.log.StaticLogProvider;
 import com.xboson.script.lib.Uuid;
 
 import java.io.*;
@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
-public final class Tool {
+public final class Tool extends StaticLogProvider {
 
   private static final ThreadLocal<SimpleDateFormat>
           dataformat = new ThreadLocal<>();
@@ -50,7 +50,6 @@ public final class Tool {
   private static Moshi moshi;
   private static XStream xml;
   private static com.xboson.script.lib.Path p = com.xboson.script.lib.Path.me;
-  private static Log ___log;
 
   private Tool() {}
 
@@ -258,7 +257,7 @@ public final class Tool {
     try {
       if (c != null) c.close();
     } catch(Exception e) {
-      openLog().debug(e);
+      openLog(Tool.class).debug(e);
     }
   }
 
@@ -267,7 +266,7 @@ public final class Tool {
     try {
       if (c != null) c.close();
     } catch(Exception e) {
-      openLog().debug(e);
+      openLog(Tool.class).debug(e);
     }
   }
 
@@ -279,19 +278,19 @@ public final class Tool {
     try {
       if (t != null) t.join();
     } catch(Exception e) {
-      openLog().debug(e);
+      openLog(Tool.class).debug(e);
     }
   }
 
 
   public static void waitOver(ExecutorService s) {
+    Log log = openLog(Tool.class);
     try {
-      Log log = openLog();
       while (! s.awaitTermination(2, TimeUnit.SECONDS)) {
         log.debug("Wait Executor Termination:", s);
       }
     } catch (InterruptedException e) {
-      openLog().debug(e);
+      log.debug(e);
     }
   }
 
@@ -450,7 +449,7 @@ public final class Tool {
     try {
       Thread.sleep(time);
     } catch(Exception e) {
-      openLog().debug(e);
+      openLog(Tool.class).debug(e);
     }
   }
 
@@ -555,18 +554,4 @@ public final class Tool {
     }
   }
 
-
-  /**
-   * 返回基于工具类的日志, 不要在外部调用.
-   */
-  static final Log openLog() {
-    if (___log == null) {
-      synchronized (Tool.class) {
-        if (___log == null) {
-          ___log = LogFactory.create();
-        }
-      }
-    }
-    return ___log;
-  }
 }
