@@ -18,6 +18,7 @@ package com.xboson.fs.ui;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Path;
+import com.xboson.util.IConstant;
 
 import java.io.Serializable;
 import java.util.*;
@@ -140,6 +141,11 @@ public class FileStruct implements Serializable {
       throw new BadPath("Is not file");
     }
     return file_content;
+  }
+
+
+  public String getContentToString() {
+    return new String(file_content, IConstant.CHARSET);
   }
 
 

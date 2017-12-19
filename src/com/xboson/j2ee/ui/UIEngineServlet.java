@@ -115,6 +115,12 @@ public class UIEngineServlet extends HttpServlet {
 
     try {
       FileStruct fs = file_provider.readAttribute(path);
+
+      if (fs == null) {
+        resp.sendError(400, path);
+        return;
+      }
+
       if (fs.isFile()) {
         file_provider.readFileContent(fs);
 
