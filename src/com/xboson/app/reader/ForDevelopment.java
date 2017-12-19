@@ -17,6 +17,7 @@
 package com.xboson.app.reader;
 
 import com.xboson.app.ApiPath;
+import com.xboson.app.XjOrg;
 import com.xboson.been.XBosonException;
 import com.xboson.db.SqlResult;
 import com.xboson.fs.FileAttr;
@@ -28,11 +29,11 @@ import java.sql.SQLException;
 public class ForDevelopment extends AbsReadScript {
 
   @Override
-  public ScriptFile read(String org, String app, String mod, String api) {
+  public ScriptFile read(XjOrg org, String app, String mod, String api) {
     log.debug("Script From DB", mod, api);
     Object[] parm = new Object[] { app, mod, api };
 
-    try (SqlResult res = getCurrentOrg().query("open_api.sql", parm)) {
+    try (SqlResult res = org.query("open_api.sql", parm)) {
       ResultSet rs = res.getResult();
       FileAttr attr = new FileAttr();
 

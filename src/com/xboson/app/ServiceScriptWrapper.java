@@ -46,6 +46,9 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
   private static final byte[] warp1 =
           "\n});".getBytes(CHARSET);
 
+  /**
+   * js 全局变量, 可以直接引用.
+   */
   private static final Class[] libs = new Class[] {
           MapImpl.class,
           DateImpl.class,
@@ -53,6 +56,10 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
           ModuleHandleContext.class,
   };
 
+
+  /**
+   * 初始化脚本, 在创建沙箱时被调用, 可以绑定全局变量
+   */
   private static final String[] configuration_script = new String[] {
           "lib/array_sort_comparator.js",
           "lib/sys_functions_impl.js",
@@ -66,10 +73,22 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
 
   public ServiceScriptWrapper() throws IOException {
-    BasicEnvironment basic = EnvironmentFactory.createBasic();
+    BasicEnvironment basic = EnvironmentFactory.createEmptyBasic();
+    SysModules sys_mod = EnvironmentFactory.createDefaultSysModules();
+    regModules(sys_mod);
     basic.setEnvObjectList(libs);
+    basic.insertConfiger(sys_mod);
     basic.insertConfiger(this);
     this.env = basic;
+  }
+
+
+  /**
+   * 注册 js 模块, 在脚本中通过 require(..) 来引入
+   */
+  private void regModules(SysModules mod) {
+    mod.regClass("uifs",
+            UifsImpl.class);
   }
 
 

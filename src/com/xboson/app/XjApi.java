@@ -16,6 +16,7 @@
 
 package com.xboson.app;
 
+import com.xboson.app.reader.AbsReadScript;
 import com.xboson.app.reader.ScriptFile;
 import com.xboson.been.CallData;
 import com.xboson.been.Module;
@@ -57,7 +58,8 @@ public class XjApi extends OnFileChangeHandle implements IDict {
 
 
   private void readApiContent() {
-    file = org.getScriptReader().read(app.getID(), mod.id(), id);
+    AbsReadScript reader = org.getScriptReader();
+    file = reader.read(org, app.getID(), mod.id(), id);
   }
 
 

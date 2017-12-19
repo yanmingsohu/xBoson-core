@@ -33,48 +33,18 @@ import com.xboson.util.IConstant;
  */
 public abstract class AbsReadScript implements IConstant, IApiConstant {
 
-  private ThreadLocal<XjOrg> thread_org;
   protected final Log log;
 
 
   public AbsReadScript() {
-    thread_org = new ThreadLocal<>();
     log = LogFactory.create();
-  }
-
-
-  /**
-   * 在线程变量上绑定 org 对象
-   */
-  public void bindXjorg(XjOrg org) {
-    thread_org.set(org);
-  }
-
-
-  /**
-   * 返回在当前线程上的 org
-   */
-  protected XjOrg getCurrentOrg() {
-    XjOrg o = thread_org.get();
-    if (o == null) {
-      throw new XBosonException("Cannot get ORG object from current Thread");
-    }
-    return o;
-  }
-
-
-  /**
-   * @see #read(String, String, String, String)
-   */
-  public ScriptFile read(String app, String mod, String api) {
-    return read(AppContext.me().originalOrg(), app, mod, api);
   }
 
 
   /**
    * 必须实现该方法, 返回已经打过补丁的脚本源代码.
    */
-  public abstract ScriptFile read(String org, String app, String mod, String api);
+  public abstract ScriptFile read(XjOrg org, String app, String mod, String api);
 
 
   /**

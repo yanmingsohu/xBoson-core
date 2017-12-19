@@ -216,7 +216,6 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
 
 
   public AbsReadScript getScriptReader() {
-    script_reader.bindXjorg(this);
     return script_reader;
   }
 }

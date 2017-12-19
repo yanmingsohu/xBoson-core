@@ -18,6 +18,7 @@ package com.xboson.app.reader;
 
 
 import com.xboson.app.ApiPath;
+import com.xboson.app.XjOrg;
 import com.xboson.fs.FileAttr;
 import com.xboson.sleep.RedisMesmerizer;
 import redis.clients.jedis.Jedis;
@@ -31,7 +32,7 @@ public class ForProduction extends ForDevelopment {
 
 
   @Override
-  public ScriptFile read(String org, String app, String mod, String api) {
+  public ScriptFile read(XjOrg org, String app, String mod, String api) {
     log.debug("Script From Redis", mod, api);
 
     try (Jedis j = RedisMesmerizer.me().open()) {

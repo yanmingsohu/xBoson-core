@@ -31,7 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * require 方法提供的系统模块
+ * require 方法提供的系统模块,
+ * 每个环境只支持一个 SysModules 模块.
  */
 public class SysModules implements ISysModuleProvider {
 
