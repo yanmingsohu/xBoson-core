@@ -24,7 +24,7 @@ import java.util.Map;
 
 
 /**
- * 在外部模块和服务脚本上下文之间传递对象
+ * 在外部模块和服务脚本上下文之间传递对象, 线程级别的.
  */
 public class ModuleHandleContext implements IJSObject {
 
@@ -44,12 +44,7 @@ public class ModuleHandleContext implements IJSObject {
    * 在脚本中调用, 获取当前脚本上下文中 name 对象的引用
    */
   public Object get(String name) {
-    Object modimpl = getMap().get(name);
-    if (modimpl == null) {
-      throw new XBosonException.NotExist("Cannot get '" + name
-          +" Module, Maybe current user not enough authority.");
-    }
-    return modimpl;
+    return _get(name);
   }
 
 
@@ -58,6 +53,16 @@ public class ModuleHandleContext implements IJSObject {
    */
   public static void register(String name, Object val) {
     getMap().put(name, val);
+  }
+
+
+  public static Object _get(String name) {
+    Object modimpl = getMap().get(name);
+    if (modimpl == null) {
+      throw new XBosonException.NotExist("Cannot get '" + name
+              +" Module, Maybe current user not enough authority.");
+    }
+    return modimpl;
   }
 
 

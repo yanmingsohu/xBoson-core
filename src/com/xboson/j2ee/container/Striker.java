@@ -26,6 +26,7 @@ import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.xboson.app.ErrorCodeMessage;
 import com.xboson.been.Config;
 import com.xboson.been.ResponseRoot;
 import com.xboson.been.XBosonException;
@@ -151,7 +152,10 @@ public class Striker extends HttpFilter {
     do {
       if (e instanceof XBosonException) {
         XBosonException xe = (XBosonException) e;
-        jr.setCode(xe.getCode());
+        int code = xe.getCode();
+        String msg = ErrorCodeMessage.getNul(code);
+        if (msg == null) msg = e.getMessage();
+        jr.setMessage(msg, code);
         break;
       }
       e = e.getCause();

@@ -28,11 +28,8 @@ import java.util.Set;
 public class UifsImpl {
 
 
-  private ModuleHandleContext handle = new ModuleHandleContext();
-
-
   public Object open() {
-    boolean runOnSysOrg = (boolean) handle.get("runOnSysOrg");
+    boolean runOnSysOrg = (boolean) ModuleHandleContext._get("runOnSysOrg");
     if (!runOnSysOrg) {
       throw new XBosonException.NotImplements("只能在平台机构中引用");
     }

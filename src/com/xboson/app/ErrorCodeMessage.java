@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public class ErrorCodeMessage {
 
-  public final static String UNKNOW_MSG = "未知的错误";
+  public final static String UNKNOW_MSG = "错误代码:";
 
 
   private final static Map<Integer, String> mapping
@@ -80,10 +80,18 @@ public class ErrorCodeMessage {
 
 
   /**
-   * 通过错误码返回错误消息
+   * 通过错误码返回错误消息, 永远不返回 null
    */
   public static String get(int code) {
     String msg = mapping.get(code);
-    return msg == null ? UNKNOW_MSG : msg;
+    return msg == null ? UNKNOW_MSG+code : msg;
+  }
+
+
+  /**
+   * 如果错误码未定义返回 null
+   */
+  public static String getNul(int code) {
+    return mapping.get(code);
   }
 }

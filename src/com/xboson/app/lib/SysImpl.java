@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.app.ErrorCodeMessage;
+import com.xboson.app.XjApp;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
@@ -75,13 +76,15 @@ public class SysImpl extends DateImpl {
   private ScriptObjectMirror transformTreeDataFunction;
   private ScriptObjectMirror getRelatedTreeDataFunction;
   private ScriptObjectMirror setRetListFunction;
+  private Map<String, Object> appCache;
 
 
-  public SysImpl(CallData cd, ConnectConfig orgdb) {
+  public SysImpl(CallData cd, ConnectConfig orgdb, XjApp app) {
     super(cd);
     this.orgdb = orgdb;
     this.request = new RequestImpl(cd);
     this.requestParameterMap = new RequestParametersImpl(cd);
+    this.appCache = app.getCacheData();
   }
 
 
@@ -242,10 +245,17 @@ public class SysImpl extends DateImpl {
 
 
   public Object getUserOrgList(String userid) throws Exception {
-    ScriptObjectMirror retList = createJSList();
+    String cacheKey = "CACHE_ORG:" + userid;
+    ScriptObjectMirror retList = (ScriptObjectMirror) appCache.get(cacheKey);
+    if (retList != null) {
+      return unwrap(retList);
+    }
+
+    retList = createJSList();
     try (SqlResult sr = SqlReader.query(ORG_SQL_NAME, orgdb, userid)) {
       ResultSet rs = sr.getResult();
       copyToList(retList, rs);
+      appCache.put(cacheKey, retList);
     }
     return unwrap(retList);
   }

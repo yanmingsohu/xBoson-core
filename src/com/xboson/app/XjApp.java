@@ -31,6 +31,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 
 /**
@@ -43,11 +47,13 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
   private XjOrg org;
   private String name;
   private String id;
+  private Map<String, Object> cacheData;
 
 
   XjApp(XjOrg org, String id) {
     this.org = org;
     this.id = id;
+    this.cacheData = Collections.synchronizedMap(new WeakHashMap<>());
     init_app();
 
     try {
@@ -68,7 +74,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
 
 
   void run(CallData cd, Module jsmodule, XjApi api) {
-    ssw.run(cd, jsmodule, org, api);
+    ssw.run(cd, jsmodule, org, this, api);
   }
 
 
@@ -89,7 +95,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
         }
         name = rs.getString("appnm");
       } else {
-        throw new XBosonException("找不到应用 " + id);
+        throw new XBosonException("找不到应用 " + id, 1202);
       }
     } catch (SQLException e) {
       throw new XBosonException(e);
@@ -145,4 +151,13 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
     return "Script-FS";
   }
 
+
+  /**
+   * 应用范围内的缓存.
+   * 返回的集合用于在脚本中保存一些常用数据, 支持多线程.
+   * 不能保证一定能取出之前压入的值.
+   */
+  public Map<String, Object> getCacheData() {
+    return cacheData;
+  }
 }

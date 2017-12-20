@@ -117,7 +117,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
    * @param org 机构
    * @param api 持有源代码
    */
-  public void run(CallData cd, Module jsmod, XjOrg org, XjApi api) {
+  public void run(CallData cd, Module jsmod, XjOrg org, XjApp app, XjApi api) {
     ScriptObjectMirror call = (ScriptObjectMirror) jsmod.exports;
 
     if (! call.isFunction() )
@@ -128,7 +128,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
     try (CloseableSet cs = new CloseableSet()) {
       SqlImpl sql     = cs.add(new SqlImpl(cd, orgdb));
-      SysImpl sys     = new SysImpl(cd, orgdb);
+      SysImpl sys     = new SysImpl(cd, orgdb, app);
       CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
       SeImpl se       = runOnSysOrg
