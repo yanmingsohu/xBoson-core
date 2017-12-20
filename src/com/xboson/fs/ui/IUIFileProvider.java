@@ -124,7 +124,7 @@ public interface IUIFileProvider {
 
 
   /**
-   * 模糊查询符合路径的完整路径集合, 总是大小写敏感的
+   * 模糊查询符合路径的完整路径集合, 总是大小写敏感的, 自行添加匹配模式.
    */
   FinderResult findPath(String pathName);
 

@@ -175,7 +175,15 @@ public class XBosonException extends RuntimeException
      * @param fname 函数的完整名字
      */
     public NotImplements(String fname) {
-      super("The " + fname + "() is not implemented yet");
+      this(fname, NULL_STR);
+      setCode(4);
+    }
+    /**
+     * @param fname 函数的完整名字
+     * @param why 未实现的原因
+     */
+    public NotImplements(String fname, String why) {
+      super("The " + fname + "() is not implemented yet; " + why);
       setCode(4);
     }
   }

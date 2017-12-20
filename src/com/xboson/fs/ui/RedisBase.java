@@ -161,7 +161,8 @@ public class RedisBase implements IConstant {
 
 
   /**
-   * 模糊查询符合路径的完整路径集合, 总是大小写敏感的
+   * 查询符合路径的完整路径集合, 总是大小写敏感的, 可以使用匹配模式.
+   * 默认只返回完全符合 pathName 的路径名.
    */
   public FinderResult findPath(String pathName) {
     List<String> files = new ArrayList<>();
@@ -170,7 +171,7 @@ public class RedisBase implements IConstant {
     try (JedisSession js = openSession()) {
       String cursor = RedisMesmerizer.BEGIN_OVER_CURSOR;
       ScanParams sp = new ScanParams();
-      sp.match("*" + pathName + "*");
+      sp.match(pathName);
 
       for (;;) {
         ScanResult<Map.Entry<String, String>> sr =

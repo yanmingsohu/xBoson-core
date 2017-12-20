@@ -37,8 +37,14 @@ import java.util.Map;
 public class SysModules implements ISysModuleProvider {
 
   private Log log = LogFactory.create();
+
+  /** 未实例化的 java 对象类型的 js 模块 */
   private Map<String, Class<?>> names;
+
+  /** 直接注册的 java 对象类型的 js 模块, 已经实例化 */
   private Map<String, Object> instances;
+
+  /** js 模块源代码 */
   private Map<String, String> jscode;
 
 

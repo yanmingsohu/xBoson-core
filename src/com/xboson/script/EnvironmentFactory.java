@@ -20,6 +20,7 @@ import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Console;
 import com.xboson.script.lib.Path;
 import com.xboson.script.lib.Uuid;
+import com.xboson.util.SysConfig;
 
 import java.io.IOException;
 
@@ -52,6 +53,15 @@ public class EnvironmentFactory {
    */
   public static SysModules createDefaultSysModules() throws IOException {
     SysModules sysmod = new SysModules();
+    return setupNodeModules(sysmod);
+  }
+
+
+  /**
+   * 将默认模块加载到 sys 中, 并返回 sysmod.
+   */
+  public static SysModules setupNodeModules(SysModules sysmod)
+          throws IOException {
 
     sysmod.regClass("console",
             Console.class);

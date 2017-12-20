@@ -78,6 +78,8 @@ public interface IConstant extends IDict {
   String SPSPSP = SP+SPSP;
   /** 换行 */
   String ENTER  = "\n";
+  /** 空字符串 */
+  String NULL_STR = "";
 
   /** "初始化" */
   String INITIALIZATION = "Initialization";

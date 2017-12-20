@@ -16,13 +16,103 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.been.XBosonException;
+import com.xboson.fs.ui.FileStruct;
+import com.xboson.fs.ui.FinderResult;
+import com.xboson.fs.ui.IUIFileProvider;
 import com.xboson.fs.ui.UIFileFactory;
+
+import java.util.Set;
 
 
 public class UifsImpl {
 
+
+  private ModuleHandleContext handle = new ModuleHandleContext();
+
+
   public Object open() {
-    return UIFileFactory.openWithConfig();
+    boolean runOnSysOrg = (boolean) handle.get("runOnSysOrg");
+    if (!runOnSysOrg) {
+      throw new XBosonException.NotImplements("只能在平台机构中引用");
+    }
+    return new Wrap();
   }
 
+
+  /**
+   * 包装器防止调用不在接口中的方法
+   */
+  private class Wrap implements IUIFileProvider {
+    private final IUIFileProvider o;
+
+    private Wrap() {
+      o = UIFileFactory.openWithConfig();
+    }
+
+    @Override
+    public byte[] readFile(String path) {
+      return o.readFile(path);
+    }
+
+
+    @Override
+    public void readFileContent(FileStruct fs) {
+      o.readFileContent(fs);
+    }
+
+
+    @Override
+    public long modifyTime(String path) {
+      return o.modifyTime(path);
+    }
+
+
+    @Override
+    public FileStruct readAttribute(String path) {
+      return o.readAttribute(path);
+    }
+
+
+    @Override
+    public void makeDir(String path) {
+      o.makeDir(path);
+    }
+
+
+    @Override
+    public void writeFile(String path, byte[] bytes) {
+      o.writeFile(path, bytes);
+    }
+
+
+    @Override
+    public void delete(String file) {
+      o.delete(file);
+    }
+
+
+    @Override
+    public void move(String src, String to) {
+      o.move(src, to);
+    }
+
+
+    @Override
+    public Set<FileStruct> readDir(String path) {
+      return o.readDir(path);
+    }
+
+
+    @Override
+    public FinderResult findPath(String pathName) {
+      return o.findPath(pathName);
+    }
+
+
+    @Override
+    public FinderResult findContent(String basePath, String content, boolean cs) {
+      return o.findContent(basePath, content, cs);
+    }
+  }
 }

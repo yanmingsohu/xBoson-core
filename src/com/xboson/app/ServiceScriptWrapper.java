@@ -124,19 +124,21 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       throw new XBosonException("Script wrapper fail.");
 
     ConnectConfig orgdb = org.getOrgDb();
+    boolean runOnSysOrg = org.isSysORG();
 
     try (CloseableSet cs = new CloseableSet()) {
       SqlImpl sql     = cs.add(new SqlImpl(cd, orgdb));
       SysImpl sys     = new SysImpl(cd, orgdb);
       CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
-      SeImpl se       = (org.isSysORG())
+      SeImpl se       = runOnSysOrg
               ? cs.add(new SeImpl(cd, sys, org.id()))
               : null;
 
       sql._setSysRef(sys);
       ModuleHandleContext.register("sql", sql);
       ModuleHandleContext.register("se",  se);
+      ModuleHandleContext.register("runOnSysOrg", runOnSysOrg);
 
       call.call(jsmod.exports, sys, sql, cache, http, se);
 
