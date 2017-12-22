@@ -19,7 +19,6 @@ package com.xboson.script;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.nio.ByteBuffer;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -29,10 +28,7 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
-import com.xboson.script.safe.SafeBinding;
-import com.xboson.util.IConstant;
 import com.xboson.util.Tool;
-import sun.font.Script;
 
 
 /**
@@ -89,16 +85,16 @@ public class Sandbox {
   /**
    * 将代码包装到函数中, 并且使用 nodejs 语法
    */
-  public WarpdScript warp(String filename, String code) throws ScriptException {
-    return new WarpdScript(this, code, filename);
+  public WrapJavaScript warp(String filename, String code) throws ScriptException {
+    return new WrapJavaScript(code, filename);
   }
 
 
   /**
    * 不指定文件名
    */
-  public WarpdScript warp(String code) throws ScriptException {
-    return new WarpdScript(this, code, "<warp>");
+  public WrapJavaScript warp(String code) throws ScriptException {
+    return new WrapJavaScript(code, "<wrap>");
   }
 
 

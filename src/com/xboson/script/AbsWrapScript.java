@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月5日 下午4:27:04
-// 原始文件路径: xBoson/src/com/xboson/script/ICodeRunner.java
+// 文件创建日期: 17-12-22 下午3:18
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/script/AbsWrapScript.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -19,17 +19,46 @@ package com.xboson.script;
 import com.xboson.been.Module;
 
 
-public interface ICodeRunner {
+/**
+ * 对 js 脚本的封装, 持有一个 Module 对象.
+ */
+public abstract class AbsWrapScript {
+
+  protected final Module module;
+  protected final String filename;
+
+
+  public AbsWrapScript(String filename) {
+    this.module = new Module();
+    this.filename = filename;
+  }
+
 
   /**
-   * 通过该方法运行文件中的代码
+   * 编译当前脚本
    */
-  Module run(String path);
+  public abstract void compile(Sandbox box);
 
 
-	/**
-	 * 运行一个打包好的脚本
-	 */
-  Module run(AbsWrapScript ws);
+  /**
+   * 运行编译好的脚本, 并初始化模块对象
+   */
+  public abstract Object initModule(ICodeRunner crun);
+
+
+  /**
+   * 返回模块, 即使没有初始化, 也会返回没有属性的 Module.
+   */
+  public Module getModule() {
+    return module;
+  }
+
+
+  /**
+   * 返回文件名
+   */
+  public String getFilename() {
+    return filename;
+  }
 
 }

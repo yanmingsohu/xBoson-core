@@ -25,29 +25,31 @@ import java.util.Map;
 import javax.script.ScriptException;
 
 import com.xboson.been.Module;
+import com.xboson.been.XBosonException;
 import com.xboson.fs.IVirtualFileSystem;
+
 
 /**
  * 应用存储在二级目录中, 第一级是模块名, 第二级是接口名
  * 不直接支持多线程.
  */
 public class Application implements ICodeRunner {
-	
-	private Sandbox sandbox;
-	private IVirtualFileSystem vfs;
-	private Map<String, WarpdScript> modcache;
 
-	
-	public Application(IEnvironment env, IVirtualFileSystem vfs) throws ScriptException {
-		this.vfs = vfs;
-		modcache = Collections.synchronizedMap(new HashMap<>());
-		sandbox  = SandboxFactory.create();
-		
-		sandbox.bootstrap();
-		env.config(sandbox, this);
-		sandbox.bootstrapEnvReady();
-		sandbox.bootstrapEnd();
-	}
+  private Sandbox sandbox;
+  private IVirtualFileSystem vfs;
+  private Map<String, AbsWrapScript> module_cache;
+
+
+  public Application(IEnvironment env, IVirtualFileSystem vfs) throws ScriptException {
+    this.vfs = vfs;
+    module_cache = Collections.synchronizedMap(new HashMap<>());
+    sandbox  = SandboxFactory.create();
+
+    sandbox.bootstrap();
+    env.config(sandbox, this);
+    sandbox.bootstrapEnvReady();
+    sandbox.bootstrapEnd();
+  }
 
 
   /**
@@ -55,52 +57,69 @@ public class Application implements ICodeRunner {
    * @param configurator
    * @throws ScriptException
    */
-	public void config(IConfigSandbox configurator) throws ScriptException {
+  public void config(IConfigSandbox configurator) throws ScriptException {
     configurator.config(sandbox, this);
   }
-	
-	
-	/**
-	 * 运行路径上的脚本, 返回脚本的运行结果.
-	 * path 参数同时也是缓存 Module 时使用的主键.
-	 */
-	public Module run(String path) throws IOException, ScriptException {
-		if (path.charAt(0) != '/')
-			throw new IOException("path must begin with '/' " + path);
-		
-		WarpdScript ws = modcache.get(path);
-		if (ws != null) {
-			return ws.getModule();
-		}
-		
-		ByteBuffer buf = vfs.readFile(path);
-		if (buf == null) {
-			throw new IOException("get null code " + path);
-		}
 
-		ws = new WarpdScript(sandbox, buf, path);
-		ws.setCodeRunner(this);
-		modcache.put(path, ws);
-		
-		Module mod = ws.getModule();
-		mod.filename = path;
-		mod.id = '/' + vfs.getID() + path;
-		mod.paths = new String[] { "/js_modules" };
 
-		ws.call();
-		
-		return mod;
-	}
-	
-	
-	/**
-	 * 删除路径对应的 js 模块, 这会引起脚本重编译.
-	 */
-	public synchronized void changed(String path) {
-		WarpdScript ws = modcache.get(path);
-		if (ws != null) {
-			ws.getModule().loaded = false;
-			modcache.remove(path);
-		}
-	}
+  /**
+   * 运行路径上的脚本, 返回脚本的运行结果.
+   * path 参数同时也是缓存 Module 时使用的主键.
+   */
+  public Module run(String path) {
+    AbsWrapScript ws = module_cache.get(path);
+    if (ws != null) {
+      return ws.getModule();
+    }
+
+    try {
+      ByteBuffer buf = vfs.readFile(path);
+      if (buf == null) {
+        throw new XBosonException.IOError(
+                "Cannot found "+ path +", null code");
+      }
+
+      ws = new WrapJavaScript(buf, path);
+      return run(ws);
+
+    } catch (IOException e) {
+      throw new XBosonException.IOError(
+              "Cannot found "+ path +", "+ e);
+    }
+  }
+
+
+  /**
+   * 运行已经初始化了的脚本对象, 该对象尚未编译.
+   */
+  public Module run(AbsWrapScript ws) {
+    String path = ws.getFilename();
+
+    ws.compile(sandbox);
+    module_cache.put(path, ws);
+
+    Module mod = ws.getModule();
+    mod.filename = path;
+    mod.id = '/'+ vfs.getID() +'/'+ path;
+    mod.paths = new String[] {
+            "/js_modules",
+            "/node_modules",
+    };
+    ws.initModule(this);
+    mod.loaded = true;
+
+    return mod;
+  }
+
+
+  /**
+   * 删除路径对应的 js 模块, 这会引起脚本重编译.
+   */
+  public synchronized void changed(String path) {
+    AbsWrapScript ws = module_cache.get(path);
+    if (ws != null) {
+      ws.getModule().loaded = false;
+      module_cache.remove(path);
+    }
+  }
 }

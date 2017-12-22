@@ -54,10 +54,10 @@ context.__boot_over = __boot_over;
 
 function __env_ready() {
   process.binding = function(n) {
-    return sys_module_provider.getInstance('sys/' + n);
+    return sys_module_provider.getModule('sys/' + n);
   };
 
-  pathlib = sys_module_provider.getInstance('path');
+  pathlib = sys_module_provider.getModule('path');
   context.JSON = process.binding('json').warp(nativeJSON);
 }
 
@@ -66,7 +66,7 @@ function __boot_over() {
   delete context.__set_sys_module_provider;
   delete context.__env_ready;
   delete context.__boot_over;
-  context.Buffer = sys_module_provider.getInstance('buffer').Buffer;
+  context.Buffer = sys_module_provider.getModule('buffer').Buffer;
   Object.freeze(context);
 }
 
@@ -98,7 +98,7 @@ function __warp_main(fn) { // 主函数包装器
 	    return dirname;
 
 	  if (!filename)
-	    return null;
+	    return '.';
 
     dirname = filename.split("/");
     if (dirname.length > 2) {
@@ -128,7 +128,7 @@ function __warp_main(fn) { // 主函数包装器
         throw new Error("module provider not set");
       }
 
-      var sysmod = sys_module_provider.getInstance(path);
+      var sysmod = sys_module_provider.getModule(path);
       if (!sysmod) {
         throw new Error("cannot found module '" + path + "'");
       }

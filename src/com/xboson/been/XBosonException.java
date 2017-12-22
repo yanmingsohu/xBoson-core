@@ -264,6 +264,16 @@ public class XBosonException extends RuntimeException
   }
 
 
+  /**
+   * 系统已经关闭后, 掉用子系统功能抛出的异常
+   */
+  static public class Shutdown extends Closed {
+    public Shutdown() {
+      super("System");
+    }
+  }
+
+
   static public class IOError extends XBosonException {
     private String path;
 
@@ -310,4 +320,5 @@ public class XBosonException extends RuntimeException
       super("Is Directory", path);
     }
   }
+
 }

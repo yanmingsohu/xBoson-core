@@ -25,7 +25,7 @@ assert(__filename.indexOf(__dirname) == 0, "bad __dirname or __filename");
 
 assert.throws(function() {
   require("not_exist_module");
-}, /cannot found.*not_exist_module/);
+}, /[cC]annot found.*not_exist_module/);
 
 
 //

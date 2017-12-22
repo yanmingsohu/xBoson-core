@@ -16,6 +16,7 @@
 
 package com.xboson.event;
 
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.IConstant;
@@ -99,6 +100,8 @@ public class EventLoop implements ThreadFactory, IConstant {
     public void run() {
       try {
         r.run();
+      } catch (XBosonException.Shutdown e) {
+        log.warn("Run Task ["+ r +"],", e);
       } catch (Throwable t) {
         log.error("Run Task ["+ r +"],", Tool.allStack(t));
       }

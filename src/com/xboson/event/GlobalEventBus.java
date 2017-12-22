@@ -16,6 +16,7 @@
 
 package com.xboson.event;
 
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.Tool;
@@ -107,14 +108,20 @@ public class GlobalEventBus {
    * @param name 事件名称
    * @param listener 监听器对象
    */
-  public synchronized void on(String name, GlobalListener listener) {
+  public void on(String name, GlobalListener listener) {
+    if (destoryed) {
+      throw new XBosonException.Shutdown();
+    }
+
     if (name == null)
       throw new NullPointerException("name");
     if (listener == null)
       throw new NullPointerException("listener");
 
-    GlobalEventContext context = getContext(true, name);
-    context.on(listener);
+    synchronized (this) {
+      GlobalEventContext context = getContext(true, name);
+      context.on(listener);
+    }
   }
 
 
@@ -125,24 +132,28 @@ public class GlobalEventBus {
    * @param listener 监听器对象, 如果 null 则删除所有在 name 上的监听器
    * @return 如果删除了监听器返回 true, 如果监听器不存在返回 false
    */
-  public synchronized boolean off(String name, GlobalListener listener) {
-    if (name != null) {
-      GlobalEventContext context = contexts.get(name);
-      if (context == null)
-        return false;
+  public boolean off(String name, GlobalListener listener) {
+    if (destoryed) { return false; }
 
-      if (listener == null) {
-        context.destory();
-        contexts.remove(name);
-        return true;
-      } else {
-        Set<GlobalListener> ls = context.getListeners();
-        boolean ret = ls.remove(listener);
-        if (ls.isEmpty()) {
+    if (name != null) {
+      synchronized (this) {
+        GlobalEventContext context = contexts.get(name);
+        if (context == null)
+          return false;
+
+        if (listener == null) {
           context.destory();
           contexts.remove(name);
+          return true;
+        } else {
+          Set<GlobalListener> ls = context.getListeners();
+          boolean ret = ls.remove(listener);
+          if (ls.isEmpty()) {
+            context.destory();
+            contexts.remove(name);
+          }
+          return ret;
         }
-        return ret;
       }
     }
     return false;
@@ -158,20 +169,21 @@ public class GlobalEventBus {
    * @param info 扩展描述, NamingEvent.getChangeInfo() 返回
    * @return 忽略返回值
    */
-  public synchronized boolean emit(String name, Object data, int type, String info) {
+  public boolean emit(String name, Object data, int type, String info) {
     if (destoryed) {
-      throw new IllegalAccessError("The system is destoryed");
+      throw new XBosonException.Shutdown();
     }
 
-    GlobalEventContext context = getContext(true, name);
-    context.emit(data, type, info);
+    synchronized (this) {
+      GlobalEventContext context = getContext(true, name);
+      context.emit(data, type, info);
 
-    // 这是个特殊的事件, 当检查到退出系统的消息后, 等待所有处理器退出
-    // 然后 GlobalEventBus 执行自身的退出操作
-    if (Names.exit.equals(name)) {
-      destory();
+      // 这是个特殊的事件, 当检查到退出系统的消息后, 等待所有处理器退出
+      // 然后 GlobalEventBus 执行自身的退出操作
+      if (Names.exit.equals(name)) {
+        destory();
+      }
     }
-
     return true;
   }
 

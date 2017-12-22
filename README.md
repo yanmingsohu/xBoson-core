@@ -13,6 +13,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * SqlServer 分页.
 * 接管 Tomcat.
 * js 脚本多行字符串.
+* node 模块目录安装画面.
 
 
 # JAR 依赖
@@ -187,7 +188,12 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
     /* 访问根路径时的跳转页面 */
   "uiWelcome": "/face/t/login.html",
   
-    /* 本机在集群中的节点 ID, 这两个参数组合用来保证生成不冲突的主键 ID, 0-1023 */
+    /* node 模块文件模式, 与 uiProviderClass 定义相同 */
+  "nodeProviderClass": "local",
+    /* 本地模式根目录 */
+  "nodeUrl": "",
+  
+    /* 本机在集群中的节点 ID, 保证生成不冲突的主键 ID, 0-1023 */
   "clusterNodeID": 0,
   
     /* 启用后, 每天凌晨清除昨天上传的临时文件 */

@@ -26,6 +26,6 @@ public interface ISysModuleProvider extends IConfigSandbox {
    * @param name
    * @return 如果找不到模块返回 null
    */
-  public Object getInstance(String name);
+  public Object getModule(String name);
 
 }

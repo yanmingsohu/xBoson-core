@@ -24,74 +24,52 @@ import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * require 方法提供的系统模块,
- * 每个环境只支持一个 SysModules 模块.
+ * require 方法提供的系统模块, 需要在初始化时将外部模块注入.
+ * 每个环境只支持一个 SysModules 模块, 切只能绑定一个运行时.
  */
 public class SysModules implements ISysModuleProvider {
 
   private Log log = LogFactory.create();
+  private ICodeRunner runner;
 
   /** 未实例化的 java 对象类型的 js 模块 */
-  private Map<String, Class<?>> names;
-
-  /** 直接注册的 java 对象类型的 js 模块, 已经实例化 */
-  private Map<String, Object> instances;
-
-  /** js 模块源代码 */
-  private Map<String, String> jscode;
+  private Map<String, AbsWrapScript> modules;
 
 
   public SysModules() {
-    names = new HashMap<>();
-    instances = new HashMap<>();
-    // 严格按照顺序加载
-    jscode = new LinkedHashMap<>();
+    modules = new HashMap<>();
   }
 
 
   /**
    * 返回一个本地模块
    */
-  public Object getInstance(String name) {
+  public Object getModule(String name) {
     if (name == null)
       throw new NullPointerException("name");
 
-    Object o = instances.get(name);
-    if (o == null) {
-      Class<?> c = names.get(name);
-      if (c == null)
-        return null;
+    Object o = getModuleFromNonInit(name);
+    if (o != null) return o;
 
-      try {
-        o = c.newInstance();
-        instances.put(name, o);
-      } catch(Exception e) {
-        log.error(e.getMessage());
-        e.printStackTrace();
-        return null;
-      }
-    }
-    return o;
+    Module mod = runner.run(name);
+    if (mod != null) return mod.exports;
+
+    return null;
   }
 
 
-  /**
-   * 注册模块的实例, 在需要时返回该实例
-   */
-  public void regInstance(String name, Object object) {
-    if (name == null)
-      throw new NullPointerException("name");
-    if (object == null)
-      throw new NullPointerException("object");
+  private Object getModuleFromNonInit(String name) {
+    AbsWrapScript module = modules.get(name);
+    if (module == null)
+      return null;
 
-    instances.put(name, object);
+    Module mod = runner.run(module);
+    modules.remove(name);
+    return mod.exports;
   }
 
 
@@ -104,7 +82,7 @@ public class SysModules implements ISysModuleProvider {
     if (clazz == null)
       throw new NullPointerException("clazz");
 
-    names.put(name, clazz);
+    modules.put(name, new NativeWrapScript(name, clazz));
   }
 
 
@@ -115,27 +93,20 @@ public class SysModules implements ISysModuleProvider {
    */
   public void loadLib(String name, String jsfile) throws IOException {
     StringBufferOutputStream buf = Tool.readFileFromResource(getClass(), jsfile);
-    jscode.put(name, buf.toString());
+    modules.put(name, new WrapJavaScript(buf.toBuffer(), name));
   }
 
 
+  /**
+   * 调用 'bootstrap.js' 中的 __set_sys_module_provider 方法来初始化环境.
+   */
   public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
     try {
       box.getGlobalFunc().invokeFunction(
               "__set_sys_module_provider", this);
 
-      Iterator<String> it = jscode.keySet().iterator();
-      while (it.hasNext()) {
-        String name = it.next();
+      this.runner = runner;
 
-        String filename = "<" + name + ">";
-        WarpdScript ws = new WarpdScript(box, jscode.get(name), filename);
-        ws.setCodeRunner(runner);
-        ws.call();
-
-        Module mod = ws.getModule();
-        regInstance(name, mod.exports);
-      }
     } catch(NoSuchMethodException e) {
       throw new ScriptException(e);
     }

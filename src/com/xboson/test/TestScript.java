@@ -21,7 +21,6 @@ import com.xboson.been.Module;
 import com.xboson.fs.FileSystemFactory;
 import com.xboson.fs.IVirtualFileSystem;
 import com.xboson.script.*;
-import com.xboson.util.CodeFormater;
 import com.xboson.util.StringBufferOutputStream;
 
 import javax.script.ScriptEngineFactory;
@@ -41,27 +40,28 @@ import java.util.List;
  */
 public class TestScript extends Test {
 
+  private Application app;
+
 
 	public void test() throws Exception {
+    IVirtualFileSystem vfs = createVFS();
+    app = createBasicApplication(vfs);
+
 //		independent_sandbox();
 //		speedtest();
 //		memoryuse();
 //		closed();
+//    t10000();
 		hack();
     fullTest();
-//    t10000();
 		error_format();
     test_functions_apply();
 	}
 
 
 	public void error_format() throws Exception {
-	  String filename = "/error.js";
-    IVirtualFileSystem vfs = null;
     try {
-      vfs = createVFS();
-      Application app = createBasicApplication(vfs);
-      app.run(filename);
+      app.run("/error.js");
     } catch (Exception e) {
       Exception x = new JScriptException(e);
       x.printStackTrace();
@@ -71,14 +71,12 @@ public class TestScript extends Test {
 
   public void test_functions_apply() throws Exception {
 	  sub("test_functions_apply");
-    Sandbox sandbox = SandboxFactory.create();
-    sandbox.bootstrap();
-    IEnvironment env = EnvironmentFactory.createBasic();
-    env.setEnvObject(JsObj.class);
-    env.config(sandbox, null);
-    sandbox.warp("Function.call.apply(t.functions, [t, 1, 2]);" +
+    String code = "Function.call.apply(t.functions, [t, 1, 2]);" +
             "var fn = Function.bind.apply(t.functions, [t]);\n" +
-            "Function.call.apply(fn, [null,2,3]);").call();
+            "Function.call.apply(fn, [null,2,3]);";
+
+    WrapJavaScript ws = new WrapJavaScript(code, "functions_apply");
+    app.run(ws);
   }
 
 
@@ -97,6 +95,7 @@ public class TestScript extends Test {
           throws Exception {
     BasicEnvironment env = EnvironmentFactory.createBasic();
     env.setEnvObject(MapImpl.class);
+    env.setEnvObject(JsObj.class);
 
     Object attr = vfs.readAttribute("/index.js");
     msg("File Attribute:", attr);
@@ -123,42 +122,49 @@ public class TestScript extends Test {
 		Sandbox sandbox = SandboxFactory.create();
 		sandbox.bootstrap();
     IEnvironment env = EnvironmentFactory.createBasic();
-		env.config(sandbox, null);
+		env.config(sandbox, app);
 		sandbox.freezeGlobal();
 		
 		Object o = null;
 		try {
-      sandbox.warp("console = null; console.log=null; console.a='bad', console.log('hello', console.a)").call();
-      sandbox.warp("if (console.a) throw new Error('console.a is changed.')");
+      eval("console = null; console.log=null; console.a='bad', console.log('hello', console.a)");
+      eval("if (console.a) throw new Error('console.a is changed.')");
       success("cannot modify java object");
     } catch(Exception e) {}
 		
-		sandbox.warp("try { test.notcall() } catch(e) { test.log(e.stack); }; }), a=19, (function cc(){ return cc").call();
+		eval("try { test.notcall() } catch(e) { test.log(e.stack); }; }), a=19, (function cc(){ return cc");
 		success("hack the ");
 		
-		sandbox.warp("if (typeof a !='undefined') throw new Error('bad');").call();
+		eval("if (typeof a !='undefined') throw new Error('bad');");
 		success("cannot make THIS value");
 		
-		sandbox.warp("global.a = 11").call();
-		sandbox.warp("if (global.a != 11) throw new Error('bad global.a')").call();
+		eval("global.a = 11");
+		eval("if (global.a != 11) throw new Error('bad global.a')");
 		success("can change global val");
 		
-		o = sandbox.warp("return Math.abs(-1)").call();
+		o = eval("return Math.abs(-1)");
 		success("Math is done " + o);
 		
 		try {
-			sandbox.warp("setTimeout(function() { console.log('setTimeout !!') }, 1000)").call();
+			eval("setTimeout(function() { console.log('setTimeout !!') }, 1000)");
 			fail("be not has setTimeout function");
 		} catch(Exception e) {
 			success("setTimeout done");
 		}
 		
-		WarpdScript ws = sandbox.warp("console.log(JSON.stringify({a:1}), module, __dirname, __filename)");
-		Module m = ws.getModule();
-		m.filename = "/test/hello.js";
-		ws.call();
+		WrapJavaScript ws = sandbox.warp("/test/hello.js",
+            "console.log(JSON.stringify({a:1}), module, __dirname, __filename)");
+		app.run(ws);
+		ws.initModule(app);
+    Module m = ws.getModule();
 		success("module ok, exports: "+ m.exports.getClass());
 	}
+
+
+	private Object eval(String code) {
+    WrapJavaScript ws = new WrapJavaScript(code, "test");
+    return app.run(ws);
+  }
 	
 	
 	@SuppressWarnings("unused")
@@ -313,7 +319,7 @@ public class TestScript extends Test {
     public void destory() {}
 
     public void functions(Object... a) {
-      sub("functions call:", Arrays.toString(a));
+      msg("functions call:", Arrays.toString(a));
     }
   }
 }

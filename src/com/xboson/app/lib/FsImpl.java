@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
+import com.xboson.fs.node.NodeFileFactory;
 import com.xboson.fs.redis.FileStruct;
 import com.xboson.fs.redis.FinderResult;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
@@ -35,16 +36,20 @@ public class FsImpl {
 
   public Object open(String fsTypeName) {
     boolean runOnSysOrg = (boolean) ModuleHandleContext._get("runOnSysOrg");
-    if (!runOnSysOrg) {
+
+    if (!runOnSysOrg)
       throw new XBosonException.NotImplements("只能在平台机构中引用");
-    }
-    if (fsTypeName == null) {
+
+    if (fsTypeName == null)
       throw new XBosonException.NullParamException("String fsTypeName");
-    }
+
 
     switch (fsTypeName) {
       case "ui":
-        return new Wrap(UIFileFactory.openWithConfig());
+        return new Wrap(UIFileFactory.open());
+
+      case "node":
+        return new Wrap(NodeFileFactory.open());
 
       default:
         throw new XBosonException.NotFound(
