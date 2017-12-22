@@ -52,10 +52,12 @@ public final class DefaultConfig {
     c.rootPassword =
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));
 
-    c.uiProviderClass   = LocalFileMapping.class.getName();
+    c.uiProviderClass   = "local";
     c.uiUrl             = "/ui";
     c.clusterNodeID     = 0;
     c.sysTableList      = default_sys_tables.split(",");
+    c.nodeProviderClass = "local";
+    c.nodeUrl           = "/node";
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
     j.setMaxIdle(10);

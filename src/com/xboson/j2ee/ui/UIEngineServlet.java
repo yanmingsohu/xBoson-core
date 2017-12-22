@@ -71,7 +71,7 @@ public class UIEngineServlet extends HttpServlet {
 
     Config cf = SysConfig.me().readConfig();
     this.list_dir = cf.uiListDir;
-    this.file_provider = UIFileFactory.openWithConfig();
+    this.file_provider = UIFileFactory.open();
   }
 
 

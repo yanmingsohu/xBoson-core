@@ -52,6 +52,9 @@ public class Config implements IBean {
   public boolean uiListDir        = false;
   public String uiWelcome         = null;
 
+  public String nodeProviderClass = null;
+  public String nodeUrl           = null;
+
   public String[] sysTableList;
 
   public JedisPoolConfig jedispool;
@@ -63,6 +66,7 @@ public class Config implements IBean {
   public boolean enableUploadClear;
   public boolean enableSessionClear;
   public boolean enableUIFileSync;
+  public boolean enableNodeFileSync;
 
 
 	/**

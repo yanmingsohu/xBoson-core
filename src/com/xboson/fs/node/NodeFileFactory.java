@@ -6,71 +6,65 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-12-17 下午6:39
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/UIFileFactory.java
+// 文件创建日期: 17-12-22 下午12:25
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/node/NodeFileFactory.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.node;
 
 import com.xboson.been.Config;
-import com.xboson.been.XBosonException;
 import com.xboson.event.EventLoop;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.fs.redis.*;
-import com.xboson.util.SysConfig;
 
 
-public final class UIFileFactory extends AbsFactory {
+public final class NodeFileFactory extends AbsFactory {
 
-  private static UIFileFactory instance;
+  private static NodeFileFactory instance;
 
 
-  /**
-   * 使用配置文件中定义的参数创建全局唯一 ui 读取器.
-   */
   public synchronized static IRedisFileSystemProvider open() {
     if (instance == null) {
-      instance = new UIFileFactory();
+      instance = new NodeFileFactory();
     }
     return instance.__open();
   }
 
 
-
+  @Override
   protected IRedisFileSystemProvider createLocal(
           Config cf, IFileSystemConfig config) {
     RedisBase rb              = new RedisBase(config);
-    RedisFileMapping rfm      = new UIRedisFileMapping(rb);
-    UILocalFileMapping local  = new UILocalFileMapping(rfm, rb);
+    RedisFileMapping rfm      = new NodeRedisFileMapping(rb);
+    LocalFileMapping local    = new NodeLocalFileMapping(rfm, rb);
 
-    //
-    // 本地模式启动同步线程
-    //
     SynchronizeFiles sf = new SynchronizeFiles(rb, rfm);
     EventLoop.me().add(sf);
-    if (cf.enableUIFileSync) {
+    if (cf.enableNodeFileSync) {
       EarlyMorning.add(sf);
     }
     return local;
   }
 
 
+  @Override
   protected IRedisFileSystemProvider createOnline(
           Config cf, IFileSystemConfig config) {
     RedisBase rb              = new RedisBase(config);
-    RedisFileMapping rfm      = new UIRedisFileMapping(rb);
+    RedisFileMapping rfm      = new NodeRedisFileMapping(rb);
     return rfm;
   }
 
 
+  @Override
   protected IFileSystemConfig createConfig(Config cf) {
-    return new UIFileSystemConfig(cf.uiUrl);
+    return new NodeFileSystemConfig(cf.nodeUrl);
   }
 
 
-  private UIFileFactory() {}
+  private NodeFileFactory() {}
 }
