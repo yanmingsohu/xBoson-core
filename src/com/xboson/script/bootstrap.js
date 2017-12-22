@@ -54,10 +54,10 @@ context.__boot_over = __boot_over;
 
 function __env_ready() {
   process.binding = function(n) {
-    return sys_module_provider.getModule('sys/' + n);
+    return sys_module_provider.getModule('sys/' + n).exports;
   };
 
-  pathlib = sys_module_provider.getModule('path');
+  pathlib = sys_module_provider.getModule('path').exports;
   context.JSON = process.binding('json').warp(nativeJSON);
 }
 
@@ -66,7 +66,7 @@ function __boot_over() {
   delete context.__set_sys_module_provider;
   delete context.__env_ready;
   delete context.__boot_over;
-  context.Buffer = sys_module_provider.getModule('buffer').Buffer;
+  context.Buffer = sys_module_provider.getModule('buffer').exports.Buffer;
   Object.freeze(context);
 }
 
@@ -79,9 +79,10 @@ function __warp_main(fn) { // 主函数包装器
 	
 	
 	return function(module, _app) {
+	  if (!_app) throw new Error("app(vfs) not provide");
 		app = _app;
 		module.exports = {};
-		module.children = [];
+		module.children = {};
 		currmodule = module;
 
 		var console = require('console').create(module.filename);
@@ -115,32 +116,22 @@ function __warp_main(fn) { // 主函数包装器
 	// 所有的缓存都在 java 上处理.
 	//
 	function require(path) {
-	  if (path[0] == '.') {
-	    if (path[1] == '/') {
-        path = pathlib.normalize(get_dirname()+ '/'+ path);
-      }
+	  if (path[0] == '/' || path[0] == '.') {
+	    path = pathlib.normalize(get_dirname() +'/'+ path);
 	  }
-	  else if (path[0] == '/') {
-	    path = pathlib.normalize(path);
-	  }
-	  else {
-      if (!sys_module_provider) {
-        throw new Error("module provider not set");
-      }
+	  var mod;
 
-      var sysmod = sys_module_provider.getModule(path);
-      if (!sysmod) {
-        throw new Error("cannot found module '" + path + "'");
-      }
-
-      return sysmod;
+	  if (sys_module_provider) {
+      mod = sys_module_provider.getModule(path);
 	  }
 
-		if (!app) throw new Error("vfs not provide");
+	  if (!mod) {
+      mod = app.run(path);
+    }
 
-		var mod = app.run(path);
-		mod.parent = currmodule;
-		currmodule.children.push(mod);
+    // 不应该每次运行都绑定
+		//mod.parent = currmodule;
+		//currmodule.children[mod.id] = mod;
 		return mod.exports;
 	}
 

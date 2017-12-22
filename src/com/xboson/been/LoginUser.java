@@ -25,12 +25,13 @@ import java.util.List;
 
 public class LoginUser extends JsonHelper implements IBean, IAWho {
   public String pid;        // uuid
-  public String userid;     // 就是用户登录 name, 唯一
-  public String password;   // 密码
-  public String password_dt;
+  public String userid;     // 就是用户登录 name, 唯一, 也是 openid
   public String tel;
   public String email;
   public String status;
+
+  transient public String password;
+  transient public String password_dt;
 
   public List<String> roles;
 

@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 2017年11月6日 10:21
-// 原始文件路径: xBoson/src/com/xboson/script/ISysModuleProvider.java
+// 原始文件路径: xBoson/src/com/xboson/script/IModuleProvider.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -17,15 +17,15 @@
 package com.xboson.script;
 
 /**
- * 系统模块提供
+ * 模块提供
  */
-public interface ISysModuleProvider extends IConfigSandbox {
+public interface IModuleProvider extends IConfigSandbox {
 
   /**
    * 从系统模块名返回系统模块
    * @param name
    * @return 如果找不到模块返回 null
    */
-  public Object getModule(String name);
+  Object getModule(String name);
 
 }

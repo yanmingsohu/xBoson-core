@@ -40,10 +40,12 @@ public class Application implements ICodeRunner {
   private Map<String, AbsWrapScript> module_cache;
 
 
-  public Application(IEnvironment env, IVirtualFileSystem vfs) throws ScriptException {
+  public Application(IEnvironment env, IVirtualFileSystem vfs)
+          throws ScriptException
+  {
     this.vfs = vfs;
     module_cache = Collections.synchronizedMap(new HashMap<>());
-    sandbox  = SandboxFactory.create();
+    sandbox = SandboxFactory.create();
 
     sandbox.bootstrap();
     env.config(sandbox, this);

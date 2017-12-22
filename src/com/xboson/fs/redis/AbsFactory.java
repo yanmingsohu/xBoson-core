@@ -27,12 +27,12 @@ import com.xboson.util.SysConfig;
 public abstract class AbsFactory {
 
   private IRedisFileSystemProvider current;
-  private Config cf;
   private IFileSystemConfig config;
+  private final Config cf;
 
 
   public AbsFactory() {
-    Config cf = SysConfig.me().readConfig();
+    cf = SysConfig.me().readConfig();
   }
 
 
@@ -41,7 +41,7 @@ public abstract class AbsFactory {
    */
   protected synchronized IRedisFileSystemProvider __open() {
     if (current == null) {
-      config    = createConfig(cf);
+      config    = getConfig();
       current   = create();
     }
     return current;
@@ -60,6 +60,14 @@ public abstract class AbsFactory {
         throw new XBosonException.NotImplements(
                 "File system type: " + cf.uiProviderClass);
     }
+  }
+
+
+  protected IFileSystemConfig getConfig() {
+    if (config == null) {
+      config = createConfig(cf);
+    }
+    return config;
   }
 
 

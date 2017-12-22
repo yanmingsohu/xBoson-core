@@ -36,7 +36,7 @@ public class BasicEnvironment implements IEnvironment {
   private final Log log;
   private List<IJSObject> objs;
   private Set<IConfigSandbox> configer;
-  private ISysModuleProvider sys_mod;
+  private IModuleProvider sys_mod;
 
 
   /**

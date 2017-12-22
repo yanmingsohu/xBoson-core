@@ -21,12 +21,16 @@ var assert = require("assert");
 assert.eq(typeof safe_context, 'undefined', "safe_context not safe");
 assert.eq(typeof fncontext, 'undefined', 'fncontext not safe');
 
+var con = require("console").create(null).log('heha');
+
 
 var safe__warp_main = false;
 __warp_main = null;
 __warp_main(function() {
   safe__warp_main = true;
-})({}, {});
+})({ filename: 'test' }, { run: function(name) {
+  return { exports: require(name) };
+} });
 assert(safe__warp_main, "__warp_main not safe");
 
 

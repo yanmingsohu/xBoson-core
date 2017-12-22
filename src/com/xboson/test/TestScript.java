@@ -20,12 +20,15 @@ import com.xboson.app.lib.MapImpl;
 import com.xboson.been.Module;
 import com.xboson.fs.FileSystemFactory;
 import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.node.NodeFileFactory;
+import com.xboson.fs.node.NodeModuleProvider;
 import com.xboson.script.*;
 import com.xboson.util.StringBufferOutputStream;
 
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -56,7 +59,15 @@ public class TestScript extends Test {
     fullTest();
 		error_format();
     test_functions_apply();
+    module_loader();
 	}
+
+
+	public void module_loader() throws Exception {
+	  sub("Test module loader");
+    SysModules sys = EnvironmentFactory.createDefaultSysModules();
+    IModuleProvider nm = NodeFileFactory.openNodeModuleProvider(sys);
+  }
 
 
 	public void error_format() throws Exception {

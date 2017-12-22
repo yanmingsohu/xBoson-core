@@ -20,6 +20,7 @@ import com.xboson.been.Config;
 import com.xboson.event.EventLoop;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.fs.redis.*;
+import com.xboson.script.IModuleProvider;
 
 
 public final class NodeFileFactory extends AbsFactory {
@@ -27,11 +28,34 @@ public final class NodeFileFactory extends AbsFactory {
   private static NodeFileFactory instance;
 
 
-  public synchronized static IRedisFileSystemProvider open() {
+  /**
+   * 打开 node 文件系统
+   */
+  public static IRedisFileSystemProvider open() {
+    return me().__open();
+  }
+
+
+  private synchronized static NodeFileFactory me() {
     if (instance == null) {
       instance = new NodeFileFactory();
     }
-    return instance.__open();
+    return instance;
+  }
+
+
+  /**
+   * 使用当前 node 文件系统创建模块读取器
+   * @param parent 只当父级模块返回 null 时才从文件系统中创建.
+   * @return
+   */
+  public synchronized static IModuleProvider
+        openNodeModuleProvider(IModuleProvider parent)
+  {
+    IRedisFileSystemProvider fs = open();
+    IFileSystemConfig config = me().getConfig();
+    NodeModuleProvider node = new NodeModuleProvider(fs, config, parent);
+    return node;
   }
 
 

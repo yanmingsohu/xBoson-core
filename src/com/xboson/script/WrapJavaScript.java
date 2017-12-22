@@ -85,6 +85,7 @@ public class WrapJavaScript extends AbsWrapScript {
       throw new JScriptException(ec, code_reader);
 
     } catch (Exception e) {
+      e.printStackTrace();
       throw new XBosonException(e);
     }
   }

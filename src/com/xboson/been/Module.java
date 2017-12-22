@@ -25,11 +25,12 @@ import com.xboson.util.Tool;
 public class Module implements IBean {
   public String   id;
   public String   filename;
-  public Object   children;
-  public Object   exports;
   public boolean  loaded;
   public Object   parent;
   public String[] paths;
+
+  transient public Object children;
+  transient public Object exports;
 
 
   public Module() {
