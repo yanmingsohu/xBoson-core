@@ -14,12 +14,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.been.Config;
-import com.xboson.been.XBosonException;
 import com.xboson.event.EventLoop;
-import com.xboson.event.OnExitHandle;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -37,8 +35,6 @@ import java.nio.file.attribute.FileTime;
  */
 public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
-  private static boolean touched;
-
   private RedisFileMapping rfm;
   private RedisBase rb;
   private Log log;
@@ -49,28 +45,20 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
   private int d     = 50;
 
 
-  private SynchronizeFiles(String base) {
-    this.base = Paths.get(base);
-    this.log  = LogFactory.create();
-    this.rb   = new RedisBase();
-    this.rfm  = new RedisFileMapping(rb);
-  }
-
-
   /**
-   * 该方法仅在第一次调用时注册半夜同步和启动同步, 再次调用什么也不做.
+   * 创建一个文件同步器, 同步本地文件到 redis;
+   * 文件同步器创建后不会启动, 需要放入其他的任务管理器中
+   *
+   * @param rb 基础方法
+   * @param rfm 扩展方法
+   * @see EventLoop 全局单线程任务管理
+   * @see EarlyMorning 午夜任务管理器
    */
-  public synchronized static void me() {
-    if (touched) return;
-    touched = true;
-
-    Config cf = SysConfig.me().readConfig();
-    SynchronizeFiles sf = new SynchronizeFiles(cf.uiUrl);
-    EventLoop.me().add(sf);
-
-    if (cf.enableUIFileSync) {
-      EarlyMorning.add(sf);
-    }
+  public SynchronizeFiles(RedisBase rb, RedisFileMapping rfm) {
+    this.log  = LogFactory.create();
+    this.rb   = rb;
+    this.rfm  = rfm;
+    this.base = Paths.get(rb.getConfig().configLocalPath());
   }
 
 

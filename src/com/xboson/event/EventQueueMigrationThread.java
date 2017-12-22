@@ -16,7 +16,7 @@
 
 package com.xboson.event;
 
-import com.xboson.been.XBosonException;
+import com.xboson.fs.redis.IFileSystemConfig;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
@@ -29,13 +29,14 @@ import java.util.List;
 
 
 /**
- * 事件队列迁移线程, 该线程将队列中的事件取出后发布到集群中.
+ * 事件队列迁移线程, 该线程将队列中的事件取出后发布到集群订阅通知中.
  * 允许有多个该线程的实例来分担任务, 但每个一条消息只被一个线程处理一次.
  * 在系统进入销毁程序, 该线程自动终止.
  */
 public class EventQueueMigrationThread extends OnExitHandle implements Runnable {
 
   public static final int QUEUE_TIMEOUT   = 5; // 秒
+  public static final int EVENT_TYPE = NamingEvent.OBJECT_CHANGED;
 
   private boolean running;
   private Thread myself;
@@ -46,18 +47,10 @@ public class EventQueueMigrationThread extends OnExitHandle implements Runnable 
 
   /**
    * 创建线程并启动
-   *
-   * @param queue_name redis 中队列的名字
-   * @param event_name 全局事件名称
    */
-  public EventQueueMigrationThread(String queue_name, String event_name) {
-    if (queue_name == null)
-      throw new XBosonException.NullParamException("String queue_name");
-    if (event_name == null)
-      throw new XBosonException.NullParamException("String event_name");
-
-    this.event_name = event_name;
-    this.queue_name = queue_name;
+  public EventQueueMigrationThread(IFileSystemConfig config) {
+    this.event_name = config.configFileChangeEventName();
+    this.queue_name = config.configQueueName();
     this.running = true;
     this.log = LogFactory.create(EventQueueMigrationThread.class, queue_name);
 
@@ -69,7 +62,7 @@ public class EventQueueMigrationThread extends OnExitHandle implements Runnable 
 
   public void run() {
     myself = Thread.currentThread();
-    log.debug("Start", myself);
+    log.info("Start", myself);
     GlobalEventBus ge = GlobalEventBus.me();
 
     try (Jedis client = RedisMesmerizer.me().open()) {
@@ -79,12 +72,13 @@ public class EventQueueMigrationThread extends OnExitHandle implements Runnable 
         //
         List<String> ret = client.brpop(QUEUE_TIMEOUT, queue_name);
         if (ret.size() == 2) {
-          ge.emit(event_name, ret.get(1), NamingEvent.OBJECT_CHANGED, ret.get(0));
+          ge.emit(event_name, ret.get(1), EVENT_TYPE, ret.get(0));
         }
       }
     } finally {
       running = false;
     }
+    log.info("Stop", myself);
   }
 
 

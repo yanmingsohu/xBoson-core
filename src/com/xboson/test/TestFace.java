@@ -16,12 +16,18 @@
 
 package com.xboson.test;
 
+import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
-import com.xboson.fs.ui.*;
+import com.xboson.event.EventLoop;
+import com.xboson.fs.redis.*;
+import com.xboson.fs.ui.UIFileSystemConfig;
+import com.xboson.fs.ui.UILocalFileMapping;
+import com.xboson.fs.ui.UIRedisFileMapping;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.LuaScript;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 
@@ -33,25 +39,33 @@ import java.util.Set;
 
 /**
  * UI-FS 测试
- * 如果有其他的集群节点连接了 redis, 测试会失败
+ * 如果有其他的集群节点连接了 redis, 测试会失败.
+ * 启动这个测试前, 必须保证本地文件已经同步到 redis.
  */
 public class TestFace extends Test {
 
   private String path;
   private byte[] content;
 
+  private UIFileSystemConfig config;
   private LocalFileMapping local;
   private RedisFileMapping redis;
+  private RedisBase rb;
 
 
   public void test() throws Throwable {
-    sub("Test ui file system");
+    sub("Test UI file system");
 
-    local = new LocalFileMapping();
-    redis = new RedisFileMapping();
+    Config cf = SysConfig.me().readConfig();
+    config = new UIFileSystemConfig(cf.uiUrl);
+    rb = new RedisBase(config);
+
+    redis = new UIRedisFileMapping(rb);
+    local = new UILocalFileMapping(redis, rb);
     path  = "/ui/paas/login.html";
     LogFactory.setLevel(Level.ALL);
 
+    waitEventLoopEmpty();
     testLocal();
     test_redis_base();
     local_and_redis();
@@ -60,6 +74,17 @@ public class TestFace extends Test {
     test_lua();
     test_find();
     test_find_path();
+  }
+
+
+  public void waitEventLoopEmpty() {
+    sub("Wait event loop empty...");
+    boolean[] check = new boolean[1];
+    EventLoop.me().add(() -> check[0] = true);
+    while (check[0] != true) {
+      waitDelayed();
+    }
+    msg("OK, Event loop empty.");
   }
 
 
@@ -91,7 +116,7 @@ public class TestFace extends Test {
 
   public void test_find() {
     sub("Test find function in lua.");
-    FindContentInRedisWithLua find = new FindContentInRedisWithLua();
+    FindContentInRedisWithLua find = new FindContentInRedisWithLua(config);
 
     finds(find, true, "Register", "register",
             "请输入验证码", "background", "系统信息");
@@ -138,13 +163,11 @@ public class TestFace extends Test {
     redis.writeFile("/t2/s1.txt", s1);
     redis.writeFile("/t2/t3/t4/s2.txt", s2);
 
+    waitDelayed();
     redis.move("/t2", "/m4");
+    msg("MOVE /t2 TO /m4");
 
-    //
-    // 写入的文件不是立即就可以读取, 消息传递有延迟
-    //
-    Tool.sleep(1000);
-
+    waitDelayed();
     file_eq(s1, "/m4/s1.txt");
     file_eq(s2, "/m4/t3/t4/s2.txt");
     dir_eq("/m4");
@@ -156,6 +179,14 @@ public class TestFace extends Test {
 
     del("/m4/s1.txt", "/m4/t3/t4/s2.txt",
             "/m4/t3/t4", "/m4/t3", "/m4");
+  }
+
+
+  /**
+   * 写入的文件不是立即就可以读取, 消息传递有延迟
+   */
+  private void waitDelayed() {
+    Tool.sleep(1000);
   }
 
 
@@ -227,7 +258,8 @@ public class TestFace extends Test {
     byte[] content = randomString(100).getBytes();
     redis.makeDir("/test/");
     redis.writeFile(test_file, content);
-    Tool.sleep(1000);
+
+    waitDelayed();
 
     byte[] r = local.readFile(test_file);
     ok(Arrays.equals(content, r), "content");
@@ -239,10 +271,7 @@ public class TestFace extends Test {
 
     delete_non_empty_dir(test_dir);
 
-    //
-    // 立即删除, 本地系统读取不到修改事件
-    //
-    Tool.sleep(1000);
+    waitDelayed();
     redis.delete(test_file);
     redis.delete(test_dir);
   }
@@ -252,7 +281,7 @@ public class TestFace extends Test {
    * dir 是非空目录, 删除会抛出异常, 则完成测试, 若没有异常则是系统错误
    */
   public void delete_non_empty_dir(String dir) {
-    sub("Check delte non-empty DIR", dir);
+    sub("Check delete non-empty DIR", dir);
     boolean checkNon = false;
     try {
       redis.delete(dir);
@@ -282,7 +311,6 @@ public class TestFace extends Test {
   public void test_redis_base() throws Throwable {
     sub("Test UI Redis base");
 
-    RedisBase rb = new RedisBase();
     FileStruct fs = FileStruct.createFile(path, 0, content);
     rb.setContent(fs);
     rb.getContent(fs);
@@ -291,15 +319,16 @@ public class TestFace extends Test {
     final Thread curr = Thread.currentThread();
     final boolean[] check = new boolean[1];
 
-    FileModifyHandle fmh = rb.startModifyReciver(new NullModifyListener() {
+    FileModifyHandle fmh = new FileModifyHandle(new NullModifyListener() {
       public void noticeModifyContent(String file) {
         eq(path, file, "recive modify notice");
         check[0] = true;
         curr.interrupt(); // 中断 标记1 的休眠.
       }
-    });
+    }, config);
 
     rb.sendModifyNotice(path);
+    msg("Wait file modify notice:", path, " ...");
     Tool.sleep(10000); // 标记1
     ok(check[0], "waiting message, (如果运行了其他节点这个测试会失败.)");
     fmh.removeModifyListener();

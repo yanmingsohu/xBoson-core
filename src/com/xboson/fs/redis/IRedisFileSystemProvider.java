@@ -7,14 +7,14 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-18 下午8:29
-// 原始文件路径: D:/javaee-project/xBoson/src/com/fs/ui/IUIFileProvider.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/fs/ui/IRedisFileSystemProvider.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 
@@ -27,7 +27,7 @@ import java.util.Set;
  * 所有的路径参数已经规范化, 不包含任何 "/./" 和 "/../", 并且使用 unix 分隔符,
  * 路径为 ui 虚拟目录, 跟目录应该包含 'ui' 't' 'web' 'lib' 等目录
  */
-public interface IUIFileProvider {
+public interface IRedisFileSystemProvider {
 
   /** 根路径, 也是默认路径 */
   String ROOT = "/";

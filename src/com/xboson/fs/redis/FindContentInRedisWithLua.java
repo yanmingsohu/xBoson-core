@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.sleep.LuaScript;
 import com.xboson.util.StringBufferOutputStream;
@@ -33,25 +33,27 @@ public class FindContentInRedisWithLua {
   /** lua 脚本相对本类路径 */
   public final static String LUA_SCRIPT_PATH = "find.lua";
   /** 默认搜索开始路径 */
-  public final static String DEF_BASE = IUIFileProvider.ROOT;
+  public final static String DEF_BASE = IRedisFileSystemProvider.ROOT;
   /** 缓存最多数量, 超过则清空缓存 */
   public final static int MAX_CACHE_C = 1000;
   /** 结果集最大数量, 超过后的数据被忽略 */
-  public final static int MAX_RESULT_COUNT = IUIFileProvider.MAX_RESULT_COUNT;
+  public final static int MAX_RESULT_COUNT = IRedisFileSystemProvider.MAX_RESULT_COUNT;
 
-  private LuaScript script;
-  private Map<String, FinderResult> cache;
+  private final LuaScript script;
+  private final Map<String, FinderResult> cache;
+  private final String contentName;
 
 
   /**
    * 设置搜索目录
    */
-  public FindContentInRedisWithLua() {
+  public FindContentInRedisWithLua(IFileSystemConfig config) {
     StringBufferOutputStream buf =
             Tool.readFileFromResource(RedisBase.class, LUA_SCRIPT_PATH);
 
     this.script = LuaScript.compile(buf);
     this.cache = new HashMap<>(MAX_CACHE_C);
+    this.contentName = config.configContentName();
   }
 
 
@@ -81,7 +83,7 @@ public class FindContentInRedisWithLua {
     FinderResult ret = cache.get(ckey);
 
     if (ret == null) {
-      Object data = script.eval(1, RedisBase.CONTENT_NAME,
+      Object data = script.eval(1, contentName,
               content, basePath, caseSensitive, MAX_RESULT_COUNT);
 
       if (cache.size() > MAX_CACHE_C) {

@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 17-11-20 上午10:59
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/UIEventMigrationThread.java
+// 文件创建日期: 17-12-22 上午9:10
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/UILocalFileMapping.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,29 +16,15 @@
 
 package com.xboson.fs.ui;
 
-import com.xboson.event.EventQueueMigrationThread;
-import com.xboson.event.Names;
+import com.xboson.fs.redis.LocalFileMapping;
+import com.xboson.fs.redis.RedisBase;
+import com.xboson.fs.redis.RedisFileMapping;
 
 
-/**
- * ui 文件修改消息线程封装, 每个应用只运行一个线程.
- *
- * @see EventQueueMigrationThread
- */
-public final class UIEventMigrationThread {
-
-  private static EventQueueMigrationThread mt;
+public class UILocalFileMapping extends LocalFileMapping {
 
 
-  private UIEventMigrationThread() {
-  }
-
-
-  public synchronized static EventQueueMigrationThread start() {
-    if (mt == null || mt.isRunning() == false) {
-      mt = new EventQueueMigrationThread(
-              RedisBase.QUEUE_NAME, Names.ui_file_change);
-    }
-    return mt;
+  public UILocalFileMapping(RedisFileMapping rfm, RedisBase rb) {
+    super(rfm, rb);
   }
 }

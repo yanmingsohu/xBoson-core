@@ -17,10 +17,14 @@
 package com.xboson.init;
 
 import com.xboson.been.Config;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import javax.servlet.*;
 import java.io.File;
+import java.util.Enumeration;
 
 
 /**
@@ -34,12 +38,14 @@ public class Startup implements ServletContextListener {
   public void contextInitialized(ServletContextEvent sce) {
     Config config = SysConfig.me().readConfig();
     File init_file = new File(config.configPath + INIT_FILE);
+    ServletContext sc = sce.getServletContext();
 
     if (init_file.exists()) {
-      system_startup(sce.getServletContext());
+      system_startup(sc);
     } else {
-      install(sce.getServletContext());
+      install(sc);
     }
+    print_address(sc);
   }
 
 
@@ -68,7 +74,7 @@ public class Startup implements ServletContextListener {
   /**
    * 系统启动
    */
-  void system_startup(ServletContext sc) {
+  private void system_startup(ServletContext sc) {
     Touch.me();
 
     FilterRegistration.Dynamic striker =
@@ -103,6 +109,20 @@ public class Startup implements ServletContextListener {
 
     main.addMapping("/*");
     main.setLoadOnStartup(1);
+  }
+
+
+  private void print_address(ServletContext sc) {
+    Log log = LogFactory.create();
+    log.info("Server Info:", sc.getServerInfo());
+
+    Enumeration<String> names = sc.getAttributeNames();
+    while (names.hasMoreElements()) {
+      String name = names.nextElement();
+      log.debug("Server Atribute", name +":", sc.getAttribute(name));
+    }
+
+    Tool.pl("http://localhost"+ sc.getContextPath());
   }
 
 }

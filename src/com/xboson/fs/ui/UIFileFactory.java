@@ -18,23 +18,31 @@ package com.xboson.fs.ui;
 
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
+import com.xboson.event.EventLoop;
+import com.xboson.event.timer.EarlyMorning;
+import com.xboson.fs.redis.IRedisFileSystemProvider;
+import com.xboson.fs.redis.RedisBase;
+import com.xboson.fs.redis.RedisFileMapping;
+import com.xboson.fs.redis.SynchronizeFiles;
 import com.xboson.util.SysConfig;
 
 
 public final class UIFileFactory {
 
-  private static IUIFileProvider current;
+  private static UIFileSystemConfig config;
+  private static IRedisFileSystemProvider current;
 
 
   /**
    * 使用配置文件中定义的参数创建全局唯一 ui 读取器.
    */
-  public static IUIFileProvider openWithConfig() {
+  public static IRedisFileSystemProvider openWithConfig() {
     if (current == null) {
       synchronized (UIFileFactory.class) {
         if (current == null) {
           Config cf = SysConfig.me().readConfig();
-          current = create(cf.uiProviderClass);
+          config    = new UIFileSystemConfig(cf.uiUrl);
+          current   = create(cf);
         }
       }
     }
@@ -42,13 +50,42 @@ public final class UIFileFactory {
   }
 
 
-  private static IUIFileProvider create(String providerClass) {
-    try {
-      Class cl = Class.forName(providerClass);
-      return (IUIFileProvider) cl.newInstance();
-    } catch(Exception e) {
-      throw new XBosonException(e);
+  private static IRedisFileSystemProvider create(Config cf) {
+    switch (cf.uiProviderClass) {
+      case "local":
+        return createLocal(cf);
+
+      case "online":
+        return createOnline(cf);
+
+      default:
+        throw new XBosonException.NotImplements(
+                "UI File system type: " + cf.uiProviderClass);
     }
+  }
+
+
+  private static IRedisFileSystemProvider createLocal(Config cf) {
+    RedisBase rb              = new RedisBase(config);
+    RedisFileMapping rfm      = new UIRedisFileMapping(rb);
+    UILocalFileMapping local  = new UILocalFileMapping(rfm, rb);
+
+    //
+    // 本地模式启动同步线程
+    //
+    SynchronizeFiles sf = new SynchronizeFiles(rb, rfm);
+    EventLoop.me().add(sf);
+    if (cf.enableUIFileSync) {
+      EarlyMorning.add(sf);
+    }
+    return local;
+  }
+
+
+  private static IRedisFileSystemProvider createOnline(Config cf) {
+    RedisBase rb              = new RedisBase(config);
+    RedisFileMapping rfm      = new UIRedisFileMapping(rb);
+    return rfm;
   }
 
 

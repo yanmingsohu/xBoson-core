@@ -19,8 +19,8 @@ package com.xboson.j2ee.ui;
 import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
-import com.xboson.fs.ui.FileStruct;
-import com.xboson.fs.ui.IUIFileProvider;
+import com.xboson.fs.redis.FileStruct;
+import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -53,7 +53,7 @@ public class UIEngineServlet extends HttpServlet {
 
   public static final String MY_URL = "/face";
 
-  private IUIFileProvider file_provider;
+  private IRedisFileSystemProvider file_provider;
   private Log log;
   private FileTypeMap mime;
   private String baseurl;

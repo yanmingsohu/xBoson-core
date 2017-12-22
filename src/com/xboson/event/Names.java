@@ -16,7 +16,7 @@
 
 package com.xboson.event;
 
-import com.xboson.fs.ui.RedisBase;
+import com.xboson.fs.redis.RedisBase;
 
 
 /**
@@ -56,14 +56,6 @@ public interface Names {
    */
   String inner_error = "sys.error";
 
-  /**
-   * c(String filename, null)
-   * ui 文件修改消息, 由于离线的本地文件节点在上线后, 需要知道在线文件的修改记录
-   * 所以该消息的离线队列由 RedisBase 相关线程维护
-   *
-   * @see RedisBase
-   */
-  String ui_file_change = "ui.file.change";
   
   /**
    * 文件修改事件前缀, 消息指发送给在线节点, 离线节点上线后也无法收到该消息.

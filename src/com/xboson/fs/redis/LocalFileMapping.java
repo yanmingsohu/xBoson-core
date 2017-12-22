@@ -14,12 +14,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import java.io.File;
@@ -40,26 +39,31 @@ import java.util.Set;
  * 读取: 比较本地文件和 redis 文件修改日期, 相同返回 redis, 否则做同步后返回最新文件.
  * 写入: 更新本地文件后更新 redis 文件, 不发送任何通知.
  */
-public class LocalFileMapping implements IUIFileProvider, IFileChangeListener {
+public abstract class LocalFileMapping implements
+        IRedisFileSystemProvider, IFileChangeListener {
 
   public static final int ID = 2;
   public static final int RETRY = 3;
   public static final int RETRY_DELAY = 1000;
 
+  private FileModifyHandle fileModifer;
   private RedisFileMapping rfm;
   private RedisBase rb;
   private String basepath;
   private Log log;
 
 
-  public LocalFileMapping() {
-    this.basepath = SysConfig.me().readConfig().uiUrl;
-    this.log      = LogFactory.create();
-    this.rb       = new RedisBase();
-    this.rfm      = new RedisFileMapping(rb);
+  /**
+   * 本地模式需要同步远程数据, 用到了 RedisFileMapping 里的方法
+   */
+  public LocalFileMapping(RedisFileMapping rfm, RedisBase rb) {
+    IFileSystemConfig config = rb.getConfig();
 
-    rb.startModifyReciver(this);
-    SynchronizeFiles.me();
+    this.log          = LogFactory.create();
+    this.basepath     = config.configLocalPath();
+    this.rb           = rb;
+    this.rfm          = rfm;
+    this.fileModifer  = new FileModifyHandle(this, config);
   }
 
 

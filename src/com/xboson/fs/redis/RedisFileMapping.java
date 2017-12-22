@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
@@ -34,7 +34,7 @@ import java.util.Set;
  * 写入: 判断 redis 中保存的文件修改时间, 条件允许则保存文件; 写入结束后,
  *      将修改记录加入消息队列
  */
-public class RedisFileMapping implements IUIFileProvider {
+public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
   public static final int ID = 1;
 
@@ -42,14 +42,9 @@ public class RedisFileMapping implements IUIFileProvider {
   private Log log;
 
 
-  public RedisFileMapping() {
-    this(new RedisBase());
-    log = LogFactory.create();
-  }
-
-
   public RedisFileMapping(RedisBase rb) {
-    this.rb = rb;
+    this.rb  = rb;
+    this.log = LogFactory.create();
   }
 
 

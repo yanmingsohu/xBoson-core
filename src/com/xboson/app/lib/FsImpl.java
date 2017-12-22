@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-12-19 下午2:52
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/lib/UifsImpl.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/lib/FsImpl.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -17,34 +17,50 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
-import com.xboson.fs.ui.FileStruct;
-import com.xboson.fs.ui.FinderResult;
-import com.xboson.fs.ui.IUIFileProvider;
+import com.xboson.fs.redis.FileStruct;
+import com.xboson.fs.redis.FinderResult;
+import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
 
 import java.util.Set;
 
 
-public class UifsImpl {
+public class FsImpl {
 
 
   public Object open() {
+    return open("ui");
+  }
+
+
+  public Object open(String fsTypeName) {
     boolean runOnSysOrg = (boolean) ModuleHandleContext._get("runOnSysOrg");
     if (!runOnSysOrg) {
       throw new XBosonException.NotImplements("只能在平台机构中引用");
     }
-    return new Wrap();
+    if (fsTypeName == null) {
+      throw new XBosonException.NullParamException("String fsTypeName");
+    }
+
+    switch (fsTypeName) {
+      case "ui":
+        return new Wrap(UIFileFactory.openWithConfig());
+
+      default:
+        throw new XBosonException.NotFound(
+                "File System Type:" + fsTypeName);
+    }
   }
 
 
   /**
    * 包装器防止调用不在接口中的方法
    */
-  private class Wrap implements IUIFileProvider {
-    private final IUIFileProvider o;
+  private class Wrap implements IRedisFileSystemProvider {
+    private final IRedisFileSystemProvider o;
 
-    private Wrap() {
-      o = UIFileFactory.openWithConfig();
+    private Wrap(IRedisFileSystemProvider o ) {
+      this.o = o;
     }
 
     @Override

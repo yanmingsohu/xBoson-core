@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
@@ -31,7 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.xboson.fs.ui.IUIFileProvider.ROOT;
+import static com.xboson.fs.redis.IRedisFileSystemProvider.ROOT;
 
 
 /**
@@ -47,29 +47,36 @@ import static com.xboson.fs.ui.IUIFileProvider.ROOT;
 public class RedisBase implements IConstant {
 
   /** 搜索文件名称时最多返回数量, 超过的被忽略 */
-  public static final int MAX_NAME_FILE = IUIFileProvider.MAX_RESULT_COUNT;
+  public static final int MAX_NAME_FILE = IRedisFileSystemProvider.MAX_RESULT_COUNT;
 
   public static final char PREFIX_FILE  = '|';
   public static final char PREFIX_DIR   = '?';
   public static final char PREFIX_DEL   = '>';
   public static final char PREFIX_MOVE  = '!';
 
-  public static final String QUEUE_NAME    = "XB.UI.File.ChangeQueue";
-  public static final String STRUCT_NAME   = "XB.UI.File.Struct";
-  public static final String CONTENT_NAME  = "XB.UI.File.CONTENT";
+  public final String queueName;
+  public final String structName;
+  public final String contentName;
 
-  public static final byte[] STRUCT_NAMEB  = STRUCT_NAME.getBytes(CHARSET);
-  public static final byte[] CONTENT_NAMEB = CONTENT_NAME.getBytes(CHARSET);
+  public final byte[] structNameBytes;
+  public final byte[] contentNameBytes;
 
+  private IFileSystemConfig config;
   private FindContentInRedisWithLua content_finder;
   private ThreadLocal<JedisSession> jedis_session;
   private Log log;
 
 
-  public RedisBase() {
-    this.log = LogFactory.create();
-    this.jedis_session = new ThreadLocal<>();
-    this.content_finder = new FindContentInRedisWithLua();
+  public RedisBase(IFileSystemConfig config) {
+    this.log              = LogFactory.create();
+    this.jedis_session    = new ThreadLocal<>();
+    this.queueName        = config.configQueueName();
+    this.structName       = config.configStructName();
+    this.contentName      = config.configContentName();
+    this.structNameBytes  = this.structName.getBytes(CHARSET);
+    this.contentNameBytes = this.contentName.getBytes(CHARSET);
+    this.config           = config;
+    this.content_finder   = new FindContentInRedisWithLua(config);
   }
 
 
@@ -78,7 +85,7 @@ public class RedisBase implements IConstant {
    */
   public void setContent(FileStruct fs) {
     try (JedisSession js = openSession()) {
-      js.client.hset(CONTENT_NAMEB,
+      js.client.hset(contentNameBytes,
               fs.path.getBytes(CHARSET), fs.getFileContent());
     }
   }
@@ -92,7 +99,7 @@ public class RedisBase implements IConstant {
       throw new XBosonException("is not file");
 
     try (JedisSession js = openSession()) {
-      byte[] b = js.client.hget(CONTENT_NAMEB, fs.path.getBytes(CHARSET));
+      byte[] b = js.client.hget(contentNameBytes, fs.path.getBytes(CHARSET));
       fs.setFileContent(b);
     }
   }
@@ -103,7 +110,7 @@ public class RedisBase implements IConstant {
       throw new XBosonException("is not file");
 
     try (JedisSession js = openSession()) {
-      js.client.hdel(CONTENT_NAME, fs.path);
+      js.client.hdel(contentName, fs.path);
     }
   }
 
@@ -114,7 +121,7 @@ public class RedisBase implements IConstant {
   public void saveStruct(FileStruct struct) {
     try (JedisSession js = openSession()) {
       byte[] out = RedisMesmerizer.toBytes(struct);
-      js.client.hset(STRUCT_NAMEB, struct.path.getBytes(CHARSET), out);
+      js.client.hset(structNameBytes, struct.path.getBytes(CHARSET), out);
 
     } catch (IOException e) {
       throw new XBosonException(e);
@@ -124,7 +131,7 @@ public class RedisBase implements IConstant {
 
   public void removeStruct(String path) {
     try (JedisSession js = openSession()) {
-      js.client.hdel(STRUCT_NAME, path);
+      js.client.hdel(structName, path);
     }
   }
 
@@ -139,7 +146,7 @@ public class RedisBase implements IConstant {
    */
   public FileStruct getStruct(String path) {
     try (JedisSession js = openSession()) {
-      byte[] bin = js.client.hget(STRUCT_NAMEB, path.getBytes(CHARSET));
+      byte[] bin = js.client.hget(structNameBytes, path.getBytes(CHARSET));
       if (bin == null || bin.length == 0)
         return null;
 
@@ -150,7 +157,7 @@ public class RedisBase implements IConstant {
         log.warn("Read from redis but fail", e);
       }
       try (JedisSession js = openSession()) {
-        js.client.hdel(STRUCT_NAME, path);
+        js.client.hdel(structName, path);
       }
       return null;
 
@@ -175,7 +182,7 @@ public class RedisBase implements IConstant {
 
       for (;;) {
         ScanResult<Map.Entry<String, String>> sr =
-              js.client.hscan(STRUCT_NAME, cursor, sp);
+              js.client.hscan(structName, cursor, sp);
 
         for (Map.Entry<String, String> d : sr.getResult()) {
           files.add(d.getKey());
@@ -214,7 +221,7 @@ public class RedisBase implements IConstant {
    */
   public void sendModifyNotice(String path) {
     try (JedisSession js = openSession()) {
-      js.client.rpush(QUEUE_NAME, PREFIX_FILE + path);
+      js.client.rpush(queueName, PREFIX_FILE + path);
       clearContentFinderCache();
     }
   }
@@ -222,32 +229,24 @@ public class RedisBase implements IConstant {
 
   public void sendCreateDirNotice(String dir) {
     try (JedisSession js = openSession()) {
-      js.client.rpush(QUEUE_NAME, PREFIX_DIR + dir);
+      js.client.rpush(queueName, PREFIX_DIR + dir);
     }
   }
 
 
   public void sendDeleteNotice(String dir) {
     try (JedisSession js = openSession()) {
-      js.client.rpush(QUEUE_NAME, PREFIX_DEL + dir);
+      js.client.rpush(queueName, PREFIX_DEL + dir);
     }
   }
 
 
   public void sendMoveNotice(String from, String to) {
     try (JedisSession js = openSession()) {
-      js.client.rpush(QUEUE_NAME, PREFIX_MOVE + from +':'+ to);
+      js.client.rpush(queueName, PREFIX_MOVE + from +':'+ to);
     }
   }
 
-
-  /**
-   * 打开一个文件修改监听器, 并尝试启动一个文件修改事件队列.
-   */
-  public FileModifyHandle startModifyReciver(IFileChangeListener fm) {
-    UIEventMigrationThread.start();
-    return new FileModifyHandle(fm);
-  }
 
 
   public void clearContentFinderCache() {
@@ -268,6 +267,11 @@ public class RedisBase implements IConstant {
       ++js.nested;
     }
     return js;
+  }
+
+
+  public IFileSystemConfig getConfig() {
+    return config;
   }
 
 

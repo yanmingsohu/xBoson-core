@@ -31,7 +31,6 @@ import jdk.nashorn.internal.runtime.ECMAException;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -87,8 +86,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
    * 注册 js 模块, 在脚本中通过 require(..) 来引入
    */
   private void regModules(SysModules mod) {
-    mod.regClass("uifs",
-            UifsImpl.class);
+    mod.regClass("fs", FsImpl.class);
   }
 
 

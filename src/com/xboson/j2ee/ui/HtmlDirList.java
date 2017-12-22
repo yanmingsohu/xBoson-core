@@ -16,15 +16,12 @@
 
 package com.xboson.j2ee.ui;
 
-import com.xboson.fs.ui.FileStruct;
+import com.xboson.fs.redis.FileStruct;
 import com.xboson.util.Tool;
 
 import javax.activation.FileTypeMap;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Date;
 import java.util.Set;
 

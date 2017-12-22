@@ -21,7 +21,7 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.script.lib.Uuid;
 import com.xboson.test.Test;
-import com.xboson.fs.ui.LocalFileMapping;
+import com.xboson.fs.redis.LocalFileMapping;
 import redis.clients.jedis.JedisPoolConfig;
 
 

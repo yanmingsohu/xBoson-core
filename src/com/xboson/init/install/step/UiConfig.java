@@ -18,8 +18,8 @@ package com.xboson.init.install.step;
 
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
-import com.xboson.fs.ui.IUIFileProvider;
-import com.xboson.fs.ui.LocalFileMapping;
+import com.xboson.fs.redis.IRedisFileSystemProvider;
+import com.xboson.fs.redis.LocalFileMapping;
 import com.xboson.util.Tool;
 
 import java.io.File;
@@ -49,7 +49,7 @@ public class UiConfig implements IStep {
     try {
       String clname = data.req.getParameter("uiProviderClass");
       cl = Class.forName(clname);
-      if (!IUIFileProvider.class.isAssignableFrom(cl)) {
+      if (!IRedisFileSystemProvider.class.isAssignableFrom(cl)) {
         data.msg = clname + " 不是 UI 文件映射接口";
         return false;
       }

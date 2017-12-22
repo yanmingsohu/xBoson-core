@@ -14,12 +14,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 import com.xboson.event.GLHandle;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
+import com.xboson.util.Tool;
 
 import javax.naming.event.NamingEvent;
 
@@ -30,14 +31,20 @@ import javax.naming.event.NamingEvent;
 public class FileModifyHandle extends GLHandle {
 
   private IFileChangeListener fm;
+  private final String fileChangeEventName;
 
 
-  public FileModifyHandle(IFileChangeListener fm) {
+  /**
+   * FileModifyHandle 创建后会启动事件迁移线程
+   */
+  public FileModifyHandle(IFileChangeListener fm, IFileSystemConfig config) {
     if (fm == null)
       throw new XBosonException.NullParamException("IFileChangeListener fm");
 
     this.fm = fm;
-    GlobalEventBus.me().on(Names.ui_file_change, this);
+    this.fileChangeEventName = config.configFileChangeEventName();
+    GlobalEventBus.me().on(fileChangeEventName, this);
+    config.startMigrationThread();
   }
 
 
@@ -68,8 +75,11 @@ public class FileModifyHandle extends GLHandle {
         String to  = file.substring(i+1);
         fm.noticeMove(src, to);
         return;
+
+      default:
+        getLog().error("Unreachable message:",
+                mark_file, "[" + mark + "]");
     }
-    getLog().error("Unreachable message:", mark_file, "[" + mark + "]");
   }
 
 
@@ -77,7 +87,7 @@ public class FileModifyHandle extends GLHandle {
    * 从全局事件移除自身
    */
   public void removeModifyListener() {
-    boolean rm = GlobalEventBus.me().off(Names.ui_file_change, this);
+    boolean rm = GlobalEventBus.me().off(fileChangeEventName, this);
     assert rm : "must removed";
   }
 }

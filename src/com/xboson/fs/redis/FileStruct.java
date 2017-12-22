@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.ui;
+package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Path;
@@ -223,7 +223,7 @@ public class FileStruct implements Serializable {
 
 
   /**
-   * 返回创建该对象的 IUIFileProvider 实例 id 值, 可由子类重写
+   * 返回创建该对象的 IRedisFileSystemProvider 实例 id 值, 可由子类重写
    */
   public int mappingID() {
     return RedisFileMapping.ID;
