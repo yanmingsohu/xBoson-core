@@ -6,36 +6,30 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月5日 下午4:27:04
-// 原始文件路径: xBoson/src/com/xboson/script/ICodeRunner.java
+// 文件创建日期: 2017年12月26日 11:26
+// 原始文件路径: xBoson/src/com/xboson/test/js/multi-line.str.js
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.script;
+var assert = require('assert');
 
-import com.xboson.been.Module;
+var str = `
+l1,
+l2,
+l3,
+l4,
+end`;
 
-
-public interface ICodeRunner {
-
-  /**
-   * 通过该方法运行文件中的代码
-   */
-  Module run(String path);
-
-
-	/**
-	 * 运行一个打包好的脚本
-	 */
-  Module run(AbsWrapScript ws);
+console.log(str);
+assert.eq("\nl1,\nl2,\nl3,\nl4,\nend", str, "multi-line-string");
 
 
-  /**
-   * 删除缓存中的模块
-   */
-  void changed(String module_path);
+var s1 = "abc`def`xxx";
+console.log(s1);
+assert.eq("abc`def`xxx", s1);
 
-}
+var s2 = `xxjj`;
+assert.eq('xxjj', s2);

@@ -6,36 +6,23 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月5日 下午4:27:04
-// 原始文件路径: xBoson/src/com/xboson/script/ICodeRunner.java
+// 文件创建日期: 2017年12月25日 12:06
+// 原始文件路径: xBoson/src/com/xboson/test/js/node-module-loader.js
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.script;
+var assert = require('assert');
+var daffy = require("daffy");
 
-import com.xboson.been.Module;
+assert(daffy, "daffy lib");
+var src0 = 'hello world';
+var patch = daffy.createPatch('hello', src0);
+console.log("Patch:", patch);
+var src1 = daffy.applyPatch('hello', patch);
 
+assert.eq(src0, src1);
 
-public interface ICodeRunner {
-
-  /**
-   * 通过该方法运行文件中的代码
-   */
-  Module run(String path);
-
-
-	/**
-	 * 运行一个打包好的脚本
-	 */
-  Module run(AbsWrapScript ws);
-
-
-  /**
-   * 删除缓存中的模块
-   */
-  void changed(String module_path);
-
-}
+console.log('Node module loader ok');

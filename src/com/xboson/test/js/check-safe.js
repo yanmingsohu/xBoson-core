@@ -23,14 +23,18 @@ assert.eq(typeof fncontext, 'undefined', 'fncontext not safe');
 
 var con = require("console").create(null).log('heha');
 
+var _app = {
+  isCached: function() { return true; },
+  run: function(name) {
+    return { exports: require(name) };
+  },
+};
 
 var safe__warp_main = false;
 __warp_main = null;
 __warp_main(function() {
   safe__warp_main = true;
-})({ filename: 'test' }, { run: function(name) {
-  return { exports: require(name) };
-} });
+})({ filename: 'test' }, _app);
 assert(safe__warp_main, "__warp_main not safe");
 
 

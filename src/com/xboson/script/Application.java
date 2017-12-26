@@ -18,15 +18,15 @@ package com.xboson.script;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import javax.script.ScriptException;
 
 import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.node.NodeModuleProvider;
+import com.xboson.util.Tool;
 
 
 /**
@@ -78,15 +78,17 @@ public class Application implements ICodeRunner {
       ByteBuffer buf = vfs.readFile(path);
       if (buf == null) {
         throw new XBosonException.IOError(
-                "Cannot found "+ path +", null code");
+                "Cannot found Module: "+ path +", null code");
       }
 
       ws = new WrapJavaScript(buf, path);
-      return run(ws);
+      Module mod = run(ws);
+      mod.loaderid = IModuleProvider.LOADER_ID_APPLICATION;
+      return mod;
 
     } catch (IOException e) {
       throw new XBosonException.IOError(
-              "Cannot found "+ path +", "+ e);
+              "Cannot found Module: "+ path +", "+ e);
     }
   }
 
@@ -100,17 +102,30 @@ public class Application implements ICodeRunner {
     ws.compile(sandbox);
     module_cache.put(path, ws);
 
-    Module mod = ws.getModule();
-    mod.filename = path;
-    mod.id = '/'+ vfs.getID() +'/'+ path;
-    mod.paths = new String[] {
-            "/js_modules",
-            "/node_modules",
-    };
+    Module mod    = ws.getModule();
+    mod.filename  = path;
+    mod.id        = '/'+ vfs.getID() +'/'+ path;
+    mod.paths     = makePaths(path);
     ws.initModule(this);
-    mod.loaded = true;
 
     return mod;
+  }
+
+
+  public boolean isCached(String name) {
+    return module_cache.containsKey(name);
+  }
+
+
+  private String[] makePaths(String path_name) {
+    List<String> paths = new ArrayList<>();
+    int i = path_name.lastIndexOf("/", path_name.length());
+
+    while (i >= 0) {
+      paths.add(path_name.substring(0, i) + NodeModuleProvider.NODE_MODULES);
+      i = path_name.lastIndexOf("/", i-1);
+    }
+    return paths.toArray(new String[paths.size()]);
   }
 
 

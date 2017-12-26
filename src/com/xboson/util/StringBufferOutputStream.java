@@ -121,4 +121,13 @@ public class StringBufferOutputStream extends OutputStream {
   public InputStream openInputStream() {
     return new ByteArrayInputStream(buf, 0, pos);
   }
+
+
+  /**
+   * 重置缓冲区
+   */
+  public void clear() {
+    pos = 0;
+    Arrays.fill(buf, (byte) 0);
+  }
 }

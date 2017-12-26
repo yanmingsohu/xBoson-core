@@ -18,6 +18,9 @@ package com.xboson.app;
 
 import com.xboson.app.reader.AbsReadScript;
 import com.xboson.app.reader.ScriptFile;
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.InvocationApi;
 import com.xboson.been.CallData;
 import com.xboson.been.Module;
 import com.xboson.db.IDict;
@@ -25,6 +28,7 @@ import com.xboson.event.OnFileChangeHandle;
 import com.xboson.fs.FileAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
 import java.io.IOException;
@@ -33,15 +37,16 @@ import java.io.IOException;
 /**
  * api 监听脚本修改事件并在脚本修改后清空缓存重新编译改变的脚本
  */
-public class XjApi extends OnFileChangeHandle implements IDict {
+public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
 
   private Log log;
   private XjOrg org;
   private XjApp app;
   private XjModule mod;
-  private String id;
   private Module jsmodule;
   private ScriptFile file;
+  private String id;
+  private String res;
 
 
   XjApi(XjOrg org, XjApp app, XjModule mod, String id) {
@@ -50,6 +55,7 @@ public class XjApi extends OnFileChangeHandle implements IDict {
     this.mod = mod;
     this.id  = id;
     this.log = LogFactory.create();
+    this.res = (app.getID() + mod.id() + id).toLowerCase();
 
     readApiContent();
     regApiChangeListener();
@@ -79,6 +85,7 @@ public class XjApi extends OnFileChangeHandle implements IDict {
         }
       }
     }
+    PermissionSystem.applyWithApp(InvocationApi.class, this);
     app.run(cd, jsmodule, this);
   }
 
@@ -114,4 +121,9 @@ public class XjApi extends OnFileChangeHandle implements IDict {
     return getFile().attr;
   }
 
+
+  @Override
+  public String description() {
+    return res;
+  }
 }

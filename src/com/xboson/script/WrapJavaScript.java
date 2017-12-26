@@ -79,13 +79,13 @@ public class WrapJavaScript extends AbsWrapScript {
       //
       AbstractJSObject jso = (AbstractJSObject) cs.eval();
       Object warpreturn = jso.call(module, module, crun);
+      module.loaded = true;
       return warpreturn;
 
     } catch (ECMAException ec) {
       throw new JScriptException(ec, code_reader);
 
     } catch (Exception e) {
-      e.printStackTrace();
       throw new XBosonException(e);
     }
   }

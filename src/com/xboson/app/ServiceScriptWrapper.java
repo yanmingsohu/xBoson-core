@@ -21,6 +21,7 @@ import com.xboson.been.CallData;
 import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
+import com.xboson.fs.node.NodeFileFactory;
 import com.xboson.script.*;
 import com.xboson.util.CloseableSet;
 import com.xboson.util.IConstant;
@@ -74,9 +75,10 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
   public ServiceScriptWrapper() throws IOException {
     BasicEnvironment basic = EnvironmentFactory.createEmptyBasic();
     SysModules sys_mod = EnvironmentFactory.createDefaultSysModules();
+    IModuleProvider node_mod = NodeFileFactory.openNodeModuleProvider(sys_mod);
     regModules(sys_mod);
     basic.setEnvObjectList(libs);
-    basic.insertConfiger(sys_mod);
+    basic.insertConfiger(node_mod);
     basic.insertConfiger(this);
     this.env = basic;
   }

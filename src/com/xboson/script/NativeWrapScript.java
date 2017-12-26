@@ -43,6 +43,7 @@ public class NativeWrapScript extends AbsWrapScript {
     try {
       Object obj = clazz.newInstance();
       module.exports = obj;
+      module.loaded = true;
       return obj;
     } catch (Exception e) {
       throw new XBosonException("Create Java Module Fail ("+ filename +")", e);

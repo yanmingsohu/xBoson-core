@@ -16,21 +16,14 @@
 
 package com.xboson.auth;
 
-import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
-
-
 /**
  * 被权限主体请求的资源, 必须能唯一准确的描述一个资源.
  */
 public interface IAResource {
 
   /**
-   * 将资源使用一个 URI 来描述, 两个不同的资源返回的 URI 也必须不同, 否则必须相同.
-   *
-   * @see File#toURI() 该方法名称的来源
+   * 将资源使用一个字符串来描述, 两个不同的资源返回的描述也必须不同, 否则必须相同.
    */
-  URI toURI();
+  String description();
 
 }

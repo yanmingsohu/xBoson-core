@@ -45,6 +45,7 @@ public class SourceFix {
         content = SourceFix.fixVirtualAttr(content);
       }
     }
+    content = multiLineString(content);
     return content;
   }
 
@@ -177,6 +178,23 @@ public class SourceFix {
             new S_Notation('~'),
             new S_Symbol(1),
             new S_VirtualAttr(0, 1),
+    };
+
+    JsParser.rewrite(content, buf, all_state, 2);
+    return buf.toBytes();
+  }
+
+
+  /**
+   * 支持 ES6 多行字符串简化语法, '`' 符号作为开始, '`' 作为结束,
+   * 不支持动态变量 ${varName}.
+   */
+  public static byte[] multiLineString(byte[] content) {
+    int size = (int) (content.length * 1.7);
+    StringBufferOutputStream buf = new StringBufferOutputStream(size);
+
+    SState[] all_state = new SState[] {
+            new S_BeginMultiLineString(),
     };
 
     JsParser.rewrite(content, buf, all_state, 2);

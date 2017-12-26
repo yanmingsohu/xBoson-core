@@ -29,6 +29,7 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
   public String tel;
   public String email;
   public String status;
+  public long   loginTime;
 
   transient public String password;
   transient public String password_dt;

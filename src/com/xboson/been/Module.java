@@ -28,6 +28,7 @@ public class Module implements IBean {
   public boolean  loaded;
   public Object   parent;
   public String[] paths;
+  public int      loaderid;
 
   transient public Object children;
   transient public Object exports;

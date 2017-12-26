@@ -16,87 +16,169 @@
 
 package com.xboson.fs.node;
 
+import com.xboson.been.Module;
+import com.xboson.been.PackageInf;
 import com.xboson.been.XBosonException;
+import com.xboson.event.GlobalEventBus;
+import com.xboson.event.OnFileChangeHandle;
+import com.xboson.fs.redis.FileStruct;
 import com.xboson.fs.redis.IFileSystemConfig;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.script.ICodeRunner;
-import com.xboson.script.IModuleProvider;
-import com.xboson.script.Sandbox;
-import com.xboson.util.StringBufferOutputStream;
+import com.xboson.script.*;
 import com.xboson.util.Tool;
+import okio.BufferedSource;
+import okio.Okio;
 
 import javax.script.ScriptException;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.nio.ByteBuffer;
 
 
 /**
  * 按照 nodejs 的规则来加载脚本文件.
  */
-public class NodeModuleProvider implements IModuleProvider {
+public class NodeModuleProvider extends AbsModules implements IModuleProvider {
 
   /**
    * node 目录必须有 package.json 文件, 且 name 为该名称.
    */
   public static final String PROJECT_NAME = "xboson-node-modules";
-  public static final String NODE_MODULES = "/NODE_MODULES";
+  public static final String NODE_MODULES = "/node_modules";
+  public static final String PACKAGE_FILE = "/package.json";
+  public static final String DEF_MAIN     = "/index.js";
+  public static final String FILE_TYPE    = "node-modules";
 
-
+  private ICodeRunner runner;
   private IRedisFileSystemProvider fs;
   private IModuleProvider parent;
-  private String localPath;
+  private FileChange fc;
   private Log log;
 
 
   NodeModuleProvider(IRedisFileSystemProvider fs,
           IFileSystemConfig config, IModuleProvider parent) {
-    this.fs = fs;
+    this.fs     = fs;
     this.parent = parent;
-    this.localPath = config.configLocalPath();
-    this.log = LogFactory.create();
+    this.log    = LogFactory.create();
+    this.fc     = new FileChange();
     check();
   }
 
 
   private void check() {
-    String pkgName = localPath + "/package.json";
+    PackageInf pkgInf = readPackage("/");
 
-    try (FileInputStream fin = new FileInputStream(pkgName)) {
-      StringBufferOutputStream buf = new StringBufferOutputStream();
-      buf.write(fin, false);
-      Map pkgInf = Tool.getAdapter(Map.class).fromJson(buf.toString());
+    if (! PROJECT_NAME.equalsIgnoreCase(pkgInf.name)) {
+      throw new XBosonException("bad package name: " + pkgInf.name);
+    }
+    log.debug("Node modules:", pkgInf, "in", "/");
+  }
 
-      String name = (String) pkgInf.get("name");
-      if (! PROJECT_NAME.equalsIgnoreCase(name)) {
-        throw new XBosonException("bad package name: " + name);
+
+  @Override
+  public Module getModule(String name, Module apply) {
+    Module mod = parent.getModule(name, apply);
+
+    if (mod != null)
+      return mod;
+
+    for (int i=0; i<apply.paths.length && mod == null; ++i) {
+      mod = findModule(apply.paths[i], name, apply);
+    }
+    return mod;
+  }
+
+
+  private Module findModule(String dir, String name, Module apply) {
+    FileStruct attr = fs.readAttribute(dir +'/'+ name);
+    Module mod = null;
+
+    if (attr != null) {
+      if (attr.isDir()) {
+        PackageInf pkg = readPackage(attr.path);
+        if (! Tool.isNulStr(pkg.main)) {
+          mod = loadModule(attr.path +'/'+ pkg.main, name);
+        } else {
+          mod = loadModule(attr.path + DEF_MAIN, name);
+        }
+      } else {
+        mod = loadModule(attr.path, name);
       }
+    }
+    return mod;
+  }
 
-      log.debug("Node modules:", pkgInf, "in", pkgName);
-      localPath = localPath + NODE_MODULES;
+
+  private Module loadModule(String script, String mod_name) {
+    FileStruct attr = fs.readAttribute(script);
+    if (attr == null)
+      throw new XBosonException.NotFound(script);
+
+    fs.readFileContent(attr);
+    ByteBuffer buf = ByteBuffer.wrap(attr.getFileContent());
+    AbsWrapScript wrap = new WrapJavaScript(buf, mod_name);
+
+    Module mod = runner.run(wrap);
+    mod.loaderid = LOADER_ID_NODE_MODULE;
+    fc.lookup(script);
+
+    log.debug("Load node module '"+ script +"'");
+    return mod;
+  }
+
+
+  private PackageInf readPackage(String dir) {
+    String file = dir + PACKAGE_FILE;
+    FileStruct attr = fs.readAttribute(file);
+    if (attr == null)
+      throw new XBosonException.NotFound(file);
+
+    try {
+      fs.readFileContent(attr);
+      byte[] content = attr.getFileContent();
+
+      //
+      // 构造输入流可以避免内存复制
+      //
+      BufferedSource r = Okio.buffer(
+              Okio.source(new ByteArrayInputStream(content)));
+
+      return Tool.getAdapter(PackageInf.class).fromJson(r);
     } catch (IOException e) {
-      throw new XBosonException(e);
+      throw new XBosonException.IOError(e);
     }
   }
 
 
   @Override
-  public Object getModule(String name) {
-    Object mod = parent.getModule(name);
-    if (mod != null)
-      return mod;
+  public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
+    try {
+      parent.config(box, runner);
 
-    String file = localPath + name;
-    Tool.pl("!!!!!!!!!", file);
+      box.getGlobalFunc().invokeFunction(
+              "__set_sys_module_provider", this);
 
-    return null;
+      this.runner = runner;
+
+    } catch(NoSuchMethodException e) {
+      throw new ScriptException(e);
+    }
   }
 
 
-  @Override
-  public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
-    parent.config(box, runner);
+  private class FileChange extends OnFileChangeHandle {
+
+    @Override
+    protected void onFileChange(String file_name) {
+      runner.changed(file_name);
+    }
+
+    public void lookup(String file_name) {
+      String eventName = getEventName(file_name);
+      GlobalEventBus.me().on(eventName, this);
+    }
   }
 }

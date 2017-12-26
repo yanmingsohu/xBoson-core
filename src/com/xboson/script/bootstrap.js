@@ -116,19 +116,31 @@ function __warp_main(fn) { // 主函数包装器
 	// 所有的缓存都在 java 上处理.
 	//
 	function require(path) {
+	  //
+	  // 一定从文件加载器加载
+	  //
 	  if (path[0] == '/' || path[0] == '.') {
 	    path = pathlib.normalize(get_dirname() +'/'+ path);
+	    return app.run(path).exports;
 	  }
-	  var mod;
 
-	  if (sys_module_provider) {
-      mod = sys_module_provider.getModule(path);
+	  var mod;
+    //
+    // 系统加载过的模块将缓存在 app 中
+    //
+	  if (app.isCached(path)) {
+	    mod = app.run(path);
+	  }
+	  else if (sys_module_provider) {
+      mod = sys_module_provider.getModule(path, currmodule);
+	  }
+	  else {
+	    throw new Error("Sys Module Provider Not Found");
 	  }
 
 	  if (!mod) {
-      mod = app.run(path);
+      throw new Error("Cannot found Module: " + path);
     }
-
     // 不应该每次运行都绑定
 		//mod.parent = currmodule;
 		//currmodule.children[mod.id] = mod;

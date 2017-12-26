@@ -28,11 +28,15 @@ import static com.xboson.event.Names.volatile_file_change_prifix;
  * 封装了文件修改事件相关操作.
  * 文件修改事件必须使用该方法来封装, 因为事件名称相同而文件名不同.
  */
-public abstract class OnFileChangeHandle extends GLHandle {
+public abstract class   OnFileChangeHandle extends GLHandle {
 
   private String eventName;
 
 
+  /**
+   * 构造文件修改事件句柄
+   * 实现自行增加文件(系统)类型前缀, 防止不同系统中同名文件冲突.
+   */
   public OnFileChangeHandle() {
   }
 
@@ -50,14 +54,14 @@ public abstract class OnFileChangeHandle extends GLHandle {
 
   /**
    * 注册文件修改消息, 当文件修改后, onFileChange() 被调用,
-   * 该方法在对象中只能调用一次.
+   * 该方法在对象中只能调用一次, 若需要监听多个文件直接使用 GlobalEventBus.on().
    *
    * @param file_name 由于全局都会使用这个事件来注册文件消息,
    *                  不同的类型应该自定义一个前缀.
    */
   protected void regFileChange(String file_name) {
     if (eventName != null)
-      throw new XBosonException("only once regFileChange()");
+      throw new XBosonException("Only once regFileChange()");
 
     eventName = getEventName(file_name);
     GlobalEventBus.me().on(eventName, this);
@@ -80,7 +84,7 @@ public abstract class OnFileChangeHandle extends GLHandle {
   }
 
 
-  private static String getEventName(String file) {
+  protected static String getEventName(String file) {
     if (file == null)
       throw new XBosonException.NullParamException("String file_name");
 
@@ -91,7 +95,7 @@ public abstract class OnFileChangeHandle extends GLHandle {
   /**
    * 方便发送文件修改消息,
    * 由于全局都会使用这个事件来注册文件消息, 不同的类型应该自定义一个前缀.
-   * @param file
+   * @param file 文件名
    */
   public static void sendChange(String file) {
     String eventName = getEventName(file);

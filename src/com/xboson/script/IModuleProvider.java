@@ -16,16 +16,26 @@
 
 package com.xboson.script;
 
+import com.xboson.been.Module;
+
+
 /**
- * 模块提供
+ * 模块加载器
  */
 public interface IModuleProvider extends IConfigSandbox {
 
+  int LOADER_ID_APPLICATION = 1;
+  int LOADER_ID_SYS_MODULE  = 2;
+  int LOADER_ID_NODE_MODULE = 3;
+
+
   /**
-   * 从系统模块名返回系统模块
+   * 从模块名返回系统模块, 并且应该将模块缓存给 Application
+   *
    * @param name
-   * @return 如果找不到模块返回 null
+   * @return 如果模块加载器找不到模块应该返回 null
+   * @see Application
    */
-  Object getModule(String name);
+  Module getModule(String name, Module applyMod);
 
 }

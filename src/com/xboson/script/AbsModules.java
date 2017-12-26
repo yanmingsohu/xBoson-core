@@ -6,8 +6,8 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 2017年11月5日 下午4:27:04
-// 原始文件路径: xBoson/src/com/xboson/script/ICodeRunner.java
+// 文件创建日期: 17-12-25 下午3:18
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/script/AbsModules.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -19,23 +19,14 @@ package com.xboson.script;
 import com.xboson.been.Module;
 
 
-public interface ICodeRunner {
+public abstract class AbsModules implements IModuleProvider {
 
   /**
-   * 通过该方法运行文件中的代码
+   * 该方法直接调用两个参数的 getModule
+   * @see #getModule(String, Module)
    */
-  Module run(String path);
-
-
-	/**
-	 * 运行一个打包好的脚本
-	 */
-  Module run(AbsWrapScript ws);
-
-
-  /**
-   * 删除缓存中的模块
-   */
-  void changed(String module_path);
+  public final Module getModule(String name) {
+    return getModule(name, null);
+  }
 
 }

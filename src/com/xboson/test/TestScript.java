@@ -23,6 +23,7 @@ import com.xboson.fs.IVirtualFileSystem;
 import com.xboson.fs.node.NodeFileFactory;
 import com.xboson.fs.node.NodeModuleProvider;
 import com.xboson.script.*;
+import com.xboson.script.lib.Console;
 import com.xboson.util.StringBufferOutputStream;
 
 import javax.script.ScriptEngineFactory;
@@ -59,15 +60,7 @@ public class TestScript extends Test {
     fullTest();
 		error_format();
     test_functions_apply();
-    module_loader();
 	}
-
-
-	public void module_loader() throws Exception {
-	  sub("Test module loader");
-    SysModules sys = EnvironmentFactory.createDefaultSysModules();
-    IModuleProvider nm = NodeFileFactory.openNodeModuleProvider(sys);
-  }
 
 
 	public void error_format() throws Exception {
@@ -104,7 +97,12 @@ public class TestScript extends Test {
 
 	public Application createBasicApplication(IVirtualFileSystem vfs)
           throws Exception {
-    BasicEnvironment env = EnvironmentFactory.createBasic();
+    SysModules sysmod = EnvironmentFactory.createDefaultSysModules();
+    IModuleProvider nodejs_mod = NodeFileFactory.openNodeModuleProvider(sysmod);
+
+    BasicEnvironment env = EnvironmentFactory.createEmptyBasic();
+    env.insertConfiger(nodejs_mod);
+    env.setEnvObject(Console.class);
     env.setEnvObject(MapImpl.class);
     env.setEnvObject(JsObj.class);
 

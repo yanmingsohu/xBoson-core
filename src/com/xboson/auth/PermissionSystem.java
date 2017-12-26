@@ -16,6 +16,7 @@
 
 package com.xboson.auth;
 
+import com.xboson.app.AppContext;
 import com.xboson.been.XBosonException;
 
 
@@ -59,11 +60,22 @@ public class PermissionSystem {
    * IAWhere 会从缓冲区中获取
    *
    * @see #apply(IAWho, IAWhere, IAResource) 完整的调用
-   * @see #apply(Class, IAResource) 更简单的调用方法
+   * @see #applyWithApp(Class, IAResource) 应用上下文
    */
-  public static void apply(IAWho who, Class<? extends IAWhere> where, IAResource res) {
+  public static void apply(IAWho who,
+                           Class<? extends IAWhere> where,
+                           IAResource res) {
     IAWhere iaw = AuthFactory.me().get(where);
     apply(who, iaw, res);
+  }
+
+
+  /**
+   * 在应用上下文中检查权限
+   */
+  public static void applyWithApp(Class<? extends IAWhere> where,
+                                IAResource res) {
+    apply(AppContext.me().who(), where, res);
   }
 
 

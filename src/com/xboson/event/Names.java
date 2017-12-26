@@ -58,7 +58,7 @@ public interface Names {
 
   
   /**
-   * 文件修改事件前缀, 消息指发送给在线节点, 离线节点上线后也无法收到该消息.
+   * 文件修改事件前缀, 消息只发送给在线节点, 离线节点上线后也无法收到该消息.
    * @see OnFileChangeHandle
    */
   String volatile_file_change_prifix = "v.file.change:";

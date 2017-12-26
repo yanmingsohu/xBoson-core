@@ -35,12 +35,9 @@ public class OpenSystemDBWithKey implements IAWhere {
 
   public static IAResource wrap(String key) {
     return new IAResource() {
-      public URI toURI() {
-        try {
-          return new URI(key);
-        } catch (URISyntaxException e) {
-          throw new XBosonException(e);
-        }
+      @Override
+      public String description() {
+        return key;
       }
     };
   }

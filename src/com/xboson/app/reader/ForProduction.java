@@ -60,7 +60,8 @@ public class ForProduction extends ForDevelopment {
           }
         }
       } else {
-        log.warn("Redis cannot found", mod, api);
+        log.warn("Redis cannot found",
+                mod, api, ", will be read from DB.");
       }
     } catch (Exception e) {
       log.warn("Script from Redis fail", mod, api);

@@ -31,7 +31,7 @@ import java.util.Map;
  * require 方法提供的系统模块, 需要在初始化时将外部模块注入.
  * 每个环境只支持一个 SysModules 模块, 切只能绑定一个运行时.
  */
-public class SysModules implements IModuleProvider {
+public class SysModules extends AbsModules implements IModuleProvider {
 
   private Log log = LogFactory.create();
   private ICodeRunner runner;
@@ -48,7 +48,7 @@ public class SysModules implements IModuleProvider {
   /**
    * 返回一个本地模块
    */
-  public Object getModule(String name) {
+  public Module getModule(String name, Module apply) {
     if (name == null)
       throw new NullPointerException("name");
 
@@ -57,6 +57,7 @@ public class SysModules implements IModuleProvider {
       return null;
 
     Module mod = runner.run(module);
+    mod.loaderid = LOADER_ID_SYS_MODULE;
     modules.remove(name);
     return mod;
   }

@@ -136,9 +136,10 @@ public class UserService extends XService implements IDict, IConstant {
     }
 
     lu.roles = userRoles(lu.pid);
+    lu.loginTime = System.currentTimeMillis();
+    lu.password = null;
 
     data.sess.login_user = lu;
-    lu.password = null;
     data.xres.bindResponse("openid", lu.userid);
     data.xres.responseMsg("成功登录系统", 0);
 	}

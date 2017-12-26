@@ -16,6 +16,7 @@
 
 package com.xboson.fs;
 
+import com.xboson.app.fix.SourceFix;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
@@ -64,9 +65,11 @@ public class LocalFileSystem extends FSHelper implements IVirtualFileSystem {
   public ByteBuffer putfile(String virtual_name, String file) throws IOException {
     Path p = Paths.get(basedir, file);
     byte[] content = Files.readAllBytes(p);
+    content = SourceFix.autoPatch(content);
     ByteBuffer buf = ByteBuffer.wrap(content);
     file_cache.put(virtual_name, buf);
-    //log.debug("PUT", basedir, virtual_name, "=>", file);
+    // log.debug("PUT", basedir, virtual_name, "=>",
+    //        file, new String(content));
     return buf;
   }
 

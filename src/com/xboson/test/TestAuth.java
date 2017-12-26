@@ -97,20 +97,16 @@ public class TestAuth extends Test {
   static public class Res implements IAResource {
     private String id;
     Res(String id) { this.id = id; }
-    public URI toURI() {
-      try {
-        return new URI("auth://test/" + id);
-      } catch (URISyntaxException e) {
-        e.printStackTrace();
-      }
-      return null;
+    @Override
+    public String description() {
+      return id;
     }
   }
 
 
   static public class Where implements IAWhere {
     public boolean apply(IAWho who, IAResource res) {
-      return res.toURI().getPath().equals( who.identification() );
+      return res.description().equals( who.identification() );
     }
   }
 
