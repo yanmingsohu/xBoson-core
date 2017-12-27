@@ -28,7 +28,6 @@ import com.xboson.event.OnFileChangeHandle;
 import com.xboson.fs.FileAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
 import java.io.IOException;

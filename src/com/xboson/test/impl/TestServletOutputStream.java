@@ -27,15 +27,20 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 
+/**
+ * 控制台必须是 utf8 编码, 否则乱码
+ */
 public class TestServletOutputStream extends ServletOutputStream {
-  private Log log;
+
   private StringBufferOutputStream out;
+  private Log log;
 
 
   public TestServletOutputStream(Log log) {
     this.log = log;
     out = new StringBufferOutputStream(1000);
   }
+
 
   @Override
   public boolean isReady() {
@@ -56,12 +61,15 @@ public class TestServletOutputStream extends ServletOutputStream {
 
   @Override
   public void flush() throws IOException {
-    close();
+    log.info(out.toString());
+    out.clear();
   }
 
 
   @Override
   public void close() throws IOException {
-    log.info(out.toString());
+    flush();
+    out = null;
+    log = null;
   }
 }

@@ -174,6 +174,12 @@ public class LogFactory extends OnExitHandle {
 	}
 
 
+	/**
+	 * 设置全局日志输出器
+   *
+	 * @param type_name com.xboson.log.writer.* 下的类名
+	 * @return 成功返回 true
+	 */
 	public synchronized boolean setType(String type_name) {
 		try {
 			Class<?> cl = Class.forName("com.xboson.log.writer." + type_name);

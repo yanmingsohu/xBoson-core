@@ -76,7 +76,7 @@ public class StringBufferOutputStream extends OutputStream {
    * @return 缓冲区转换为字符串
    */
   public String toString() {
-    return new String(buf, 0, pos);
+    return new String(buf, 0, pos, IConstant.CHARSET);
   }
 
 

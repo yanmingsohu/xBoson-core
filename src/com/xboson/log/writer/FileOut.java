@@ -16,9 +16,7 @@
 
 package com.xboson.log.writer;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
@@ -27,6 +25,7 @@ import java.util.TimerTask;
 import com.xboson.log.ILogWriter;
 import com.xboson.log.Level;
 import com.xboson.log.OutBase;
+import com.xboson.util.IConstant;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
@@ -39,13 +38,13 @@ public class FileOut extends OutBase implements ILogWriter {
 	private static final long resetSize = 10 * 1024 * 1024;
 	
 	private File currentFile;
-	private FileWriter out;
+	private Writer writer;
 	private Timer checksize;
 	
 
 	public FileOut() throws IOException {
 		currentFile = logFile();
-		out = new FileWriter(currentFile, true);
+		switchOutFile();
 		checksize = new Timer(true);
 		checksize.schedule(new CheckSize(), checkPeriod, checkPeriod);
 	}
@@ -61,10 +60,10 @@ public class FileOut extends OutBase implements ILogWriter {
 
 	@Override
 	public void output(Date d, Level l, String name, Object[] msg) {
-		synchronized (out) {
-			format(out, d, l, name, msg);
+		synchronized (writer) {
+			format(writer, d, l, name, msg);
 			try {
-				out.append(line);
+				writer.append(line);
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
@@ -75,7 +74,13 @@ public class FileOut extends OutBase implements ILogWriter {
 	@Override
 	public void destroy(ILogWriter replace) {
 		checksize.cancel();
-		Tool.close(out);
+		Tool.close(writer);
+	}
+
+
+	private void switchOutFile() throws IOException {
+		OutputStream o = new FileOutputStream(currentFile, true);
+		writer = new OutputStreamWriter(o, IConstant.CHARSET);
 	}
 
 	
@@ -84,18 +89,19 @@ public class FileOut extends OutBase implements ILogWriter {
 		
 		public void run() {
 			if (currentFile.length() > resetSize) {
-				Tool.close(out);
+				Tool.close(writer);
 				
 				File rename;
 				do {
 					rename = new File(currentFile.getPath() + '.' + num);
 					++num;
 				} while (rename.exists());
-				
+
+				Tool.pl("Log output file switch", currentFile, "->", rename);
 				currentFile.renameTo(rename);
 				
 				try {
-					out = new FileWriter(currentFile, true);
+					switchOutFile();
 				} catch(Exception e) {
 					e.printStackTrace();
 				}

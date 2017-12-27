@@ -18,25 +18,31 @@ package com.xboson.test.impl;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.IConstant;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Locale;
 
 
 public class TestServletResponse implements HttpServletResponse {
+
   Log log = LogFactory.create("InnerServletResponse");
   TestServletOutputStream out;
+
 
   public TestServletResponse() {
     log = LogFactory.create("InnerServletResponse");
     out = new TestServletOutputStream(log);
   }
+
 
   @Override
   public void addCookie(Cookie cookie) {
@@ -184,7 +190,7 @@ public class TestServletResponse implements HttpServletResponse {
 
   @Override
   public PrintWriter getWriter() throws IOException {
-    return new PrintWriter(out);
+    return new PrintWriter(System.out, true);
   }
 
 

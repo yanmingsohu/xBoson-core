@@ -39,7 +39,7 @@ import okio.Timeout;
 public class OutputStreamSinkWarp implements BufferedSink {
 	
 	private OutputStream writer;
-	private Charset utf8 = Charset.forName("utf8");
+	private Charset utf8 = IConstant.CHARSET;
 
 
 	public OutputStreamSinkWarp(OutputStream writer) {

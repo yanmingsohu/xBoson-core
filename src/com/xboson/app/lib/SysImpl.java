@@ -497,6 +497,11 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public boolean regexMatches(String regex, String str) {
+    return regexFind(regex, str);
+  }
+
+
   public Object regexSplit(String regex, String str) {
     return str.split(regex);
   }
