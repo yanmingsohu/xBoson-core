@@ -20,28 +20,41 @@ function transformTreeData(list, primary_key, parent_ref_key, child_list_key) {
   var root = [];
   var mapping = {};
 
+  //
+  // 第一次循环记录所有主键
+  //
   for (var i=0; i<size; ++i) {
     var item = list[i];
     mapping[ item[primary_key] ] = item;
-
-    if (! item[parent_ref_key]) {
-      root.push(item);
-    }
   }
 
+  //
+  // 第二次循环检查依赖关系
+  //
   for (var i=0; i<size; ++i) {
     var item = list[i];
     var ref = item[parent_ref_key];
 
     if (ref) {
       var parent = mapping[ref];
+
       if (parent) {
         var child_list = parent[child_list_key];
         if (!child_list) {
           child_list = parent[child_list_key] = [];
         }
         child_list.push(item);
+      } else {
+        //
+        // 指向的父节点并不存在, 则认为是根对象
+        //
+        root.push(item);
       }
+    } else {
+      //
+      // 没有父指针属性, 则认为是根对象
+      //
+      root.push(item);
     }
   }
   return root;

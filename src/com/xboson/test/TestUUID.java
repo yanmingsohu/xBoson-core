@@ -64,7 +64,7 @@ public class TestUUID extends Test {
     }
 
 
-    UUID id = uid.v1obj();
+    UUID id = uid.v4obj();
     String ds = uid.ds(id);
     UUID pds = uid.parseDS(ds);
     String z = uid.zip(id);

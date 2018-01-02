@@ -44,6 +44,12 @@ var MODULE_NAME = '/node_modules';
 });
 
 
+// 禁止 Function 打印源代码
+Function.prototype.toString = function() {
+  return 'function ' + (this.name || 'anonymous') + '() { [native code] }'
+};
+
+
 readOnlyAttr(context, '__warp_main', __warp_main);
 rwAttrOnClosed(context, 'javax.script.filename');
 
