@@ -31,81 +31,85 @@ import com.xboson.util.Tool;
 
 
 public class FileOut extends OutBase implements ILogWriter {
-	
-	private static final String line = "\r\n";
-	private static final String logFileNameFormat = "yyyy-MM-dd HH";
-	private static final long checkPeriod = 1 * 60 * 1000;
-	private static final long resetSize = 10 * 1024 * 1024;
-	
-	private File currentFile;
-	private Writer writer;
-	private Timer checksize;
-	
 
-	public FileOut() throws IOException {
-		currentFile = logFile();
-		switchOutFile();
-		checksize = new Timer(true);
-		checksize.schedule(new CheckSize(), checkPeriod, checkPeriod);
-	}
-	
-	
-	private File logFile() {
-		SimpleDateFormat f = new SimpleDateFormat(logFileNameFormat);
-		String name = SysConfig.me().readConfig().logPath;
-		name += "/" + f.format(new Date()) + "h.log";
-		return new File(name);
-	}
+  private static final String line = "\r\n";
+  private static final String logFileNameFormat = "yyyy-MM-dd HH";
+  private static final long checkPeriod = 1 * 60 * 1000;
+  private static final long resetSize = 10 * 1024 * 1024;
+
+  private File currentFile;
+  private Writer writer;
+  private Timer checksize;
 
 
-	@Override
-	public void output(Date d, Level l, String name, Object[] msg) {
-		synchronized (writer) {
-			format(writer, d, l, name, msg);
-			try {
-				writer.append(line);
-			} catch(Exception e) {
-				Tool.pl("Log File Writer", e.getMessage());
-			}
-		}
-	}
+  public FileOut() throws IOException {
+    currentFile = logFile();
+    switchOutFile();
+    checksize = new Timer(true);
+    checksize.schedule(new CheckSize(), checkPeriod, checkPeriod);
+  }
 
 
-	@Override
-	public void destroy(ILogWriter replace) {
-		checksize.cancel();
-		Tool.close(writer);
-	}
+  private File logFile() {
+    SimpleDateFormat f = new SimpleDateFormat(logFileNameFormat);
+    String name = SysConfig.me().readConfig().logPath;
+    name += "/" + f.format(new Date()) + "h.log";
+    return new File(name);
+  }
 
 
-	private void switchOutFile() throws IOException {
-		OutputStream o = new FileOutputStream(currentFile, true);
-		writer = new OutputStreamWriter(o, IConstant.CHARSET);
-	}
+  @Override
+  public synchronized void output(Date d, Level l, String name, Object[] msg) {
+    try {
+      //
+      // 因为没有在 Log 中做线程同步, 写出时, 该对象可能已经关闭而抛出异常,
+      // 考虑到性能原因, 接受在切换输出时丢失部分日志.
+      //
+      format(writer, d, l, name, msg);
+      writer.append(line);
+    } catch(Exception e) {
+      nolog("File Writer Fail: " + e);
+    }
+  }
 
-	
-	private class CheckSize extends TimerTask {
-		private int num = 0;
-		
-		public void run() {
-			if (currentFile.length() > resetSize) {
-				Tool.close(writer);
-				
-				File rename;
-				do {
-					rename = new File(currentFile.getPath() + '.' + num);
-					++num;
-				} while (rename.exists());
 
-				Tool.pl("Log output file switch", currentFile, "->", rename);
-				currentFile.renameTo(rename);
-				
-				try {
-					switchOutFile();
-				} catch(Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+  @Override
+  public synchronized void destroy(ILogWriter replace) {
+    checksize.cancel();
+    Tool.close(writer);
+  }
+
+
+  private synchronized void switchOutFile() throws IOException {
+    OutputStream o = new FileOutputStream(currentFile, true);
+    writer = new OutputStreamWriter(o, IConstant.CHARSET);
+  }
+
+
+  private class CheckSize extends TimerTask {
+    private int num = 0;
+
+    public void run() {
+      if (currentFile.length() > resetSize) {
+        synchronized(FileOut.this) {
+          Tool.close(writer);
+
+          File rename;
+          do {
+            rename = new File(currentFile.getPath() + '.' + num);
+            ++num;
+          } while (rename.exists());
+
+          Tool.pl("Log output file switch", currentFile, "->", rename);
+          currentFile.renameTo(rename);
+
+          try {
+            switchOutFile();
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      }
+    }
+  }
 }

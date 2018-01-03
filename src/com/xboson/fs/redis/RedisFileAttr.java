@@ -97,7 +97,7 @@ public class RedisFileAttr implements Serializable, IFileAttribute {
       throw new BadPath("Is not directory");
     }
     if (! full.startsWith(path)) {
-      throw new BadPath("Is not child " + full);
+      throw new BadPath("Is not child: '" + full + "'");
     }
     return full.substring(path.length());
   }

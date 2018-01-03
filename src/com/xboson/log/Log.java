@@ -26,13 +26,13 @@ public class Log {
   /**
    * 如果是继承的, 则使用全局级别, 否则使用日志自己的级别
    */
-	private Level cl = Level.INHERIT;
-	private String name;
-	
-	
-	Log(String name) {
-		this.name = name;
-	}
+  private Level cl = Level.INHERIT;
+  private String name;
+
+
+  Log(String name) {
+    this.name = name;
+  }
 
 
   /**
@@ -45,49 +45,52 @@ public class Log {
   }
 
 
-	public void logs(final Level l, Object[] msg) {
-		if (cl == Level.INHERIT) {
-		  if (LogFactory.blocking(l)) return;
+  public void logs(final Level l, Object[] msg) {
+    if (cl == Level.INHERIT) {
+      if (LogFactory.blocking(l)) return;
     } else if (cl.blocking(l)) {
-		  return;
+      return;
     }
 
-		Date d = new Date();
-		LogFactory.getLogWriter().output(d, l, name, msg);
-	}
+    Date d = new Date();
+    //
+    // 为保证性能不在这里做同步
+    //
+    LogFactory.getLogWriter().output(d, l, name, msg);
+  }
 
 
-	Level getLevel() {
-		return cl;
-	}
+  Level getLevel() {
+    return cl;
+  }
 
 
-	String getName() {
-		return name;
-	}
-	
-	
-	public void log(Level l, Object... msg) {
-		logs(l, msg);
-	}
-	
-	public void info(Object... msg) {
-		logs(Level.INFO, msg);
-	}
-	
-	public void debug(Object... msg) {
-		logs(Level.DEBUG, msg);
-	}
-	
-	public void error(Object... msg) {
-		logs(Level.ERR, msg);
-	}
-	
-	public void warn(Object... msg) {
-		logs(Level.WARN, msg);
-	}
-	
-	public void fatal(Object... msg) {
-		logs(Level.FATAL, msg);
-	}
+  String getName() {
+    return name;
+  }
+
+
+  public void log(Level l, Object... msg) {
+    logs(l, msg);
+  }
+
+  public void info(Object... msg) {
+    logs(Level.INFO, msg);
+  }
+
+  public void debug(Object... msg) {
+    logs(Level.DEBUG, msg);
+  }
+
+  public void error(Object... msg) {
+    logs(Level.ERR, msg);
+  }
+
+  public void warn(Object... msg) {
+    logs(Level.WARN, msg);
+  }
+
+  public void fatal(Object... msg) {
+    logs(Level.FATAL, msg);
+  }
 }

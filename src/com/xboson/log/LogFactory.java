@@ -22,6 +22,7 @@ import com.xboson.event.OnExitHandle;
 import com.xboson.log.writer.ConsoleOut;
 import com.xboson.log.writer.SavedOut;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,29 +35,29 @@ public class LogFactory extends OnExitHandle {
 
   public static final String FILE = "log.level.properties";
 
-	private static LogFactory instance;
-	private static Level level;
-	private static ILogWriter writer;
-	private static Properties config = new Properties();
-	private String filepath;
-	
-	
-	static {
-		setLevel(Level.ALL);
-		/** 仅在启动期间保持日志, 启动后立即切换 */
-		writer = new SavedOut();
-	}
+  private static LogFactory instance;
+  private static Level level;
+  private static ILogWriter writer;
+  private static Properties config = new Properties();
+  private String filepath;
 
-	public synchronized static LogFactory me() {
-		if (instance == null) {
-			instance = new LogFactory();
-		}
-		return instance;
-	}
-	
-	
-	private LogFactory() {
-		try {
+
+  static {
+    setLevel(Level.ALL);
+    /** 仅在启动期间保持日志, 启动后立即切换 */
+    writer = new SavedOut();
+  }
+
+  public synchronized static LogFactory me() {
+    if (instance == null) {
+      instance = new LogFactory();
+    }
+    return instance;
+  }
+
+
+  private LogFactory() {
+    try {
       Config cfg = SysConfig.me().readConfig();
       setType(cfg.loggerWriterType);
       setLevel(Level.find(cfg.logLevel));
@@ -68,53 +69,54 @@ public class LogFactory extends OnExitHandle {
 
       create().info("Initialization Success, Log level", level);
     } catch(Exception e) {
-		  System.err.println("LogFactory::INIT " + e);
-		} finally {
-			if (writer == null) {
-				writer = new ConsoleOut();
-			}
-		}
-	}
+      System.err.println("LogFactory::INIT " + e);
+    } finally {
+      if (writer == null) {
+        writer = new ConsoleOut();
+        nolog("::Use Console Log Writer");
+      }
+    }
+  }
 
 
-	@Override
-	protected void exit() {
-	  if (config != null) {
-	    try (OutputStream out = new FileOutputStream(filepath)) {
-	      config.store(out, "LogFactory Config From xBoson.");
+  @Override
+  protected void exit() {
+    if (config != null) {
+      try (OutputStream out = new FileOutputStream(filepath)) {
+        config.store(out, "LogFactory Config From xBoson.");
       } catch(Exception e) {
-        System.err.println("LogFactory::EXIT " + e);
+        nolog("::LogFactory::EXIT " + e);
       }
     }
 
-		if (writer != null) {
-			writer.destroy(null);
-			// 保证在退出后仍然可用
-			writer = new ConsoleOut();
-		}
-	}
+    if (writer != null) {
+      writer.destroy(null);
+      // 保证在退出后仍然可用
+      writer = new ConsoleOut();
+    }
+  }
 
 
   /**
    * 调用该方法, 通知工厂 Log 的级别被改变, 工厂会对改变做记录
    * @param log 级别被改变的实例
    */
-	static void changeLevel(Log log) {
+  static void changeLevel(Log log) {
     synchronized (config) {
       config.setProperty(log.getName(), log.getLevel().getName());
     }
   }
-	
 
-	/**
-	 * 创建日志实例, 用于输出日志.
-	 */
-	public static Log create(String name) {
-	  if (name == null)
-	    throw new XBosonException.NullParamException("String name");
 
-	  Log log = new Log(name);
-	  synchronized (config) {
+  /**
+   * 创建日志实例, 用于输出日志.
+   */
+  public static Log create(String name) {
+    if (name == null)
+      throw new XBosonException.NullParamException("String name");
+
+    Log log = new Log(name);
+    synchronized (config) {
       String levelname = config.getProperty(name);
       if (levelname != null) {
         log.setLevel(Level.find(levelname));
@@ -122,74 +124,80 @@ public class LogFactory extends OnExitHandle {
         changeLevel(log);
       }
     }
-		return log;
-	}
+    return log;
+  }
 
 
-	public static Log create(Class c, String name) {
-		return create(c.getName() + "::" + name);
-	}
-	
-	
-	/**
-	 * 创建日志实例, 用于输出日志, 类名作为日志名.
+  public static Log create(Class c, String name) {
+    return create(c.getName() + "::" + name);
+  }
+
+
+  /**
+   * 创建日志实例, 用于输出日志, 类名作为日志名.
    * @see #create(String)
-	 */
-	public static Log create(Class<?> c) {
-		return create(c.getName());
-	}
-	
-	
-	/**
-	 * 使用调用该方法的类名作为日志名, 在集成系统中, 始终使用父类的名称.
+   */
+  public static Log create(Class<?> c) {
+    return create(c.getName());
+  }
+
+
+  /**
+   * 使用调用该方法的类名作为日志名, 在集成系统中, 始终使用父类的名称.
    * @see #create(String)
-	 */
-	public static Log create() {
-		Exception e = new Exception();
-		StackTraceElement[] t = e.getStackTrace();
-		return create(t[1].getClassName());
-	}
-	
-	
-	/**
-	 * 设置当前日志级别
-	 */
-	public static void setLevel(Level l) {
-		if (l == Level.INHERIT) {
-		  l = Level.ALL;
-      System.err.println("Global level can not be set to inherit");
+   */
+  public static Log create() {
+    Exception e = new Exception();
+    StackTraceElement[] t = e.getStackTrace();
+    return create(t[1].getClassName());
+  }
+
+
+  /**
+   * 设置当前日志级别
+   */
+  public static void setLevel(Level l) {
+    if (l == Level.INHERIT) {
+      l = Level.ALL;
+      nolog("::Global level can not be set to inherit");
     }
-		l.checknull();
-		level = l;
-	}
-	
-	
-	static ILogWriter getLogWriter() {
-		return writer;
-	}
-	
-	
-	static boolean blocking(Level l) {
-		return level.blocking(l);
-	}
+    l.checknull();
+    level = l;
+  }
 
 
-	/**
-	 * 设置全局日志输出器
+  static ILogWriter getLogWriter() {
+    return writer;
+  }
+
+
+  static boolean blocking(Level l) {
+    return level.blocking(l);
+  }
+
+
+  /**
+   * 设置全局日志输出器
    *
-	 * @param type_name com.xboson.log.writer.* 下的类名
-	 * @return 成功返回 true
-	 */
-	public synchronized boolean setType(String type_name) {
-		try {
-			Class<?> cl = Class.forName("com.xboson.log.writer." + type_name);
-			ILogWriter older = writer;
-			writer = (ILogWriter) cl.newInstance();
-			older.destroy(writer);
-			return true;
-		} catch(Exception e) {
-			System.out.println("Init log fail: " + e.getMessage());
-		}
-		return false;
-	}
+   * @param type_name com.xboson.log.writer.* 下的类名
+   * @return 成功返回 true
+   */
+  public synchronized boolean setType(String type_name) {
+    try {
+      Class<?> cl = Class.forName("com.xboson.log.writer." + type_name);
+      ILogWriter older = writer;
+      writer = (ILogWriter) cl.newInstance();
+      older.destroy(writer);
+      nolog("::Log Writer " + cl);
+      return true;
+    } catch(Exception e) {
+      nolog("::Init log fail: " + e.getMessage());
+    }
+    return false;
+  }
+
+
+  public static void nolog(String msg) {
+    OutBase.nolog(msg);
+  }
 }

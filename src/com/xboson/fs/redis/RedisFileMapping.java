@@ -53,7 +53,10 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
       return path;
 
     path = Path.me.normalize(path);
-    if (path.charAt(path.length()-1) == '/') {
+    //
+    // 'path.length() > 1' 当目录是根目录则不做改变.
+    //
+    if (path.length() > 1 && path.charAt(path.length()-1) == '/') {
       path = path.substring(0, path.length()-1);
     }
     return path;
