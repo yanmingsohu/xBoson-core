@@ -21,7 +21,7 @@ import com.xboson.been.PackageInf;
 import com.xboson.been.XBosonException;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.OnFileChangeHandle;
-import com.xboson.fs.redis.FileStruct;
+import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.IFileSystemConfig;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.log.Log;
@@ -93,7 +93,7 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
 
 
   private Module findModule(String dir, String name, Module apply) {
-    FileStruct attr = fs.readAttribute(dir +'/'+ name);
+    RedisFileAttr attr = fs.readAttribute(dir +'/'+ name);
     Module mod = null;
 
     if (attr != null) {
@@ -113,7 +113,7 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
 
 
   private Module loadModule(String script, String mod_name) {
-    FileStruct attr = fs.readAttribute(script);
+    RedisFileAttr attr = fs.readAttribute(script);
     if (attr == null)
       throw new XBosonException.NotFound(script);
 
@@ -132,7 +132,7 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
 
   private PackageInf readPackage(String dir) {
     String file = dir + PACKAGE_FILE;
-    FileStruct attr = fs.readAttribute(file);
+    RedisFileAttr attr = fs.readAttribute(file);
     if (attr == null)
       throw new XBosonException.NotFound(file);
 

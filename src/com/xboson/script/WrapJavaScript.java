@@ -45,6 +45,11 @@ public class WrapJavaScript extends AbsWrapScript {
   }
 
 
+  public WrapJavaScript(byte[] code, String filename) {
+    this(ByteBuffer.wrap(code), filename);
+  }
+
+
   public WrapJavaScript(ByteBuffer code, String filename) {
     this(filename);
     code_reader.add(S_WRAP0);

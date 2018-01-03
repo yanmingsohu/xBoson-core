@@ -24,9 +24,8 @@ import javax.script.ScriptException;
 
 import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
-import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.fs.node.NodeModuleProvider;
-import com.xboson.util.Tool;
 
 
 /**
@@ -36,11 +35,11 @@ import com.xboson.util.Tool;
 public class Application implements ICodeRunner {
 
   private Sandbox sandbox;
-  private IVirtualFileSystem vfs;
+  private IScriptFileSystem vfs;
   private Map<String, AbsWrapScript> module_cache;
 
 
-  public Application(IEnvironment env, IVirtualFileSystem vfs)
+  public Application(IEnvironment env, IScriptFileSystem vfs)
           throws ScriptException
   {
     this.vfs = vfs;

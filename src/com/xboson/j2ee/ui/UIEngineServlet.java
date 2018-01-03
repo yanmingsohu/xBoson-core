@@ -19,7 +19,7 @@ package com.xboson.j2ee.ui;
 import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
-import com.xboson.fs.redis.FileStruct;
+import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.log.Log;
@@ -114,7 +114,7 @@ public class UIEngineServlet extends HttpServlet {
     }
 
     try {
-      FileStruct fs = file_provider.readAttribute(path);
+      RedisFileAttr fs = file_provider.readAttribute(path);
 
       if (fs == null) {
         resp.sendError(400, path);
@@ -136,7 +136,7 @@ public class UIEngineServlet extends HttpServlet {
       else if (fs.isDir() && list_dir) {
         resp.setContentType("text/html");
         resp.setHeader("Cache-Control", "no-cache");
-        Set<FileStruct> files = file_provider.readDir(fs.path);
+        Set<RedisFileAttr> files = file_provider.readDir(fs.path);
         HtmlDirList.toHtml(resp.getWriter(), files, baseurl + path);
       }
 

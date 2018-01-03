@@ -52,7 +52,7 @@ public interface IRedisFileSystemProvider {
    * @param fs
    * @throws XBosonException.IOError
    */
-  void readFileContent(FileStruct fs);
+  void readFileContent(RedisFileAttr fs);
 
 
   /**
@@ -70,7 +70,7 @@ public interface IRedisFileSystemProvider {
    * 读取路径上文件(目录)的属性, 不存在的路径返回 null.
    * @throws XBosonException.IOError
    */
-  FileStruct readAttribute(String path);
+  RedisFileAttr readAttribute(String path);
 
 
   /**
@@ -120,7 +120,7 @@ public interface IRedisFileSystemProvider {
    * @return 目录中的文件列表
    * @throws XBosonException.IOError
    */
-  Set<FileStruct> readDir(String path);
+  Set<RedisFileAttr> readDir(String path);
 
 
   /**

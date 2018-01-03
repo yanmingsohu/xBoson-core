@@ -16,7 +16,7 @@
 
 package com.xboson.j2ee.ui;
 
-import com.xboson.fs.redis.FileStruct;
+import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.util.Tool;
 
 import javax.activation.FileTypeMap;
@@ -39,7 +39,7 @@ public class HtmlDirList {
    * @param baseurl 网络路径
    * @throws IOException
    */
-  public static void toHtml(Writer html, Set<FileStruct> files, String baseurl)
+  public static void toHtml(Writer html, Set<RedisFileAttr> files, String baseurl)
           throws IOException {
 
     html.write("<html><head>");
@@ -54,7 +54,7 @@ public class HtmlDirList {
 
     FileTypeMap types = MimeTypeFactory.getFileTypeMap();
 
-    for (FileStruct p : files) {
+    for (RedisFileAttr p : files) {
       html.write("<tr>");
 
       String name = p.path;

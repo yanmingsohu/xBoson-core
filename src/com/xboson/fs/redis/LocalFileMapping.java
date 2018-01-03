@@ -79,7 +79,7 @@ public abstract class LocalFileMapping implements
   @Override
   public byte[] readFile(String path) {
     try (RedisBase.JedisSession close = rb.openSession()) {
-      FileStruct fs = readAttribute(path);
+      RedisFileAttr fs = readAttribute(path);
       if (fs == null)
         throw new XBosonException.NotFound(path);
 
@@ -93,7 +93,7 @@ public abstract class LocalFileMapping implements
    * 在读取文件时会尝试同步本地和 redis 上的文件内容.
    */
   @Override
-  public void readFileContent(FileStruct fs) {
+  public void readFileContent(RedisFileAttr fs) {
     if (fs.isDir())
       throw new XBosonException.ISDirectory(fs.path);
 
@@ -144,13 +144,13 @@ public abstract class LocalFileMapping implements
 
     if (f.exists()) {
       try {
-        FileStruct fs;
+        RedisFileAttr fs;
 
         if (f.isDirectory()) {
-          fs = FileStruct.createDir(path);
+          fs = RedisFileAttr.createDir(path);
         } else {
           long local_t = f.lastModified();
-          fs = FileStruct.createFile(path, local_t, null);
+          fs = RedisFileAttr.createFile(path, local_t, null);
         }
 
         return new LocalFileStruct(fs, true);
@@ -164,12 +164,12 @@ public abstract class LocalFileMapping implements
 
 
   @Override
-  public FileStruct readAttribute(String path) {
+  public RedisFileAttr readAttribute(String path) {
     try (RedisBase.JedisSession close = rb.openSession()) {
       Path local_file = normalize(path);
 
-      FileStruct localfs = readLocalAttr(local_file, path);
-      FileStruct redisfs = rfm.readAttribute(path);
+      RedisFileAttr localfs = readLocalAttr(local_file, path);
+      RedisFileAttr redisfs = rfm.readAttribute(path);
 
       if (localfs == null) {
         if (redisfs != null)
@@ -200,7 +200,7 @@ public abstract class LocalFileMapping implements
 
   @Override
   public long modifyTime(String path) {
-    FileStruct fs = readAttribute(path);
+    RedisFileAttr fs = readAttribute(path);
     if (fs == null)
       return -1;
 
@@ -264,7 +264,7 @@ public abstract class LocalFileMapping implements
 
 
   @Override
-  public Set<FileStruct> readDir(String path) {
+  public Set<RedisFileAttr> readDir(String path) {
     Path local_file = normalize(path);
     File f = local_file.toFile();
 
@@ -275,16 +275,16 @@ public abstract class LocalFileMapping implements
       throw new XBosonException.IOError("Is not dir: " + path);
 
     File[] files = f.listFiles();
-    Set<FileStruct> ret = new HashSet<>(files.length);
-    FileStruct fs;
+    Set<RedisFileAttr> ret = new HashSet<>(files.length);
+    RedisFileAttr fs;
 
     for (int i=0; i<files.length; ++i) {
       f = files[i];
       if (f.isFile()) {
-        fs = FileStruct.createFile(f.getName(), f.lastModified(), null);
+        fs = RedisFileAttr.createFile(f.getName(), f.lastModified(), null);
         ret.add(fs);
       } else if (f.isDirectory()) {
-        fs = FileStruct.createDir(f.getName());
+        fs = RedisFileAttr.createDir(f.getName());
         ret.add(fs);
       } else {
         log.warn("Skip file is not file or dir:", f);
@@ -320,8 +320,8 @@ public abstract class LocalFileMapping implements
    * 尝试多次延迟读取文件内容, 因为可能有网络延迟或集群延迟.
    * 只在同步消息中使用, 不可在实时系统中调用.
    */
-  private FileStruct getContentTryManyTimes(String file) {
-    FileStruct fs = null;
+  private RedisFileAttr getContentTryManyTimes(String file) {
+    RedisFileAttr fs = null;
 
     for (int i=RETRY; i>=0; --i) {
       fs = rb.getStruct(file);
@@ -341,7 +341,7 @@ public abstract class LocalFileMapping implements
   public void noticeModifyContent(String file) {
     try (RedisBase.JedisSession close = rb.openSession()) {
       rb.clearContentFinderCache();
-      FileStruct fs = getContentTryManyTimes(file);
+      RedisFileAttr fs = getContentTryManyTimes(file);
       rb.getContent(fs);
 
       long mt = fs.lastModify;

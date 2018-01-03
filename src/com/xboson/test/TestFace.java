@@ -203,8 +203,8 @@ public class TestFace extends Test {
 
   public void notExists(String ...files) {
     for (String file : files) {
-      FileStruct fs1 = redis.readAttribute(file);
-      FileStruct fs2 = local.readAttribute(file);
+      RedisFileAttr fs1 = redis.readAttribute(file);
+      RedisFileAttr fs2 = local.readAttribute(file);
       ok(fs1 == null, "Redis no file:" + file);
       ok(fs2 == null, "Local no file:" + file);
     }
@@ -229,8 +229,8 @@ public class TestFace extends Test {
    * 从两个系统中读取目录, 目录内容相同测试正确, 否则抛出异常
    */
   public void dir_eq(String dir) {
-    Set<FileStruct> ls = local.readDir(dir);
-    Set<FileStruct> rs = redis.readDir(dir);
+    Set<RedisFileAttr> ls = local.readDir(dir);
+    Set<RedisFileAttr> rs = redis.readDir(dir);
     try {
       ok(ls != null, "local dir");
       ok(rs != null, "redis dir");
@@ -311,7 +311,7 @@ public class TestFace extends Test {
   public void test_redis_base() throws Throwable {
     sub("Test UI Redis base");
 
-    FileStruct fs = FileStruct.createFile(path, 0, content);
+    RedisFileAttr fs = RedisFileAttr.createFile(path, 0, content);
     rb.setContent(fs);
     rb.getContent(fs);
     ok(Arrays.equals(fs.getFileContent(), content), "read/write redis");

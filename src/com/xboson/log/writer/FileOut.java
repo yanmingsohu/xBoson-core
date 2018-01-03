@@ -65,7 +65,7 @@ public class FileOut extends OutBase implements ILogWriter {
 			try {
 				writer.append(line);
 			} catch(Exception e) {
-				e.printStackTrace();
+				Tool.pl("Log File Writer", e.getMessage());
 			}
 		}
 	}

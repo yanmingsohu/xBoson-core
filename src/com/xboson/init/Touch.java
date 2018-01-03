@@ -22,7 +22,7 @@ import com.xboson.db.DbmsFactory;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
-import com.xboson.fs.FileSystemFactory;
+import com.xboson.fs.script.FileSystemFactory;
 import com.xboson.j2ee.container.UrlMapping;
 import com.xboson.log.LogFactory;
 import com.xboson.script.SandboxFactory;

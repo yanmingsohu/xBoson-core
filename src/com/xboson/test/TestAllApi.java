@@ -23,8 +23,8 @@ import com.xboson.app.fix.SourceFix;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.SqlResult;
-import com.xboson.fs.FileAttr;
-import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.script.ScriptAttr;
+import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.script.Application;
@@ -47,7 +47,7 @@ import java.util.Set;
 /**
  * 将平台上所有代码全部编译
  */
-public class TestAllApi extends Test implements IVirtualFileSystem {
+public class TestAllApi extends Test implements IScriptFileSystem {
 
   private final static String all_org_sql =
           "SELECT orgid FROM a297dfacd7a84eab9656675f61750078.mdm_org;";
@@ -184,8 +184,8 @@ public class TestAllApi extends Test implements IVirtualFileSystem {
 
 
   @Override
-  public FileAttr readAttribute(String path) throws IOException {
-    return new FileAttr();
+  public ScriptAttr readAttribute(String path) throws IOException {
+    return new ScriptAttr();
   }
 
 

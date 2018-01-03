@@ -83,7 +83,7 @@ public class RedisBase implements IConstant {
   /**
    * 将 fs 中的内容保存
    */
-  public void setContent(FileStruct fs) {
+  public void setContent(RedisFileAttr fs) {
     try (JedisSession js = openSession()) {
       js.client.hset(contentNameBytes,
               fs.path.getBytes(CHARSET), fs.getFileContent());
@@ -94,7 +94,7 @@ public class RedisBase implements IConstant {
   /**
    * 读取文件内容到 fs
    */
-  public void getContent(FileStruct fs) {
+  public void getContent(RedisFileAttr fs) {
     if (!fs.isFile())
       throw new XBosonException("is not file");
 
@@ -105,7 +105,7 @@ public class RedisBase implements IConstant {
   }
 
 
-  public void delContent(FileStruct fs) {
+  public void delContent(RedisFileAttr fs) {
     if (!fs.isFile())
       throw new XBosonException("is not file");
 
@@ -118,7 +118,7 @@ public class RedisBase implements IConstant {
    * 创建/保存一个独立的节点, 不管有没有父节点的存在,
    * 文件内容需要单独通过 setContent() 操作
    */
-  public void saveStruct(FileStruct struct) {
+  public void saveStruct(RedisFileAttr struct) {
     try (JedisSession js = openSession()) {
       byte[] out = RedisMesmerizer.toBytes(struct);
       js.client.hset(structNameBytes, struct.path.getBytes(CHARSET), out);
@@ -136,7 +136,7 @@ public class RedisBase implements IConstant {
   }
 
 
-  public void removeStruct(FileStruct fs) {
+  public void removeStruct(RedisFileAttr fs) {
     removeStruct(fs.path);
   }
 
@@ -144,13 +144,13 @@ public class RedisBase implements IConstant {
   /**
    * 路径上没有数据返回 null
    */
-  public FileStruct getStruct(String path) {
+  public RedisFileAttr getStruct(String path) {
     try (JedisSession js = openSession()) {
       byte[] bin = js.client.hget(structNameBytes, path.getBytes(CHARSET));
       if (bin == null || bin.length == 0)
         return null;
 
-      return (FileStruct) RedisMesmerizer.fromBytes(bin);
+      return (RedisFileAttr) RedisMesmerizer.fromBytes(bin);
 
     } catch (ObjectStreamException e) {
       if (! XBosonException.isChecked(e)) {

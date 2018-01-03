@@ -20,7 +20,7 @@ import com.xboson.app.ApiPath;
 import com.xboson.app.XjOrg;
 import com.xboson.been.XBosonException;
 import com.xboson.db.SqlResult;
-import com.xboson.fs.FileAttr;
+import com.xboson.fs.script.ScriptAttr;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,7 +35,7 @@ public class ForDevelopment extends AbsReadScript {
 
     try (SqlResult res = org.query("open_api.sql", parm)) {
       ResultSet rs = res.getResult();
-      FileAttr attr = new FileAttr();
+      ScriptAttr attr = new ScriptAttr();
 
       if (rs.next()) {
         if (! ZR001_ENABLE.equals(rs.getString("status")) ) {
@@ -49,8 +49,6 @@ public class ForDevelopment extends AbsReadScript {
         attr.fullPath   = ApiPath.toFile(mod, api);
         attr.createTime = rs.getDate("createdt").getTime();
         attr.modifyTime = rs.getDate("updatedt").getTime();
-        attr.isdir      = false;
-        attr.isfile     = true;
 
         return file;
 

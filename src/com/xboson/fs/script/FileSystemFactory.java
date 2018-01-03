@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs;
+package com.xboson.fs.script;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -41,7 +41,7 @@ public class FileSystemFactory {
 
 
   private Log log;
-  private Map<String, IVirtualFileSystem> fss;
+  private Map<String, IScriptFileSystem> fss;
 
 
   private FileSystemFactory() {
@@ -53,12 +53,12 @@ public class FileSystemFactory {
   /**
    * 打开文件系统
    */
-  public IVirtualFileSystem open(String org, String app) {
+  public IScriptFileSystem open(String org, String app) {
     return open(org + app);
   }
 
 
-  public IVirtualFileSystem open(String id) {
+  public IScriptFileSystem open(String id) {
     return fss.get(id);
   }
 

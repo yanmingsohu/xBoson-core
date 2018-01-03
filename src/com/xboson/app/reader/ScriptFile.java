@@ -16,7 +16,7 @@
 
 package com.xboson.app.reader;
 
-import com.xboson.fs.FileAttr;
+import com.xboson.fs.script.ScriptAttr;
 
 
 public class ScriptFile {
@@ -24,7 +24,7 @@ public class ScriptFile {
   /**
    * 文件属性
    */
-  public final FileAttr attr;
+  public final ScriptAttr attr;
 
   /**
    * 打过补丁的源代码
@@ -38,7 +38,7 @@ public class ScriptFile {
   public final String original_code;
 
 
-  public ScriptFile(byte[] content, String orgi, FileAttr attr) {
+  public ScriptFile(byte[] content, String orgi, ScriptAttr attr) {
     this.content = content;
     this.attr = attr;
     this.original_code = orgi;

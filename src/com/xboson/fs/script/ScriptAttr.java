@@ -7,47 +7,49 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-13 下午3:12
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/FileAttr.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ScriptAttr.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs;
+package com.xboson.fs.script;
 
 import com.xboson.been.JsonHelper;
 
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
  * 文件属性对象
  */
-public class FileAttr extends JsonHelper {
-  public String fileName; // 只有文件名本身
+public class ScriptAttr extends JsonHelper implements Serializable {
+
+  /** 只有文件名本身 */
+  public String fileName;
   public long createTime;
   public long modifyTime;
   public String creatorUID;
-  public String pathName; // 只包含路径
-  public String fullPath; // 路径 + 文件名
-  public long fileSize;   // 文件的字节大小
-  public boolean isfile;
-  public boolean isdir;
+  /** 只包含路径 */
+  public String pathName;
+  /** 路径 + 文件名 */
+  public String fullPath;
+  /** 文件的字节大小 */
+  public long fileSize;
 
 
-  public FileAttr() {}
+  public ScriptAttr() {}
 
 
-  public FileAttr(BasicFileAttributes basic, Path fullpath) {
-    this.fileName = fullpath.getFileName().toString();
+  public ScriptAttr(BasicFileAttributes basic, Path fullpath) {
+    this.fileName   = fullpath.getFileName().toString();
     this.createTime = basic.creationTime().toMillis();
     this.modifyTime = basic.lastModifiedTime().toMillis();
     this.creatorUID = null;
-    this.pathName = fullpath.getParent().toString();
-    this.fullPath = fullpath.toString();
-    this.fileSize = basic.size();
-    this.isdir = basic.isDirectory();
-    this.isfile = ! basic.isDirectory();
+    this.pathName   = fullpath.getParent().toString();
+    this.fullPath   = fullpath.toString();
+    this.fileSize   = basic.size();
   }
 }

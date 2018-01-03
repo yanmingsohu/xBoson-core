@@ -19,7 +19,7 @@ package com.xboson.app.reader;
 
 import com.xboson.app.ApiPath;
 import com.xboson.app.XjOrg;
-import com.xboson.fs.FileAttr;
+import com.xboson.fs.script.ScriptAttr;
 import com.xboson.sleep.RedisMesmerizer;
 import redis.clients.jedis.Jedis;
 
@@ -46,7 +46,7 @@ public class ForProduction extends ForDevelopment {
           int b = arr.indexOf("\"", a);
           if (b > a) {
             Date now        = new Date();
-            FileAttr attr   = new FileAttr();
+            ScriptAttr attr   = new ScriptAttr();
             ScriptFile file = makeFile(attr, arr.substring(a, b));
             attr.fileSize   = file.content.length;
             attr.fileName   = api;
@@ -54,8 +54,6 @@ public class ForProduction extends ForDevelopment {
             attr.fullPath   = ApiPath.toFile(mod, api);
             attr.createTime = now.getTime();
             attr.modifyTime = now.getTime();
-            attr.isdir      = false;
-            attr.isfile     = true;
             return file;
           }
         }

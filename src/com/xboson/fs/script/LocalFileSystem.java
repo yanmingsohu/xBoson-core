@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs;
+package com.xboson.fs.script;
 
 import com.xboson.app.fix.SourceFix;
 import com.xboson.log.Log;
@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * 将测试目录文件映射到虚拟目录
  */
-public class LocalFileSystem extends FSHelper implements IVirtualFileSystem {
+public class LocalFileSystem extends FSHelper implements IScriptFileSystem {
 
   /** <virtual_filename, code> */
   private final Map<String, ByteBuffer> file_cache;
@@ -87,10 +87,10 @@ public class LocalFileSystem extends FSHelper implements IVirtualFileSystem {
 
 
   @Override
-  public FileAttr readAttribute(String path) throws IOException {
+  public ScriptAttr readAttribute(String path) throws IOException {
     Path p = Paths.get(basedir, path);
     BasicFileAttributes bfa = Files.readAttributes(p, BasicFileAttributes.class);
-    FileAttr fa = new FileAttr(bfa, p);
+    ScriptAttr fa = new ScriptAttr(bfa, p);
     //log.debug("Attribute", path);
     return fa;
   }

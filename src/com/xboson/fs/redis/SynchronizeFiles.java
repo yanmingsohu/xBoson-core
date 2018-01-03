@@ -16,12 +16,10 @@
 
 package com.xboson.fs.redis;
 
-import com.xboson.been.Config;
 import com.xboson.event.EventLoop;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import java.io.IOException;
@@ -117,12 +115,12 @@ public final class SynchronizeFiles implements Runnable, FileVisitor<Path> {
 
     final long local_t = Files.getLastModifiedTime(local_path).toMillis();
 
-    FileStruct redis_file = rb.getStruct(vpath);
+    RedisFileAttr redis_file = rb.getStruct(vpath);
     final long redis_t = redis_file != null ? redis_file.lastModify : -1;
 
     if (local_t > redis_t) {
       byte[] body = Files.readAllBytes(local_path);
-      redis_file = FileStruct.createFile(vpath, local_t, body);
+      redis_file = RedisFileAttr.createFile(vpath, local_t, body);
       rfm.writeFile(redis_file, false);
     }
     else if (local_t < redis_t) {

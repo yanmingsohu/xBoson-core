@@ -22,8 +22,8 @@ import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
-import com.xboson.fs.FileAttr;
-import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.script.ScriptAttr;
+import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.script.Application;
 
 import javax.script.ScriptException;
@@ -32,7 +32,6 @@ import java.nio.ByteBuffer;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -40,7 +39,7 @@ import java.util.WeakHashMap;
 /**
  * 每个 app 共享唯一的沙箱, 并缓存编译好的模块
  */
-public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem {
+public class XjApp extends XjPool<XjModule> implements IDict, IScriptFileSystem {
 
   private ServiceScriptWrapper ssw;
   private Application runtime;
@@ -126,7 +125,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IVirtualFileSystem
 
 
   @Override
-  public FileAttr readAttribute(String path) throws IOException {
+  public ScriptAttr readAttribute(String path) throws IOException {
     XjApi api = getApi(path);
     return api.getApiAttr();
   }

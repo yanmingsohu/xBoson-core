@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-12-17 下午12:52
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/FileStruct.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/ui/RedisFileAttr.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -17,6 +17,7 @@
 package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
+import com.xboson.fs.basic.IFileAttribute;
 import com.xboson.script.lib.Path;
 import com.xboson.util.IConstant;
 
@@ -28,7 +29,7 @@ import java.util.*;
  * 虽然也是文件属性类, 但是为 UI 存储优化.
  * file_content 可以能为 null.
  */
-public class FileStruct implements Serializable {
+public class RedisFileAttr implements Serializable, IFileAttribute {
 
   public final static int T_FILE = 1;
   public final static int T_DIR  = 2;
@@ -42,7 +43,7 @@ public class FileStruct implements Serializable {
   private transient boolean need_synchronization;
 
 
-  private FileStruct(String path, int type, long lastModify) {
+  private RedisFileAttr(String path, int type, long lastModify) {
     if (path == null)
       throw new XBosonException.NullParamException("String path");
 
@@ -52,7 +53,7 @@ public class FileStruct implements Serializable {
   }
 
 
-  protected FileStruct(FileStruct fs) {
+  protected RedisFileAttr(RedisFileAttr fs) {
     this(fs.path, fs.type, fs.lastModify);
     this.dir_contain = fs.dir_contain;
     this.file_content = fs.file_content;
@@ -60,18 +61,18 @@ public class FileStruct implements Serializable {
   }
 
 
-  public static FileStruct createFile(String path,
-                                      long lastModify,
-                                      byte[] content)
+  public static RedisFileAttr createFile(String path,
+                                         long lastModify,
+                                         byte[] content)
   {
-    FileStruct fs = new FileStruct(path, T_FILE, lastModify);
+    RedisFileAttr fs = new RedisFileAttr(path, T_FILE, lastModify);
     fs.file_content = content;
     return fs;
   }
 
 
-  public static FileStruct createDir(String path) {
-    FileStruct fs = new FileStruct(path, T_DIR, 0);
+  public static RedisFileAttr createDir(String path) {
+    RedisFileAttr fs = new RedisFileAttr(path, T_DIR, 0);
     fs.dir_contain = new HashSet<>();
     return fs;
   }
@@ -186,10 +187,10 @@ public class FileStruct implements Serializable {
     if (o == this)
       return true;
 
-    if (o == null || o instanceof FileStruct == false)
+    if (o == null || o instanceof RedisFileAttr == false)
       return false;
 
-    FileStruct other = (FileStruct) o;
+    RedisFileAttr other = (RedisFileAttr) o;
     return other.path.equals(path)
             && other.type == type
             && other.lastModify == lastModify;
@@ -200,9 +201,9 @@ public class FileStruct implements Serializable {
    * 复制所有属性, 除了 path 只保留文件名部分,
    * 返回的对象中, 内容属性将指向同一个可变对象.
    */
-  public final FileStruct cloneBaseName() {
+  public final RedisFileAttr cloneBaseName() {
     String basename = Path.me.basename(path);
-    FileStruct fs = new FileStruct(basename, type, lastModify);
+    RedisFileAttr fs = new RedisFileAttr(basename, type, lastModify);
     fs.dir_contain = dir_contain;
     fs.file_content = file_content;
     fs.need_synchronization = need_synchronization;
@@ -213,8 +214,8 @@ public class FileStruct implements Serializable {
   /**
    * 克隆所有属性除了 path 使用 newPath
    */
-  public final FileStruct cloneWithName(String newPath) {
-    FileStruct fs = new FileStruct(newPath, type, lastModify);
+  public final RedisFileAttr cloneWithName(String newPath) {
+    RedisFileAttr fs = new RedisFileAttr(newPath, type, lastModify);
     fs.dir_contain = dir_contain;
     fs.file_content = file_content;
     fs.need_synchronization = need_synchronization;

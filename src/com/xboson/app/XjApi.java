@@ -25,7 +25,7 @@ import com.xboson.been.CallData;
 import com.xboson.been.Module;
 import com.xboson.db.IDict;
 import com.xboson.event.OnFileChangeHandle;
-import com.xboson.fs.FileAttr;
+import com.xboson.fs.script.ScriptAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
@@ -116,7 +116,7 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
   }
 
 
-  public FileAttr getApiAttr() {
+  public ScriptAttr getApiAttr() {
     return getFile().attr;
   }
 

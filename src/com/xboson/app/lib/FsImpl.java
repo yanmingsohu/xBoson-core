@@ -18,7 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.fs.node.NodeFileFactory;
-import com.xboson.fs.redis.FileStruct;
+import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.FinderResult;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
@@ -75,7 +75,7 @@ public class FsImpl {
 
 
     @Override
-    public void readFileContent(FileStruct fs) {
+    public void readFileContent(RedisFileAttr fs) {
       o.readFileContent(fs);
     }
 
@@ -87,7 +87,7 @@ public class FsImpl {
 
 
     @Override
-    public FileStruct readAttribute(String path) {
+    public RedisFileAttr readAttribute(String path) {
       return o.readAttribute(path);
     }
 
@@ -117,7 +117,7 @@ public class FsImpl {
 
 
     @Override
-    public Set<FileStruct> readDir(String path) {
+    public Set<RedisFileAttr> readDir(String path) {
       return o.readDir(path);
     }
 

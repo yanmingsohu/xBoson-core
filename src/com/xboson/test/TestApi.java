@@ -22,7 +22,7 @@ import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
 import com.xboson.been.LoginUser;
 import com.xboson.been.SessionData;
-import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.test.impl.TestServletRequest;
@@ -83,7 +83,7 @@ public class TestApi extends Test {
   }
 
 
-  public void show_code(IVirtualFileSystem fs, String path) throws IOException {
+  public void show_code(IScriptFileSystem fs, String path) throws IOException {
     ByteBuffer buf = fs.readFile(path);
     String code = new String(buf.array());
     printCode(code);

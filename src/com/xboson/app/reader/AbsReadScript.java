@@ -17,12 +17,10 @@
 package com.xboson.app.reader;
 
 import com.xboson.app.ApiEncryption;
-import com.xboson.app.AppContext;
 import com.xboson.app.XjOrg;
 import com.xboson.app.fix.SourceFix;
 import com.xboson.app.lib.IApiConstant;
-import com.xboson.been.XBosonException;
-import com.xboson.fs.FileAttr;
+import com.xboson.fs.script.ScriptAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.IConstant;
@@ -50,7 +48,7 @@ public abstract class AbsReadScript implements IConstant, IApiConstant {
   /**
    * 为代码打补丁, 返回脚本文件
    */
-  protected ScriptFile makeFile(FileAttr attr, String original_code) {
+  protected ScriptFile makeFile(ScriptAttr attr, String original_code) {
     byte[] original_byte = ApiEncryption.decryptApi(original_code);
     byte[] content = SourceFix.autoPatch(original_byte);
     return new ScriptFile(content, original_code, attr);

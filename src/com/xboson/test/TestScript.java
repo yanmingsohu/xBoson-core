@@ -18,10 +18,9 @@ package com.xboson.test;
 
 import com.xboson.app.lib.MapImpl;
 import com.xboson.been.Module;
-import com.xboson.fs.FileSystemFactory;
-import com.xboson.fs.IVirtualFileSystem;
+import com.xboson.fs.script.FileSystemFactory;
+import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.fs.node.NodeFileFactory;
-import com.xboson.fs.node.NodeModuleProvider;
 import com.xboson.script.*;
 import com.xboson.script.lib.Console;
 import com.xboson.util.StringBufferOutputStream;
@@ -29,7 +28,6 @@ import com.xboson.util.StringBufferOutputStream;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -48,7 +46,7 @@ public class TestScript extends Test {
 
 
 	public void test() throws Exception {
-    IVirtualFileSystem vfs = createVFS();
+    IScriptFileSystem vfs = createVFS();
     app = createBasicApplication(vfs);
 
 //		independent_sandbox();
@@ -89,13 +87,13 @@ public class TestScript extends Test {
    * @throws Exception - 测试失败抛出异常
    */
 	public void fullTest() throws Exception {
-    IVirtualFileSystem vfs = createVFS();
+    IScriptFileSystem vfs = createVFS();
     Application app = createBasicApplication(vfs);
     app.run("/index.js");
 	}
 
 
-	public Application createBasicApplication(IVirtualFileSystem vfs)
+	public Application createBasicApplication(IScriptFileSystem vfs)
           throws Exception {
     SysModules sysmod = EnvironmentFactory.createDefaultSysModules();
     IModuleProvider nodejs_mod = NodeFileFactory.openNodeModuleProvider(sysmod);
@@ -114,14 +112,14 @@ public class TestScript extends Test {
   }
 
 
-  public IVirtualFileSystem createVFS() throws URISyntaxException {
+  public IScriptFileSystem createVFS() throws URISyntaxException {
     String fsid = "test";
     URL basepath = this.getClass().getResource("./js/");
     msg("Base path:", basepath);
 
     FileSystemFactory fsf = FileSystemFactory.me();
     fsf.addLocalFileSystem(basepath, fsid);
-    IVirtualFileSystem vfs = fsf.open(fsid);
+    IScriptFileSystem vfs = fsf.open(fsid);
     return vfs;
   }
 
@@ -233,7 +231,7 @@ public class TestScript extends Test {
 		FileSystemFactory fsf = FileSystemFactory.me();
     URL basepath = this.getClass().getResource("./js/");
 		fsf.addLocalFileSystem(basepath, fsid);
-		IVirtualFileSystem vfs = fsf.open(fsid);
+		IScriptFileSystem vfs = fsf.open(fsid);
 
 		List<Application> appList = new ArrayList<>(count);
     beginTime();

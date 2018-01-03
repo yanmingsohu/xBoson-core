@@ -62,7 +62,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
   @Override
   public byte[] readFile(String path) {
-    FileStruct fs = readAttribute(path);
+    RedisFileAttr fs = readAttribute(path);
 
     if (fs == null)
       throw new XBosonException.NotFound(path);
@@ -73,7 +73,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
 
   @Override
-  public void readFileContent(FileStruct fs) {
+  public void readFileContent(RedisFileAttr fs) {
     if (fs.isDir())
       throw new XBosonException.ISDirectory(fs.path);
 
@@ -88,7 +88,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
 
   @Override
-  public FileStruct readAttribute(String path) {
+  public RedisFileAttr readAttribute(String path) {
     return rb.getStruct(normalize(path));
   }
 
@@ -102,17 +102,17 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
   public void makeDir(String path, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
       path = normalize(path);
-      FileStruct dir = rb.getStruct(path);
+      RedisFileAttr dir = rb.getStruct(path);
 
       if (dir == null) {
-        dir = FileStruct.createDir(path);
+        dir = RedisFileAttr.createDir(path);
         makeDir(dir, notice);
       }
     }
   }
 
 
-  public void makeDir(FileStruct dir, boolean notice) {
+  public void makeDir(RedisFileAttr dir, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
       makeStructUntilRoot(dir);
       if (notice) {
@@ -131,13 +131,13 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
   public void writeFile(String path, byte[] bytes, long modify, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
       path = normalize(path);
-      FileStruct file = FileStruct.createFile(path, modify, bytes);
+      RedisFileAttr file = RedisFileAttr.createFile(path, modify, bytes);
       writeFile(file, notice);
     }
   }
 
 
-  public void writeFile(FileStruct file, boolean notice) {
+  public void writeFile(RedisFileAttr file, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
       makeStructUntilRoot(file);
       rb.setContent(file);
@@ -149,8 +149,8 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
   }
 
 
-  private void removeAndUpdateParent(FileStruct fs) {
-    FileStruct parent = rb.getStruct(fs.parentPath());
+  private void removeAndUpdateParent(RedisFileAttr fs) {
+    RedisFileAttr parent = rb.getStruct(fs.parentPath());
     parent.removeChild(fs.path);
     rb.removeStruct(fs);
     rb.saveStruct(parent);
@@ -166,7 +166,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
   public void delete(String file, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
       file = normalize(file);
-      FileStruct fs = rb.getStruct(file);
+      RedisFileAttr fs = rb.getStruct(file);
 
       if (fs == null)
         throw new XBosonException.NotFound(file);
@@ -208,13 +208,13 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
       //
       // 源文件必须存在
       //
-      FileStruct srcfs = rb.getStruct(src);
+      RedisFileAttr srcfs = rb.getStruct(src);
       if (srcfs == null)
         throw new XBosonException.NotFound(src);
       //
       // 目标文件不能存在
       //
-      FileStruct tofs = rb.getStruct(to);
+      RedisFileAttr tofs = rb.getStruct(to);
       if (tofs != null)
         throw new XBosonException.IOError(
                 "The target directory already exists", to);
@@ -222,7 +222,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
       // 存储目标文件的路径上必须是目录, 并且必须存在
       //
       String save_to_dir = Path.me.dirname(to);
-      FileStruct save_dir = rb.getStruct(save_to_dir);
+      RedisFileAttr save_dir = rb.getStruct(save_to_dir);
       if (save_dir == null)
         throw new XBosonException.NotFound(save_to_dir);
       if (! save_dir.isDir())
@@ -238,7 +238,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
         delete(src, false);
       }
       else if (srcfs.isDir()) {
-        tofs = FileStruct.createDir(to);
+        tofs = RedisFileAttr.createDir(to);
         makeDir(tofs, false);
         //
         // 迭代所有子节点
@@ -264,10 +264,10 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
 
   @Override
-  public Set<FileStruct> readDir(String path) {
+  public Set<RedisFileAttr> readDir(String path) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
       path = normalize(path);
-      FileStruct fs = rb.getStruct(path);
+      RedisFileAttr fs = rb.getStruct(path);
 
       if (fs == null)
         throw new XBosonException.NotFound(path);
@@ -277,7 +277,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
 
       Set<String> names = fs.containFiles();
-      Set<FileStruct> ret = new HashSet<>(names.size());
+      Set<RedisFileAttr> ret = new HashSet<>(names.size());
 
       for (String name : names) {
         fs = rb.getStruct(path + name);
@@ -311,14 +311,14 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
    * 该方法会直接复制路径上的 struct, 如果是文件没问题, 是目录需要检查子节点问题.
    * 该方法不发送集群消息, 本地文件系统只要收到最深层目录即可自动创建上层目录.
    */
-  public void makeStructUntilRoot(FileStruct fs) {
+  public void makeStructUntilRoot(RedisFileAttr fs) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
       List<String> need_create_dir = new ArrayList<>();
-      FileStruct direct_parent = null;
+      RedisFileAttr direct_parent = null;
 
       String pp = fs.parentPath();
       while (pp != null) {
-        FileStruct check_fs = rb.getStruct(pp);
+        RedisFileAttr check_fs = rb.getStruct(pp);
         if (check_fs == null) {
           //
           // 创建不存在的目录
@@ -352,7 +352,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
           rb.saveStruct(direct_parent);
         }
 
-        FileStruct new_node = FileStruct.createDir(p);
+        RedisFileAttr new_node = RedisFileAttr.createDir(p);
         rb.saveStruct(new_node);
         direct_parent = new_node;
       }
