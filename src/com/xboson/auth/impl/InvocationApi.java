@@ -38,10 +38,11 @@ public class InvocationApi implements IAWhere {
 
   public static final String H_KEY
           = IApiConstant._R_KEY_PREFIX_
-          + IApiConstant._CACHE_REGION_SYS_AUTHORITY_;
+          + IApiConstant._CACHE_REGION_RBAC_;
 
-  public static final String APP_NORMAL = "application_normal:";
-  public static final String APP_PUB    = "application_pub:";
+  public static final String APP_RBAC     = ":01";
+  public static final String APP_RBAC_PUB = "01";
+
 
   /** 将用户与权限直接映射, 加快速度 */
   private Map<String, Boolean> user_api_cache;
@@ -72,7 +73,6 @@ public class InvocationApi implements IAWhere {
 
     String res_desc = ":" + res.description();
     LoginUser user  = (LoginUser) who;
-    String org      = AppContext.me().originalOrg() + ':';
     String hasAuth  = null;
     String q_key    = user.userid +'/'+ user.loginTime;
 
@@ -85,25 +85,17 @@ public class InvocationApi implements IAWhere {
     try (Jedis client = RedisMesmerizer.me().open()) {
       for (String roleid : user.roles) {
         //
-        // 缓存系统角色 API 信息
-        // orgid : roleid : appid + moduleid + apiid + sysid
+        // 缓存所有机构角色 API 权限
+        // roleid : 01 : appid + moduleid + apiid
         //
-        hasAuth = client.hget(H_KEY, org + roleid + res_desc);
+        hasAuth = client.hget(H_KEY, roleid + APP_RBAC + res_desc);
         if (hasAuth != null) break;
 
         //
-        // 缓存已发布应用（普通）角色 API 信息
-        // "application_normal" : roleid : appid + moduleid + apiid
+        // 缓存已发布应用（公共）角色 API 信息
+        // 01 : appid + moduleid + apiid
         //
-        hasAuth = client.hget(H_KEY, APP_NORMAL + roleid + res_desc);
-        if (hasAuth != null) break;
-
-        //
-        // 缓存已发布应用（公共）角色 API 信息，机构ID作为角色ID，
-        // 同机构所有公共应用使用同一角色ID即机构ID
-        // "application_pub" : orgid : appid + moduleid + apiid
-        //
-        hasAuth = client.hget(H_KEY, APP_PUB + roleid + res_desc);
+        hasAuth = client.hget(H_KEY, APP_RBAC_PUB + res_desc);
         if (hasAuth != null) break;
       }
     }
