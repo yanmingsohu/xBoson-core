@@ -16,27 +16,20 @@
 
 package com.xboson.fs.redis;
 
-import com.xboson.been.XBosonException;
-import com.xboson.fs.basic.IFileAttribute;
+import com.xboson.fs.basic.AbsFileAttr;
 import com.xboson.script.lib.Path;
 import com.xboson.util.IConstant;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
  * 虽然也是文件属性类, 但是为 UI 存储优化.
  * file_content 可以能为 null.
  */
-public class RedisFileAttr implements Serializable, IFileAttribute {
-
-  public final static int T_FILE = 1;
-  public final static int T_DIR  = 2;
-
-  public final String path;
-  public final int type;
-  public final long lastModify;
+public class RedisFileAttr extends AbsFileAttr implements Serializable {
 
   private Set<String> dir_contain;
   private transient byte[] file_content;
@@ -44,17 +37,12 @@ public class RedisFileAttr implements Serializable, IFileAttribute {
 
 
   private RedisFileAttr(String path, int type, long lastModify) {
-    if (path == null)
-      throw new XBosonException.NullParamException("String path");
-
-    this.path = path;
-    this.type = type;
-    this.lastModify = lastModify;
+    super(path, type, lastModify);
   }
 
 
   protected RedisFileAttr(RedisFileAttr fs) {
-    this(fs.path, fs.type, fs.lastModify);
+    super(fs);
     this.dir_contain = fs.dir_contain;
     this.file_content = fs.file_content;
     this.need_synchronization = fs.need_synchronization;
@@ -75,16 +63,6 @@ public class RedisFileAttr implements Serializable, IFileAttribute {
     RedisFileAttr fs = new RedisFileAttr(path, T_DIR, 0);
     fs.dir_contain = new HashSet<>();
     return fs;
-  }
-
-
-  public boolean isDir() {
-    return type == T_DIR;
-  }
-
-
-  public boolean isFile() {
-    return type == T_FILE;
   }
 
 
@@ -160,40 +138,6 @@ public class RedisFileAttr implements Serializable, IFileAttribute {
    */
   public String parentPath() {
     return Path.me.dirname(path);
-  }
-
-
-  public class BadPath extends XBosonException.IOError {
-    BadPath(String why) {
-      super(why, path);
-    }
-  }
-
-
-  @Override
-  public String toString() {
-    return "[" + path +", "+ (type == T_DIR ? "DIR":"FILE") + "]";
-  }
-
-
-  @Override
-  public final int hashCode() {
-    return (int)(path.hashCode() + type + lastModify);
-  }
-
-
-  @Override
-  public final boolean equals(Object o) {
-    if (o == this)
-      return true;
-
-    if (o == null || o instanceof RedisFileAttr == false)
-      return false;
-
-    RedisFileAttr other = (RedisFileAttr) o;
-    return other.path.equals(path)
-            && other.type == type
-            && other.lastModify == lastModify;
   }
 
 

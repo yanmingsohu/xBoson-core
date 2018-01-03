@@ -77,7 +77,7 @@ public class TestFace extends Test {
   }
 
 
-  public void waitEventLoopEmpty() {
+  public static void waitEventLoopEmpty() {
     sub("Wait event loop empty...");
     boolean[] check = new boolean[1];
     EventLoop.me().add(() -> check[0] = true);
@@ -185,7 +185,7 @@ public class TestFace extends Test {
   /**
    * 写入的文件不是立即就可以读取, 消息传递有延迟
    */
-  private void waitDelayed() {
+  private static void waitDelayed() {
     Tool.sleep(1000);
   }
 

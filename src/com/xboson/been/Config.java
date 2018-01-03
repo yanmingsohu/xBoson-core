@@ -61,6 +61,7 @@ public class Config implements IBean {
   public DBPoolConfig dbpool;
   public ConnectConfig db;
   public ConnectConfig redis;
+  public MongoConfig mongodb;
 
   public byte clusterNodeID;
   public boolean enableUploadClear;

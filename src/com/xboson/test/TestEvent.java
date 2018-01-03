@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Date;
 
 public class TestEvent extends Test implements GlobalListener {
+
   private Object recv = null;
   private int count = 0;
   private boolean not_recive_when_off = true;
@@ -42,6 +43,7 @@ public class TestEvent extends Test implements GlobalListener {
     GlobalEventBus ge = GlobalEventBus.me();
     ge.on("test", this);
     ge.on(Names.inner_error, this);
+    TestFace.waitEventLoopEmpty();
 
     send(new Date().toString());
     send("hello.2=" + Math.random());
@@ -161,6 +163,7 @@ public class TestEvent extends Test implements GlobalListener {
   void send(Object data) {
     GlobalEventBus ge = GlobalEventBus.me();
     ge.emit("test", data);
+    Tool.sleep(1000);
     eq(recv, data, "recive: " + recv);
   }
 
@@ -172,10 +175,10 @@ public class TestEvent extends Test implements GlobalListener {
     Object data = b.getObject();
     recv = data;
 
-//    msg(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> [get event]"
-//            + "\n\t\t\tname: "+ name
-//            + "\n\t\t\tdata: " + data
-//            + "\n\t\t\tinfo: " + e.getChangeInfo());
+    msg(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> [get event]"
+            + "\n\t\t\tname: "+ name
+            + "\n\t\t\tdata: " + data
+            + "\n\t\t\tinfo: " + e.getChangeInfo());
 
     if(name.equals(Names.inner_error) ) {
       msg("LOG print 'error by error'");

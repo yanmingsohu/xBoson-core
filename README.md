@@ -18,6 +18,8 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 临时文件系统接入 fs 模块
 * 区块链api
 * 云盘系统
+* 多语言
+* UI 模板引擎
 
 
 # 2.0 新特性
@@ -37,6 +39,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 安全的启动/退出机制.
 * 针对平台开发的 j2ee 框架.
 * 快如闪电的 json/xml 转换器.
+* 集群使用消息总线来发送通知.
 
 
 # JAR 依赖
@@ -72,6 +75,11 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
     
 * (HTTP 客户端)
     -- (okhttp-3.9.1.jar)[http://square.github.io/okhttp/]
+    
+* (MongoDB 客户端)
+    -- (bson-3.6.1.jar)
+    -- (mongodb-driver-3.6.1.jar)
+    -- (mongodb-driver-core-3.6.1.jar)
 
 		
 # URL 映射约定

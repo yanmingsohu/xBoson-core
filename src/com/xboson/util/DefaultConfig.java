@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.xboson.been.Config;
+import com.xboson.been.MongoConfig;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.script.lib.Uuid;
@@ -82,6 +83,13 @@ public final class DefaultConfig {
     redis.setHost("localhost");
     redis.setPort("6379");
     redis.setPassword("");
+
+    MongoConfig mc = c.mongodb = new MongoConfig();
+    mc.host = "localhost";
+    mc.port = 27017;
+    mc.database = "xboson";
+    mc.username = "";
+    mc.password = "";
   }
 
 

@@ -17,6 +17,7 @@
 package com.xboson.fs.script;
 
 import com.xboson.been.JsonHelper;
+import com.xboson.fs.basic.IFileAttribute;
 
 import java.io.Serializable;
 import java.nio.file.Path;
@@ -25,7 +26,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 /**
  * 文件属性对象
  */
-public class ScriptAttr extends JsonHelper implements Serializable {
+public class ScriptAttr extends JsonHelper implements
+        Serializable, IFileAttribute {
 
   /** 只有文件名本身 */
   public String fileName;
