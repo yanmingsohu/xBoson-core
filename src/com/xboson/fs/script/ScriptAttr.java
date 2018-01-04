@@ -54,4 +54,19 @@ public class ScriptAttr extends JsonHelper implements
     this.fullPath   = fullpath.toString();
     this.fileSize   = basic.size();
   }
+
+
+  /**
+   * 脚本文件系统没有目录
+   */
+  @Override
+  public int type() {
+    return T_FILE;
+  }
+
+
+  @Override
+  public String path() {
+    return fullPath;
+  }
 }

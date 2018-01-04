@@ -21,8 +21,6 @@ import com.xboson.script.lib.Path;
 import com.xboson.util.IConstant;
 
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 
 
 /**
@@ -31,7 +29,6 @@ import java.util.Set;
  */
 public class RedisFileAttr extends AbsFileAttr implements Serializable {
 
-  private Set<String> dir_contain;
   private transient byte[] file_content;
   private transient boolean need_synchronization;
 
@@ -43,7 +40,6 @@ public class RedisFileAttr extends AbsFileAttr implements Serializable {
 
   protected RedisFileAttr(RedisFileAttr fs) {
     super(fs);
-    this.dir_contain = fs.dir_contain;
     this.file_content = fs.file_content;
     this.need_synchronization = fs.need_synchronization;
   }
@@ -61,57 +57,7 @@ public class RedisFileAttr extends AbsFileAttr implements Serializable {
 
   public static RedisFileAttr createDir(String path) {
     RedisFileAttr fs = new RedisFileAttr(path, T_DIR, 0);
-    fs.dir_contain = new HashSet<>();
     return fs;
-  }
-
-
-  /**
-   * 当前对象必须是目录, full 必须是当前目录子节点路径,
-   * 返回去掉当前路径的子路径字符串. 当 full 不符合条件时抛出异常.
-   */
-  private String childPath(String full) {
-    if (type != T_DIR) {
-      throw new BadPath("Is not directory");
-    }
-    if (! full.startsWith(path)) {
-      throw new BadPath("Is not child: '" + full + "'");
-    }
-    return full.substring(path.length());
-  }
-
-
-  /**
-   * 将文件或目录加入当前目录中作为子节点,
-   * 保存时将去掉当前目录前缀, 只保留子节点名称 (有前置 '/')
-   * @param fileOrDir 完整路径
-   */
-  public void addChildStruct(String fileOrDir) {
-    String ch = childPath(fileOrDir);
-    dir_contain.add(ch);
-  }
-
-
-  /**
-   * 删除当前目录中的子节点
-   * @param fileOrDir 完整路径
-   */
-  public void removeChild(String fileOrDir) {
-    String ch = childPath(fileOrDir);
-    if (! dir_contain.remove(ch)) {
-      throw new BadPath("Not in this dir:" + fileOrDir);
-    }
-  }
-
-
-  /**
-   * 返回所有子节点路径列表, 路径中不包含当前目录的路径.
-   */
-  public Set<String> containFiles() {
-    if (type != T_DIR) {
-      throw new BadPath("Is not directory");
-    }
-    return dir_contain;
   }
 
 
@@ -148,7 +94,7 @@ public class RedisFileAttr extends AbsFileAttr implements Serializable {
   public final RedisFileAttr cloneBaseName() {
     String basename = Path.me.basename(path);
     RedisFileAttr fs = new RedisFileAttr(basename, type, lastModify);
-    fs.dir_contain = dir_contain;
+    if (dir_contain != null) fs.dir_contain.addAll(dir_contain);
     fs.file_content = file_content;
     fs.need_synchronization = need_synchronization;
     return fs;
@@ -160,7 +106,7 @@ public class RedisFileAttr extends AbsFileAttr implements Serializable {
    */
   public final RedisFileAttr cloneWithName(String newPath) {
     RedisFileAttr fs = new RedisFileAttr(newPath, type, lastModify);
-    fs.dir_contain = dir_contain;
+    if (dir_contain != null) fs.dir_contain.addAll(dir_contain);
     fs.file_content = file_content;
     fs.need_synchronization = need_synchronization;
     return fs;

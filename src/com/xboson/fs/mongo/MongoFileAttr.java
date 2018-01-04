@@ -16,28 +16,78 @@
 
 package com.xboson.fs.mongo;
 
-import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.model.Filters;
 import com.xboson.fs.basic.AbsFileAttr;
+import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
+
+import java.util.Collection;
 
 
 public class MongoFileAttr extends AbsFileAttr {
 
-  public final String id;
+  /** 文件内容节点 id */
+  public final ObjectId content_id;
+
+  private Bson filter_id;
 
 
-  protected MongoFileAttr(MongoFileAttr fs) {
+  public MongoFileAttr(MongoFileAttr fs) {
     super(fs);
-    id = fs.id;
+    content_id = fs.content_id;
   }
 
 
-  protected MongoFileAttr(GridFSFile file) {
-    super(file.getFilename(), T_FILE, file.getUploadDate().getTime());
-    id = file.getObjectId().toHexString();
+  public MongoFileAttr(org.bson.Document doc) {
+    super(doc.getString("path"),
+            doc.getInteger("type"),
+            doc.getLong("lastModify"));
+
+    this.content_id = doc.getObjectId("content_id");
+
+    if (type == T_DIR) {
+      super.dir_contain.addAll((Collection) doc.get("contains"));
+    }
   }
 
 
-  public static MongoFileAttr create(GridFSFile file) {
-    return new MongoFileAttr(file);
+  public MongoFileAttr(String path, int type, long lastModify, ObjectId id) {
+    super(path, type, lastModify);
+    this.content_id = id;
+  }
+
+
+  public final MongoFileAttr cloneNewContnet(ObjectId id) {
+    return new MongoFileAttr(path, type, System.currentTimeMillis(), id);
+  }
+
+
+  public static MongoFileAttr createFile(String file, ObjectId id) {
+    return new MongoFileAttr(file, T_FILE, System.currentTimeMillis(), id);
+  }
+
+
+  public static MongoFileAttr createDir(String path) {
+    return new MongoFileAttr(path, T_DIR, System.currentTimeMillis(), null);
+  }
+
+
+  public org.bson.Document toDocument() {
+    org.bson.Document doc = new org.bson.Document();
+    doc.append("path", path);
+    doc.append("_id", path);
+    doc.append("type", type);
+    doc.append("lastModify", lastModify);
+    doc.append("contains", dir_contain);
+    doc.append("content_id", content_id);
+    return doc;
+  }
+
+
+  public Bson toFilterID() {
+    if (filter_id == null) {
+      filter_id = Filters.eq("_id", path);
+    }
+    return filter_id;
   }
 }

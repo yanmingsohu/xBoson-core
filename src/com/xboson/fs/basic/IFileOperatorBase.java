@@ -26,6 +26,9 @@ import java.util.Set;
  */
 public interface IFileOperatorBase<ATTR extends IFileAttribute> {
 
+  /** 根路径, 也是默认路径 */
+  String ROOT = "/";
+
 
   /**
    * 读取路径上文件(目录)的属性, 不存在的路径返回 null.

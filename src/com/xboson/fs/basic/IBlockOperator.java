@@ -22,10 +22,6 @@ import com.xboson.been.XBosonException;
 public interface IBlockOperator<ATTR extends IFileAttribute>
         extends IFileOperatorBase<ATTR> {
 
-  /** 根路径, 也是默认路径 */
-  String ROOT = "/";
-
-
   /**
    * 快速读取文件内容, 不推荐使用; 尝试读取目录会抛出异常.
    * 应该使用 readAttribute()/readFileContent() 的组合来读取文件.

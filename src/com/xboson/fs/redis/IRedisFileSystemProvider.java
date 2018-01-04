@@ -18,6 +18,7 @@ package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 import com.xboson.fs.basic.IBlockOperator;
+import com.xboson.fs.basic.IFinder;
 
 
 /**
@@ -26,7 +27,7 @@ import com.xboson.fs.basic.IBlockOperator;
  * 路径为 ui 虚拟目录, 跟目录应该包含 'ui' 't' 'web' 'lib' 等目录
  */
 public interface IRedisFileSystemProvider
-        extends IBlockOperator<RedisFileAttr> {
+        extends IBlockOperator<RedisFileAttr>, IFinder<FinderResult> {
 
 
   /** 结果集最大数量, 超过后的数据被忽略 */
@@ -39,21 +40,5 @@ public interface IRedisFileSystemProvider
    * @throws XBosonException.IOError
    */
   void readFileContent(RedisFileAttr fs);
-
-
-  /**
-   * 模糊查询符合路径的完整路径集合, 总是大小写敏感的, 自行添加匹配模式.
-   */
-  FinderResult findPath(String pathName);
-
-
-  /**
-   * 查询文件内容, 返回文件列表
-   *
-   * @param basePath 开始目录
-   * @param content 要搜索的文本
-   * @param cs true 则启用大小写敏感
-   */
-  FinderResult findContent(String basePath, String content, boolean cs);
 
 }

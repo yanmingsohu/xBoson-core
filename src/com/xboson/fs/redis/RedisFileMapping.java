@@ -17,13 +17,8 @@
 package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
-import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
-import com.xboson.script.lib.Path;
+import com.xboson.fs.basic.AbsFileSystemUtil;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -34,32 +29,16 @@ import java.util.Set;
  * 写入: 判断 redis 中保存的文件修改时间, 条件允许则保存文件; 写入结束后,
  *      将修改记录加入消息队列
  */
-public abstract class RedisFileMapping implements IRedisFileSystemProvider {
+public abstract class RedisFileMapping extends AbsFileSystemUtil<RedisFileAttr>
+        implements IRedisFileSystemProvider {
 
   public static final int ID = 1;
 
   private RedisBase rb;
-  private Log log;
 
 
   public RedisFileMapping(RedisBase rb) {
     this.rb  = rb;
-    this.log = LogFactory.create();
-  }
-
-
-  public String normalize(String path) {
-    if (path == null)
-      return path;
-
-    path = Path.me.normalize(path);
-    //
-    // 'path.length() > 1' 当目录是根目录则不做改变.
-    //
-    if (path.length() > 1 && path.charAt(path.length()-1) == '/') {
-      path = path.substring(0, path.length()-1);
-    }
-    return path;
   }
 
 
@@ -152,11 +131,17 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
   }
 
 
-  private void removeAndUpdateParent(RedisFileAttr fs) {
-    RedisFileAttr parent = rb.getStruct(fs.parentPath());
-    parent.removeChild(fs.path);
+  protected void removeAndUpdateParent(RedisFileAttr fs) {
     rb.removeStruct(fs);
-    rb.saveStruct(parent);
+    if (fs.isFile()) {
+      rb.delContent(fs);
+    }
+    String parentPath = fs.parentPath();
+    if (parentPath != null) {
+      RedisFileAttr parent = rb.getStruct(parentPath);
+      parent.removeChild(fs.path);
+      rb.saveStruct(parent);
+    }
   }
 
 
@@ -168,23 +153,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
   public void delete(String file, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
-      file = normalize(file);
-      RedisFileAttr fs = rb.getStruct(file);
-
-      if (fs == null)
-        throw new XBosonException.NotFound(file);
-
-      if (fs.isFile()) {
-        rb.delContent(fs);
-        removeAndUpdateParent(fs);
-      }
-      else /* Is dir */ {
-        if (fs.containFiles().size() > 0)
-          throw new XBosonException.IOError(
-                  "Can not delete a non-empty directory");
-
-        removeAndUpdateParent(fs);
-      }
+      deleteFile(file);
 
       if (notice) {
         rb.sendDeleteNotice(file);
@@ -201,63 +170,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
 
   public void move(String src, String to, boolean notice) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
-      src = normalize(src);
-      to  = normalize(to);
-      //
-      // 不能移动自己
-      //
-      if (src.equalsIgnoreCase(to))
-        throw new XBosonException.IOError("Sourc And Target is same.");
-      //
-      // 源文件必须存在
-      //
-      RedisFileAttr srcfs = rb.getStruct(src);
-      if (srcfs == null)
-        throw new XBosonException.NotFound(src);
-      //
-      // 目标文件不能存在
-      //
-      RedisFileAttr tofs = rb.getStruct(to);
-      if (tofs != null)
-        throw new XBosonException.IOError(
-                "The target directory already exists", to);
-      //
-      // 存储目标文件的路径上必须是目录, 并且必须存在
-      //
-      String save_to_dir = Path.me.dirname(to);
-      RedisFileAttr save_dir = rb.getStruct(save_to_dir);
-      if (save_dir == null)
-        throw new XBosonException.NotFound(save_to_dir);
-      if (! save_dir.isDir())
-        throw new XBosonException.IOError(
-                "Cannot move to non-directory", save_to_dir);
-      //
-      // 先创建新节点再删除老节点.
-      //
-      if (srcfs.isFile()) {
-        rb.getContent(srcfs);
-        tofs = srcfs.cloneWithName(to);
-        writeFile(tofs, false);
-        delete(src, false);
-      }
-      else if (srcfs.isDir()) {
-        tofs = RedisFileAttr.createDir(to);
-        makeDir(tofs, false);
-        //
-        // 迭代所有子节点
-        //
-        Set<String> oldSubNodes = srcfs.containFiles();
-        for (String oldName : oldSubNodes) {
-          String oldPath = src + oldName;
-          String newPath = to  + oldName;
-          move(oldPath, newPath, false);
-        }
-        delete(src, false);
-      }
-      else {
-        throw new XBosonException.IOError(
-                "cannot support Unknow file type");
-      }
+      super.moveTo(src, to);
 
       if (notice) {
         rb.sendMoveNotice(src, to);
@@ -269,29 +182,7 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
   @Override
   public Set<RedisFileAttr> readDir(String path) {
     try (RedisBase.JedisSession jsession = rb.openSession()) {
-      path = normalize(path);
-      RedisFileAttr fs = rb.getStruct(path);
-
-      if (fs == null)
-        throw new XBosonException.NotFound(path);
-
-      if (! fs.isDir())
-        throw new XBosonException.IOError("Is not dir: " + path);
-
-
-      Set<String> names = fs.containFiles();
-      Set<RedisFileAttr> ret = new HashSet<>(names.size());
-
-      for (String name : names) {
-        fs = rb.getStruct(path + name);
-        if (fs != null) {
-          ret.add(fs.cloneBaseName());
-        } else {
-          log.warn("Redis file system may bad, Cannot found:",
-                  name, ", In dir:", path, ", But recorded.");
-        }
-      }
-      return ret;
+      return readDirContain(path);
     }
   }
 
@@ -308,67 +199,41 @@ public abstract class RedisFileMapping implements IRedisFileSystemProvider {
   }
 
 
-  /**
-   * 从 fs 的父节点开始创建目录, 这会检查一直到目录根节点之前的路径是否都是目录,
-   * 最后创建 fs 定义的节点. 在任意一部上失败都会抛出异常.
-   * 该方法会直接复制路径上的 struct, 如果是文件没问题, 是目录需要检查子节点问题.
-   * 该方法不发送集群消息, 本地文件系统只要收到最深层目录即可自动创建上层目录.
-   */
-  public void makeStructUntilRoot(RedisFileAttr fs) {
-    try (RedisBase.JedisSession jsession = rb.openSession()) {
-      List<String> need_create_dir = new ArrayList<>();
-      RedisFileAttr direct_parent = null;
+  @Override
+  protected RedisFileAttr createDirNode(String path) {
+    return RedisFileAttr.createDir(path);
+  }
 
-      String pp = fs.parentPath();
-      while (pp != null) {
-        RedisFileAttr check_fs = rb.getStruct(pp);
-        if (check_fs == null) {
-          //
-          // 创建不存在的目录
-          //
-          need_create_dir.add(pp);
-        } else if (check_fs.isFile()) {
-          //
-          // 不能在文件路径上创建子目录
-          //
-          throw new XBosonException("Contain files in " + fs.path);
-        } else if (check_fs.isDir()) {
-          //
-          // 当前向搜索到一个目录则不再继续搜索,
-          // 这个目录结构的正确由创建该目录的时候保证.
-          //
-          direct_parent = check_fs;
-          break;
-        }
 
-        pp = Path.me.dirname(pp);
-      }
+  @Override
+  protected void addTo(RedisFileAttr dir, String path) {
+    dir.addChildStruct(path);
+  }
 
-      final int size = need_create_dir.size();
-      for (int i = size - 1; i >= 0; --i) {
-        String p = need_create_dir.get(i);
-        //
-        // 更新父节点
-        //
-        if (direct_parent != null) {
-          direct_parent.addChildStruct(p);
-          rb.saveStruct(direct_parent);
-        }
 
-        RedisFileAttr new_node = RedisFileAttr.createDir(p);
-        rb.saveStruct(new_node);
-        direct_parent = new_node;
-      }
+  @Override
+  protected void saveNode(RedisFileAttr a) {
+    rb.saveStruct(a);
+  }
 
-      if (direct_parent == null && ROOT.equals(fs.path) == false) {
-        direct_parent = rb.getStruct(ROOT);
-      }
 
-      if (direct_parent != null) {
-        direct_parent.addChildStruct(fs.path);
-        rb.saveStruct(direct_parent);
-      }
-      rb.saveStruct(fs);
-    }
+  @Override
+  protected void moveFile(RedisFileAttr src, String to) {
+    rb.getContent(src);
+    RedisFileAttr tofs = src.cloneWithName(to);
+    writeFile(tofs, false);
+    deleteFile(src.path);
+  }
+
+
+  @Override
+  protected Set<String> containFiles(RedisFileAttr dir) {
+    return dir.containFiles();
+  }
+
+
+  @Override
+  protected RedisFileAttr cloneBaseName(RedisFileAttr a) {
+    return a.cloneBaseName();
   }
 }

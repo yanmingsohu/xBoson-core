@@ -16,37 +16,54 @@
 
 package com.xboson.fs.mongo;
 
+import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.GridFSUploadStream;
 import com.mongodb.client.model.Filters;
-import com.xboson.fs.basic.IStreamOperator;
+import com.mongodb.client.model.UpdateOptions;
+import com.xboson.been.XBosonException;
+import com.xboson.fs.basic.AbsFileSystemUtil;
+import com.xboson.script.lib.Path;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashSet;
 import java.util.Set;
 
+import static com.xboson.fs.basic.IFileAttribute.T_FILE;
 
-public class MongoFileSystem implements IStreamOperator<MongoFileAttr> {
 
+/**
+ * 文件结构会被删除, 文件内容 (的多个版本) 将永久保留.
+ */
+public class MongoFileSystem extends AbsFileSystemUtil<MongoFileAttr>
+        implements IMongoFileSystem {
+
+  public static final String STRUCT_SUFFIX = ".struct";
+
+  private MongoCollection<Document> struct;
   private MongoDatabase db;
   private GridFSBucket fs;
   private String diskName;
 
 
   MongoFileSystem(MongoDatabase db, String diskName) {
-    this.fs = GridFSBuckets.create(db, diskName);
+    this.fs       = GridFSBuckets.create(db, diskName);
     this.diskName = diskName;
-    this.db = db;
+    this.db       = db;
+    this.struct   = db.getCollection(diskName + STRUCT_SUFFIX);
   }
 
 
   @Override
   public MongoFileAttr readAttribute(String path) {
-    for (GridFSFile file : fs.find(Filters.eq("filename", path))) {
-      return MongoFileAttr.create(file);
+    path = normalize(path);
+    Bson id = Filters.eq("_id", path);
+    for (org.bson.Document doc : struct.find(id)) {
+      return new MongoFileAttr(doc);
     }
     return null;
   }
@@ -54,48 +71,122 @@ public class MongoFileSystem implements IStreamOperator<MongoFileAttr> {
 
   @Override
   public Set<MongoFileAttr> readDir(String path) {
-    Set<MongoFileAttr> list = new HashSet<>();
-    for (GridFSFile file : fs.find(Filters.eq("filename", path))) {
-      list.add(MongoFileAttr.create(file));
-    }
-    return list;
+    return readDirContain(path);
   }
 
 
   @Override
   public void move(String src, String to) {
-//    fs.rename(null, to);
+    super.moveTo(src, to);
   }
 
 
   @Override
   public void delete(String path) {
-    for (GridFSFile file : fs.find(Filters.eq("filename", path))) {
-      fs.delete(file.getObjectId());
-    }
+    deleteFile(path);
   }
 
 
   @Override
   public long modifyTime(String path) {
-    return 0;
+    path = normalize(path);
+    Bson id = Filters.eq("_id", path);
+    for (org.bson.Document doc : struct.find(id)) {
+      return doc.getLong("lastModify");
+    }
+    return -1;
   }
 
 
   @Override
   public void makeDir(String path) {
+    MongoFileAttr attr = readAttribute(path);
+    if (attr == null) {
+      attr = MongoFileAttr.createDir(path);
+      makeStructUntilRoot(attr);
+    }
   }
 
 
   @Override
   public InputStream openInputStream(String file) {
-    return fs.openDownloadStream(file);
+    MongoFileAttr attr = readAttribute(file);
+    if (attr == null)
+      throw new XBosonException.NotFound(file);
+    if (attr.type != T_FILE)
+      throw new XBosonException.IOError("Is not file", file);
+
+    return fs.openDownloadStream(attr.content_id);
   }
 
 
   @Override
   public OutputStream openOutputStream(String file) {
-    delete(file);
-    return fs.openUploadStream(file);
+    MongoFileAttr attr = readAttribute(file);
+    GridFSUploadStream out = fs.openUploadStream(file);
+    if (attr == null) {
+      attr = MongoFileAttr.createFile(file, out.getObjectId());
+      makeStructUntilRoot(attr);
+    } else {
+      attr = attr.cloneNewContnet(out.getObjectId());
+    }
+    saveNode(attr);
+    return out;
+  }
+
+
+  @Override
+  protected void moveFile(MongoFileAttr src, String to) {
+    MongoFileAttr tofs = new MongoFileAttr(
+            to, src.type, src.lastModify, src.content_id);
+    saveNode(tofs);
+    deleteFile(src.path);
+  }
+
+
+  @Override
+  protected Set<String> containFiles(MongoFileAttr dir) {
+    return dir.dir_contain;
+  }
+
+
+  @Override
+  protected MongoFileAttr createDirNode(String path) {
+    return MongoFileAttr.createDir(path);
+  }
+
+
+  @Override
+  protected void addTo(MongoFileAttr dir, String path) {
+    dir.addChildStruct(path);
+  }
+
+
+  @Override
+  protected void saveNode(MongoFileAttr a) {
+    UpdateOptions opt = new UpdateOptions().upsert(true);
+    struct.replaceOne(a.toFilterID(), a.toDocument(), opt);
+  }
+
+
+  @Override
+  protected MongoFileAttr cloneBaseName(MongoFileAttr a) {
+    String basename = Path.me.basename(a.path);
+    MongoFileAttr fs = new MongoFileAttr(
+            basename, a.type, a.lastModify, a.content_id);
+    if (fs.dir_contain != null) fs.dir_contain.addAll(a.dir_contain);
+    return fs;
+  }
+
+
+  @Override
+  protected void removeAndUpdateParent(MongoFileAttr fs) {
+    struct.deleteOne(fs.toFilterID());
+    String parentPath = parentPath(fs);
+    if (parentPath != null) {
+      MongoFileAttr parent = readAttribute(parentPath);
+      parent.removeChild(fs.path);
+      saveNode(parent);
+    }
   }
 }

@@ -18,9 +18,8 @@ package com.xboson.fs.mongo;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.GridFSBuckets;
 import com.xboson.been.MongoConfig;
+import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
@@ -53,6 +52,9 @@ public class SysMongoFactory extends OnExitHandle {
 
   private SysMongoFactory() {
     mc = SysConfig.me().readConfig().mongodb;
+    if (!mc.enable)
+      throw new XBosonException("MongoDB disabled");
+
     cli = new MongoClient(mc.address(), mc.credential(), mc.options());
   }
 

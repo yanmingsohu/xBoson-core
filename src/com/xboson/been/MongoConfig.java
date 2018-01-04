@@ -34,6 +34,7 @@ public class MongoConfig {
   public String database;
   public String username;
   public String password;
+  public boolean enable;
 
 
   public ServerAddress address() {

@@ -10,16 +10,17 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * api 沙箱超时管理, 内存管理.
 * SqlServer 分页.
 * 接管 Tomcat.
-* node 模块目录安装画面.
 * 上传下载
 * xls 报表
 * api 脚本引用 api 脚本 (直接 require)
 * 集群管理
-* 临时文件系统接入 fs 模块
 * 区块链api
 * 云盘系统
 * 多语言
 * UI 模板引擎
+* 配置文件改为 yaml
+* node 模块目录安装画面.
+* MongoDB 配置安装画面.
 
 
 # 2.0 新特性

@@ -90,6 +90,7 @@ public final class DefaultConfig {
     mc.database = "xboson";
     mc.username = "";
     mc.password = "";
+    mc.enable = false;
   }
 
 

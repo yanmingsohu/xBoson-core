@@ -156,7 +156,7 @@ public abstract class LocalFileMapping implements
         return new LocalFileStruct(fs, true);
 
       } catch (Exception e) {
-        log.warn("readLocalAttr()", e);
+        log.warn("readLocalAttr()", local_file, path, e);
       }
     }
     return null;

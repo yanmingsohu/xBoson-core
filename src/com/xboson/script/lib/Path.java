@@ -17,6 +17,9 @@
 package com.xboson.script.lib;
 
 
+import com.xboson.util.Tool;
+
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -88,7 +91,8 @@ public class Path {
 
 
   /**
-   * 返回除名称之外的完整父目录
+   * 返回除名称之外的完整父目录,
+   * 如果没有父路径返回 null.
    */
   public String dirname(String path) {
     char[] ch = path.trim().toCharArray();
@@ -110,6 +114,9 @@ public class Path {
 
     if (end < 0)
       return null;
+
+    if (end == 0)
+      return "/";
 
     return new String(ch, 0, end);
   }

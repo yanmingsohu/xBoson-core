@@ -65,6 +65,12 @@ public class TestFace extends Test {
     path  = "/ui/paas/login.html";
     LogFactory.setLevel(Level.ALL);
 
+    //
+    // 直接在当前线程中执行同步
+    //
+    SynchronizeFiles sf = new SynchronizeFiles(rb, redis);
+    sf.run();
+
     waitEventLoopEmpty();
     testLocal();
     test_redis_base();

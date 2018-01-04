@@ -19,15 +19,14 @@ package com.xboson.test;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.xboson.fs.mongo.MongoFileAttr;
 import com.xboson.fs.mongo.MongoFileSystem;
 import com.xboson.fs.mongo.SysMongoFactory;
 import com.xboson.util.Tool;
-import jdk.internal.util.xml.impl.Input;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 
 
 public class TestMongo extends Test {
@@ -58,12 +57,25 @@ public class TestMongo extends Test {
     sub("File System");
 
     MongoFileSystem fs = SysMongoFactory.me().openFS();
-    OutputStream out = fs.openOutputStream("/test.txt");
-    String txt = Tool.randomString(100);
-    out.write(txt.getBytes());
-    out.close();
 
-    InputStream i = fs.openInputStream("/test.txt");
+    sub("Make dir");
+    fs.makeDir("/a/b/c");
+
+    sub("Write file");
+    String filename = "/a/test.txt";
+    String txt = writeRandomFile(fs, filename);
+
+    sub("Write file 2");
+    writeRandomFile(fs, "/c/1.txt");
+    writeRandomFile(fs, "/2.txt");
+    writeRandomFile(fs, "/3.txt");
+
+    sub("Read dir");
+    msg("/a", fs.readDir("/a"));
+    msg("/", fs.readDir("/"));
+
+    sub("Read file");
+    InputStream i = fs.openInputStream(filename);
     byte[] buf = new byte[1000];
     int len = i.read(buf);
     String rtext = new String(buf, 0, len);
@@ -72,6 +84,16 @@ public class TestMongo extends Test {
 
     MongoFileAttr attr = fs.readAttribute("/test.txt");
     msg("File Attribute:", attr);
+  }
+
+
+  public String writeRandomFile(MongoFileSystem fs, String file)
+          throws Exception {
+    OutputStream out = fs.openOutputStream(file);
+    String txt = Tool.randomString(100);
+    out.write(txt.getBytes());
+    out.close();
+    return txt;
   }
 
 

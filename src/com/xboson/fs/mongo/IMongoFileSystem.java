@@ -6,35 +6,19 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-1-3 上午10:16
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/basic/IFileAttribute.java
+// 文件创建日期: 18-1-4 下午4:29
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/fs/mongo/IMongoFileSystem.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.fs.basic;
+package com.xboson.fs.mongo;
 
-/**
- * 不对文件属性做任何约定
- */
-public interface IFileAttribute {
-
-  /** 文件 */
-  int T_FILE = 1;
-  /** 目录 */
-  int T_DIR  = 2;
-
-  /**
-   * 返回当前路径上对象的类型 (文件/目录/其他)
-   */
-  int type();
+import com.xboson.fs.basic.IStreamOperator;
 
 
-  /**
-   * 返回规范化的绝对路径
-   */
-  String path();
+public interface IMongoFileSystem extends IStreamOperator<MongoFileAttr> {
 
 }

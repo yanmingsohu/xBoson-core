@@ -145,6 +145,9 @@ public class RedisBase implements IConstant {
    * 路径上没有数据返回 null
    */
   public RedisFileAttr getStruct(String path) {
+    if (path == null)
+      throw new XBosonException.NullParamException("String path");
+
     try (JedisSession js = openSession()) {
       byte[] bin = js.client.hget(structNameBytes, path.getBytes(CHARSET));
       if (bin == null || bin.length == 0)

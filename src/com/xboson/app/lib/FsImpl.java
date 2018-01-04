@@ -17,12 +17,20 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
+import com.xboson.fs.mongo.IMongoFileSystem;
+import com.xboson.fs.mongo.MongoFileAttr;
+import com.xboson.fs.mongo.SysMongoFactory;
 import com.xboson.fs.node.NodeFileFactory;
 import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.FinderResult;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
+import com.xboson.script.lib.Checker;
+import com.xboson.util.Tool;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Set;
 
 
@@ -51,9 +59,83 @@ public class FsImpl {
       case "node":
         return new Wrap(NodeFileFactory.open());
 
+      case "share":
+        return new Wrap2(SysMongoFactory.me().openFS());
+
       default:
         throw new XBosonException.NotFound(
                 "File System Type:" + fsTypeName);
+    }
+  }
+
+
+  public Object openShare(String diskName) {
+    if (Tool.isNulStr(diskName))
+      throw new XBosonException.NullParamException("String diskName");
+
+    Checker.me.symbol(diskName, "无效的磁盘名称格式");
+
+    return new Wrap2(SysMongoFactory.me().openFS(diskName));
+  }
+
+
+  public void pipe(InputStream i, OutputStream o) throws IOException {
+    Tool.copy(i, o, true);
+  }
+
+
+  private class Wrap2 implements IMongoFileSystem {
+    private IMongoFileSystem real;
+
+    private Wrap2(IMongoFileSystem real) {
+      this.real = real;
+    }
+
+    @Override
+    public InputStream openInputStream(String file) {
+      return real.openInputStream(file);
+    }
+
+
+    @Override
+    public OutputStream openOutputStream(String file) {
+      return real.openOutputStream(file);
+    }
+
+
+    @Override
+    public MongoFileAttr readAttribute(String path) {
+      return real.readAttribute(path);
+    }
+
+
+    @Override
+    public Set<MongoFileAttr> readDir(String path) {
+      return real.readDir(path);
+    }
+
+
+    @Override
+    public void move(String src, String to) {
+      real.move(src, to);
+    }
+
+
+    @Override
+    public void delete(String file) {
+      real.delete(file);
+    }
+
+
+    @Override
+    public long modifyTime(String path) {
+      return real.modifyTime(path);
+    }
+
+
+    @Override
+    public void makeDir(String path) {
+      real.makeDir(path);
     }
   }
 
