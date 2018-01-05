@@ -19,6 +19,7 @@ package com.xboson.test;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.fs.mongo.MongoFileAttr;
 import com.xboson.fs.mongo.MongoFileSystem;
 import com.xboson.fs.mongo.SysMongoFactory;
@@ -26,7 +27,6 @@ import com.xboson.util.Tool;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Set;
 
 
 public class TestMongo extends Test {
@@ -48,6 +48,11 @@ public class TestMongo extends Test {
     try (MongoClient cli = new MongoClient()) {
       MongoDatabase db = cli.getDatabase("test");
       MongoCollection cl = db.getCollection("c1");
+      JsonAdapter a = Tool.getAdapter(Object.class);
+      msg(":::::::::", a);
+      Object list = cli.listDatabaseNames();
+      String str = a.toJson(list);
+      msg(str);
       cl.count();
     }
   }

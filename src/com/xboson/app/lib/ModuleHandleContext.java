@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.IJSObject;
+import com.xboson.util.CloseableSet;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +28,13 @@ import java.util.Map;
  * 在外部模块和服务脚本上下文之间传递对象, 线程级别的.
  */
 public class ModuleHandleContext implements IJSObject {
+
+  /**
+   * 注册一个该名称的 CloseableSet 对象到上下文,
+   * 之后可以调用 autoClose 来自动关闭可关闭对象.
+   * @see CloseableSet
+   */
+  public static final String CLOSE = "close_set";
 
   private static ThreadLocal<Map<String, Object>> moduleHandle;
 
@@ -53,6 +61,14 @@ public class ModuleHandleContext implements IJSObject {
    */
   public static void register(String name, Object val) {
     getMap().put(name, val);
+  }
+
+
+  public static void autoClose(AutoCloseable ac) {
+    CloseableSet c = (CloseableSet) _get(CLOSE);
+    if (c == null)
+      throw new XBosonException.NotFound("Not found CloseableSet");
+    c.add(ac);
   }
 
 

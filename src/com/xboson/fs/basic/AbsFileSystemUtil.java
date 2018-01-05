@@ -317,6 +317,7 @@ public abstract class AbsFileSystemUtil<ATTR extends IFileAttribute>
 
   /**
    * 删除节点, 并删除引用该节点的父节点的引用.
+   * 实现可能需要删除文件内容.
    */
   protected abstract void removeAndUpdateParent(ATTR fs);
 }

@@ -91,15 +91,20 @@ public class FsImpl {
       this.real = real;
     }
 
+
     @Override
     public InputStream openInputStream(String file) {
-      return real.openInputStream(file);
+      InputStream i = real.openInputStream(file);
+      ModuleHandleContext.autoClose(i);
+      return i;
     }
 
 
     @Override
     public OutputStream openOutputStream(String file) {
-      return real.openOutputStream(file);
+      OutputStream o = real.openOutputStream(file);
+      ModuleHandleContext.autoClose(o);
+      return o;
     }
 
 

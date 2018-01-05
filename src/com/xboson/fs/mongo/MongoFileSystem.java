@@ -174,7 +174,8 @@ public class MongoFileSystem extends AbsFileSystemUtil<MongoFileAttr>
     String basename = Path.me.basename(a.path);
     MongoFileAttr fs = new MongoFileAttr(
             basename, a.type, a.lastModify, a.content_id);
-    if (fs.dir_contain != null) fs.dir_contain.addAll(a.dir_contain);
+    if (fs.dir_contain != null)
+      fs.dir_contain.addAll(a.dir_contain);
     return fs;
   }
 

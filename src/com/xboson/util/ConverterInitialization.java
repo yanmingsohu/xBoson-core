@@ -69,6 +69,7 @@ public final class ConverterInitialization {
     TimestampJsonConverter.registerAdapter(jsbuilded);
     BigDecimalConverter.registerAdapter(jsbuilded);
     ExceptionConverter.registerAdapter(jsbuilded);
+    MongoJsonConverter.registerAdapter(jsbuilded);
   }
 
 

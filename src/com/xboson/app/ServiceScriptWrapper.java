@@ -89,6 +89,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
    */
   private void regModules(SysModules mod) {
     mod.regClass("fs", FsImpl.class);
+    mod.regClass("mongodb", MongoImpl.class);
   }
 
 
@@ -139,6 +140,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       ModuleHandleContext.register("sql", sql);
       ModuleHandleContext.register("se",  se);
       ModuleHandleContext.register("runOnSysOrg", runOnSysOrg);
+      ModuleHandleContext.register(ModuleHandleContext.CLOSE, cs);
 
       call.call(jsmod.exports, sys, sql, cache, http, se);
 

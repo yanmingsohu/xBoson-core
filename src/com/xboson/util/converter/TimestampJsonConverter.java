@@ -24,12 +24,14 @@ import com.xboson.util.Tool;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Date;
 
 
 public class TimestampJsonConverter {
 
   public static void registerAdapter(Moshi.Builder builder) {
     builder.add(Timestamp.class, new TimestampAdapter());
+    builder.add(Date.class, new DateAdapter());
   }
 
 
@@ -45,6 +47,21 @@ public class TimestampJsonConverter {
     public void toJson(JsonWriter jsonWriter, Timestamp timestamp)
             throws IOException {
       jsonWriter.value(Tool.formatDate(timestamp));
+    }
+  }
+
+
+  static public class DateAdapter extends JsonAdapter<Date> {
+
+    @Override
+    public Date fromJson(JsonReader jsonReader) throws IOException {
+      throw new UnsupportedOperationException("fromJson Timestamp");
+    }
+
+
+    @Override
+    public void toJson(JsonWriter jsonWriter, Date date) throws IOException {
+      jsonWriter.value(Tool.formatDate(date));
     }
   }
 }
