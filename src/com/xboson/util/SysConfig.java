@@ -184,7 +184,7 @@ public class SysConfig {
 	public static GenericObjectPoolConfig defaultPoolConfig() {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 		config.setMaxTotal(-1);
-		config.setMaxIdle(10000);
+		config.setMaxIdle(1000);
 		config.setEvictorShutdownTimeoutMillis(100);
 		config.setBlockWhenExhausted(false);
 		return config;
@@ -197,7 +197,7 @@ public class SysConfig {
 	public static GenericKeyedObjectPoolConfig defaultKeyPoolConfig() {
 		GenericKeyedObjectPoolConfig config = new GenericKeyedObjectPoolConfig();
 		config.setMaxTotalPerKey(-1);
-		config.setMaxIdlePerKey(10000);
+		config.setMaxIdlePerKey(1000);
 		config.setEvictorShutdownTimeoutMillis(1);
 		config.setBlockWhenExhausted(false);
 		return config;

@@ -20,9 +20,13 @@ import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.squareup.moshi.JsonAdapter;
+import com.xboson.app.lib.ModuleHandleContext;
 import com.xboson.fs.mongo.MongoFileAttr;
 import com.xboson.fs.mongo.MongoFileSystem;
 import com.xboson.fs.mongo.SysMongoFactory;
+import com.xboson.fs.script.IScriptFileSystem;
+import com.xboson.script.Application;
+import com.xboson.util.CloseableSet;
 import com.xboson.util.Tool;
 
 import java.io.InputStream;
@@ -36,6 +40,18 @@ public class TestMongo extends Test {
   public void test() throws Throwable {
     basic();
     fs();
+    script();
+  }
+
+
+  public void script() throws Throwable {
+    sub("Script Module");
+    new ModuleHandleContext().init();
+    ModuleHandleContext.register(ModuleHandleContext.CLOSE, new CloseableSet());
+
+    IScriptFileSystem vfs = TestScript.createVFS();
+    Application app = TestScript.createBasicApplication(vfs);
+    app.run("/mongo-db.js");
   }
 
 
@@ -49,10 +65,8 @@ public class TestMongo extends Test {
       MongoDatabase db = cli.getDatabase("test");
       MongoCollection cl = db.getCollection("c1");
       JsonAdapter a = Tool.getAdapter(Object.class);
-      msg(":::::::::", a);
       Object list = cli.listDatabaseNames();
-      String str = a.toJson(list);
-      msg(str);
+      msg(list);
       cl.count();
     }
   }

@@ -55,6 +55,7 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
   public T getProxy() {
     Class c = original.getClass();
     Class[] interfaces = c.getInterfaces();
+    interfaces = appendInterfaces(interfaces);
 
     Object obj = Proxy.newProxyInstance(c.getClassLoader(),
             interfaces, this);
@@ -106,6 +107,14 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
    * @throws Exception 如果实现抛出异常, 方法返回后对象仍然会进入关闭状态.
    */
   protected abstract void doClose(T original, Object proxy) throws Exception;
+
+
+  /**
+   * 附加新街口给代理类, 默认实现直接返回 interfaces.
+   */
+  protected Class[] appendInterfaces(Class[] interfaces) {
+    return interfaces;
+  }
 
 
   /**

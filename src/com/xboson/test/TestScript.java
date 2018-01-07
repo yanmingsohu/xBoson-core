@@ -17,6 +17,7 @@
 package com.xboson.test;
 
 import com.xboson.app.lib.MapImpl;
+import com.xboson.app.lib.MongoImpl;
 import com.xboson.been.Module;
 import com.xboson.fs.script.FileSystemFactory;
 import com.xboson.fs.script.IScriptFileSystem;
@@ -93,9 +94,11 @@ public class TestScript extends Test {
 	}
 
 
-	public Application createBasicApplication(IScriptFileSystem vfs)
+	public static Application createBasicApplication(IScriptFileSystem vfs)
           throws Exception {
     SysModules sysmod = EnvironmentFactory.createDefaultSysModules();
+    sysmod.regClass("mongodb", MongoImpl.class);
+
     IModuleProvider nodejs_mod = NodeFileFactory.openNodeModuleProvider(sysmod);
 
     BasicEnvironment env = EnvironmentFactory.createEmptyBasic();
@@ -112,9 +115,9 @@ public class TestScript extends Test {
   }
 
 
-  public IScriptFileSystem createVFS() throws URISyntaxException {
+  public static IScriptFileSystem createVFS() throws URISyntaxException {
     String fsid = "test";
-    URL basepath = this.getClass().getResource("./js/");
+    URL basepath = TestScript.class.getResource("./js/");
     msg("Base path:", basepath);
 
     FileSystemFactory fsf = FileSystemFactory.me();

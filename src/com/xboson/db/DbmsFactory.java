@@ -45,7 +45,11 @@ public class DbmsFactory extends OnExitHandle {
 
   public static DbmsFactory me() {
     if (instance == null) {
-      instance = new DbmsFactory();
+      synchronized (DbmsFactory.class) {
+        if (instance == null) {
+          instance = new DbmsFactory();
+        }
+      }
     }
     return instance;
   }

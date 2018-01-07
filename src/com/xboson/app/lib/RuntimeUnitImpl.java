@@ -239,4 +239,13 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       return true;
     return false;
   }
+
+
+  public static boolean isTrue(Object o) {
+    if (o == null)
+      return false;
+    if (o instanceof Boolean)
+      return (Boolean) o;
+    return false;
+  }
 }

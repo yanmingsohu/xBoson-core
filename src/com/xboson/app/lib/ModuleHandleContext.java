@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.been.XBosonException;
 import com.xboson.script.IJSObject;
 import com.xboson.util.CloseableSet;
+import com.xboson.util.Tool;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +48,7 @@ public class ModuleHandleContext implements IJSObject {
     }
     return map;
   }
+
 
   /**
    * 在脚本中调用, 获取当前脚本上下文中 name 对象的引用
@@ -96,7 +98,9 @@ public class ModuleHandleContext implements IJSObject {
 
   @Override
   public void init() {
-    moduleHandle = new ThreadLocal<>();
+    if (moduleHandle == null) {
+      moduleHandle = new ThreadLocal<>();
+    }
   }
 
 
