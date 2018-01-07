@@ -21,6 +21,7 @@ import com.xboson.app.ErrorCodeMessage;
 import com.xboson.app.XjApp;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
+import com.xboson.been.XBosonException.BadParameter;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlCachedResult;
 import com.xboson.db.SqlResult;
@@ -35,6 +36,11 @@ import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.Context;
 import jdk.nashorn.internal.runtime.ScriptObject;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.supercsv.io.CsvMapReader;
 import org.supercsv.io.CsvMapWriter;
 import org.supercsv.prefs.CsvPreference;
@@ -956,18 +962,109 @@ public class SysImpl extends DateImpl {
   }
 
 
-/////////////////////////////////////////////////////////////// ---- //
-// Not implements Functions
-/////////////////////////////////////////////////////////////// ---- //
+  public String setReportData(String fileName, String dataName,
+                              String readPath, String savePath) {
+    if (dataName == null)
+      throw new BadParameter("2", "dataName is null");
 
+    Object data = result.getMember(dataName);
+    if (data == null)
+      throw new BadParameter("2",
+              "Cannot found bind result `" + dataName + '`');
 
-  public String setReportData(String fileName, Object[] data,
-                              String tmpPath, String downPath) {
-    throw new UnsupportedOperationException("setReportData");
+    return setReportData(fileName, data, readPath, savePath);
   }
 
 
-  public String convertCsvToXls(Object... p) {
+  public String setReportData(String fileName, Object data,
+                              String readPath, String savePath) {
+    ScriptObjectMirror list = wrap(data);
+    if (! list.isArray())
+      throw new BadParameter("2", "data not List");
+
+    if (Tool.isNulStr(fileName))
+      throw new BadParameter("1", "fileName not string");
+
+    if (Tool.isNulStr(readPath))
+      throw new BadParameter("3", "readPath not string");
+
+    if (Tool.isNulStr(savePath))
+      throw new BadParameter("4", "savePath not string");
+
+    final String SHEET_NAME = "data";
+    final String base = Directory.get(cd);
+    final String readDir = Tool.normalize( base + '/' + readPath);
+    final String saveDir = Tool.normalize( base + '/' + savePath);
+
+    try (CloseableSet close = new CloseableSet()) {
+      Workbook wb;
+      try {
+        FileInfo file = PrimitiveOperation.me().openReadFile(readDir, fileName);
+        close.add(file);
+        wb = new HSSFWorkbook(file.input);
+      } catch(Exception e) {
+        wb = new HSSFWorkbook();
+      }
+
+      close.add(wb);
+      Sheet sheet = wb.getSheet(SHEET_NAME);
+      if (sheet == null) {
+        sheet = wb.createSheet(SHEET_NAME);
+      }
+
+      final int size = list.size();
+      Map<String, Integer> name2num = new HashMap<>();
+      int cellCount = 0;
+
+      for (int i=0; i<size; ++i) {
+        Row row = sheet.createRow(i);
+        ScriptObjectMirror obj = wrap(list.getSlot(i));
+
+        for (Map.Entry<String, Object> entry : obj.entrySet()) {
+          Integer c = name2num.get(entry.getKey());
+          if (c == null) {
+            c = cellCount++;
+            name2num.put(entry.getKey(), c);
+          }
+          Cell cell = row.createCell(c);
+          Object value = entry.getValue();
+
+          if (value instanceof Date) {
+            cell.setCellValue((Date) value);
+          }
+          else if (value instanceof Number) {
+            cell.setCellValue((double) value);
+          }
+          else if (value instanceof Boolean) {
+            cell.setCellValue((boolean) value);
+          }
+          else {
+            cell.setCellValue(String.valueOf(entry.getValue()));
+          }
+        }
+      }
+
+      StringBufferOutputStream buf = new StringBufferOutputStream();
+      wb.write(buf);
+
+      int dot = fileName.lastIndexOf(".");
+      String name = fileName.substring(0, dot);
+      String ext = fileName.substring(dot);
+      String saveFile = name +'_'+ Tool.formatDate(new Date()) + ext;
+      PrimitiveOperation.me().updateFile(
+              saveDir, saveFile, buf.openInputStream());
+
+      return saveFile;
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
+  }
+
+
+  /**
+   * 没有 api 用到这个函数, 通过其他函数组合可以实现
+   */
+  public String convertCsvToXls(String fileName, String csv) {
     throw new UnsupportedOperationException("convertCsvToXls");
   }
 

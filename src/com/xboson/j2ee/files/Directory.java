@@ -35,21 +35,25 @@ public class Directory {
   public static String get(HttpServletRequest req) throws ServletException {
     SessionData sess = SessionData.get(req);
     UrlSplit sp = new UrlSplit(req);
-    return get(sess, sp);
+    return get(sess, sp, req.getParameter("org"));
   }
 
 
   public static String get(CallData cd) {
-    return get(cd.sess, cd.url);
+    return get(cd.sess, cd.url, cd.req.getParameter("org"));
   }
 
 
-  public static String get(SessionData sess, UrlSplit sp) {
+  public static String get(SessionData sess, UrlSplit sp, String org) {
     String dirname;
 
-    if (sess == null || sess.login_user == null) {
+    if (org != null) {
+      dirname = "/" + org;
+    }
+    else if (sess == null || sess.login_user == null) {
       dirname = "/temporary";
-    } else {
+    }
+    else {
       dirname = "/" + sess.login_user.userid;
     }
 

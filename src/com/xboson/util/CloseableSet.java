@@ -47,7 +47,7 @@ public class CloseableSet implements AutoCloseable {
 
   @Override
   public void close() {
-    for (int i=0, end=list.size(); i<end; ++i) {
+    for (int i=list.size()-1; i>=0; --i) {
       AutoCloseable c = list.get(i);
       try {
         c.close();

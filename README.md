@@ -5,22 +5,22 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 
 # 需要做:
 
+* UI 模板引擎
 * js 沙箱每次一个独立默认上下文.(当前为 app 共用且锁死).
 * blob 保存时直接写入db, 而不在内存堆积.
 * api 沙箱超时管理, 内存管理.
 * SqlServer 分页.
 * 接管 Tomcat.
-* 上传下载
-* xls 报表
 * api 脚本引用 api 脚本 (直接 require)
 * 集群管理
 * 区块链api
 * 云盘系统
 * 多语言
-* UI 模板引擎
 * 配置文件改为 yaml
 * node 模块目录安装画面.
 * MongoDB 配置安装画面.
+* 上传下载
+* xls 报表
 
 
 # 2.0 新特性
@@ -41,6 +41,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 针对平台开发的 j2ee 框架.
 * 快如闪电的 json/xml 转换器.
 * 集群使用消息总线来发送通知.
+* MongoDB 驱动.
 
 
 # JAR 依赖
@@ -81,6 +82,9 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
     -- (bson-3.6.1.jar)
     -- (mongodb-driver-3.6.1.jar)
     -- (mongodb-driver-core-3.6.1.jar)
+    
+* (Microsoft Excel 报表)
+    -- (poi-3.17.jar)
 
 		
 # URL 映射约定
