@@ -48,8 +48,8 @@ public class ConnectPoolFactory implements
   @Override
   public PooledObject<Connection> makeObject(ConnectConfig key)
           throws Exception {
-    log.debug("Make Object", key);
     Connection conn = dbms.openWithoutPool(key);
+    log.debug("Make Object", conn, key);
     return new DefaultPooledObject<>(conn);
   }
 
@@ -68,7 +68,7 @@ public class ConnectPoolFactory implements
     if (!c.isClosed()) {
       c.close();
     }
-    log.debug("Destory", p, key);
+    log.debug("Destory", c, key);
   }
 
 
@@ -86,10 +86,10 @@ public class ConnectPoolFactory implements
       if (!c.isClosed()) {
         ret = c.isValid(VALIDATE_TIMEOUT);
       }
+      log.debug("Validate", c, key, ret);
     } catch (SQLException e) {
       log.debug("Validate Fail", p, key, e);
     }
-    log.debug("Validate", p, key, ret);
     return ret;
   }
 
@@ -110,7 +110,7 @@ public class ConnectPoolFactory implements
     if (key.database != null) {
       c.setCatalog(key.database);
     }
-    log.debug("Activate", p, key);
+    log.debug("Activate", c, key);
   }
 
 
@@ -126,6 +126,6 @@ public class ConnectPoolFactory implements
       c.commit();
     }
     c.setAutoCommit(false);
-    log.debug("Passivate", p, key);
+    log.debug("Passivate", c, key);
   }
 }

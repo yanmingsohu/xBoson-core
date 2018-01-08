@@ -46,7 +46,7 @@ public class ForProduction extends ForDevelopment {
           int b = arr.indexOf("\"", a);
           if (b > a) {
             Date now        = new Date();
-            ScriptAttr attr   = new ScriptAttr();
+            ScriptAttr attr = new ScriptAttr();
             ScriptFile file = makeFile(attr, arr.substring(a, b));
             attr.fileSize   = file.content.length;
             attr.fileName   = api;
@@ -54,6 +54,8 @@ public class ForProduction extends ForDevelopment {
             attr.fullPath   = ApiPath.toFile(mod, api);
             attr.createTime = now.getTime();
             attr.modifyTime = now.getTime();
+
+            log.debug("Load Script from CACHE:", mod, '/', api);
             return file;
           }
         }

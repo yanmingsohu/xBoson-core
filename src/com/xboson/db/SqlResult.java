@@ -17,13 +17,11 @@
 package com.xboson.db;
 
 import com.xboson.been.XBosonException;
+import com.xboson.util.Tool;
 
 import java.lang.reflect.Field;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -70,7 +68,8 @@ public class SqlResult implements AutoCloseable {
       return new SqlResult(conn, ps);
 
     } catch(Exception e) {
-      throw new XBosonException.XSqlException(sql, e);
+      String bind = Arrays.toString(parm);
+      throw new XBosonException.XSqlException(sql +"\nBind parm: "+ bind, e);
     }
   }
 
@@ -129,11 +128,7 @@ public class SqlResult implements AutoCloseable {
    */
   @Override
   public void close() {
-    try {
-      conn.close();
-    } catch (SQLException e) {
-      throw new XBosonException.XSqlException(e);
-    }
+    Tool.close(conn);
   }
 
 

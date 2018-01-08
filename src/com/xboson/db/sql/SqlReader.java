@@ -100,13 +100,19 @@ public class SqlReader {
    */
   public static SqlResult query(String filename, ConnectConfig config, Object...parm) {
     String sql = read(filename);
+    Connection conn = null;
+    boolean needClose = true;
     try {
-      Connection conn = DbmsFactory.me().open(config);
-      return SqlResult.query(conn, sql, parm);
+      conn = DbmsFactory.me().open(config);
+      SqlResult sr = SqlResult.query(conn, sql, parm);
+      needClose = false;
+      return sr;
     } catch(XBosonException xe) {
       throw xe;
     } catch(Exception e) {
       throw new XBosonException.XSqlException(sql, e);
+    } finally {
+      if (needClose) Tool.close(conn);
     }
   }
 

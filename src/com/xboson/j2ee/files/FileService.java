@@ -62,11 +62,6 @@ public class FileService extends HttpServlet {
 
   /**
    * 上传文件
-   *
-   * @param req
-   * @param resp
-   * @throws ServletException
-   * @throws IOException
    */
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
@@ -114,6 +109,9 @@ public class FileService extends HttpServlet {
 
   /**
    * 下载文件
+   * Http 参数:
+   *  file_name - 文件名
+   *  dir_name - 路径
    */
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -127,16 +125,25 @@ public class FileService extends HttpServlet {
 
     XResponse ret = XResponse.get(req);
     String file_name = req.getParameter("file_name");
+    String dir_name  = req.getParameter("dir_name");
 
     if (Tool.isNulStr(file_name)) {
       ret.responseMsg("文件名不能为空 [file_name]", 1);
       return;
     }
 
-    String dir_name = Directory.get(req);
+    String base = Directory.get(req);
+    if (dir_name != null) {
+      dir_name = Tool.normalize(base +'/'+ dir_name);
+    } else {
+      dir_name = base;
+    }
+
     try (FileInfo info = PrimitiveOperation.me().openReadFile(dir_name, file_name)) {
       resp.setDateHeader("Last-Modified", info.last_modified);
       resp.setContentType(info.type);
+      resp.setHeader("Content-Disposition",
+              "attachment; filename=" + file_name);
       Tool.copy(info.input, resp.getOutputStream(), true);
 
       log.debug("Dir", dir_name, ", File", file_name);

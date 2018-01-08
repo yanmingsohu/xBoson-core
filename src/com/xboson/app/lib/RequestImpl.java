@@ -70,9 +70,8 @@ public class RequestImpl extends JSObject.Helper {
     if (ret == null) {
       ret = super.getMember(name);
     }
-    if (ret instanceof String) {
-      if (Tool.isNulStr((String) ret))
-        return null;
+    if (ret instanceof String && Tool.isNulStr((String) ret)) {
+      return null;
     }
     return ret;
   }

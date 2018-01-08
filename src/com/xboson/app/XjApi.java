@@ -95,6 +95,7 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
       jsmodule = null;
       file = null;
       app.updateApiScript(this);
+      log.debug("Script Changed:", mod.id(), '/', id);
     }
   }
 

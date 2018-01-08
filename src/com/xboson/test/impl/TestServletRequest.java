@@ -35,6 +35,7 @@ public class TestServletRequest implements HttpServletRequest {
 
   Map<String, Object> attr = new HashMap<>();
   Hashtable<String, String> header = new Hashtable<>();
+  Map<String, String> parameters = new HashMap<>();
 
 
   public TestServletRequest() {
@@ -283,12 +284,21 @@ public class TestServletRequest implements HttpServletRequest {
 
   @Override
   public String getParameter(String s) {
+    String ret = parameters.get(s);
+    if (ret != null)
+      return ret;
+
     if ("$format".equals(s)) {
-      return "json";
+      ret = "json";
+    } else if ("s".equals(s)) {
+      ret = "d";
+    } else if ("org".equals(s)) {
+      ret =  Tool.uuid.ds();
+    } else {
+      ret = Tool.randomString(10);
     }
-    if ("s".equals(s))
-      return "d";
-    return Tool.randomString(10);
+    parameters.put(s, ret);
+    return ret;
   }
 
 

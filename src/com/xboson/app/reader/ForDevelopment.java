@@ -50,6 +50,7 @@ public class ForDevelopment extends AbsReadScript {
         attr.createTime = rs.getDate("createdt").getTime();
         attr.modifyTime = rs.getDate("updatedt").getTime();
 
+        log.debug("Load Script from DB:", mod, '/', api);
         return file;
 
       } else {

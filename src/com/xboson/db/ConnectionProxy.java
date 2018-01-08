@@ -17,13 +17,19 @@
 package com.xboson.db;
 
 import com.xboson.been.XBosonException;
+import com.xboson.event.timer.TimeFactory;
 import com.xboson.util.AutoCloseableProxy;
+import com.xboson.util.CloseableSet;
+import com.xboson.util.ResourceLeak;
+import com.xboson.util.Tool;
 import org.apache.commons.pool2.KeyedObjectPool;
 
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.TimerTask;
 
 
 /**
@@ -33,7 +39,8 @@ public class ConnectionProxy extends AutoCloseableProxy<Connection> {
 
   private KeyedObjectPool<ConnectConfig, Connection> pool;
   private ConnectConfig config;
-  private List<AutoCloseable> closelist;
+  private CloseableSet closelist;
+  private ResourceLeak leak;
 
 
   public ConnectionProxy(KeyedObjectPool<ConnectConfig, Connection> pool,
@@ -48,19 +55,15 @@ public class ConnectionProxy extends AutoCloseableProxy<Connection> {
 
     this.pool = pool;
     this.config = config.clone();
-    this.closelist = new ArrayList<>();
+    this.closelist = new CloseableSet();
+    //this.leak = closelist.add(new ResourceLeak(this));
   }
 
 
   @Override
   protected void doClose(Connection original, Object proxy) throws Exception {
     pool.returnObject(config, original);
-
-    for (AutoCloseable obj : closelist) {
-      try {
-        obj.close();
-      } catch(Exception e) {}
-    }
+    closelist.close();
   }
 
 

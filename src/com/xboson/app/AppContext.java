@@ -25,6 +25,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.IConstant;
+import com.xboson.util.Tool;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -134,6 +135,7 @@ public class AppContext implements IConstant {
     ex.put("org", ac.org);
     ex.put("app", ac.app);
     ex.put("mod", ac.mod);
+    ex.put("requestid", Tool.uuid.ds());
   }
 
 

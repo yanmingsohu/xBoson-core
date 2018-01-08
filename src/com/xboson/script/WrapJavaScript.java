@@ -72,7 +72,7 @@ public class WrapJavaScript extends AbsWrapScript {
       cs = box.compile(code_reader);
 
     } catch (ScriptException e) {
-      throw new JScriptException(e, code_reader);
+      throw new JScriptException(e, code_reader, filename);
     }
   }
 
@@ -88,7 +88,7 @@ public class WrapJavaScript extends AbsWrapScript {
       return warpreturn;
 
     } catch (ECMAException ec) {
-      throw new JScriptException(ec, code_reader);
+      throw new JScriptException(ec, code_reader, filename);
 
     } catch (Exception e) {
       throw new XBosonException(e);

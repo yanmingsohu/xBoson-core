@@ -83,9 +83,11 @@ public class PrimitiveOperation {
    * @return 文件消息包装文件输入流和数据库连接资源, 需要关闭
    */
   public FileInfo openReadFile(String dir, String file) {
+    SqlResult sr = null;
+    boolean needClose = true;
     try {
       // 不能在这里关闭 db connect 否则读取流也会关闭
-      SqlResult sr = SqlReader.query(OPEN, db, dir, file);
+      sr = SqlReader.query(OPEN, db, dir, file);
       ResultSet rs = sr.getResult();
 
       if (rs.next()) {
@@ -94,12 +96,16 @@ public class PrimitiveOperation {
         fi.last_modified = rs.getTimestamp("update-time").getTime();
         fi.type = rs.getString("content-type");
 
+        needClose = false;
         return fi;
       } else {
         throw new XBosonException("Not found file: " + dir +' '+ file, 404);
       }
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);
+    } finally {
+      if (needClose)
+        Tool.close(sr);
     }
   }
 

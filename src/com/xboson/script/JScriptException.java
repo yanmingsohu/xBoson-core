@@ -43,6 +43,7 @@ public class JScriptException extends XBosonException {
   private static final String CLASS_NAME = "<javascript>";
   private int line_offset = 0;
   private String lastFileName;
+  private String fileName;
   private int lastLine;
   private CodeFormater cf;
 
@@ -73,6 +74,12 @@ public class JScriptException extends XBosonException {
   }
 
 
+  public JScriptException(Exception fail, Reader code, String filename) {
+    this(fail, new CodeFormater(code), OffsetLineStack.offset);
+    setFileName(filename);
+  }
+
+
   /**
    * 该构造方法会过滤 fail 中无关的错误堆栈项.
    * 并设置一个文件行偏移.
@@ -84,6 +91,11 @@ public class JScriptException extends XBosonException {
     this.cf = cf;
     setLineOffset(offset);
     collect_trace(fail);
+  }
+
+
+  public void setFileName(String fileName) {
+    this.fileName = fileName;
   }
 
 
@@ -130,8 +142,7 @@ public class JScriptException extends XBosonException {
       }
     } else if (e instanceof ScriptException) {
       ScriptException se = (ScriptException) e;
-      lastLine = se.getLineNumber();
-      lastFileName = se.getFileName();
+      setNameAndLine(se.getFileName(), se.getLineNumber());
     }
 
     Throwable t = e.getCause();
@@ -142,17 +153,21 @@ public class JScriptException extends XBosonException {
 
 
   private StackTraceElement clear_trace(StackTraceElement in) {
-    if (lastFileName == null) {
-      lastFileName = in.getFileName();
-    }
-    if (lastLine < 0) {
-      lastLine = in.getLineNumber();
-    }
+    setNameAndLine(in.getFileName(), in.getLineNumber());
     StackTraceElement ret = new StackTraceElement(
             CLASS_NAME,
             in.getMethodName(),
             in.getFileName(),
             in.getLineNumber() + line_offset);
     return ret;
+  }
+
+
+  private void setNameAndLine(String filename, int line) {
+    if (this.fileName != null && filename.indexOf(this.fileName) < 0)
+      return;
+
+    this.lastLine = line;
+    this.lastFileName = filename;
   }
 }

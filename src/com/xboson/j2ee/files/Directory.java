@@ -27,8 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * 路径生成规则:
- *    当用户登录一级目录为用户 id, 否则为 temporary;
- *    二级目录为 servlet 服务路径之后的路径字符串, 使用 '/' 拼接
+ *    有 org 参数, 则一级目录为 org,
+ *    否则, 用户登录, 则一级目录为 用户 id.
+ *    否则, 目录为 temporary/ + servlet 服务路径之后的路径字符串;
  */
 public class Directory {
 
@@ -50,15 +51,14 @@ public class Directory {
     if (org != null) {
       dirname = "/" + org;
     }
-    else if (sess == null || sess.login_user == null) {
-      dirname = "/temporary";
-    }
-    else {
+    else if (sess != null && sess.login_user != null) {
       dirname = "/" + sess.login_user.userid;
     }
-
-    if (sp.getLast() != null) {
-      dirname = Tool.normalize(dirname + sp.getLast());
+    else {
+      dirname = "/temporary";
+      if (sp.getLast() != null) {
+        dirname = Tool.normalize(dirname + sp.getLast());
+      }
     }
 
     return dirname;

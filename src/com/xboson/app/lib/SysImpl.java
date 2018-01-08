@@ -643,34 +643,28 @@ public class SysImpl extends DateImpl {
   /**
    * 转换 list 数据为 csv, 并保存在文件中.
    *
-   * @param dir 目录, (忽略 仅为兼容设计)
+   * @param dir 目录
    * @param filename 保存文件名
    * @param charset 文件编码
-   * @param list 数据
+   * @param olist 数据数组
    */
   public void listToCsv(String dir, String filename,
-                        String charset, Object[] list) throws IOException {
-    dir = Directory.get(cd);
+                        String charset, Object olist) throws IOException {
+    dir = Tool.normalize(Directory.get(cd) + '/' + dir);
     StringBufferOutputStream output = new StringBufferOutputStream();
 
     try (CsvMapWriter csv = new CsvMapWriter(
             output.openWrite(charset), CsvPreference.STANDARD_PREFERENCE) ) {
 
-      ScriptObjectMirror firstRow = wrap(list[0]);
+      ScriptObjectMirror list = wrap(olist);
+      ScriptObjectMirror firstRow = wrap(list.getSlot(0));
       String[] header = firstRow.getOwnKeys(false);
       csv.writeHeader(header);
 
-      for (int i = 0; i < list.length; ++i) {
-        if (list[i] instanceof Map) {
-          csv.write((Map) list[i], header);
-        }
-        else if (list[i] instanceof ScriptObject) {
-          ScriptObjectMirror js = wrap(list[i]);
-          csv.write(js, header);
-        }
-        else {
-          throw new XBosonException("bad type:" + list[i]);
-        }
+      final int size = list.size();
+      for (int i = 0; i < size; ++i) {
+        ScriptObjectMirror js = wrap(list.getSlot(i));
+        csv.write(js, header);
       }
 
       csv.flush();
@@ -1012,45 +1006,15 @@ public class SysImpl extends DateImpl {
         sheet = wb.createSheet(SHEET_NAME);
       }
 
-      final int size = list.size();
       Map<String, Integer> name2num = new HashMap<>();
-      int cellCount = 0;
+      Ref<Integer> rowNum = new Ref<>(0);
+      writeList(list, sheet, name2num, rowNum);
 
-      for (int i=0; i<size; ++i) {
-        Row row = sheet.createRow(i);
-        ScriptObjectMirror obj = wrap(list.getSlot(i));
-
-        for (Map.Entry<String, Object> entry : obj.entrySet()) {
-          Integer c = name2num.get(entry.getKey());
-          if (c == null) {
-            c = cellCount++;
-            name2num.put(entry.getKey(), c);
-          }
-          Cell cell = row.createCell(c);
-          Object value = entry.getValue();
-
-          if (value instanceof Date) {
-            cell.setCellValue((Date) value);
-          }
-          else if (value instanceof Number) {
-            cell.setCellValue((double) value);
-          }
-          else if (value instanceof Boolean) {
-            cell.setCellValue((boolean) value);
-          }
-          else {
-            cell.setCellValue(String.valueOf(entry.getValue()));
-          }
-        }
-      }
-
+      wb.getCreationHelper().createFormulaEvaluator().evaluateAll();
       StringBufferOutputStream buf = new StringBufferOutputStream();
       wb.write(buf);
 
-      int dot = fileName.lastIndexOf(".");
-      String name = fileName.substring(0, dot);
-      String ext = fileName.substring(dot);
-      String saveFile = name +'_'+ Tool.formatDate(new Date()) + ext;
+      String saveFile = generateTimeName(fileName);
       PrimitiveOperation.me().updateFile(
               saveDir, saveFile, buf.openInputStream());
 
@@ -1058,6 +1022,70 @@ public class SysImpl extends DateImpl {
     } catch (IOException e) {
       throw new XBosonException.IOError(e);
     }
+  }
+
+
+  private void writeList(ScriptObjectMirror list, Sheet sheet,
+                         Map<String, Integer> name2num, Ref<Integer> rowNum) {
+    final int size = list.size();
+    for (int i=0; i<size; ++i) {
+      Object o = list.getSlot(i);
+      ScriptObjectMirror obj;
+      if (o instanceof String) {
+        obj = wrap(result.getMember((String) o));
+      } else {
+        obj = wrap(o);
+      }
+
+      if (obj.isArray()) {
+        writeList(obj, sheet, name2num, rowNum);
+      } else {
+        Row row = sheet.createRow(rowNum.x);
+        writeRow(obj, row, name2num);
+        rowNum.x += 1;
+      }
+    }
+  }
+
+
+  private void writeRow(ScriptObjectMirror obj, Row row,
+                        Map<String, Integer> name2num) {
+    for (Map.Entry<String, Object> entry : obj.entrySet()) {
+      Integer c = name2num.get(entry.getKey());
+      if (c == null) {
+        c = name2num.size();
+        name2num.put(entry.getKey(), c);
+      }
+      Cell cell = row.createCell(c);
+      Object value = entry.getValue();
+
+      if (value instanceof Date) {
+        cell.setCellValue((Date) value);
+      }
+      else if (value instanceof Number) {
+        cell.setCellValue(((Number) value).doubleValue());
+      }
+      else if (value instanceof Boolean) {
+        cell.setCellValue((boolean) value);
+      }
+      else {
+        cell.setCellValue(String.valueOf(entry.getValue()));
+      }
+    }
+  }
+
+
+  private String generateTimeName(String fileName) {
+    String name, ext;
+    int dot = fileName.lastIndexOf(".");
+    if (dot >= 0) {
+      name = fileName.substring(0, dot);
+      ext  = fileName.substring(dot);
+    } else {
+      name = fileName;
+      ext  = "";
+    }
+    return name +'_'+ Tool.formatDate(new Date()) + ext;
   }
 
 
