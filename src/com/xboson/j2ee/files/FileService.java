@@ -21,6 +21,7 @@ import com.xboson.event.timer.EarlyMorning;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.script.lib.Checker;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
@@ -134,6 +135,7 @@ public class FileService extends HttpServlet {
 
     String base = Directory.get(req);
     if (dir_name != null) {
+      Checker.me.safepath(dir_name, "dir_name");
       dir_name = Tool.normalize(base +'/'+ dir_name);
     } else {
       dir_name = base;

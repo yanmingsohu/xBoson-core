@@ -31,6 +31,7 @@ import com.xboson.j2ee.files.FileInfo;
 import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.script.lib.Buffer;
+import com.xboson.script.lib.Checker;
 import com.xboson.util.*;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -581,7 +582,10 @@ public class SysImpl extends DateImpl {
    */
   public Object csvToList(String[] fileInfo, String delimiter, String quote,
                           String escape, String[] header, int preview) {
-    String dir = Directory.get(cd);
+    String dir = fileInfo[0];
+    Checker.me.safepath(dir, "param fileInfo[0] (dirname)");
+    dir = Tool.normalize(Directory.get(cd) + '/' + dir);
+
     try (FileInfo info = PrimitiveOperation.me().openReadFile(dir, fileInfo[1])) {
       InputStreamReader reader = new InputStreamReader(info.input, fileInfo[2]);
       return parseCsv(reader, delimiter, quote, escape, header, preview);
@@ -650,6 +654,7 @@ public class SysImpl extends DateImpl {
    */
   public void listToCsv(String dir, String filename,
                         String charset, Object olist) throws IOException {
+    Checker.me.safepath(dir, "param 1 (dir)");
     dir = Tool.normalize(Directory.get(cd) + '/' + dir);
     StringBufferOutputStream output = new StringBufferOutputStream();
 
@@ -881,8 +886,8 @@ public class SysImpl extends DateImpl {
    * @return 返回生成的文件名
    */
   public String listToZip(Object[] list, final String path) throws Exception {
-    String base = Directory.get(cd);
-    String dir  = Tool.normalize( base + '/' + path);
+    Checker.me.safepath(path, "param 2 (path)");
+    String dir  = Tool.normalize( Directory.get(cd) + '/' + path);
     String file = Tool.uuid.v4() + ".zip";
 
     StringBufferOutputStream buf = new StringBufferOutputStream();
@@ -901,7 +906,7 @@ public class SysImpl extends DateImpl {
 
       if (obj.hasMember("path")) {
         String ipath = (String) obj.getMember("path");
-        try (FileInfo in = PrimitiveOperation.me().openReadFile(base, ipath)) {
+        try (FileInfo in = PrimitiveOperation.me().openReadFile(dir, ipath)) {
           Tool.copy(in.input, zip, false);
         }
         continue;
@@ -928,8 +933,9 @@ public class SysImpl extends DateImpl {
    * @return 解压的 list 数据对象
    */
   public Object zipToList(String path, String filename) throws Exception {
-    String base = Directory.get(cd);
-    String dir  = Tool.normalize( base + '/' + path);
+    Checker.me.safepath(path, "param 1 (path)");
+    String dir  = Tool.normalize( Directory.get(cd) + '/' + path);
+
     ScriptObjectMirror arr = createJSList();
     int reti = arr.size()-1;
 
@@ -985,6 +991,8 @@ public class SysImpl extends DateImpl {
     if (Tool.isNulStr(savePath))
       throw new BadParameter("4", "savePath not string");
 
+    Checker.me.safepath(readPath, "param 3 (readPath)");
+    Checker.me.safepath(savePath, "param 4 (savePath)");
     final String SHEET_NAME = "data";
     final String base = Directory.get(cd);
     final String readDir = Tool.normalize( base + '/' + readPath);
