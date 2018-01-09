@@ -17,17 +17,18 @@
 package com.xboson.util;
 
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 
-import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonWriter;
-import com.squareup.moshi.Moshi;
 import com.xboson.been.Config;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.config.DefaultConfig;
+import com.xboson.util.config.IConfigSerialization;
+import com.xboson.util.config.SerialFactory;
 import okio.Buffer;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -41,10 +42,12 @@ public class SysConfig {
 	private String homepath;
 	private Config config;
 	private boolean readed;
+	private IConfigSerialization serial;
 
 	
 	private SysConfig() {
 		initHomePath();
+		serial = SerialFactory.get();
 		readed = false;
 		config = new Config(homepath);
 
@@ -102,7 +105,7 @@ public class SysConfig {
 			String str = null;
 			try {
 				str = Tool.readFromFile(config_file).toString();
-				setConfigUseJson(str);
+				setConfigUseString(str);
 				log.info("Read Config from", config_file);
 
 			} catch(Exception e) {
@@ -119,11 +122,9 @@ public class SysConfig {
 	}
 
 
-	private void setConfigUseJson(String str) throws IOException {
-		Moshi moshi = new Moshi.Builder().build();
-		JsonAdapter<Config> configAdapter = moshi.adapter(Config.class);
+	private void setConfigUseString(String str) throws IOException {
+		Config run = serial.convert(str);
 
-		Config run = configAdapter.fromJson(str);
 		if (config.configVersion.compareTo(run.configVersion) > 0) {
 		  log.warn("Configuration files need to be upgraded",
               run.configVersion, "<", config.configVersion);
@@ -151,14 +152,10 @@ public class SysConfig {
 			File cfile = new File(config.configFile);
 			log.info("Generate config file", cfile);
 
-			final Buffer buffer = new Buffer();
-			final JsonWriter jsonWriter = JsonWriter.of(buffer);
-			jsonWriter.setIndent("  ");
+			String json = serial.convert(config);
 
-			Tool.getAdapter(Config.class).toJson(jsonWriter, config);
-
-			try (FileOutputStream out = new FileOutputStream(cfile)) {
-				out.write(buffer.readByteArray());
+			try (FileWriter out = new FileWriter(cfile)) {
+				out.write(json);
 			}
 
 			// 如果配置文件是程序生成的, 则认为配置已经读取完成.
@@ -179,7 +176,7 @@ public class SysConfig {
 
 
 	/**
-	 * 基于 10000 并发来设计的缓存池, 过多的对象利用不上.
+	 * 基于并发来设计的缓存池, 过多的对象利用不上.
 	 */
 	public static GenericObjectPoolConfig defaultPoolConfig() {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();

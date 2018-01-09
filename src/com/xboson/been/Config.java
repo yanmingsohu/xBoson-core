@@ -19,18 +19,16 @@ package com.xboson.been;
 
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
+import com.xboson.util.config.SerialFactory;
 import redis.clients.jedis.JedisPoolConfig;
 
+
 /**
- * 不要修改 Config 对象中的属性, 除非世界末日.
+ * 不要删除 Config 对象中的属性, 除非世界末日.
  */
 public class Config implements IBean {
 
-  public static final String CONFIG_DIR 	= "/xBoson-config";
-  public static final String CONFIG_FILE 	= "/config.json";
-  public static final String LOG_DIR 			= "/logs";
-
-  public String configVersion     = "1.3.2";
+  public String configVersion     = "1.3.3";
 
   public String configFile				= null;
   public String configPath				= null;
@@ -64,7 +62,7 @@ public class Config implements IBean {
   public ConnectConfig redis;
   public MongoConfig mongodb;
 
-  public byte clusterNodeID;
+  public short clusterNodeID;
   public boolean enableUploadClear;
   public boolean enableSessionClear;
   public boolean enableUIFileSync;
@@ -85,8 +83,8 @@ public class Config implements IBean {
 
   public void setHome(String home) {
     this.home		= home;
-    configPath	= home + CONFIG_DIR;
-    logPath 		= configPath + LOG_DIR;
-    configFile	= configPath + CONFIG_FILE;
+    configPath	= home + SerialFactory.CONFIG_DIR;
+    logPath 		= configPath + SerialFactory.LOG_DIR;
+    configFile	= configPath + '/' + SerialFactory.get().fileName();
   }
 }

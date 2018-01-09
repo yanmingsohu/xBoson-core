@@ -16,26 +16,46 @@
 
 package com.xboson.test;
 
-import com.squareup.moshi.JsonWriter;
+import com.squareup.moshi.JsonAdapter;
+import com.thoughtworks.xstream.XStream;
 import com.xboson.been.Config;
-import com.xboson.util.DefaultConfig;
+import com.xboson.j2ee.resp.XmlResponse;
+import com.xboson.util.config.DefaultConfig;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
-import okio.Buffer;
+import com.xboson.util.config.JsonConfig;
+import com.xboson.util.config.YamlConfig;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 
 
 public class TestConfig extends Test {
 
 
-	public void test() throws IOException {
-    show_default_config();
-	  test1();
+	public void test() throws Exception {
+    from_sys_config();
+    json();
+    yaml();
+//    xml();
+//    readJsonConfigToYaml();
   }
 
 
-  public void test1() throws IOException {
+  // 工具方法, 非测试用例
+  public void readJsonConfigToYaml() throws IOException {
+	  sub("Read Json to Yaml");
+    SysConfig sys = SysConfig.me();
+    Config c = sys.readConfig();
+//    msg(Tool.getAdapter(Config.class).toJson(c));
+    YamlConfig yc = new YamlConfig();
+    msg(yc.convert(c));
+  }
+
+
+  public void from_sys_config() throws IOException {
+	  sub("Sys read config");
 		SysConfig sys = SysConfig.me();
 		msg( sys.getHomePath() );
 		sys.checkConfigFiles();
@@ -52,21 +72,63 @@ public class TestConfig extends Test {
   /**
    * 如果默认配置文件不存使用默认值创建这个文件
    */
-	public void show_default_config() throws IOException {
+	public void json() throws IOException {
 	  sub("生成系统默认配置:");
-    System.out.println(line);
+    msg(line);
 
-    final Buffer buffer = new Buffer();
-    final JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.setIndent("  ");
-
-    Config c = new Config();
+    Config c = new Config("~");
     DefaultConfig.setto(c);
-    Tool.getAdapter(Config.class).toJson(jsonWriter, c);
+    JsonConfig jc = new JsonConfig();
 
-    byte[] bytes = buffer.readByteArray();
-    System.out.println(new String(bytes));
-    System.out.println(line);
+    String json = jc.convert(c);
+    msg(json);
+    msg(line);
+
+    eq(c, jc.convert(json));
+//    json = DefaultConfig.reomveComments(json);
+//    msg(json);
+//    msg(line);
+  }
+
+
+  public void yaml() throws Exception {
+	  sub("YAML");
+    YamlConfig yc = new YamlConfig();
+    Config c = new Config("~");
+    DefaultConfig.setto(c);
+
+    String yaml = yc.convert(c);
+    msg(yaml);
+
+    Config rc = yc.convert(yaml);
+    eq(c, rc);
+  }
+
+
+  public void xml() throws Exception {
+	  sub("XML Config");
+    Config c = new Config("~");
+    DefaultConfig.setto(c);
+
+    Writer out = new StringWriter();
+    out.write('\n');
+    out.write(XmlResponse.XML_HEAD);
+
+    XStream xs = Tool.createXmlStream();
+    xs.toXML(c, out);
+    out.write('\n');
+
+    String xml = out.toString();
+    msg(xml);
+
+    Config rc = (Config) xs.fromXML(xml);
+    eq(c, rc);
+  }
+
+
+  public void eq(Config original, Config convert) {
+    JsonAdapter<Config> ja = Tool.getAdapter(Config.class);
+    eq(ja.toJson(original), ja.toJson(convert), "convert ok");
   }
 
 

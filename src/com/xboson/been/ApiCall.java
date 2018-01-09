@@ -62,9 +62,14 @@ public class ApiCall implements IBean {
    * 参数都被转换为小写.
    */
   public ApiCall(String org, String app, String mod, String api) {
-    this.org = org.toLowerCase();
-    this.app = app.toLowerCase();
-    this.mod = mod.toLowerCase();
-    this.api = api.toLowerCase();
+    this.org = toLower(org);
+    this.app = toLower(app);
+    this.mod = toLower(mod);
+    this.api = toLower(api);
+  }
+
+
+  private String toLower(String s) {
+    return s == null ? null : s.toLowerCase();
   }
 }

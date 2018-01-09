@@ -14,18 +14,28 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.util;
+package com.xboson.util.config;
 
 import com.xboson.been.Config;
 import com.xboson.been.MongoConfig;
+import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.script.lib.Uuid;
 import com.xboson.test.Test;
-import com.xboson.fs.redis.LocalFileMapping;
+import com.xboson.util.Password;
+import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.Properties;
 
+
+/**
+ * 配置文件默认值
+ */
 public final class DefaultConfig {
 
   public static final String default_sys_tables = "sys_tenant,sys_tenant_user," +
@@ -38,6 +48,9 @@ public final class DefaultConfig {
           "ZYAPP_SYSMGT,ZYAPP_LOGIN,auth,c9e98ea6fc7148d186289e8c33776f8a," +
           "03229cbe4f4f11e48d6d6f51497a883b,d2c8511b47714faba5c71506a5029d94," +
           "26c0f25501d24c0993515d445e1215a5,c770045becc04c7583f626faacd3b456";
+
+  private static Properties p;
+
 
   /**
    * 将配置设置成为默认设置
@@ -59,12 +72,13 @@ public final class DefaultConfig {
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));
 
     c.uiProviderClass   = "local";
-    c.uiUrl             = "/ui";
+    c.uiUrl             = "/web4xboson/public";
+    c.uiWelcome         = "/face/ui/paas/login.html";
     c.clusterNodeID     = 0;
     c.sysTableList      = toList(default_sys_tables);
     c.shareAppList      = toList(default_share_app);
     c.nodeProviderClass = "local";
-    c.nodeUrl           = "/node";
+    c.nodeUrl           = "/web4xboson/xboson-node-modules";
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
     j.setMaxIdle(10);
@@ -97,6 +111,25 @@ public final class DefaultConfig {
     mc.username = "";
     mc.password = "";
     mc.enable = false;
+  }
+
+
+  /**
+   * 配置属性的注释, 在当前包 config-comments.prop 文件中.
+   */
+  public synchronized static Properties comments() {
+    if (p == null) {
+      StringBufferOutputStream buf = Tool.readFileFromResource(
+              DefaultConfig.class, "config-comments.prop");
+      p = new Properties();
+      try {
+        StringReader r = new StringReader(buf.toString());
+        p.load(r);
+      } catch (IOException e) {
+        throw new XBosonException.IOError(e);
+      }
+    }
+    return p;
   }
 
 
