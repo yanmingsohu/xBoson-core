@@ -135,9 +135,7 @@ public class TestApi extends Test {
     }
 
     public RunApi(String org, String app) throws Exception {
-      ac = new ApiCall();
-      ac.org = org;
-      ac.app = app;
+      ac = new ApiCall(org, app, null, null);
     }
 
     void run(String module_id, String api_id) throws IOException {

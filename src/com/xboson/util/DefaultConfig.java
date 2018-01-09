@@ -34,6 +34,11 @@ public final class DefaultConfig {
           "sys_eeb_work_node,sys_eeb_jobgroup,sys_eeb_varnish,sys_eeb_sche," +
           "sys_eeb_statistics,sys_eeb_detail";
 
+  public static final String default_share_app = "ZYAPP_IDE,ZYAPP_MENU," +
+          "ZYAPP_SYSMGT,ZYAPP_LOGIN,auth,c9e98ea6fc7148d186289e8c33776f8a," +
+          "03229cbe4f4f11e48d6d6f51497a883b,d2c8511b47714faba5c71506a5029d94," +
+          "26c0f25501d24c0993515d445e1215a5,c770045becc04c7583f626faacd3b456";
+
   /**
    * 将配置设置成为默认设置
    */
@@ -56,7 +61,8 @@ public final class DefaultConfig {
     c.uiProviderClass   = "local";
     c.uiUrl             = "/ui";
     c.clusterNodeID     = 0;
-    c.sysTableList      = default_sys_tables.split(",");
+    c.sysTableList      = toList(default_sys_tables);
+    c.shareAppList      = toList(default_share_app);
     c.nodeProviderClass = "local";
     c.nodeUrl           = "/node";
 
@@ -91,6 +97,11 @@ public final class DefaultConfig {
     mc.username = "";
     mc.password = "";
     mc.enable = false;
+  }
+
+
+  private static String[] toList(String str) {
+    return str.split(",");
   }
 
 

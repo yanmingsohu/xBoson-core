@@ -19,7 +19,7 @@ package com.xboson.been;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * 将请求 url 分解, 用于路由映射
+ * 将请求 url 分解, 用于路由映射.
  * 当入参为 /a/b/c
  * 	 name = /a
  *   last = /b/c
@@ -37,15 +37,18 @@ public class UrlSplit implements IBean {
 	private boolean withoutSlash = false;
 
 
+  /**
+   * 从请求 url 中初始化.
+   */
 	public UrlSplit(HttpServletRequest req) {
 		String cp = req.getContextPath();
 		String rq = req.getRequestURI();
-		split( rq.substring(cp.length(), rq.length()) );
+    split( rq.substring(cp.length(), rq.length()) );
 	}
 	
 	
-	public UrlSplit(String s) {
-		split(s);
+	public UrlSplit(String url) {
+    split(url);
 	}
 
 
@@ -89,11 +92,11 @@ public class UrlSplit implements IBean {
    * 使用最靠近左面的 '/' 切分 s, 前部分放入 name, 后部分放入 last
 	 * 这会改变自身的数据, 并返回 name
    *
-   * @throws URLParseExcption
+   * @throws URLParseException
 	 */
 	String split(String s) {
 		if (s == null) 
-			throw new URLParseExcption(errMsg);
+			throw new URLParseException(errMsg);
 
 		try {
 		  //
@@ -119,7 +122,7 @@ public class UrlSplit implements IBean {
       }
       return name;
     } catch(Exception e) {
-		  throw new URLParseExcption(errMsg, e);
+		  throw new URLParseException(errMsg, e);
     }
 	}
 
@@ -151,11 +154,11 @@ public class UrlSplit implements IBean {
   /**
    * 当路径无法继续拆分, 会抛出这个异常
    */
-	public class URLParseExcption extends XBosonException {
-    public URLParseExcption(String s) {
+	public class URLParseException extends XBosonException {
+    public URLParseException(String s) {
       super(s);
     }
-    public URLParseExcption(String s, Throwable throwable) {
+    public URLParseException(String s, Throwable throwable) {
       super(s, throwable);
     }
   }

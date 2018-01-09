@@ -42,7 +42,7 @@ public class App extends XService {
     AppContext af = AppContext.me();
     data.url.setErrorMessage(PATH_FOTMAT);
 
-    ApiCall ac = af.parse(data.url);
+    ApiCall ac = new ApiCall(data.url);
     ac.call = data;
 
     af.call(ac);

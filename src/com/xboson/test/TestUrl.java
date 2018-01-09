@@ -42,7 +42,7 @@ public class TestUrl extends Test {
     eq(url.next(), "b", "bad");
     eq(url.next(), "c", "bad");
 
-    new Throws(UrlSplit.URLParseExcption.class) {
+    new Throws(UrlSplit.URLParseException.class) {
       @Override
       public void run() throws Throwable {
         url.next();
@@ -77,7 +77,7 @@ public class TestUrl extends Test {
     n = url.next();
     msg("next:", n);
 
-    new Throws(UrlSplit.URLParseExcption.class) {
+    new Throws(UrlSplit.URLParseException.class) {
       @Override
       public void run() throws Throwable {
         url.next();

@@ -203,12 +203,13 @@ public class HttpImpl extends RuntimeUnitImpl {
                              Object jparam, Object jheader)
           throws ServletException {
 
-    ApiCall ac = new ApiCall();
     ScriptObjectMirror api = wrap(japi);
-    ac.app = getNNStringAttr(api, "app");
-    ac.mod = getNNStringAttr(api, "mod");
-    ac.api = getNNStringAttr(api, "api");
-    ac.org = getStringAttr(api, "org");
+    ApiCall ac = new ApiCall(
+            getStringAttr(api, "org"),
+            getNNStringAttr(api, "app"),
+            getNNStringAttr(api, "mod"),
+            getNNStringAttr(api, "api")
+    );
     ac.exparam = new HashMap<>();
 
     ScriptObjectMirror ret = createJSObject();

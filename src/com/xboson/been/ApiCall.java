@@ -20,7 +20,7 @@ import java.util.Map;
 
 
 /**
- * 封装对 api 的调用
+ * 封装对 api 的调用, 参数小写化.
  */
 public class ApiCall implements IBean {
 
@@ -42,4 +42,29 @@ public class ApiCall implements IBean {
   /** 扩展请求参数, 优先级高于 http 参数, 可以 null */
   public Map<String, Object> exparam;
 
+
+  /**
+   * 分析 url 参数, 并将请求映射到 api 上, 返回的对象中 call 属性为 null.
+   * @param url 该参数是安全的, 不会被改变.
+   */
+  public ApiCall(UrlSplit url) {
+    UrlSplit sp = url.clone();
+    sp.withoutSlash(true);
+
+    this.org = sp.next().toLowerCase();
+    this.app = sp.next().toLowerCase();
+    this.mod = sp.next().toLowerCase();
+    this.api = sp.next().toLowerCase();
+  }
+
+
+  /**
+   * 参数都被转换为小写.
+   */
+  public ApiCall(String org, String app, String mod, String api) {
+    this.org = org.toLowerCase();
+    this.app = app.toLowerCase();
+    this.mod = mod.toLowerCase();
+    this.api = api.toLowerCase();
+  }
 }

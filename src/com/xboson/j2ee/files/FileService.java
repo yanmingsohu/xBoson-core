@@ -68,7 +68,7 @@ public class FileService extends HttpServlet {
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
     XResponse ret = XResponse.get(req);
-    String dirname = Directory.get(req);
+    String dirname = DirectoryGenerate.get(req);
     int new_count = 0;
     int update_count = 0;
 
@@ -133,7 +133,7 @@ public class FileService extends HttpServlet {
       return;
     }
 
-    String base = Directory.get(req);
+    String base = DirectoryGenerate.get(req);
     if (dir_name != null) {
       Checker.me.safepath(dir_name, "dir_name");
       dir_name = Tool.normalize(base +'/'+ dir_name);

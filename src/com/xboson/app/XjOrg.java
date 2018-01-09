@@ -101,11 +101,31 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
       create_org_db_user(conn);
     }
     else if (! XBOSON_TYPE.equals(dbconf.flg)) {
-      throw new XBosonException("数据库配置不是 flg==9 无法打开机构数据库");
+      throw new XBosonException("系统异常: 数据库配置不是 flg==9 无法打开机构数据库");
     }
     else {
+      check_mysql_user(conn, dbconf);
       set_org_db(dbconf);
     }
+  }
+
+
+  /**
+   * 当迁移数据库后, 平台中保存的 mysql 帐号可能并不存在, 该方法检测 mysql 帐号
+   * 并在必要时创建 mysql 帐号.
+   */
+  private void check_mysql_user(Connection conn, SysPlDrmDs001 dbconf)
+          throws SQLException {
+    SqlResult res = SqlResult.query(conn,
+            SqlReader.read("mysql_user_exist.sql"), dbconf.user_name);
+
+    ResultSet rs = res.getResult();
+    if (rs.next() && rs.getInt(1) > 0) {
+      return;
+    }
+    do_grant(conn, dbconf.user_name, dbconf.pass);
+    log.debug("Mysql User not exists, Create:",
+            dbconf.user_name, "Org:", dbconf.owner);
   }
 
 
@@ -143,9 +163,14 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
 
 
   private void create_org_db_user(Connection conn) throws SQLException {
-    String ps = Tool.randomString(30);
-    String un = Tool.randomString(10);
+    create_org_db_user(conn,
+            Tool.randomString(30),
+            Tool.randomString(10));
+  }
 
+
+  private void create_org_db_user(Connection conn, String un, String ps)
+          throws SQLException {
     do_grant(conn, un, ps);
 
     Object[] parm = new Object[] {
@@ -155,13 +180,16 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
     String sql = SqlReader.read("create_db_conf.sql");
     SqlResult res = SqlResult.query(conn, sql, parm);
     if (!res.isUpdate()) {
-      throw new XBosonException("创建机构 db 用户失败");
+      throw new XBosonException("保存 DB 连接配置到平台数据源失败");
     }
 
     orgdb = rootdb.clone();
     orgdb.setDatabase(orgid);
-    orgdb.setUsername(orgid);
+    orgdb.setUsername(un);
     orgdb.setPassword(ps);
+
+    log.debug("Save MYSQL user to 'sys_pl_drm_ds001'",
+            "Org:", orgid, "User:", un);
   }
 
 

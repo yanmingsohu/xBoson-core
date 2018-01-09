@@ -56,6 +56,7 @@ public class Config implements IBean {
   public String nodeUrl           = null;
 
   public String[] sysTableList;
+  public String[] shareAppList;
 
   public JedisPoolConfig jedispool;
   public DBPoolConfig dbpool;

@@ -73,11 +73,12 @@ public class UserService extends XService implements IDict, IConstant {
     try {
       subService(data, MSG);
     } catch (XBosonException.NoService ns) {
-      ApiCall ac = new ApiCall();
-      ac.org  = data.getString("org", 0, 100);
-      ac.app  = data.getString("app", 1, 100);
-      ac.mod  = data.getString("mod", 1, 100);
-      ac.api  = ns.getServiceName();
+      ApiCall ac = new ApiCall(
+        data.getString("org", 0, 100),
+        data.getString("app", 1, 100),
+        data.getString("mod", 1, 100),
+        ns.getServiceName()
+      );
       ac.call = data;
 
       if (skipCheckLogin.contains(ac.api)

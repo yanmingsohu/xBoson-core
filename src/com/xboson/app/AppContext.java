@@ -25,10 +25,13 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.IConstant;
+import com.xboson.util.JavaConverter;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -40,6 +43,7 @@ public class AppContext implements IConstant {
   private AppPool production;
   private AppPool development;
   private ThreadLocal<ThreadLocalData> ttld;
+  private Set<String> shareApp;
   private Log log;
 
 
@@ -48,11 +52,14 @@ public class AppContext implements IConstant {
     ttld        = new ThreadLocal<>();
     production  = new AppPool(new ForProduction());
     development = new AppPool(new ForDevelopment());
+    shareApp    = JavaConverter.arr2setLower(
+            SysConfig.me().readConfig().shareAppList);
   }
 
 
   /**
    * 该方法支持嵌套请求, 前一个请求的参数会被保留在 ThreadLocalData.nestedCall 中.
+   * App Mod Api 参数都被转换为小写.
    */
   public void call(ApiCall ac) {
     log.debug("Call::", ApiPath.getPath(ac));
@@ -62,14 +69,14 @@ public class AppContext implements IConstant {
       make_extend_parameter(ac);
 
       //
-      // 利用 app 名称判断是否调用平台机构 api, 此时 org 可以是另一个机构, 这种跨机构
+      // 跨机构调用共享 APP 中的 api, 此时 org 可以是另一个机构, 这种跨机构
       // 调用 api 的行为只支持平台机构; 此时 api 以 root 的数据库权限启动, 而参数中
       // 的 org 仍然是原先机构的 id.
       //
       // 即使 org 是其他机构, 运行的仍然是平台机构中的 api, 所以不会有代码越权访问资源,
       // 必须保证平台机构 api 逻辑安全.
       //
-      if (ac.app.startsWith(SYS_APP_PREFIX)) {
+      if (shareApp.contains(ac.app)) {
         ac.org = SYS_ORG;
         tld.replaceOrg = true;
       }
@@ -141,7 +148,6 @@ public class AppContext implements IConstant {
 
   /**
    * 返回扩展请求参数
-   * @return
    */
   public Map<String, Object> getExtendParameter() {
     return ttld.get().exparam;
@@ -173,19 +179,11 @@ public class AppContext implements IConstant {
 
 
   /**
-   * 分析 url 参数, 并将请求映射到 api 上, 返回的对象中 call 属性为 null.
-   * @param url 该参数是安全的, 不会被改变.
+   * 如果在 app 上下文中返回 true;
+   * 在上下文中意味着可以安全的调用上下文相关函数而不会抛出异常.
    */
-  public ApiCall parse(UrlSplit url) {
-    ApiCall ret = new ApiCall();
-    UrlSplit sp = url.clone();
-    sp.withoutSlash(true);
-
-    ret.org = sp.next();
-    ret.app = sp.next();
-    ret.mod = sp.next();
-    ret.api = sp.next();
-    return ret;
+  public boolean isInContext() {
+    return ttld.get() != null;
   }
 
 

@@ -26,7 +26,7 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlCachedResult;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
-import com.xboson.j2ee.files.Directory;
+import com.xboson.j2ee.files.DirectoryGenerate;
 import com.xboson.j2ee.files.FileInfo;
 import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.j2ee.resp.XmlResponse;
@@ -584,7 +584,7 @@ public class SysImpl extends DateImpl {
                           String escape, String[] header, int preview) {
     String dir = fileInfo[0];
     Checker.me.safepath(dir, "param fileInfo[0] (dirname)");
-    dir = Tool.normalize(Directory.get(cd) + '/' + dir);
+    dir = Tool.normalize(DirectoryGenerate.get(cd) + '/' + dir);
 
     try (FileInfo info = PrimitiveOperation.me().openReadFile(dir, fileInfo[1])) {
       InputStreamReader reader = new InputStreamReader(info.input, fileInfo[2]);
@@ -655,7 +655,7 @@ public class SysImpl extends DateImpl {
   public void listToCsv(String dir, String filename,
                         String charset, Object olist) throws IOException {
     Checker.me.safepath(dir, "param 1 (dir)");
-    dir = Tool.normalize(Directory.get(cd) + '/' + dir);
+    dir = Tool.normalize(DirectoryGenerate.get(cd) + '/' + dir);
     StringBufferOutputStream output = new StringBufferOutputStream();
 
     try (CsvMapWriter csv = new CsvMapWriter(
@@ -887,7 +887,7 @@ public class SysImpl extends DateImpl {
    */
   public String listToZip(Object[] list, final String path) throws Exception {
     Checker.me.safepath(path, "param 2 (path)");
-    String dir  = Tool.normalize( Directory.get(cd) + '/' + path);
+    String dir  = Tool.normalize( DirectoryGenerate.get(cd) + '/' + path);
     String file = Tool.uuid.v4() + ".zip";
 
     StringBufferOutputStream buf = new StringBufferOutputStream();
@@ -934,7 +934,7 @@ public class SysImpl extends DateImpl {
    */
   public Object zipToList(String path, String filename) throws Exception {
     Checker.me.safepath(path, "param 1 (path)");
-    String dir  = Tool.normalize( Directory.get(cd) + '/' + path);
+    String dir  = Tool.normalize( DirectoryGenerate.get(cd) + '/' + path);
 
     ScriptObjectMirror arr = createJSList();
     int reti = arr.size()-1;
@@ -994,7 +994,7 @@ public class SysImpl extends DateImpl {
     Checker.me.safepath(readPath, "param 3 (readPath)");
     Checker.me.safepath(savePath, "param 4 (savePath)");
     final String SHEET_NAME = "data";
-    final String base = Directory.get(cd);
+    final String base = DirectoryGenerate.get(cd);
     final String readDir = Tool.normalize( base + '/' + readPath);
     final String saveDir = Tool.normalize( base + '/' + savePath);
 

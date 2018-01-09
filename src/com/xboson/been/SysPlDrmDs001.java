@@ -25,7 +25,7 @@ import java.math.BigDecimal;
 public class SysPlDrmDs001 {
   public String did;    // 数据源ID
   public String dn;     // 数据源名称
-  public String owner;  // 所有者
+  public String owner;  // 所有者, 就是 orgid
   public String dbtype; // 数据库类型
   public String cn;     // 数据库中文名称
   public String flg;    // 0 平台, 1 第三方, 9 xBoson 创建

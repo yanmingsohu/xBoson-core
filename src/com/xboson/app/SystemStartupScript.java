@@ -57,11 +57,9 @@ public class SystemStartupScript implements IConstant, Runnable {
       //
       // 初始化 cache 脚本所在的机构/app/模块
       //
-      ApiCall ac = new ApiCall();
-      ac.org = SYS_ORG;
-      ac.app = "26c0f25501d24c0993515d445e1215a5";
-      ac.mod = "cacheinit";
-      ac.api = "total";
+      ApiCall ac = new ApiCall(SYS_ORG,
+              "26c0f25501d24c0993515d445e1215a5",
+              "cacheinit", "total");
       ac.call = TestApi.simulationCallData();
 
       AppContext.me().call(ac);

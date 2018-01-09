@@ -99,4 +99,16 @@ public class JavaConverter {
     }
     return set;
   }
+
+
+  /**
+   * 转换为小写的 Set 集合
+   */
+  public static Set<String> arr2setLower(String[] arr) {
+    Set<String> set = new HashSet<>();
+    for (int i=0; i<arr.length; ++i) {
+      set.add(arr[i].toLowerCase());
+    }
+    return set;
+  }
 }
