@@ -17,7 +17,7 @@
 package com.xboson.util;
 
 /**
- * 原始类型数据引用
+ * 引用一个对象
  * @param <T>
  */
 public class Ref<T> {

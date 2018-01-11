@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.app.*;
 import com.xboson.app.fix.SourceFix;
+import com.xboson.auth.impl.ResourceRoleTypes;
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;

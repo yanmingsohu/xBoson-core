@@ -46,6 +46,7 @@ import org.supercsv.io.CsvMapReader;
 import org.supercsv.io.CsvMapWriter;
 import org.supercsv.prefs.CsvPreference;
 
+import javax.servlet.ServletInputStream;
 import java.io.*;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -77,6 +78,7 @@ public class SysImpl extends DateImpl {
   public final Object request;
   public final Object requestParameterMap;
   public ScriptObjectMirror result;
+  public Object requestJson = null;
 
   private ConnectConfig orgdb;
   private ScriptObjectMirror printList;
@@ -103,6 +105,23 @@ public class SysImpl extends DateImpl {
     super(null);
     request = null;
     requestParameterMap = null;
+  }
+
+
+  public void parseBody() throws IOException {
+    String type = cd.req.getContentType();
+    if (type == null)
+      return;
+
+    ServletInputStream in = cd.req.getInputStream();
+    if (in.isFinished())
+      return;
+
+    if (type.contains("application/json")) {
+      StringBufferOutputStream buf = new StringBufferOutputStream();
+      buf.write(in, true);
+      requestJson = jsonParse(buf.toString());
+    }
   }
 
 

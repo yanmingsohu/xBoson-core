@@ -58,6 +58,9 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
+  /**
+   * sql 将查询结果绑定在 sys 上.
+   */
   public void _setSysRef(SysImpl sys) {
     this.sys = sys;
   }

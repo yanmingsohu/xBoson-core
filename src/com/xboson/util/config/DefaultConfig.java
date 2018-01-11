@@ -47,7 +47,8 @@ public final class DefaultConfig {
   public static final String default_share_app = "ZYAPP_IDE,ZYAPP_MENU," +
           "ZYAPP_SYSMGT,ZYAPP_LOGIN,auth,c9e98ea6fc7148d186289e8c33776f8a," +
           "03229cbe4f4f11e48d6d6f51497a883b,d2c8511b47714faba5c71506a5029d94," +
-          "26c0f25501d24c0993515d445e1215a5,c770045becc04c7583f626faacd3b456";
+          "26c0f25501d24c0993515d445e1215a5,c770045becc04c7583f626faacd3b456," +
+          "c879dcc94d204d96a98a34e0b7d75676";
 
   private static Properties p;
 

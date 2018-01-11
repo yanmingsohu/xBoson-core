@@ -17,8 +17,11 @@
 package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
+import com.xboson.auth.impl.RoleBaseAccessControl;
+import com.xboson.auth.impl.ResourceRoleTypes;
 import com.xboson.been.LoginUser;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ScanParams;
@@ -46,9 +49,7 @@ public class RedisImpl implements IApiConstant {
       String tkey = key_prefix + region;
 
       client.hset(tkey, key, value);
-      if (exp > 0) {
-        client.expire(tkey, exp);
-      }
+      // if (exp > 0) client.expire(tkey, exp);
     }
   }
 
@@ -138,17 +139,6 @@ public class RedisImpl implements IApiConstant {
    */
   public Object getRoleInfo(ResourceRoleTypes type, String resourceId) {
     LoginUser user = (LoginUser) AppContext.me().who();
-
-    try (Jedis j = RedisMesmerizer.me().open()) {
-      Iterator<String> it = user.roles.iterator();
-      while (it.hasNext()) {
-        String key = it.next() + type + resourceId;
-        String ret = j.hget(_CACHE_REGION_RBAC_, key);
-        if (ret != null) {
-          return ret;
-        }
-      }
-    }
-    return null;
+    return RoleBaseAccessControl.check(user, type, resourceId, false);
   }
 }

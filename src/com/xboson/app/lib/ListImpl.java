@@ -107,12 +107,13 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public boolean contain(NativeArray arr, Object compareVal) {
-    int end = arr.size();
+  public boolean contain(Object oarr, Object compareVal) {
+    ScriptObjectMirror arr = wrap(oarr);
     compareVal = ScriptObjectMirror.wrap(compareVal, Context.getGlobal());
+    final int end = arr.size();
 
     for (int i=0; i<end; ++i) {
-      Object o = arr.get(i);
+      Object o = arr.getSlot(i);
       if (_equals(compareVal, o)) {
         return true;
       }

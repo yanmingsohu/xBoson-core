@@ -35,6 +35,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
@@ -67,12 +69,17 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
           "lib/compatible-syntax.js",
           "lib/strutil.js",
           "lib/ide.js",
+          "lib/pre-init.js",
   };
 
+
+  /** configuration_script 脚本返回的函数, 名成 : 函数 */
+  private Map<String, ScriptObjectMirror> config_return_func;
   private IEnvironment env;
 
 
   public ServiceScriptWrapper() throws IOException {
+    this.config_return_func = new HashMap<>();
     BasicEnvironment basic = EnvironmentFactory.createEmptyBasic();
     SysModules sys_mod = EnvironmentFactory.createDefaultSysModules();
     IModuleProvider node_mod = NodeFileFactory.openNodeModuleProvider(sys_mod);
@@ -102,8 +109,16 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     for (int i=0; i<configuration_script.length; ++i) {
       String filepath = configuration_script[i];
       box.setFilename(filepath);
-      box.eval(Tool.readFileFromResource(
+      Object ret = box.eval(Tool.readFileFromResource(
               getClass(), filepath).openInputStream());
+
+      if (ret instanceof ScriptObjectMirror) {
+        ScriptObjectMirror o = (ScriptObjectMirror) ret;
+        if (o.isFunction()) {
+          String name = String.valueOf(o.getMember("name"));
+          config_return_func.put(name, o);
+        }
+      }
     }
     bindApiConstant(box, IApiConstant.class);
   }
@@ -132,16 +147,17 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       SysImpl sys     = new SysImpl(cd, orgdb, app);
       CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
-      SeImpl se       = runOnSysOrg
-              ? cs.add(new SeImpl(cd, sys, org.id()))
-              : null;
+      SeImpl se       = runOnSysOrg == false ? null
+                      : cs.add(new SeImpl(cd, sys, org.id()));
 
       sql._setSysRef(sys);
       ModuleHandleContext.register("sql", sql);
       ModuleHandleContext.register("se",  se);
+      ModuleHandleContext.register("sys", sys);
       ModuleHandleContext.register("runOnSysOrg", runOnSysOrg);
       ModuleHandleContext.register(ModuleHandleContext.CLOSE, cs);
 
+      config_return_func.get("__init_system_modules").call(null, sys);
       call.call(jsmod.exports, sys, sql, cache, http, se);
 
     } catch (ECMAException ec) {

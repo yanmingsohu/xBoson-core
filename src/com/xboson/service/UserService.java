@@ -19,16 +19,14 @@ package com.xboson.service;
 import com.xboson.app.AppContext;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.sleep.RedisMesmerizer;
-import com.xboson.util.IConstant;
-import com.xboson.util.JavaConverter;
-import com.xboson.util.Password;
-import com.xboson.util.SysConfig;
+import com.xboson.util.*;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
@@ -227,13 +225,33 @@ public class UserService extends XService implements IDict, IConstant {
   }
 
 
+  /**
+   * 查询用户在所有机构中的角色
+   * @param pid 用户 id
+   * @return 角色列表
+   */
   private List<String> userRoles(String pid) {
-    try (SqlResult sr = SqlReader.query("user_roles_list.sql", cf.db, pid)) {
-      ResultSet rs = sr.getResult();
+    try (SqlResult sr = SqlReader.query("mdm_org", cf.db)) {
+      ResultSet orgs = sr.getResult();
       List<String> roles = new ArrayList<>();
-      while (rs.next()) {
-        roles.add(rs.getString("roleid"));
+
+      while (orgs.next()) {
+        String orgid = orgs.getString("id");
+
+        //
+        // schema 不支持变量绑定, 只能拼.
+        //
+        String sql = "Select roleid From " + orgid
+                + ".sys_user_role Where pid=? And status='1'";
+
+        SqlResult sr2 = sr.query(sql, pid);
+        ResultSet role_rs = sr2.getResult();
+
+        while (role_rs.next()) {
+          roles.add(role_rs.getString("roleid"));
+        }
       }
+
       return roles;
     } catch (SQLException e) {
       throw new XBosonException(e);
