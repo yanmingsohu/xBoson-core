@@ -166,6 +166,7 @@ public abstract class LocalFileMapping implements
   @Override
   public RedisFileAttr readAttribute(String path) {
     try (RedisBase.JedisSession close = rb.openSession()) {
+      path = Tool.normalize(path);
       Path local_file = normalize(path);
 
       RedisFileAttr localfs = readLocalAttr(local_file, path);
@@ -221,7 +222,7 @@ public abstract class LocalFileMapping implements
       Path file = normalize(path);
       Files.createDirectories(file);
     } catch (Exception e) {
-      log.error("Make dir", e);
+      log.error("Make dir", path, e);
     }
   }
 

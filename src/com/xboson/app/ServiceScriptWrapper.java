@@ -161,7 +161,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       call.call(jsmod.exports, sys, sql, cache, http, se);
 
     } catch (ECMAException ec) {
-      throw new JScriptException(ec, api.getCode());
+      throw new JScriptException(ec, api.getCode(), api.getApiAttr().fileName);
 
     } catch (XBosonException x) {
       throw x;

@@ -3,15 +3,19 @@
 Java JDK 8, Tomcat 9, Servlet 4.0.
 
 
+# 注意:
+
+* Docker: 平台访问整个操作系统的资源, 应该管理 Docker 而非被 Docker 管理.
+* 当平台没有完全初始化完成调用文件模块(fs) 的 open 方法会抛出 null 错误, 稍等即可.
+
+
 # 需要做:
 
-* UI 模板引擎
 * js 沙箱每次一个独立默认上下文.(当前为 app 共用且锁死).
 * blob 保存时直接写入db, 而不在内存堆积.
 * api 沙箱超时管理, 内存管理.
 * SqlServer 分页.
 * 接管 Tomcat.
-* api 脚本引用 api 脚本 (直接 require)
 * 集群管理
 * 区块链api
 * 云盘系统
@@ -22,9 +26,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 计划任务
 * 程序授权许可系统
 * 在脚本环境中执行操作系统shell, 专门一个shell目录
-* DB 事务 测试用例
-* Docker: 平台访问整个操作系统的资源, 应该管理 Docker 而非被 Docker 管理.
-* 发布一个新文件(t中不存在)报错.
+* api 脚本引用 api 脚本 (直接 require)
 
 
 # 2.0 新特性

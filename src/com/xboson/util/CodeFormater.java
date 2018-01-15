@@ -89,7 +89,7 @@ public class CodeFormater {
     }
 
     int begin = line_saved.get(i - 1) + 1;
-    int end = line_saved.get(i) - 1;
+    int end = line_saved.get(i);
     int len = end - begin;
 
     if (len <= 0) {

@@ -59,8 +59,9 @@ public class JScriptException extends XBosonException {
   /**
    * @see JScriptException#JScriptException(Exception, CodeFormater, int)
    */
-  public JScriptException(Exception fail, byte[] code) {
+  public JScriptException(Exception fail, byte[] code, String fileName) {
     this(fail, new CodeFormater(ByteBuffer.wrap(code)), OffsetLineStack.offset);
+    setFileName(fileName);
   }
 
 
@@ -164,6 +165,9 @@ public class JScriptException extends XBosonException {
 
 
   private void setNameAndLine(String filename, int line) {
+    if (lastFileName != null)
+      return;
+
     if (this.fileName != null && filename.indexOf(this.fileName) < 0)
       return;
 

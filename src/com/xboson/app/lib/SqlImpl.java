@@ -122,7 +122,12 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public int update(String sql, Object[] param) throws Exception {
-    return update(sql, param, true);
+    return update(sql, param, false);
+  }
+
+
+  public int update(String sql) throws Exception {
+    return update(sql, null, false);
   }
 
 
@@ -132,9 +137,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
     conn.setAutoCommit(!manualCommit);
     PreparedStatement ps = conn.prepareStatement(query_impl.replaceSql(sql));
 
-    for (int i=1; i<=param.length; ++i) {
-      Object p = param[i-1];
-      ps.setObject(i, p);
+    if (param != null) {
+      for (int i = 1; i <= param.length; ++i) {
+        Object p = param[i - 1];
+        ps.setObject(i, p);
+      }
     }
 
     return ps.executeUpdate();
