@@ -28,7 +28,8 @@ import com.xboson.util.Tool;
 
 
 /**
- * 这里应该调用系统启动脚本, 在单独的线程中.
+ * 在 EventLoop 线程中进行缓存初始化, 这些过程写在脚本中.
+ * @see EventLoop
  */
 public class SystemStartupScript implements IConstant, Runnable {
 
@@ -70,7 +71,7 @@ public class SystemStartupScript implements IConstant, Runnable {
     } catch (XBosonException.Closed c) {
       log.warn(INITIALIZATION, c);
     } catch (Exception e) {
-      log.error(INITIALIZATION, "Fail", e);
+      log.error(INITIALIZATION, "Fail", Tool.allStack(e));
     }
   }
 }

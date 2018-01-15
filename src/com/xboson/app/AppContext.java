@@ -188,6 +188,20 @@ public class AppContext implements IConstant {
 
 
   /**
+   * 当读取了脚本代码后调用该方法, 返回计数器的值, 并将计数器 +add,
+   * 不在脚本上下文中总是返回 -1.
+   */
+  public int readScriptCount(int add) {
+    ThreadLocalData tld = ttld.get();
+    if (tld == null)
+      return -1;
+    int c = tld.scriptReadCount;
+    ++tld.scriptReadCount;
+    return c;
+  }
+
+
+  /**
    * 在任何位置都可以安全调用该方法, 返回当前登录的用户,
    * 如果没有用户登录会抛出异常.
    */
@@ -210,6 +224,9 @@ public class AppContext implements IConstant {
   }
 
 
+  /**
+   * 返回当前应用上下文
+   */
   public static AppContext me() {
     if (instance == null) {
       synchronized (AppContext.class) {
@@ -232,6 +249,7 @@ public class AppContext implements IConstant {
     String orgid;
     ApiCall ac;
     boolean replaceOrg;
+    int scriptReadCount;
 
     String __cache_path;
     ApiTypes __dev_mode;

@@ -26,7 +26,6 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 计划任务
 * 程序授权许可系统
 * 在脚本环境中执行操作系统shell, 专门一个shell目录
-* api 脚本引用 api 脚本 (直接 require)
 
 
 # 2.0 新特性

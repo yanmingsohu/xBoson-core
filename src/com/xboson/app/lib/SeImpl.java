@@ -29,6 +29,7 @@ import com.xboson.event.OnFileChangeHandle;
 import com.xboson.util.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;

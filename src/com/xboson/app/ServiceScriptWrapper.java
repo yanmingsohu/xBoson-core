@@ -137,7 +137,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     ScriptObjectMirror call = (ScriptObjectMirror) jsmod.exports;
 
     if (! call.isFunction() )
-      throw new XBosonException("Script wrapper fail.");
+      throw new XBosonException("Is not WEB Service Script.");
 
     ConnectConfig orgdb = org.getOrgDb();
     boolean runOnSysOrg = org.isSysORG();
@@ -173,7 +173,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
 
   /**
-   * 包装来自表的脚本, 使之可以成为 web 服务脚本
+   * 包装脚本, 使之可以成为 web 服务脚本
    * @param code 需要包装的脚本字节缓冲
    * @return
    */

@@ -55,9 +55,13 @@ public class ApiPath {
   }
 
 
-  /** 核心 */
+  /**
+   * 返回 api 脚本修改事件的消息名称
+   * type - 消息类型前缀
+   * filename
+   */
   public static String getEventPath(String type, String filename) {
-    return type + filename;
+    return type + filename.toLowerCase();
   }
 
 

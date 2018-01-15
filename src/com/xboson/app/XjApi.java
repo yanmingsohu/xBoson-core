@@ -46,6 +46,7 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
   private ScriptFile file;
   private String id;
   private String res;
+  private boolean isRequired;
 
 
   XjApi(XjOrg org, XjApp app, XjModule mod, String id) {
@@ -69,7 +70,10 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
 
 
   private void regApiChangeListener() {
-    regFileChange(ApiPath.getEventPath());
+    String eventPath = ApiPath.getEventPath(
+            AppContext.me().getApiModeType(),
+            ApiPath.getPath(org.id(), app.getID(), mod.id(), id));
+    regFileChange(eventPath);
   }
 
 
@@ -96,6 +100,17 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
       file = null;
       app.updateApiScript(this);
       log.debug("Script Changed:", mod.id(), '/', id);
+
+      //
+      // 被引用脚本改变后需要立即重新编译.
+      //
+      if (isRequired) {
+        try {
+          jsmodule = app.buildJSModule(ApiPath.toFile(mod.id(), id));
+        } catch (IOException | ScriptException e) {
+          log.error("Reloading script fail,", e.toString());
+        }
+      }
     }
   }
 
@@ -125,5 +140,18 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
   @Override
   public String description() {
     return res;
+  }
+
+
+  /**
+   * 设置脚本的是使用 require 加载的
+   */
+  void setRequired(boolean is) {
+    isRequired = is;
+  }
+
+
+  boolean isRequired() {
+    return isRequired;
   }
 }

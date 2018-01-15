@@ -114,7 +114,7 @@ public class SysImpl extends DateImpl {
       return;
 
     ServletInputStream in = cd.req.getInputStream();
-    if (in.isFinished())
+    if (in == null || in.isFinished())
       return;
 
     if (type.contains("application/json")) {
