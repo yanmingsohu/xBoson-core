@@ -80,6 +80,7 @@ public final class DefaultConfig {
     c.shareAppList      = toList(default_share_app);
     c.nodeProviderClass = "local";
     c.nodeUrl           = "/web4xboson/xboson-node-modules";
+    c.shellUrl          = "/web4xboson/shell-script";
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
     j.setMaxIdle(10);

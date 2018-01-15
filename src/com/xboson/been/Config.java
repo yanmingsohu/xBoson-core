@@ -52,6 +52,7 @@ public class Config implements IBean {
 
   public String nodeProviderClass = null;
   public String nodeUrl           = null;
+  public String shellUrl          = null;
 
   public String[] sysTableList;
   public String[] shareAppList;

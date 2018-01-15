@@ -25,6 +25,7 @@ uiWelcome: 访问根路径时的跳转页面
 
 nodeProviderClass: node 模块文件模式, 与 uiProviderClass 定义相同
 nodeUrl: 本地模式根目录
+shellUrl: 操作系统外壳脚本文件目录
 
 
 enableUploadClear: 启用后, 每天凌晨清除昨天上传的临时文件

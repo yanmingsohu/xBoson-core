@@ -24,4 +24,9 @@ public interface IDict {
   String ZR001_ENABLE = "1";
   String ZR001_DISABLE = "0";
 
+  /** SYS08.00.006.00 */
+  String ADMIN_FLAG_USER = "0";
+  String ADMIN_FLAG_ADMIN = "1";
+  String ADMIN_FLAG_TENANT_ADMIN = "2";
+
 }
