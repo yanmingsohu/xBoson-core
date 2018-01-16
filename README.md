@@ -26,7 +26,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * node 模块目录安装画面.
 * MongoDB 配置安装画面.
 * 集成 HTML 模板引擎.
-* 计划任务
+* 计划任务在调用平台 api 时的权限问题
 
 
 # 2.0 新特性

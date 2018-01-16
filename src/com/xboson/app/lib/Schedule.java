@@ -16,7 +16,6 @@
 
 package com.xboson.app.lib;
 
-import com.xboson.app.AppContext;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
@@ -37,8 +36,11 @@ public class Schedule extends RuntimeUnitImpl {
 
   private static final String LOG_FILE = "insert-scheduler-log.sql";
 
-  private static final Map<String, Map<String, Task>>
-          org_management = Collections.synchronizedMap(new HashMap<>());
+  /**
+   * 每个应用都有独立的上下文自然会将不同的 org 分开
+   */
+  private final Map<String, Task>
+          management = Collections.synchronizedMap(new HashMap<>());
 
   private final Log log;
   private OkHttpClient hc;
@@ -52,19 +54,18 @@ public class Schedule extends RuntimeUnitImpl {
 
   public void start(String id, Map<String, Object> config) {
     getStr(id, "id");
-    Map<String, Task> management = getManagement();
     Task task = management.get(id);
     if (task != null) {
       throw new XBosonException(
               "Schedule Task "+ task.schedulenm +"("+ id +") is running");
     }
-    task = new Task(id, config, management);
+    task = new Task(id, config);
     management.put(id, task);
   }
 
 
   public boolean stop(String id) {
-    Task task = getManagement().get(id);
+    Task task = management.get(id);
     if (task == null) {
       return false;
     }
@@ -74,7 +75,7 @@ public class Schedule extends RuntimeUnitImpl {
 
 
   public Object info(String id) {
-    return getManagement().get(id);
+    return management.get(id);
   }
   
   
@@ -118,14 +119,11 @@ public class Schedule extends RuntimeUnitImpl {
     private String  id;
     public  int     state;
 
-    private Map<String, Task> management;
     private ConnectConfig db;
     private TimerTask task;
     
 
-    private Task(String id,
-                 Map<String, Object> config,
-                 Map<String, Task> management)
+    private Task(String id, Map<String, Object> config)
     {
       schedulenm        = getStr(config, "schedulenm");
       schedule_cycle    = getInt(config, "schedule_cycle");
@@ -136,23 +134,22 @@ public class Schedule extends RuntimeUnitImpl {
       start_time        = parseDate(config, "start_time");
 
       this.db           = SysConfig.me().readConfig().db;
-      this.management   = management;
       this.state        = JOB_STATUS_INIT;
       this.id           = id;
-      task = new Inner();
-      TimeFactory.me().schedule(task, start_time);
+      TimeFactory.me().schedule(new Inner(), start_time);
     }
 
 
     private class Inner extends TimerTask {
+      private Inner() {
+        task = this;
+      }
       @Override
       public void run() {
         try {
           state = JOB_STATUS_RUNNING;
           callApi();
-          state = JOB_STATUS_STOP;
         } catch (Exception e) {
-          state = JOB_STATUS_ERR;
           log.error(e);
         }
 
@@ -180,8 +177,7 @@ public class Schedule extends RuntimeUnitImpl {
         }
 
         start_time = next;
-        task = new Inner();
-        TimeFactory.me().schedule(task, start_time);
+        TimeFactory.me().schedule(new Inner(), start_time);
       }
     }
 
@@ -209,6 +205,7 @@ public class Schedule extends RuntimeUnitImpl {
         Response resp = openClient().newCall(req.build()).execute();
         ResponseBody body = resp.body();
         parm[2] = body.byteStream();
+        state = JOB_STATUS_STOP;
       } catch (Exception e) {
         state = JOB_STATUS_ERR;
         parm[2] = e.toString();
@@ -252,17 +249,6 @@ public class Schedule extends RuntimeUnitImpl {
       }
       return c.getTime();
     }
-  }
-
-
-  private Map<String, Task> getManagement() {
-    final String org = AppContext.me().originalOrg();
-    Map<String, Task> management = org_management.get(org);
-    if (management == null) {
-      management = Collections.synchronizedMap(new HashMap<>());
-      org_management.put(org, management);
-    }
-    return management;
   }
 
 
