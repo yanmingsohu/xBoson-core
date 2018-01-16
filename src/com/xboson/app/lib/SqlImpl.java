@@ -121,6 +121,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
+  public int update(String sql, Object[] param, int manualCommit) throws Exception {
+    return update(sql, param, manualCommit >= 1);
+  }
+
+
   public int update(String sql, Object[] param) throws Exception {
     return update(sql, param, false);
   }

@@ -20,6 +20,7 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
+import com.xboson.been.XBosonException;
 import com.xboson.util.Tool;
 
 import java.io.IOException;
@@ -32,6 +33,9 @@ public class ExceptionConverter {
 
   public static void registerAdapter(Moshi.Builder builder) {
     builder.add(ClassCastException.class, ea);
+    builder.add(Exception.class, ea);
+    builder.add(XBosonException.class, ea);
+    builder.add(NullPointerException.class, ea);
   }
 
 

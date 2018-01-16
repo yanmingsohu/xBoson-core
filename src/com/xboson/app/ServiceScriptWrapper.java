@@ -98,6 +98,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     mod.regClass("fs", FsImpl.class);
     mod.regClass("mongodb", MongoImpl.class);
     mod.regClass("shell", Shell.class);
+    mod.regClass("schedule", Schedule.class);
   }
 
 
@@ -138,7 +139,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     ScriptObjectMirror call = (ScriptObjectMirror) jsmod.exports;
 
     if (! call.isFunction() )
-      throw new XBosonException("Is not WEB Service Script.");
+      throw new XBosonException("Is not WEB Service Script (Maybe a library).");
 
     ConnectConfig orgdb = org.getOrgDb();
     boolean runOnSysOrg = org.isSysORG();

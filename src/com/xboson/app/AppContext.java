@@ -53,7 +53,7 @@ public class AppContext implements IConstant {
     production  = new AppPool(new ForProduction());
     development = new AppPool(new ForDevelopment());
     shareApp    = JavaConverter.arr2setLower(
-            SysConfig.me().readConfig().shareAppList);
+                  SysConfig.me().readConfig().shareAppList);
   }
 
 

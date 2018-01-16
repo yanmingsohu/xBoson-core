@@ -240,7 +240,11 @@ public class TestFace extends Test {
     try {
       ok(ls != null, "local dir");
       ok(rs != null, "redis dir");
-      eq(ls, rs, "same dir");
+
+      if (ls.containsAll(rs) == false || rs.containsAll(ls) == false) {
+        throw new AssertionError("same dir not equals\n\tObject 1: '" + ls +
+                "'\n\tObject 2: '" + rs + "'");
+      }
       msg("OK same dir", dir);
     } catch (AssertionError t) {
       msg("Local:", ls);

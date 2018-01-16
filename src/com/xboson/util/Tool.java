@@ -60,6 +60,9 @@ public final class Tool extends StaticLogProvider {
   public static final Uuid uuid = new Uuid();
 
 
+  public static final String COMM_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+
   /**
    * 保证性能和线程安全; moshi 内部已经对适配器做了缓存.
    * 返回的适配器已经注册了可用的对象转换器.
@@ -209,7 +212,7 @@ public final class Tool extends StaticLogProvider {
   public static String formatDate(Date d) {
     SimpleDateFormat f = dataformat.get();
     if (f == null) {
-      f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+      f = new SimpleDateFormat(COMM_DATE_FORMAT);
       dataformat.set(f);
     }
     return f.format(d);

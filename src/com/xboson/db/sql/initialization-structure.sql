@@ -1,6 +1,7 @@
-//
-// xBoson 平台附加数据库初始化过程
-//
+--
+-- xBoson 平台附加数据库初始化过程
+--
+
 CREATE TABLE `sys_upload_files` (
   `filename` varchar(80) NOT NULL,
   `dir` varchar(200) NOT NULL,
@@ -13,3 +14,11 @@ CREATE TABLE `sys_upload_files` (
   PRIMARY KEY (`filename`,`dir`),
   UNIQUE KEY `id_UNIQUE` (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE `sys_pl_log_scheduler` (
+  `scheduleid` VARCHAR(40) NOT NULL,
+  `create_date` DATETIME NOT NULL,
+  `content` MEDIUMTEXT NULL),
+  `api` VARCHAR(500) NOT NULL
+ENGINE = MyISAM;

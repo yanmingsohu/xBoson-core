@@ -35,10 +35,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class TestTool extends Test {
@@ -52,6 +49,14 @@ public class TestTool extends Test {
     test_chinese();
     test_id();
     test_http_get();
+
+    sub("Calendar");
+    Calendar c = Calendar.getInstance();
+    msg(c.getTime());
+    c.add(Calendar.DAY_OF_YEAR, 2);
+    msg(c.getTime());
+    c.add(Calendar.WEEK_OF_YEAR, 2);
+    msg(c.getTime());
   }
 
 
