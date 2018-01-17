@@ -93,8 +93,10 @@ function __warp_main(fn) { // 主函数包装器
 
 		var console = require('console').create(module.filename);
 		var dirname = get_dirname(module.filename);
-		module.paths = get_module_paths(dirname);
 
+		if (!module.paths) {
+		  module.paths = get_module_paths(dirname);
+		}
 		return fn.call(fncontext, require, module,
 		       dirname, module.filename, module.exports, console);
 	}
@@ -122,27 +124,28 @@ function __warp_main(fn) { // 主函数包装器
 	// 所有的缓存都在 java 上处理.
 	//
 	function require(path) {
+	  var mod;
 	  //
 	  // 一定从文件加载器加载
 	  //
-	  if (path[0] == '/' || path[0] == '.') {
-	    path = pathlib.normalize(get_dirname() +'/'+ path);
+	  if (path[0] == '/') {
+	    path = pathlib.normalize(get_dirname() + path);
 	    return app.run(path).exports;
 	  }
 
-	  var mod;
-    //
-    // 系统加载过的模块将缓存在 app 中
-    //
-	  if (app.isCached(path)) {
+	  if (path[0] == '.') {
+	    mod = app.getModule(path, currmodule);
+	    if (mod) return mod.exports;
+	  }
+    else if (app.isCached(path)) {
+      //
+      // 系统加载过的模块将缓存在 app 中
+      //
 	    mod = app.run(path);
+	    if (mod) return mod.exports;
 	  }
-	  else if (sys_module_provider) {
-      mod = sys_module_provider.getModule(path, currmodule);
-	  }
-	  else {
-	    throw new Error("Sys Module Provider Not Found");
-	  }
+
+    mod = sys_module_provider.getModule(path, currmodule);
 
 	  if (!mod) {
       throw new Error("Cannot found Module: " + path);
@@ -157,7 +160,7 @@ function __warp_main(fn) { // 主函数包装器
 	function get_module_paths(dirname) {
 	  if (!dirname) return [];
 
-	  var ret = [];
+	  var ret = [ dirname ];
 	  if (dirname != '/') {
       var sp = dirname.split('/');
       while (sp.length > 1) {

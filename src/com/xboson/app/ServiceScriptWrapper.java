@@ -82,8 +82,10 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     this.config_return_func = new HashMap<>();
     BasicEnvironment basic = EnvironmentFactory.createEmptyBasic();
     SysModules sys_mod = EnvironmentFactory.createDefaultSysModules();
-    IModuleProvider node_mod = NodeFileFactory.openNodeModuleProvider(sys_mod);
+    IConfigurableModuleProvider node_mod =
+            NodeFileFactory.openNodeModuleProvider(sys_mod);
     regModules(sys_mod);
+
     basic.setEnvObjectList(libs);
     basic.insertConfiger(node_mod);
     basic.insertConfiger(this);

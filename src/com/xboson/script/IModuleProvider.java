@@ -22,17 +22,21 @@ import com.xboson.been.Module;
 /**
  * 模块加载器
  */
-public interface IModuleProvider extends IConfigSandbox {
+public interface IModuleProvider {
 
   int LOADER_ID_APPLICATION = 1;
   int LOADER_ID_SYS_MODULE  = 2;
   int LOADER_ID_NODE_MODULE = 3;
 
+  String MODULE_NAME = "/node_modules";
+
 
   /**
-   * 从模块名返回系统模块, 并且应该将模块缓存给 Application
+   * 从模块路径返回模块, 并且应该将模块缓存给 Application,
+   * 在必要时从 applyMod 模块中提取加载路径, 并尝试从这些路径中加载模块.
    *
-   * @param name
+   * @param name 模块路径
+   * @param applyMod 加载模块的模块
    * @return 如果模块加载器找不到模块应该返回 null
    * @see Application
    */

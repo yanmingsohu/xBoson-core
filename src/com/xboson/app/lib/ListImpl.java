@@ -18,11 +18,14 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.IJSObject;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.runtime.Context;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 
 public class ListImpl extends RuntimeUnitImpl implements IJSObject {
@@ -125,6 +128,8 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   /**
    * 深层比较两个 js 对象, 比较对象中的所有属性都相同返回 true.
    * 如果不是 js 对象, 进行简单比较.
+   * 脚本环境中原始对象还是原始对象(int,float,string),
+   * 其他复杂对象被包装到 ScriptObjectMirror 中.
    *
    * @param a 尽可能转换为 ScriptObjectMirror 的对象
    * @param b 与 a 比较
@@ -132,24 +137,19 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
    */
   private boolean _equals(Object a, Object b) {
     //
-    // c 即是 b
+    // b 不是复杂对象, 执行简单比较
     //
-    Object c = ScriptObjectMirror.wrap(b, Context.getGlobal());
-    //
-    // c == b 说明没有转换成 ScriptObjectMirror
-    // 执行简单比较
-    //
-    if (c == b) {
+    if (b instanceof ScriptObjectMirror == false) {
       return a.equals(b);
     }
     //
-    // c 一定被转换了, 而 a 没有转换过, a b,一定不同
+    // b 一定是复杂对象, 而 a 不是, a b,一定不同
     //
     if (a instanceof ScriptObjectMirror == false) {
       return false;
     }
 
-    ScriptObjectMirror x = (ScriptObjectMirror) c;
+    ScriptObjectMirror x = (ScriptObjectMirror) b;
     ScriptObjectMirror y = (ScriptObjectMirror) a;
 
     if (x.equals(y))
@@ -158,10 +158,23 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
     if (x.size() != y.size())
       return false;
 
-    Iterator<String> it = x.keySet().iterator();
-    while (it.hasNext()) {
-      String name = it.next();
-      if (x.getMember(name).equals(y.getMember(name)) == false) {
+    Set<String> names = new HashSet<>(x.size() << 1);
+    names.addAll(x.keySet());
+    names.addAll(y.keySet());
+
+    for (String name : names) {
+      Object o1 = x.getMember(name);
+      Object o2 = y.getMember(name);
+
+      if (o1 == null) {
+        if (o2 == null) {
+          continue;
+        } else {
+          return false;
+        }
+      }
+
+      if (! o1.equals(o2)) {
         return false;
       }
     }

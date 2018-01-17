@@ -20,6 +20,7 @@ import com.xboson.been.Config;
 import com.xboson.event.EventLoop;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.fs.redis.*;
+import com.xboson.script.IConfigurableModuleProvider;
 import com.xboson.script.IModuleProvider;
 
 
@@ -49,7 +50,7 @@ public final class NodeFileFactory extends AbsFactory {
    * @param parent 只当父级模块返回 null 时才从文件系统中创建.
    * @return
    */
-  public synchronized static IModuleProvider
+  public synchronized static IConfigurableModuleProvider
         openNodeModuleProvider(IModuleProvider parent)
   {
     IRedisFileSystemProvider fs = open();

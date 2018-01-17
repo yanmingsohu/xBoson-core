@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
+import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.event.timer.TimeFactory;
@@ -77,38 +78,9 @@ public class Schedule extends RuntimeUnitImpl {
   public Object info(String id) {
     return management.get(id);
   }
-  
-  
-  public interface ConstVar {
-    int YEAR    = 30;
-    int MONTH   = 31;
-    int WEEK    = 40;
-    int DAY     = 50;
-    int DAY2    = 60;
-    int HOUR    = 70;
-    int SECOND  = 90;
-    int MINUTE  = 80;
-
-    /** 初始化, 尚未运行过 */
-    int JOB_STATUS_INIT     = 0;
-    /** 运行的任务正在请求 api 但未返回 */
-    int JOB_STATUS_RUNNING  = 1;
-    /** 运行的任务休眠中 */
-    int JOB_STATUS_STOP     = 3;
-    /** 系统错误, 网络不通等 */
-    int JOB_STATUS_ERR      = 2;
-    /** 达到结束时间 */
-    int JOB_STATUS_TIMEUP   = 4;
-    /** 达到运行次数 */
-    int JOB_STATUS_MAXCOUNT = 5;
-    /** api 返回了一些东西 */
-    int JOB_STATUS_LOG      = 6;
-    /** 任务已经删除 */
-    int JOB_STATUS_DEL      = 7;
-  }
 
 
-  private class Task implements ConstVar {
+  private class Task implements IDict {
     private String  schedulenm;         // 名称
     private Date    start_time;         // 开始时间
     private Date    run_end_time;       // 结束时间
@@ -222,26 +194,26 @@ public class Schedule extends RuntimeUnitImpl {
       c.setTime(start_time);
 
       switch (schedule_cycle) {
-        case YEAR:
+        case JOB_UNIT_YEAR:
           c.add(Calendar.YEAR, schedule_interval);
           break;
-        case MONTH:
+        case JOB_UNIT_MONTH:
           c.add(Calendar.MONTH, schedule_interval);
           break;
-        case WEEK:
+        case JOB_UNIT_WEEK:
           c.add(Calendar.WEEK_OF_YEAR, schedule_interval);
           break;
-        case DAY:
-        case DAY2:
+        case JOB_UNIT_DAY:
+        case JOB_UNIT_DAY2:
           c.add(Calendar.DAY_OF_YEAR, schedule_interval);
           break;
-        case HOUR:
+        case JOB_UNIT_HOUR:
           c.add(Calendar.HOUR, schedule_interval);
           break;
-        case SECOND:
+        case JOB_UNIT_SECOND:
           c.add(Calendar.SECOND, schedule_interval);
           break;
-        case MINUTE:
+        case JOB_UNIT_MINUTE:
           c.add(Calendar.MINUTE, schedule_interval);
           break;
         default:

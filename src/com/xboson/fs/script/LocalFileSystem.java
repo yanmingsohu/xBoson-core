@@ -64,6 +64,7 @@ public class LocalFileSystem extends FSHelper implements IScriptFileSystem {
    */
   public ByteBuffer putfile(String virtual_name, String file) throws IOException {
     Path p = Paths.get(basedir, file);
+    if (! Files.exists(p)) return null;
     byte[] content = Files.readAllBytes(p);
     content = SourceFix.autoPatch(content);
     ByteBuffer buf = ByteBuffer.wrap(content);

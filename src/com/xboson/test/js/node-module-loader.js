@@ -25,4 +25,6 @@ var src1 = daffy.applyPatch('hello', patch);
 
 assert.eq(src0, src1);
 
+//var mas = require("masquerade-html-lib");
+
 console.log('Node module loader ok');

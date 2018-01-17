@@ -27,6 +27,7 @@ import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.*;
+import com.xboson.script.lib.Path;
 import com.xboson.util.Tool;
 import okio.BufferedSource;
 import okio.Okio;
@@ -46,7 +47,6 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
    * node 目录必须有 package.json 文件, 且 name 为该名称.
    */
   public static final String PROJECT_NAME = "xboson-node-modules";
-  public static final String NODE_MODULES = "/node_modules";
   public static final String PACKAGE_FILE = "/package.json";
   public static final String DEF_MAIN     = "/index.js";
   public static final String FILE_TYPE    = "node-modules";
@@ -88,6 +88,7 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
     for (int i=0; i<apply.paths.length && mod == null; ++i) {
       mod = findModule(apply.paths[i], name, apply);
     }
+
     return mod;
   }
 
@@ -121,8 +122,11 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
     ByteBuffer buf = ByteBuffer.wrap(attr.getFileContent());
     AbsWrapScript wrap = new WrapJavaScript(buf, mod_name);
 
-    Module mod = runner.run(wrap);
+    Module mod = wrap.getModule();
     mod.loaderid = LOADER_ID_NODE_MODULE;
+    mod.paths = get_module_paths(Path.me.dirname(script));
+
+    runner.run(wrap);
     fc.lookup(script);
 
     log.debug("Load node module '"+ script +"'");
@@ -156,7 +160,9 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
   @Override
   public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
     try {
-      parent.config(box, runner);
+      if (parent instanceof IConfigSandbox) {
+        ((IConfigSandbox) parent).config(box, runner);
+      }
 
       box.getGlobalFunc().invokeFunction(
               "__set_sys_module_provider", this);

@@ -16,33 +16,35 @@
 
 package com.xboson.script;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
+import com.xboson.been.Module;
+import com.xboson.fs.script.IScriptFileSystem;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
+import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
-
-import com.xboson.been.Module;
-import com.xboson.been.XBosonException;
-import com.xboson.fs.script.IScriptFileSystem;
-import com.xboson.fs.node.NodeModuleProvider;
+import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
  * 应用存储在二级目录中, 第一级是模块名, 第二级是接口名
  * 不直接支持多线程.
  */
-public class Application implements ICodeRunner {
+public class Application implements ICodeRunner, IModuleProvider {
 
   private Sandbox sandbox;
   private IScriptFileSystem vfs;
   private Map<String, AbsWrapScript> module_cache;
-
+  private Log log;
 
   public Application(IEnvironment env, IScriptFileSystem vfs)
           throws ScriptException
   {
     this.vfs = vfs;
+    this.log = LogFactory.create();
     module_cache = Collections.synchronizedMap(new HashMap<>());
     sandbox = SandboxFactory.create();
 
@@ -76,8 +78,7 @@ public class Application implements ICodeRunner {
     try {
       ByteBuffer buf = vfs.readFile(path);
       if (buf == null) {
-        throw new XBosonException.IOError(
-                "Cannot found Module: "+ path +", null code");
+        return null;
       }
 
       ws = new WrapJavaScript(buf, path);
@@ -85,9 +86,9 @@ public class Application implements ICodeRunner {
       mod.loaderid = IModuleProvider.LOADER_ID_APPLICATION;
       return mod;
 
-    } catch (IOException e) {
-      throw new XBosonException.IOError(
-              "Cannot found Module: "+ path +", "+ e);
+    } catch (Exception e) {
+      log.warn("Read script file", e);
+      return null;
     }
   }
 
@@ -104,7 +105,6 @@ public class Application implements ICodeRunner {
     Module mod    = ws.getModule();
     mod.filename  = path;
     mod.id        = '/'+ vfs.getID() +'/'+ path;
-    mod.paths     = makePaths(path);
     ws.initModule(this);
 
     return mod;
@@ -113,18 +113,6 @@ public class Application implements ICodeRunner {
 
   public boolean isCached(String name) {
     return module_cache.containsKey(name);
-  }
-
-
-  private String[] makePaths(String path_name) {
-    List<String> paths = new ArrayList<>();
-    int i = path_name.lastIndexOf("/", path_name.length());
-
-    while (i >= 0) {
-      paths.add(path_name.substring(0, i) + NodeModuleProvider.NODE_MODULES);
-      i = path_name.lastIndexOf("/", i-1);
-    }
-    return paths.toArray(new String[paths.size()]);
   }
 
 
@@ -138,4 +126,17 @@ public class Application implements ICodeRunner {
       module_cache.remove(path);
     }
   }
+
+
+  @Override
+  public Module getModule(String name, Module apply) {
+    Module mod = null;
+    final String[] paths = apply.paths;
+
+    for (int i=0; i<paths.length && mod == null; ++i) {
+      mod = run(Tool.normalize(paths[i] +'/'+ name));
+    }
+    return mod;
+  }
+
 }

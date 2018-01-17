@@ -99,7 +99,8 @@ public class TestScript extends Test {
     SysModules sysmod = EnvironmentFactory.createDefaultSysModules();
     sysmod.regClass("mongodb", MongoImpl.class);
 
-    IModuleProvider nodejs_mod = NodeFileFactory.openNodeModuleProvider(sysmod);
+		IConfigurableModuleProvider nodejs_mod =
+						NodeFileFactory.openNodeModuleProvider(sysmod);
 
     BasicEnvironment env = EnvironmentFactory.createEmptyBasic();
     env.insertConfiger(nodejs_mod);

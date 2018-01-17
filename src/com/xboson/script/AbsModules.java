@@ -18,8 +18,12 @@ package com.xboson.script;
 
 import com.xboson.been.Module;
 
+import java.util.ArrayList;
+import java.util.List;
 
-public abstract class AbsModules implements IModuleProvider {
+
+public abstract class AbsModules implements IConfigurableModuleProvider {
+
 
   /**
    * 该方法直接调用两个参数的 getModule
@@ -27,6 +31,26 @@ public abstract class AbsModules implements IModuleProvider {
    */
   public final Module getModule(String name) {
     return getModule(name, null);
+  }
+
+
+  /**
+   * 返回所有可能的脚本加载路径
+   * @param path_name 以该目录为基础
+   * @return 路径数组
+   */
+  public static String[] get_module_paths(String path_name) {
+    if (path_name == null) return null;
+
+    List<String> paths = new ArrayList<>();
+    paths.add(path_name);
+    int i = path_name.lastIndexOf("/", path_name.length());
+
+    while (i >= 0) {
+      paths.add(path_name.substring(0, i) + MODULE_NAME);
+      i = path_name.lastIndexOf("/", i-1);
+    }
+    return paths.toArray(new String[paths.size()]);
   }
 
 }

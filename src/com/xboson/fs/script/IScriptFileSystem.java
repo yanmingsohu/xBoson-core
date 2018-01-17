@@ -27,7 +27,8 @@ import java.nio.ByteBuffer;
 public interface IScriptFileSystem {
 
   /**
-   * 读取路径上的文件, 返回文件内容, 如果文件不存在应该抛出异常
+   * 读取路径上的文件, 返回文件内容, 如果文件不存在返回 null,
+   * 只有在出现异常的情况才应该抛出 IOException
    */
   ByteBuffer readFile(String path) throws IOException;
 
