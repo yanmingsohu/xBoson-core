@@ -136,3 +136,6 @@ assert.throws(function() {
     console.log(name, arr[name], "is working !!!!!!!!!!!!!!!!!!");
   }
 }, /ReferenceError.*name/);
+
+
+console.log('ok');

@@ -91,14 +91,7 @@ public class SysModules extends AbsModules implements IModuleProvider {
    * 调用 'bootstrap.js' 中的 __set_sys_module_provider 方法来初始化环境.
    */
   public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
-    try {
-      box.getGlobalFunc().invokeFunction(
-              "__set_sys_module_provider", this);
-
-      this.runner = runner;
-
-    } catch(NoSuchMethodException e) {
-      throw new ScriptException(e);
-    }
+    box.invokeFunction("__set_sys_module_provider", this);
+    this.runner = runner;
   }
 }

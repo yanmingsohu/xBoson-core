@@ -20,15 +20,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import javax.script.Bindings;
-import javax.script.Compilable;
-import javax.script.CompiledScript;
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
+import javax.script.*;
 
+import com.xboson.been.XBosonException;
 import com.xboson.util.Tool;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 
 /**
@@ -44,15 +40,33 @@ public class Sandbox {
 
 
   Sandbox(ScriptEngine engine) throws ScriptException {
-    this.js 			= engine;
-    this.bind 		= js.getBindings(ScriptContext.ENGINE_SCOPE);
-    this.context 	= js.getContext();
-
-    if (js instanceof Compilable) {
-      cpl = (Compilable) js;
+    if (engine instanceof Compilable) {
+      cpl = (Compilable) engine;
     } else {
-      throw new ScriptException("cannot compile");
+      throw new ScriptException("Cannot compile");
     }
+
+    this.js      = engine;
+    this.bind    = js.getBindings(ScriptContext.ENGINE_SCOPE);
+    this.context = js.getContext();
+  }
+
+
+  /**
+   * 创建一个新的上下文环境, 继承了全局上下文中的对象
+   * http://wiki.openjdk.java.net/display/Nashorn/Nashorn+jsr223+engine+notes
+   */
+  public ScriptContext createContext() {
+    ScriptContext new_context = new SimpleScriptContext();
+    //
+    // 继承全局对象中的属性和方法
+    //
+    new_context.setBindings(bind, ScriptContext.ENGINE_SCOPE);
+    //
+    // 设置局部上下文对象
+    //
+    new_context.setBindings(js.createBindings(), ScriptContext.GLOBAL_SCOPE);
+    return new_context;
   }
 
 
@@ -98,16 +112,38 @@ public class Sandbox {
   }
 
 
+  /**
+   * 用默认上下文执行脚本
+   */
   public Object eval(String code) throws ScriptException {
-    // System.out.println("CODE: " + code);
-    return js.eval(code);
+    return eval(code, this.context);
   }
 
 
+  /**
+   * 用指定的上下文执行脚本
+   */
+  public Object eval(String code, ScriptContext context) throws ScriptException {
+    return js.eval(code, context);
+  }
+
+
+  /**
+   * 用默认上下文执行脚本
+   */
   public Object eval(InputStream instream) throws ScriptException {
+    return eval(instream, this.context);
+  }
+
+
+  /**
+   * 用指定的上下文执行脚本
+   */
+  public Object eval(InputStream instream, ScriptContext context)
+          throws ScriptException {
     try {
       Reader reader = new InputStreamReader(instream);
-      return js.eval(reader);
+      return js.eval(reader, context);
     } finally {
       Tool.close(instream);
     }
@@ -123,8 +159,35 @@ public class Sandbox {
   }
 
 
-  public Invocable getGlobalFunc() {
+  /**
+   * 返回默认全局上下文中的可执行对象, 用于调用默认全局上下文中的函数
+   * 该方法不能返回自定义上下文中的可执行对象.
+   *
+   * @see #invokeFunction
+   */
+  public Invocable getGlobalInvocable() {
     return (Invocable) js;
+  }
+
+
+  /**
+   * 执行当前上下文中的函数
+   *
+   * @param name 函数名
+   * @param params 参数
+   * @return js 函数返回值
+   * @throws ScriptException 找不到函数或不是函数
+   */
+  public Object invokeFunction(String name, Object...params)
+          throws ScriptException {
+    ScriptObjectMirror func = (ScriptObjectMirror) bind.get(name);
+    if (func == null)
+      throw new ScriptException("Cannot function '" + name + "'");
+
+    if (! func.isFunction())
+      throw new XBosonException("Is not a function '" + name + "'");
+
+    return func.call(bind, params);
   }
 
 
@@ -138,20 +201,12 @@ public class Sandbox {
 
 
   public void bootstrapEnvReady() throws ScriptException {
-    try {
-      getGlobalFunc().invokeFunction("__env_ready");
-    } catch(NoSuchMethodException e) {
-      throw new ScriptException(e);
-    }
+    invokeFunction("__env_ready");
   }
 
 
   public void bootstrapEnd() throws ScriptException {
-    try {
-      getGlobalFunc().invokeFunction("__boot_over");
-    } catch(NoSuchMethodException e) {
-      throw new ScriptException(e);
-    }
+    invokeFunction("__boot_over");
   }
 
 
@@ -163,11 +218,17 @@ public class Sandbox {
   }
 
 
+  /**
+   * 返回全局上下文中的 binding
+   */
   public Bindings getBindings() {
     return bind;
   }
 
 
+  /**
+   * 返回全局上下文
+   */
   public ScriptContext getContext() {
     return context;
   }

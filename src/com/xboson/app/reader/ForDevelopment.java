@@ -54,7 +54,7 @@ public class ForDevelopment extends AbsReadScript {
         return file;
 
       } else {
-        throw new XBosonException("找不到 API " + api);
+        throw new XBosonException.NotFound("API:" + api);
       }
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);

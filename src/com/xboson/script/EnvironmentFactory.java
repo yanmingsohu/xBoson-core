@@ -16,10 +16,7 @@
 
 package com.xboson.script;
 
-import com.xboson.script.lib.Buffer;
-import com.xboson.script.lib.Console;
-import com.xboson.script.lib.Path;
-import com.xboson.script.lib.Uuid;
+import com.xboson.script.lib.*;
 import com.xboson.util.SysConfig;
 
 import java.io.IOException;
@@ -71,6 +68,8 @@ public class EnvironmentFactory {
             Buffer.class);
     sysmod.regClass("sys/uuid",
             Uuid.class);
+    sysmod.regClass("vm",
+            Vm.class);
 
     sysmod.loadLib("sys/util",
             "lib/sysutil.js");

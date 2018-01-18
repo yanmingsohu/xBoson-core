@@ -261,8 +261,8 @@ public class TestScript extends Test {
 		b.eval(c);
 		a.eval("a = 1;");
 		b.eval("a = 2;");
-		Integer aa = (Integer) a.getGlobalFunc().invokeFunction("g");
-		Integer bb = (Integer) b.getGlobalFunc().invokeFunction("g");
+		Integer aa = (Integer) a.getGlobalInvocable().invokeFunction("g");
+		Integer bb = (Integer) b.getGlobalInvocable().invokeFunction("g");
 		if (aa == 1 && bb == 2) {
 			success("independent sandbox");
 		} else {

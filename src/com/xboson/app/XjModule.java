@@ -50,7 +50,7 @@ public class XjModule extends XjPool<XjApi> implements IDict {
         }
         name = rs.getString("modulenm");
       } else {
-        throw new XBosonException("找不到模块 " + id);
+        throw new XBosonException.NotFound("Module:" + id);
       }
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);

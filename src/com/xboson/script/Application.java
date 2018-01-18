@@ -17,12 +17,14 @@
 package com.xboson.script;
 
 import com.xboson.been.Module;
+import com.xboson.been.XBosonException;
 import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.HashMap;
@@ -86,7 +88,7 @@ public class Application implements ICodeRunner, IModuleProvider {
       mod.loaderid = IModuleProvider.LOADER_ID_APPLICATION;
       return mod;
 
-    } catch (Exception e) {
+    } catch (IOException | XBosonException.IOError e) {
       log.warn("Read script file", e);
       return null;
     }

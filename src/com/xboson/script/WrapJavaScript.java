@@ -22,6 +22,7 @@ import jdk.nashorn.api.scripting.AbstractJSObject;
 import jdk.nashorn.internal.runtime.ECMAException;
 
 import javax.script.CompiledScript;
+import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import java.nio.ByteBuffer;
 
@@ -37,6 +38,7 @@ public class WrapJavaScript extends AbsWrapScript {
 
   private ReaderSet code_reader;
   private CompiledScript cs;
+  private ScriptContext context;
 
 
   protected WrapJavaScript(String filename) {
@@ -68,6 +70,7 @@ public class WrapJavaScript extends AbsWrapScript {
 
   public void compile(Sandbox box) {
     try {
+      context = box.createContext();
       box.setFilename(filename);
       cs = box.compile(code_reader);
 
@@ -82,7 +85,7 @@ public class WrapJavaScript extends AbsWrapScript {
       //
       // jso 是在 'bootstrap.js' 脚本中 __warp_main 函数返回的函数.
       //
-      AbstractJSObject jso = (AbstractJSObject) cs.eval();
+      AbstractJSObject jso = (AbstractJSObject) cs.eval(context);
       Object warpreturn = jso.call(module, module, crun);
       module.loaded = true;
       return warpreturn;

@@ -164,7 +164,7 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
         ((IConfigSandbox) parent).config(box, runner);
       }
 
-      box.getGlobalFunc().invokeFunction(
+      box.getGlobalInvocable().invokeFunction(
               "__set_sys_module_provider", this);
 
       this.runner = runner;
