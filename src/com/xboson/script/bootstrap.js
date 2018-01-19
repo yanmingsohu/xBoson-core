@@ -59,10 +59,8 @@ context.__boot_over = __boot_over;
 
 
 function __env_ready() {
-  process.binding = function(n) {
-    return sys_module_provider.getModule('sys/' + n).exports;
-  };
-
+  process = sys_module_provider.getModule('process').exports;
+  process.init(sys_module_provider);
   pathlib = sys_module_provider.getModule('path').exports;
   context.JSON = process.binding('json').warp(nativeJSON);
 }

@@ -17,9 +17,8 @@
 package com.xboson.script.lib;
 
 
-import com.xboson.util.Tool;
+import com.xboson.util.IConstant;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -38,6 +37,20 @@ public class Path {
     if (p.indexOf("/../") >= 0) {
       throw new IllegalArgumentException("path block '/../' string");
     }
+  }
+
+
+  public String join(String... s) {
+    StringBuilder buf = new StringBuilder();
+    for (int i=0;;) {
+      buf.append(s[i]);
+      if (++i < s.length) {
+        buf.append('/');
+      } else {
+        break;
+      }
+    }
+    return normalize(buf.toString());
   }
 
 
@@ -119,6 +132,23 @@ public class Path {
       return "/";
 
     return new String(ch, 0, end);
+  }
+
+
+  public String extname(String path) {
+    int i = path.length() - 1;
+    while (i >= 0) {
+      char ch = path.charAt(i);
+      if (ch == '/' || ch == '\\') {
+        return IConstant.NULL_STR;
+      }
+      if (ch == '.') break;
+      --i;
+    }
+    if (i > 0) {
+      return path.substring(i);
+    }
+    return IConstant.NULL_STR;
   }
 
 

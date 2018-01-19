@@ -36,6 +36,8 @@ public class ExceptionConverter {
     builder.add(Exception.class, ea);
     builder.add(XBosonException.class, ea);
     builder.add(NullPointerException.class, ea);
+    builder.add(IllegalArgumentException.class, ea);
+    builder.add(NoSuchMethodException.class, ea);
   }
 
 

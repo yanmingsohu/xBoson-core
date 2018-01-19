@@ -70,7 +70,11 @@ public class EnvironmentFactory {
             Uuid.class);
     sysmod.regClass("vm",
             Vm.class);
+    sysmod.regClass("sys/process",
+            com.xboson.script.lib.Process.class);
 
+    sysmod.loadLib("process",
+            "lib/process.js");
     sysmod.loadLib("sys/util",
             "lib/sysutil.js");
     sysmod.loadLib("sys/json",

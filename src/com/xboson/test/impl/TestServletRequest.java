@@ -37,6 +37,8 @@ public class TestServletRequest implements HttpServletRequest {
   Hashtable<String, String> header = new Hashtable<>();
   Map<String, String> parameters = new HashMap<>();
 
+  public String requestUri = "/app/";
+
 
   public TestServletRequest() {
 
@@ -140,7 +142,7 @@ public class TestServletRequest implements HttpServletRequest {
 
   @Override
   public String getRequestURI() {
-    return getContextPath() + "/app/";
+    return getContextPath() + requestUri;
   }
 
 

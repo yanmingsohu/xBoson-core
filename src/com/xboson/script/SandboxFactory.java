@@ -28,36 +28,38 @@ import javax.script.ScriptException;
  * 线程安全, 并对线程优化的沙箱工厂
  */
 public class SandboxFactory {
-	
-	private static ThreadLocal<NashornScriptEngineFactory> seml = new ThreadLocal<NashornScriptEngineFactory>();
-	private static Log log = LogFactory.create();
-	private static BlockAllFilter blockall = new BlockAllFilter();
+
+  private static ThreadLocal<NashornScriptEngineFactory> seml = new ThreadLocal<NashornScriptEngineFactory>();
+  private static Log log = LogFactory.create();
+  private static BlockAllFilter blockall = new BlockAllFilter();
 
 
-	/**
-	 * 创建一个独立的沙箱
-	 * @throws ScriptException 
-	 */
-	public static Sandbox create() throws ScriptException {
-		ScriptEngine se = getEM().getScriptEngine(blockall);
-		return new Sandbox(se);
-	}
-	
-	
-	public static NashornScriptEngineFactory getEM() {
-		NashornScriptEngineFactory em = seml.get();
-		if (em == null) {
-			em = new NashornScriptEngineFactory();
-			seml.set(em);
-		}
-		return em;
-	}
-	
-	
-	public static void version() {
-		NashornScriptEngineFactory n = getEM();
-		log.info("Script ENGINE:", 
-				"[" + n.getEngineName(), n.getEngineVersion() + "]",
-				"[" + n.getLanguageName(), n.getLanguageVersion() + "]");
-	}
+  /**
+   * 创建一个独立的沙箱, 该沙箱对象与线程绑定.
+   * 在同一个线程上调用该方法, 总是返回唯一的沙箱对象.
+   *
+   * @throws ScriptException
+   */
+  public static Sandbox create() throws ScriptException {
+    ScriptEngine se = getEM().getScriptEngine(blockall);
+    return new Sandbox(se);
+  }
+
+
+  public static NashornScriptEngineFactory getEM() {
+    NashornScriptEngineFactory em = seml.get();
+    if (em == null) {
+      em = new NashornScriptEngineFactory();
+      seml.set(em);
+    }
+    return em;
+  }
+
+
+  public static void version() {
+    NashornScriptEngineFactory n = getEM();
+    log.info("Script ENGINE:",
+        "[" + n.getEngineName(), n.getEngineVersion() + "]",
+        "[" + n.getLanguageName(), n.getLanguageVersion() + "]");
+  }
 }

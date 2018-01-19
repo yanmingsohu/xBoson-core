@@ -7,17 +7,45 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 2018年1月19日 20:02
-// 原始文件路径: xBoson/src/com/xboson/script/lib/uuid.js
+// 原始文件路径: xBoson/src/com/xboson/script/lib/process.js
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-var sysuuid = require("sys/uuid");
-var sysutil = require("sys/util");
+var sys_module_provider;
+var sys_process;
+var Event = require("events");
+var process = module.exports = new Event();
 
-var uuid = module.exports = {
+
+process.versions = {
 };
 
-sysutil.warpObject(sysuuid, uuid);
+
+//
+// 初始化方法只能调用一次
+//
+process.init = function(_sys_module_provider) {
+  delete process.init;
+  sys_module_provider = _sys_module_provider;
+  sys_process = process.binding('process');
+  process.versions.engineVersion = sys_process.engineVersion();
+  process.versions.languageVersion = sys_process.languageVersion();
+};
+
+
+process.hrtime = function(stime) {
+  var ret = sys_process.hrtime();
+  if (stime) {
+    ret[0] -= stime[0];
+    ret[1] -= stime[1];
+  }
+  return ret;
+};
+
+
+process.binding = function(n) {
+  return sys_module_provider.getModule('sys/' + n).exports;
+};

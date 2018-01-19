@@ -16,54 +16,74 @@
 
 package com.xboson.script.lib;
 
+import com.xboson.been.XBosonException;
 import com.xboson.script.JSObject;
 import com.xboson.script.Sandbox;
 import com.xboson.script.SandboxFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.runtime.Context;
 
 import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import javax.script.SimpleScriptContext;
 
 
 public class Vm extends JSObject {
 
+  public static final String VM_CONTEXT = "xBoson.vm.context";
+
+
   public Object createContext() {
-    return new InnerContext(null);
+    return createContext(ScriptUtils.wrap(Context.getGlobal().newObject()));
   }
 
 
   public Object createContext(ScriptObjectMirror sandbox) {
-    return new InnerContext(sandbox);
+    ScriptContext context = new SimpleScriptContext();
+    sandbox.setMember(VM_CONTEXT, context);
+    context.setBindings(sandbox, ScriptContext.GLOBAL_SCOPE);
+    return sandbox;
   }
 
 
-  public boolean isContext(Object o) {
-    return o instanceof InnerContext;
+  public boolean isContext(ScriptObjectMirror o) {
+    Object r = o.getMember(VM_CONTEXT);
+    if (r != null) {
+      return r instanceof ScriptContext;
+    }
+    return false;
   }
 
 
-  public Object runInContext(String code, InnerContext context)
+  public Object runInContext(String code, ScriptObjectMirror sandbox)
           throws ScriptException {
-    Sandbox box = SandboxFactory.create();
-    return box.eval(code, context.context);
+    return runInContext(code, sandbox, null);
   }
 
 
-  public final class InnerContext {
-    private ScriptContext context;
-    private ScriptObjectMirror bind;
+  public Object runInContext(String code,
+                             ScriptObjectMirror sandbox,
+                             ScriptObjectMirror options)
+          throws ScriptException {
+    ScriptContext context = (ScriptContext) sandbox.getMember(VM_CONTEXT);
+    if (context == null) {
+      throw new XBosonException.BadParameter("sandbox", "is not context");
+    }
+    if (options != null) {
+      setOptions(context, options);
+    }
+    Sandbox box = SandboxFactory.create();
+    return box.eval(code, context);
+  }
 
 
-    private InnerContext(ScriptObjectMirror bind) {
-      context = new SimpleScriptContext();
-      if (bind == null) {
-        bind = (ScriptObjectMirror) ScriptObjectMirror.wrap(
-                Context.getGlobal().newObject(), Context.getGlobal());
-      }
-      this.bind = bind;
-      this.context.setBindings(bind, ScriptContext.GLOBAL_SCOPE);
+  private void setOptions(ScriptContext context, ScriptObjectMirror options) {
+    Object filename = options.get("filename");
+    if (filename != null) {
+      context.setAttribute(ScriptEngine.FILENAME,
+              filename, ScriptContext.GLOBAL_SCOPE);
     }
   }
 }

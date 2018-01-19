@@ -21,75 +21,95 @@ import com.xboson.log.Level;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.JSObject;
+import com.xboson.util.Tool;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+
+import java.util.Arrays;
 
 
 public class Console extends JSObject {
-	
-	private Log log;
+
+  private Log log;
 
 
-	public Console() {
-		log = LogFactory.create("script.console");
-	}
+  public Console() {
+    log = LogFactory.create("script.console");
+  }
 
 
-	public Console(String name) {
-		log = LogFactory.create(name);
-	}
+  public Console(String name) {
+    log = LogFactory.create(name);
+  }
 
 
-	public Console create(String name) {
-		if (name != null) {
-			return new Console(name);
-		} else {
-			return new Console();
-		}
-	}
-
-	
-	@Override
-	public String env_name() {
-		return "console";
-	}
-
-	
-	public Console info(Object ...msg) {
-		log.logs(Level.INFO, msg);
-		return this;
-	}
-	
-	
-	public Console log(Object ...msg) {
-		log.logs(Level.INFO, msg);
-		return this;
-	}
-	
-	
-	public Console debug(Object ...msg) {
-		log.logs(Level.DEBUG, msg);
-		return this;
-	}
-	
-	
-	public Console error(Object ...msg) {
-		log.logs(Level.ERR, msg);
-		return this;
-	}
-	
-	
-	public Console warn(Object ...msg) {
-		log.logs(Level.WARN, msg);
-		return this;
-	}
-	
-	
-	public Console fatal(Object ...msg) {
-		log.logs(Level.FATAL, msg);
-		return this;
-	}
+  public Console create(String name) {
+    if (name != null) {
+      return new Console(name);
+    } else {
+      return new Console();
+    }
+  }
 
 
-	public Console trace(Object ...msg) {
-		return debug(msg);
-	}
+  @Override
+  public String env_name() {
+    return "console";
+  }
+
+
+  public Console info(Object ...msg) {
+    log.logs(Level.INFO, join(msg));
+    return this;
+  }
+
+
+  public Console log(Object ...msg) {
+    log.logs(Level.INFO, join(msg));
+    return this;
+  }
+
+
+  public Console debug(Object ...msg) {
+    log.logs(Level.DEBUG, join(msg));
+    return this;
+  }
+
+
+  public Console error(Object ...msg) {
+    log.logs(Level.ERR, join(msg));
+    return this;
+  }
+
+
+  public Console warn(Object ...msg) {
+    log.logs(Level.WARN, join(msg));
+    return this;
+  }
+
+
+  public Console fatal(Object ...msg) {
+    log.logs(Level.FATAL, join(msg));
+    return this;
+  }
+
+
+  public Console trace(Object ...msg) {
+    return debug(msg);
+  }
+
+
+  private Object[] join(Object ...msg) {
+    Object[] ret = new Object[msg.length];
+    for (int i=0; i<msg.length; ++i) {
+      if (msg[i] instanceof ScriptObjectMirror) {
+        ScriptObjectMirror js = (ScriptObjectMirror) msg[i];
+        if (!js.isEmpty()) {
+          ret[i] = Tool.getAdapter(ScriptObjectMirror.class).toJson(js);
+        }
+      } else {
+        ret[i] = msg[i];
+      }
+    }
+    return ret;
+  }
 }
