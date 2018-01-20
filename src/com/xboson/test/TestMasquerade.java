@@ -16,47 +16,32 @@
 
 package com.xboson.test;
 
-import com.xboson.been.Module;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
-import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.fs.ui.UIFileFactory;
-import com.xboson.script.*;
+import com.xboson.j2ee.ui.TemplateEngine;
 import com.xboson.test.impl.TestServletRequest;
 import com.xboson.test.impl.TestServletResponse;
-import com.xboson.util.StringBufferOutputStream;
-import com.xboson.util.Tool;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
-
-import javax.script.ScriptContext;
-import javax.script.ScriptException;
-import java.io.Writer;
 
 
-public class TestMasquerade extends Test implements IConfigSandbox {
-  private Module masquerade;
+public class TestMasquerade extends Test {
 
   @Override
   public void test() throws Throwable {
-    sub("Basic");
-    IScriptFileSystem vfs = TestScript.createVFS();
-    Application app = TestScript.createBasicApplication(vfs);
-    app.config(this);
     page();
   }
 
 
   private void page() throws Throwable {
     sub("Request page");
-    ScriptObjectMirror init = (ScriptObjectMirror) masquerade.exports;
     IRedisFileSystemProvider uifs = UIFileFactory.open();
-    ScriptObjectMirror service =
-            (ScriptObjectMirror) init.call(null, "/", true, uifs);
+    TemplateEngine te = new TemplateEngine(uifs);
 
     TestServletResponse resp = new TestServletResponse();
     TestServletRequest req = new TestServletRequest();
-    req.requestUri = "/t/index.htm";
-    service.call(null, req, resp);
-    resp.getWriter().flush();
+    req.requestUri = "/face/t/paas/api-doc/md.htm";
+    te.reloadTags();
+    TestFace.waitEventLoopEmpty();
+    te.service(req, resp);
   }
 
 
@@ -64,20 +49,4 @@ public class TestMasquerade extends Test implements IConfigSandbox {
     new TestMasquerade();
   }
 
-
-  @Override
-  public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
-    sub("Init");
-    String fileName = "./masquerade.js";
-    StringBufferOutputStream buf =
-        Tool.readFileFromResource(UIFileFactory.class, fileName);
-    ScriptContext context = box.createContext();
-
-    WrapJavaScript js = box.warp(fileName, buf.toString());
-    js.compile(box);
-    js.initModule(runner);
-
-    masquerade = js.getModule();
-    msg(fileName, masquerade);
-  }
 }

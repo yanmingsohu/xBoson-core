@@ -64,7 +64,7 @@ public class UIFileSystemConfig implements IFileSystemConfig {
 
 
   @Override
-  public void startMigrationThread() {
+  public synchronized void startMigrationThread() {
     if (mt == null) {
       mt = new EventQueueMigrationThread(this);
     }

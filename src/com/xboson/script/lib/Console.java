@@ -100,11 +100,13 @@ public class Console extends JSObject {
 
   private Object[] join(Object ...msg) {
     Object[] ret = new Object[msg.length];
+
     for (int i=0; i<msg.length; ++i) {
       if (msg[i] instanceof ScriptObjectMirror) {
         ScriptObjectMirror js = (ScriptObjectMirror) msg[i];
-        if (!js.isEmpty()) {
-          ret[i] = Tool.getAdapter(ScriptObjectMirror.class).toJson(js);
+
+        if (! js.isEmpty()) {
+          ret[i] = Tool.beautifyJson(ScriptObjectMirror.class, js);
         }
       } else {
         ret[i] = msg[i];

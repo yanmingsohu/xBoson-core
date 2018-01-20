@@ -159,6 +159,11 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public void addRetData(String value, String name) {
+    addRetData((Object) value, name);
+  }
+
+
   public void setRetData(String code) throws IOException {
     setRetData(Integer.parseInt(code));
   }

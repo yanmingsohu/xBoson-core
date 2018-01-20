@@ -19,6 +19,10 @@
 // init
 // 若需要同步 nodejs 代码, 直接将对应文件的内容复制到 __install 的实现函数中
 ///////////////////////////////////////////////////////////////////////////////
+var Event = require("events");
+var fileChangeEvent = new Event();
+var console = console.create("masquerade");
+
 var innerModule = {
 };
 
@@ -144,6 +148,7 @@ module.exports = {
 //
 function watch(fs, _path, rcb) {
   console.warn("watch()", fs, _path);
+  rcb(null, fileChangeEvent);
 }
 
 //
@@ -152,7 +157,9 @@ function watch(fs, _path, rcb) {
 // cb - 每个文件/目录的回调函数 function(path, state)
 //
 function eachDir(fs, dir, eachChild, cb) {
-  console.warn("eachDir()", fs, dir);
+  if (eachChild) throw new Error("Unsupport 'eachChild'");
+  // console.warn("eachDir()", fs, dir);
+  fs.readDir(dir, cb);
 }
 
 }); // hfs.js END
@@ -736,7 +743,6 @@ function html_builder() {
 __install('./systag/tag-api.js', function(module, require) {
 
 var tool = require('../tool.js');
-var net  = require('mixer-lib').util.net();
 var TIME_OUT = 15;
 
 var copyHeaders = ['cookie', 'authorization'];
@@ -777,32 +783,7 @@ module.exports = function(taginfo, __, errorHandle) {
 
 
   return function(next, buf, context) {
-    var header = {};
-    for (var i=copyHeaders.length-1; i>=0; --i) {
-      var h = context.getHeader( copyHeaders[i] );
-      if (h) header[ copyHeaders[i] ] = h;
-    }
-
-    var _url = geturl(context);
-
-    var req = method(_url, {}, function(err, data) {
-      if (err) {
-        context[save] = {
-          url     : _url,
-          stack   : err.stack,
-          message : err.message,
-          code    : err.code,
-        }
-        context[save].prototype = Error;
-      } else {
-        context[save] = data[type]();
-      }
-      next();
-    }, null, header);
-
-    req.setTimeout(tout, function() {
-      req.abort();
-    });
+    next();
   };
 
 
@@ -822,14 +803,11 @@ module.exports = function(taginfo, __, errorHandle) {
 __install('./systag/tag-auth.js', function(module, require) {
 
 var tool = require('../tool.js');
-var net  = require('mixer-lib').util.net();
 var clib = require('configuration-lib');
 var TIME_OUT = 15 * 1000;
 
 var copyHeaders = ['cookie', 'authorization'];
 
-//
-// http://172.16.140.129:8088/ds/api/roles?rbac=rbac&app=auth&mod=rbac&org=a297dfacd7a84eab9656675f61750078&openid=jilianzhi&s=d
 //
 // <auth [to='auth'] />
 //     获取页面权限数据，并把结果保存在 to 指定的变量中，默认变量名为 auth
@@ -847,41 +825,9 @@ module.exports = function(taginfo, __, errorHandle) {
     throw new Error('cannot modify system var "' + to + '"');
   }
 
-  try {
-    var conf = clib.load();
-    url = 'http://' + conf.ui_ide.host + ':' + conf.ui_ide.proxyPort
-      + '/ds/api/uiauth?app=ZYAPP_LOGIN&mod=ZYMODULE_LOGIN'
-      + '&pageid=' + pageid; //context['org'] +
-
-  } catch(e) {
-    // 出错则打印错误
-    return function(next, buf, context) {
-      buf.write(e.message);
-      next();
-    };
-  }
 
   return function(next, buf, context) {
-    var header = {};
-    for (var i=copyHeaders.length-1; i>=0; --i) {
-			var hval = context.getHeader( copyHeaders[i] );
-			if (hval) {
-				header[ copyHeaders[i] ] = hval;
-			}
-    }
-
-		var t_url = url + '&org=' + context.query.org;
-
-    var req = net.get(t_url, {}, function(err, data) {
-      if (err) {
-        errorHandle(new Error('get `' + t_url + '` but err:' + err));
-        return;
-      }
-      context[save] = data['txt']();//['result']
-      next();
-    }, null, header);
-
-    req.setTimeout(TIME_OUT);
+    next();
   };
 
 
@@ -2999,6 +2945,7 @@ function getScript(code, id, filename, lineOffset,
 // ! 该方法在 xBoson 重新实现 !
 //
 function getWatcher(filename, _change_listener) {
+  fileChangeEvent.on(filename, _change_listener);
   console.warn("getWatcher()", filename);
 }
 
@@ -3249,7 +3196,27 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
 
   var ret = _mid_process;
   ret.add_plugin = add_plugin;
+  ret.reload_tags = _reload_tags;
   return ret;
+
+
+  //
+  // xBoson 增加: 重新读取标签库
+  //
+  function _reload_tags() {
+    console.warn("Reload TAG Library...");
+
+    var old = tag_factory;
+    tag_factory = {};
+    systag(tag_factory);
+    deftag(pool, tag_factory, EXT, fs);
+
+    for (var name in old) {
+      if (! tag_factory[name]) {
+        tag_factory[name] = old[name];
+      }
+    }
+  }
 
 
   function _mid_process(res, rep, next) {
@@ -3327,7 +3294,7 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
         return false;
 
       var if_mod_sin = res.header('If-Modified-Since');
-      if (if_mod_sin) {
+      if (if_mod_sin && render.last_modify > 0) {
         if_mod_sin = new Date( if_mod_sin ).getTime();
 
         if (render.last_modify <= if_mod_sin) {
@@ -3474,7 +3441,6 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
       var file = path.join(config.public, r_url);
       fs.stat(file, function(err, stats) {
         if (err) {
-          err.printStackTrace();
           _next_def(_next);
         } else {
           if (stats.isFile()) {
@@ -3614,12 +3580,15 @@ function masquerade(baseurl, debug, uifs) {
   var fs = uifs_to_nodefs(uifs);
 
   var config = {
-    public  : "/",
-    private : "/t/paas/0function",
-    extname : 'htm',
+    public   : "/",
+    private  : "/t/paas/0function",
+    extname  : 'htm',
+    encoding : "utf8",
   };
 
   var mid_process = mid(baseurl, config, debug, fs);
+  service.reload_tags = mid_process.reload_tags;
+  service.add_plugin = mid_process.add_plugin;
   return service;
 
   function service(servletReq, servletResp) {
@@ -3648,6 +3617,7 @@ function uifs_to_nodefs(uifs) {
     open              : unsupport,
     createReadStream  : unsupport,
     fstat             : stat,
+    readDir           : readDir,
   };
   return fs;
 
@@ -3655,10 +3625,17 @@ function uifs_to_nodefs(uifs) {
     if (cb == null && typeof opt == 'function')
       cb = opt;
 
+    var encoding = opt && opt.encoding;
+
     try {
       var byte_arr = uifs.readFile(path);
       var buf = Buffer.from(byte_arr);
-      cb(null, buf);
+
+      if (encoding) {
+        cb(null, buf.toString(encoding));
+      } else {
+        cb(null, buf);
+      }
     } catch(err) {
       cb(err);
     }
@@ -3670,17 +3647,34 @@ function uifs_to_nodefs(uifs) {
       if (!attr)
         return cb('not fonud ' + path);
 
-      var ret = {
-        ctime       : new Date(attr.lastModify), // change time,
-        mtime       : new Date(attr.lastModify), // modify time,
-        birthtime   : new Date(0),  // uifs 没有创建日期属性
-        isDirectory : function() { return attr.isDir() },
-        isFile      : function() { return attr.isFile() },
-      };
-      cb(null, ret);
+      cb(null, createStat(attr));
     } catch(err) {
       cb(err);
     }
+  }
+
+  function readDir(path, cb) {
+    while (path.length > 1 && path[path.length-1] == '/') {
+      path = path.substring(0, path.length-1);
+    }
+    var dircontent = uifs.readDir(path);
+    if (dircontent) {
+      dircontent.forEach(function(attr) {
+        var stat = createStat(attr);
+        cb(path +'/'+ attr.path, stat);
+      });
+    }
+  }
+
+  function createStat(attr) {
+    var ret = {
+      ctime       : new Date(attr.lastModify), // change time,
+      mtime       : new Date(attr.lastModify), // modify time,
+      birthtime   : new Date(0),  // uifs 没有创建日期属性
+      isDirectory : function() { return attr.isDir() },
+      isFile      : function() { return attr.isFile() },
+    };
+    return ret;
   }
 
   function watch(path, cb) {
@@ -3712,7 +3706,7 @@ function servlet_response_to_node(servletResp) {
     setHeader   : function(n, v) { servletResp.setHeader(n, v); },
     finished    : false,
     write       : write,
-    end         : function() { /* Do nothing */ },
+    end         : function() { writer.flush() },
   };
 
   Object.defineProperty(resp, "statusCode", {
@@ -3741,5 +3735,8 @@ function servlet_response_to_node(servletResp) {
 }
 
 
-module.exports = masquerade;
+module.exports = {
+  init  : masquerade,
+  event : fileChangeEvent,
+}
 ///////////////////////////////////////////////////////////////////////////////

@@ -24,6 +24,7 @@ import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.script.lib.Path;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
@@ -52,8 +53,10 @@ import java.util.Set;
 public class UIEngineServlet extends HttpServlet {
 
   public static final String MY_URL = "/face";
+  public static final String HTML_TYPE = "text/html";
 
   private IRedisFileSystemProvider file_provider;
+  private TemplateEngine template;
   private Log log;
   private FileTypeMap mime;
   private String baseurl;
@@ -72,6 +75,7 @@ public class UIEngineServlet extends HttpServlet {
     Config cf = SysConfig.me().readConfig();
     this.list_dir = cf.uiListDir;
     this.file_provider = UIFileFactory.open();
+    this.template = new TemplateEngine(file_provider);
   }
 
 
@@ -122,6 +126,12 @@ public class UIEngineServlet extends HttpServlet {
       }
 
       if (fs.isFile()) {
+        if (TemplateEngine.EXT.equalsIgnoreCase(Path.me.extname(path))) {
+          resp.setContentType(HTML_TYPE);
+          template.service(req, resp);
+          return;
+        }
+
         file_provider.readFileContent(fs);
 
         String file_type = mime.getContentType(path);
@@ -134,7 +144,7 @@ public class UIEngineServlet extends HttpServlet {
         log.debug("Get File:", file_type, path);
       }
       else if (fs.isDir() && list_dir) {
-        resp.setContentType("text/html");
+        resp.setContentType(HTML_TYPE);
         resp.setHeader("Cache-Control", "no-cache");
         Set<RedisFileAttr> files = file_provider.readDir(fs.path);
         HtmlDirList.toHtml(resp.getWriter(), files, baseurl + path);

@@ -200,6 +200,7 @@ public class Buffer {
       config(new JSObject.ExportsAttribute("length"));
     }
 
+
     @Override
     public Object getSlot(int index) {
       return buf.get(index);

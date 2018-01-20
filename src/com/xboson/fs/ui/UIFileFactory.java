@@ -29,14 +29,23 @@ public final class UIFileFactory extends AbsFactory {
   private static UIFileFactory instance;
 
 
+  public static UIFileFactory me() {
+    if (instance == null) {
+      synchronized (UIFileFactory.class) {
+        if (instance == null) {
+          instance = new UIFileFactory();
+        }
+      }
+    }
+    return instance;
+  }
+
+
   /**
    * 使用配置文件中定义的参数创建全局唯一 ui 读取器.
    */
   public synchronized static IRedisFileSystemProvider open() {
-    if (instance == null) {
-      instance = new UIFileFactory();
-    }
-    return instance.__open();
+    return me().__open();
   }
 
 

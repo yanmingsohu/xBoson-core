@@ -21,6 +21,9 @@ import com.xboson.util.Tool;
 
 import javax.naming.event.NamingEvent;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static com.xboson.event.Names.volatile_file_change_prifix;
 
 
@@ -28,9 +31,9 @@ import static com.xboson.event.Names.volatile_file_change_prifix;
  * 封装了文件修改事件相关操作.
  * 文件修改事件必须使用该方法来封装, 因为事件名称相同而文件名不同.
  */
-public abstract class   OnFileChangeHandle extends GLHandle {
+public abstract class OnFileChangeHandle extends GLHandle {
 
-  private String eventName;
+  private final Set<String> eventNames;
 
 
   /**
@@ -38,6 +41,7 @@ public abstract class   OnFileChangeHandle extends GLHandle {
    * 实现自行增加文件(系统)类型前缀, 防止不同系统中同名文件冲突.
    */
   public OnFileChangeHandle() {
+    eventNames = new HashSet<>();
   }
 
 
@@ -54,16 +58,16 @@ public abstract class   OnFileChangeHandle extends GLHandle {
 
   /**
    * 注册文件修改消息, 当文件修改后, onFileChange() 被调用,
-   * 该方法在对象中只能调用一次, 若需要监听多个文件直接使用 GlobalEventBus.on().
+   * 该方法可以多次调用, 在多个文件上监听修改.
    *
    * @param file_name 由于全局都会使用这个事件来注册文件消息,
    *                  不同的类型应该自定义一个前缀.
    */
   protected void regFileChange(String file_name) {
-    if (eventName != null)
-      throw new XBosonException("Only once regFileChange()");
-
-    eventName = getEventName(file_name);
+    String eventName = getEventName(file_name);
+    if (eventNames.contains(eventName)) {
+      throw new XBosonException("File has been monitored " + file_name);
+    }
     GlobalEventBus.me().on(eventName, this);
   }
 
@@ -75,12 +79,15 @@ public abstract class   OnFileChangeHandle extends GLHandle {
   protected abstract void onFileChange(String file_name);
 
 
+  /**
+   * 移除所有注册过的监听器
+   */
   public void removeFileListener() {
-    if (eventName == null)
-      return;
-
-    boolean rm = GlobalEventBus.me().off(eventName, this);
-    assert rm : "must removed";
+    for (String eventName : eventNames) {
+      boolean rm = GlobalEventBus.me().off(eventName, this);
+      assert rm : "must removed";
+    }
+    eventNames.clear();
   }
 
 

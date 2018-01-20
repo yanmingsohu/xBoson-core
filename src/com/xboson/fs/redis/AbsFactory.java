@@ -63,7 +63,7 @@ public abstract class AbsFactory {
   }
 
 
-  protected IFileSystemConfig getConfig() {
+  public IFileSystemConfig getConfig() {
     if (config == null) {
       config = createConfig(cf);
     }

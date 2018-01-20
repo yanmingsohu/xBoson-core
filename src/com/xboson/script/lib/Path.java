@@ -179,4 +179,13 @@ public class Path {
 
     return null;
   }
+
+
+  public String basename(String path, String ext) {
+    String bn = basename(path);
+    if (bn.endsWith(ext)) {
+      return bn.substring(0, bn.length() - ext.length());
+    }
+    return bn;
+  }
 }

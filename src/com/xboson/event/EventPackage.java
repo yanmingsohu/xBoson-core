@@ -40,8 +40,10 @@ public class EventPackage {
     this.info = info;
     this.from = from;
     // 数据被再次编码为 string, 并保留类型
-    this.data = Tool.getAdapter((Class) data.getClass()).toJson(data);
-    this.className = data.getClass().getName();
+    if (data != null) {
+      this.data = Tool.getAdapter((Class) data.getClass()).toJson(data);
+      this.className = data.getClass().getName();
+    }
   }
 
 

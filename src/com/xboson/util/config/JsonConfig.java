@@ -17,11 +17,9 @@
 package com.xboson.util.config;
 
 import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.Config;
 import com.xboson.util.Tool;
-import okio.Buffer;
 
 import java.io.IOException;
 
@@ -38,14 +36,7 @@ public class JsonConfig extends AbsConfigSerialization {
 
   @Override
   public String convert(Config config) throws IOException {
-    final Buffer buffer = new Buffer();
-    final JsonWriter jsonWriter = JsonWriter.of(buffer);
-    jsonWriter.setIndent("  ");
-
-    Tool.getAdapter(Config.class).toJson(jsonWriter, config);
-    String json = new String(buffer.readByteArray());
-    json = addComments(json);
-    return json;
+    return Tool.beautifyJson(Config.class, config);
   }
 
   /**

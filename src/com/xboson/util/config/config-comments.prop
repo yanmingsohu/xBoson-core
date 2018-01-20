@@ -35,7 +35,8 @@ enableUIFileSync: 启用后, 每天凌晨同步本地 UI 文件
 
 sysTableList: 系统表数组, 当其他机构调用平台机构中的应用访问这些表时, \
               总是指向平台机构中的表, 而不是被替换到对应机构中的表;\
-              这个配置来自原平台 config.properties -> PL_TBLS 字段
+              这个配置来自原平台 config.properties -> PL_TBLS 字段. \
+              (如果表名称以 'sys_pl_' 为前缀, 自动应用该特性.)
 shareAppList: 共享应用数组, 来自平台机构中的应用, 这些应用可以在其他机构中调用.
 
 

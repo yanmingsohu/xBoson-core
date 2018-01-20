@@ -26,6 +26,7 @@ import com.xboson.db.IDriver;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.event.OnFileChangeHandle;
+import com.xboson.j2ee.ui.TemplateEngine;
 import com.xboson.util.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
@@ -179,7 +180,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
-  public boolean isAuthorizedUI(String pageid) {
+  public Object isAuthorizedUI(String pageid) {
     return redis.getRoleInfo(ResourceRoleTypes.PAGE, pageid) != null;
   }
 
@@ -275,4 +276,12 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     return true;
   }
 
+
+  /**
+   * 当 html 模板标签库被修改后, 调用该方法使模板引擎重新加载标签库.
+   * [原平台无该函数]
+   */
+  public void sendUITemplateReloadTag() {
+    TemplateEngine.reloadTags();
+  }
 }

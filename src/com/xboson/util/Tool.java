@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.squareup.moshi.Moshi.Builder;
 import com.thoughtworks.xstream.XStream;
@@ -80,6 +81,27 @@ public final class Tool extends StaticLogProvider {
       }
     }
     return moshi.adapter(c);
+  }
+
+
+  /**
+   * 输出对象的 json 字符串, 并使用美化的缩进格式.
+   * @param c 数据对象的类类型
+   * @param data 数据对象
+   * @param <E>
+   * @return 返回 json 化字符串
+   */
+  public static <E> String beautifyJson(Class<E> c, E data) {
+    okio.Buffer buffer = new okio.Buffer();
+    JsonWriter jsonWriter = JsonWriter.of(buffer);
+    jsonWriter.setIndent(IConstant.SP);
+    JsonAdapter<E> adapter = getAdapter(c);
+    try {
+      adapter.toJson(jsonWriter, data);
+    } catch (IOException e) {
+      return adapter.toJson(data);
+    }
+    return new String(buffer.readByteArray());
   }
 
 

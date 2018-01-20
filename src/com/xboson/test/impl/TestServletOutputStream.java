@@ -72,4 +72,9 @@ public class TestServletOutputStream extends ServletOutputStream {
     out = null;
     log = null;
   }
+
+
+  public Writer openWriter() {
+    return out.openWrite();
+  }
 }
