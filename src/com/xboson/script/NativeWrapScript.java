@@ -25,11 +25,19 @@ import com.xboson.been.XBosonException;
 public class NativeWrapScript extends AbsWrapScript {
 
   private final Class<?> clazz;
+  private Object moduleInstance;
 
 
   public NativeWrapScript(String filename, Class<?> clazz) {
     super(filename);
     this.clazz = clazz;
+  }
+
+
+  public NativeWrapScript(String filename, Object mod) {
+    super(filename);
+    this.clazz = mod.getClass();
+    this.moduleInstance = mod;
   }
 
 
@@ -41,10 +49,12 @@ public class NativeWrapScript extends AbsWrapScript {
   @Override
   public Object initModule(ICodeRunner crun) {
     try {
-      Object obj = clazz.newInstance();
-      module.exports = obj;
+      if (moduleInstance == null) {
+        moduleInstance = clazz.newInstance();
+      }
+      module.exports = moduleInstance;
       module.loaded = true;
-      return obj;
+      return moduleInstance;
     } catch (Exception e) {
       throw new XBosonException("Create Java Module Fail ("+ filename +")", e);
     }

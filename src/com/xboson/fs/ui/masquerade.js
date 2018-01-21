@@ -19,9 +19,10 @@
 // init
 // 若需要同步 nodejs 代码, 直接将对应文件的内容复制到 __install 的实现函数中
 ///////////////////////////////////////////////////////////////////////////////
-var Event = require("events");
-var fileChangeEvent = new Event();
-var console = console.create("masquerade");
+var helper          = require("helper");
+var Event           = require("events");
+var fileChangeEvent = new Event(); // 该对象没有被绑定事件, 文件修改消息也没有实现.
+var console         = console.create("masquerade");
 
 var innerModule = {
 };
@@ -147,8 +148,8 @@ module.exports = {
 //
 //
 function watch(fs, _path, rcb) {
-  console.warn("watch()", fs, _path);
-  rcb(null, fileChangeEvent);
+  // console.warn("watch()", fs, _path);
+  // rcb(null, fileChangeEvent);
 }
 
 //
@@ -324,7 +325,7 @@ function expression_complier(exp, must_easy_exp) {
 
   } else {
 
-    var script = new vm.Script(exp, {filename: 'bird-express'});
+    var script = vm.Script(exp, {filename: 'bird-express'});
 
     ret.val = function(context) {
       if (!vm.isContext(context)) {
@@ -740,6 +741,8 @@ function html_builder() {
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
+// 针对 xBoson 做了修改
+///////////////////////////
 __install('./systag/tag-api.js', function(module, require) {
 
 var tool = require('../tool.js');
@@ -760,8 +763,8 @@ module.exports = function(taginfo, __, errorHandle) {
 
   var url    = geta('url');
   var save   = geta('to');
-  var type   = geta('type', 'json') == 'json' ? 'obj': 'txt';
-  var method = geta('method', 'get') == 'get' ? net.get : net.post;
+  var tosjon = geta('type', 'json') == 'json';
+  var isget  = geta('method', 'get') == 'get';
   var exp    = (taginfo.attr.exp == 'true');
   var tout   = parseInt(geta('timeout', TIME_OUT)) * 1000;
   var geturl;
@@ -783,7 +786,28 @@ module.exports = function(taginfo, __, errorHandle) {
 
 
   return function(next, buf, context) {
-    next();
+    var header = {};
+    for (var i=copyHeaders.length-1; i>=0; --i) {
+      var h = context.getHeader( copyHeaders[i] );
+      if (h) header[ copyHeaders[i] ] = h;
+    }
+
+    var _url = geturl(context);
+    try {
+      var retbody;
+      if (isget) {
+        retbody = helper.httpGet(_url, header);
+      } else {
+        retbody = helper.httpPost(_url, header, taginfo.attr['body']);
+      }
+      if (tosjon) {
+        retbody = JSON.parse(retbody);
+      }
+      context[save] = retbody;
+      next();
+    } catch(err) {
+      errorHandle(err);
+    }
   };
 
 
@@ -800,6 +824,8 @@ module.exports = function(taginfo, __, errorHandle) {
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
+// 针对 xBoson 做了修改
+///////////////////////////
 __install('./systag/tag-auth.js', function(module, require) {
 
 var tool = require('../tool.js');
@@ -817,7 +843,7 @@ module.exports = function(taginfo, __, errorHandle) {
   if (!taginfo.selfend)
      throw new Error('api Tag must have no BODY');
 
-  var pageid = geta('page');
+  var pageid = tool.expression_complier(geta('page'));
   var save   = geta('to', 'auth');
   var url;
 
@@ -827,7 +853,12 @@ module.exports = function(taginfo, __, errorHandle) {
 
 
   return function(next, buf, context) {
-    next();
+    try {
+      context[save] = helper.pageAccessInfo(pageid);
+      next();
+    } catch(err) {
+      errorHandle(err);
+    }
   };
 
 
@@ -2931,7 +2962,7 @@ function getScript(code, id, filename, lineOffset,
     ];
 
     code = warp.join('');
-    return new vm.Script(code, {
+    return vm.Script(code, {
       filename    : filename,
       lineOffset  : lineOffset -1, // 减去一行 warp 产生的行
     });
@@ -2945,8 +2976,9 @@ function getScript(code, id, filename, lineOffset,
 // ! 该方法在 xBoson 重新实现 !
 //
 function getWatcher(filename, _change_listener) {
-  fileChangeEvent.on(filename, _change_listener);
-  console.warn("getWatcher()", filename);
+//  fileChangeEvent.on(filename, _change_listener);
+//  console.warn("getWatcher()", filename);
+  fileChangeEvent.on('reload', _change_listener);
 }
 
 
@@ -3216,6 +3248,7 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
         tag_factory[name] = old[name];
       }
     }
+    fileChangeEvent.emit('reload');
   }
 
 

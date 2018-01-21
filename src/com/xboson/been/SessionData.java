@@ -25,11 +25,12 @@ import javax.servlet.http.HttpServletRequest;
 
 
 /**
- * Session 不是动态数据, 属性都是固定的
+ * Session 不是动态数据, 属性都是固定的,
+ * 这与 servlet 中的 session 是分离的两套系统, xBoson 不使用 servlet.session.
  */
 public class SessionData implements IBean, IBinData, ITimeout {
-	
-	public static final String attrname = "xBoson-session-data";
+
+  public static final String attrname = "xBoson-session-data";
 
   public LoginUser login_user;
   public String id;
@@ -37,34 +38,34 @@ public class SessionData implements IBean, IBinData, ITimeout {
 
   public long loginTime;
   public long endTime;
-	
-	
-	public SessionData() {
-	}
-	
-	
-	/**
-	 * 将 this 绑定到 request attribute 上
-	 */
-	public SessionData(Cookie ck, int sessionTimeoutMinute) {
-	  this.id = ck.getValue();
-	  this.loginTime = System.currentTimeMillis();
-	  this.endTime = this.loginTime + sessionTimeoutMinute * 60 * 1000;
-	}
 
 
-	public boolean isTimeout() {
-	  return endTime - System.currentTimeMillis() < 0;
+  public SessionData() {
   }
 
-	
-	public static SessionData get(HttpServletRequest request) throws ServletException {
-		SessionData sd = (SessionData) request.getAttribute(attrname);
-		if (sd == null) {
-			throw new ServletException("SessionData not init");
-		}
-		return sd;
-	}
+
+  /**
+   * 将 this 绑定到 request attribute 上
+   */
+  public SessionData(Cookie ck, int sessionTimeoutMinute) {
+    this.id = ck.getValue();
+    this.loginTime = System.currentTimeMillis();
+    this.endTime = this.loginTime + sessionTimeoutMinute * 60 * 1000;
+  }
+
+
+  public boolean isTimeout() {
+    return endTime - System.currentTimeMillis() < 0;
+  }
+
+
+  public static SessionData get(HttpServletRequest request) throws ServletException {
+    SessionData sd = (SessionData) request.getAttribute(attrname);
+    if (sd == null) {
+      throw new ServletException("SessionData not init");
+    }
+    return sd;
+  }
 
 
   @Override
@@ -73,10 +74,10 @@ public class SessionData implements IBean, IBinData, ITimeout {
   }
 
 
-	/**
-	 * 标记为销毁状态
-	 */
-	public void destoryFlag() {
-		endTime = 0;
-	}
+  /**
+   * 标记为销毁状态
+   */
+  public void destoryFlag() {
+    endTime = 0;
+  }
 }

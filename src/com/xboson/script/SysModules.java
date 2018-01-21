@@ -77,6 +77,14 @@ public class SysModules extends AbsModules implements IModuleProvider {
 
 
   /**
+   * 注册 java 模块, 模块已经实例化
+   */
+  public void regLib(String name, Object lib) {
+    modules.put(name, new NativeWrapScript(name, lib));
+  }
+
+
+  /**
    * 读取 js 脚本, 并作为系统模块
    * @param name - 模块名称
    * @param jsfile - js 文件路径, 相对于 SysModules 类

@@ -15,19 +15,17 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * js 沙箱每次一个独立默认上下文.(当前为 app 共用且锁死) -- 使用 with() {}.
 * blob 保存时直接写入db, 而不在内存堆积.
 * api 沙箱超时管理, 内存管理.
-* SqlServer 分页.
 * 接管 Tomcat.
 * 区块链api
 * 云盘系统(api已经完成)
 * 多语言
 * 集群管理
+* SqlServer 分页.
 * UI 文件修改履历
 * 程序授权许可系统
 * node 模块目录安装画面.
 * MongoDB 配置安装画面.
-* 集成 HTML 模板引擎.
 * 系统交叉登录(补充到计划任务调用api时的权限)
-* 增加 vm 模块
 
 
 # 2.0 新特性

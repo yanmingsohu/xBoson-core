@@ -79,8 +79,7 @@ public class SessionCluster extends HttpFilter {
         //
         // 尝试从 redis 还原数据
         //
-        sd = (SessionData) RedisMesmerizer.me()
-                .wake(SessionData.class, ck.getValue());
+        sd = resurrectionSession(ck);
         //
         // 超时则重建数据
         //
@@ -103,6 +102,24 @@ public class SessionCluster extends HttpFilter {
     } finally {
       RedisMesmerizer.me().sleep(sd);
     }
+  }
+
+
+  /**
+   * 从请求中还原 session
+   */
+  public static SessionData resurrectionSession(HttpServletRequest request) {
+    Cookie ck = SessionID.getCookie(cookieName, request);
+    return resurrectionSession(ck);
+  }
+
+
+  /**
+   * 从 cookie 中还原 session 数据
+   */
+  public static SessionData resurrectionSession(Cookie ck) {
+    return (SessionData) RedisMesmerizer.me()
+            .wake(SessionData.class, ck.getValue());
   }
 
 

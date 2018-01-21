@@ -36,12 +36,17 @@ public class TestMasquerade extends Test {
     IRedisFileSystemProvider uifs = UIFileFactory.open();
     TemplateEngine te = new TemplateEngine(uifs);
 
-    TestServletResponse resp = new TestServletResponse();
-    TestServletRequest req = new TestServletRequest();
-    req.requestUri = "/face/t/paas/api-doc/md.htm";
-    te.reloadTags();
-    TestFace.waitEventLoopEmpty();
-    te.service(req, resp);
+    String[] pages = new String[] {
+            "/face/t/paas/api-doc/md.htm",
+            "/face/t/paas/mdms/datadictD/index.htm",
+    };
+
+    for (String page : pages) {
+      TestServletResponse resp = new TestServletResponse();
+      TestServletRequest req = new TestServletRequest();
+      req.requestUri = page;
+      te.service(req, resp);
+    }
   }
 
 

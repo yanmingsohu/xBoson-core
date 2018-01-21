@@ -24,15 +24,19 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.runtime.Context;
 
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
-import javax.script.SimpleScriptContext;
+import javax.script.*;
+import java.io.StringReader;
 
 
 public class Vm extends JSObject {
 
   public static final String VM_CONTEXT = "xBoson.vm.context";
+
+
+  public Object Script(String code, ScriptObjectMirror options)
+          throws ScriptException {
+    return new Script(code, options);
+  }
 
 
   public Object createContext() {
@@ -84,6 +88,27 @@ public class Vm extends JSObject {
     if (filename != null) {
       context.setAttribute(ScriptEngine.FILENAME,
               filename, ScriptContext.GLOBAL_SCOPE);
+    }
+  }
+
+
+  public class Script {
+    private Sandbox box;
+    private CompiledScript script;
+    private ScriptObjectMirror options;
+
+    public Script(String code, ScriptObjectMirror options)
+            throws ScriptException {
+      this.box = SandboxFactory.create();
+      this.script = box.compile(new StringReader(code));
+      this.options = options;
+    }
+
+    public Object runInContext(ScriptObjectMirror sandbox, ScriptObjectMirror opt)
+            throws ScriptException {
+      ScriptContext context = (ScriptContext) sandbox.getMember(VM_CONTEXT);
+      setOptions(context, options);
+      return script.eval(context);
     }
   }
 }

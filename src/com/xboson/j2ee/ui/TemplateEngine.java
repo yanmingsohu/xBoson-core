@@ -40,7 +40,8 @@ import java.nio.ByteBuffer;
 
 
 /**
- * 面向 servlet 的模板渲染引擎
+ * 面向 servlet 的模板渲染引擎,
+ * 该对象创建独立的脚本环境来运行模板引擎.
  */
 public class TemplateEngine extends GLHandle
         implements IConfigSandbox, IScriptFileSystem {
@@ -55,13 +56,16 @@ public class TemplateEngine extends GLHandle
   private Module masquerade;
   private ScriptObjectMirror service;
   private ScriptObjectMirror reload_tags;
+  private HelperModule helper;
 
 
   public TemplateEngine(IRedisFileSystemProvider uifs) {
     try {
       this.uifs = uifs;
+      this.helper = new HelperModule();
 
       SysModules sysmod = EnvironmentFactory.createDefaultSysModules();
+      sysmod.regLib("helper", helper);
       IConfigurableModuleProvider nodejs_mod =
               NodeFileFactory.openNodeModuleProvider(sysmod);
 
