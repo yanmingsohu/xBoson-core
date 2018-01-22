@@ -17,10 +17,12 @@
 package com.xboson.init.install;
 
 import com.xboson.been.Config;
+import com.xboson.util.Tool;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 
 
 public class HttpData {
@@ -42,5 +44,50 @@ public class HttpData {
     this.resp = resp;
     this.sc = req.getServletContext();
     this.cf = c;
+  }
+
+
+  /**
+   * 如果参数是空字符串或 null, 则返回 null.
+   */
+  public String getStr(String name) {
+    String n = req.getParameter(name);
+    if (Tool.isNulStr(n)) return null;
+    return n;
+  }
+
+
+  /**
+   * 获取 http 参数, 如果参数为空字符串返回 0
+   */
+  public int getInt(String name) {
+    String n = req.getParameter(name);
+    if (Tool.isNulStr(n)) return 0;
+    return Integer.parseInt(n);
+  }
+
+
+  public boolean getBool(String name) {
+    String b = req.getParameter(name);
+    if (Tool.isNulStr(b)) return false;
+    if ("1".equals(b)) return true;
+    return Boolean.parseBoolean(b);
+  }
+
+
+  /**
+   * 是目录返回 true, 否则返回 false 并在 msg 上绑定错误消息.
+   */
+  public boolean isDirectory(String path) {
+    File f = new File(path);
+    if (! f.exists()) {
+      msg = "目录不存在: " + path;
+      return false;
+    }
+    if (! f.isDirectory()) {
+      msg = "不是目录: " + path;
+      return false;
+    }
+    return true;
   }
 }

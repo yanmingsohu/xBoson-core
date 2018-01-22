@@ -108,8 +108,7 @@ public class DbmsFactory extends OnExitHandle {
   public void registeringDefaultDriver() {
     Iterator<Class> it = null;
     try {
-      Package pk = Mysql.class.getPackage();
-      Set<Class> cl = Tool.findPackage(pk.getName());
+      Set<Class> cl = Tool.findPackage(Mysql.class);
       it = cl.iterator();
     } catch(Exception e) {
       log.error("registeringDefaultDriver", e);

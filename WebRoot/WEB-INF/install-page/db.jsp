@@ -67,7 +67,8 @@
           <tr>
             <td> database: </td><td>
               <input name="database" value="${ param.database }"/>
-              <a href='#' val='xboson' setto='[name=database]'>(xboson)</a>
+              <a href='#' val='a297dfacd7a84eab9656675f61750078'
+                 setto='[name=database]'>(sys-org-id)</a>
             </td>
           </tr>
 

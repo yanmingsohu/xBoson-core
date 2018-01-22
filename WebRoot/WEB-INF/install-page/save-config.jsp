@@ -52,6 +52,8 @@
                 <%=c.uiListDir %> </div>
           <div><a>根目录跳转</a>
                 <%=c.uiWelcome %> </div>
+          <div><a>JS 模块目录</a>
+                <%=c.nodeUrl %> </div>
         </section>
 
         <form method="POST">

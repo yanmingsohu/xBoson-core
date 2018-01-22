@@ -21,10 +21,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 多语言
 * 集群管理
 * SqlServer 分页.
-* UI 文件修改履历
 * 程序授权许可系统
-* node 模块目录安装画面.
-* MongoDB 配置安装画面.
 * 系统交叉登录(补充到计划任务调用api时的权限)
 
 

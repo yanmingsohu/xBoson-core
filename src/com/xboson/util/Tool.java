@@ -31,12 +31,13 @@ import java.io.*;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 
 public final class Tool extends StaticLogProvider {
@@ -60,8 +61,9 @@ public final class Tool extends StaticLogProvider {
    */
   public static final Uuid uuid = new Uuid();
 
-
   public static final String COMM_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+  public static final String FILE_SYS_PREFIX = "file:";
 
 
   /**
@@ -408,27 +410,22 @@ public final class Tool extends StaticLogProvider {
 
 
   /**
-   * @see #findPackage(Package)
-   * @deprecated 不推荐在正式代码中使用, 可用于测试
-   * @param packageName 包名
-   * @return 即使找不到类, 也会返回空数组
+   * 获取包下的所有类, 排除子包, 排除内部类, 可以处理 jar 包中的类.
+   *
+   * @param clazz 在 class 所在的包中寻找所以类
+   * @return 类类型集合
+   * @throws IOException 读取目录/文件时发生错误
+   * @throws ClassNotFoundException
    */
-  public static Set<Class> findPackage(String packageName)
+  public static Set<Class> findPackage(Class clazz)
           throws IOException, ClassNotFoundException {
-    Package pk = Package.getPackage(packageName);
-    if (pk == null)
-      throw new XBosonException.NotExist(
-              "cannot find package: " + packageName);
-
-    return findPackage(pk);
+    return findPackage(clazz.getPackage());
   }
 
 
   /**
-   * 获取包下的所有类类型, 排除子包, 排除内部类,
-   * java bug: 如果没有访问过这个包, 无法在 findPackage 中查找
-   *
-   * @deprecated 不推荐在正式代码中使用, 可用于测试
+   * @see #findPackage(Class) 推荐使用这个方法最安全
+   * @deprecated 如果没有访问过这个包中的至少一个类, 该方法会返回空集合.
    * @param pk 包
    * @return 即使找不到类, 也会返回空数组
    */
@@ -442,20 +439,29 @@ public final class Tool extends StaticLogProvider {
     ClassLoader loader = Thread.currentThread().getContextClassLoader();
     URL url = loader.getResource(packagePath);
 
+    List<String> files;
+    int prefixLength;
     String fullPath = url.getPath();
-    File[] files = new File(fullPath).listFiles();
 
-    String tmp = fullPath.replaceAll("/|\\\\", ".");
-    int prefixLength = tmp.indexOf(packageName) -1;
+    if (fullPath.startsWith(FILE_SYS_PREFIX)) {
+      files = listFilesFromJar(fullPath);
+      prefixLength = 0;
+    } else {
+      File[] fs = new File(fullPath).listFiles();
+      files = new ArrayList<>(fs.length);
+      for (File f : fs) {
+        files.add(f.toString());
+      }
+      String tmp = fullPath.replaceAll("/|\\\\", ".");
+      prefixLength = tmp.indexOf(packageName) - 1;
+    }
 
     Set<Class> ret = new HashSet<>();
 
-    for (int i=0; i<files.length; ++i) {
-      File file = files[i];
-      String name = file.toString();
+    for (String name : files) {
       name = name.substring(prefixLength);
 
-      if (name.lastIndexOf(".class") == name.length() - 6) {
+      if (name.endsWith(".class")) {
         if (name.indexOf('$') >= 0) continue;
         name = name.substring(0, name.length() - 6);
         name = name.replaceAll("/|\\\\", ".");
@@ -464,6 +470,36 @@ public final class Tool extends StaticLogProvider {
     }
 
     return ret;
+  }
+
+
+  /**
+   * 从 jar 文件中读取类列表
+   * @param fullPath 格式: "file:/c:/path/path!/classPath"
+   * @return
+   */
+  public static List<String> listFilesFromJar(String fullPath)
+          throws IOException {
+    List<String> files = new ArrayList<>();
+    String tmp[] = fullPath.split("!");
+
+    if (tmp[0].startsWith(FILE_SYS_PREFIX))
+      tmp[0] = tmp[0].substring(FILE_SYS_PREFIX.length());
+
+    if (tmp[1].charAt(0) == '/')
+      tmp[1] = tmp[1].substring(1);
+
+    Pattern pattern = Pattern.compile(tmp[1] + "/(.+?)/*");
+    ZipInputStream inp = new ZipInputStream(new FileInputStream(tmp[0]));
+    ZipEntry en;
+
+    while (null != (en = inp.getNextEntry())) {
+      Matcher m = pattern.matcher(en.getName());
+      if (m.matches()) {
+        files.add(tmp[1] +'/'+ m.group(1));
+      }
+    }
+    return files;
   }
 
 

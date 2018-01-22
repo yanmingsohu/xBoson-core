@@ -38,18 +38,15 @@ public class UiConfig implements IStep {
     data.cf.uiListDir = Boolean.parseBoolean(
             data.req.getParameter("uiListDir"));
 
-    Class cl = null;
-
     data.cf.uiWelcome = data.req.getParameter("uiWelcome");
     if (Tool.isNulStr(data.cf.uiWelcome)) {
       data.msg = "必须设置根路径跳转";
       return false;
     }
 
+    String clname = data.req.getParameter("uiProviderClass");
     try {
-      String clname = data.req.getParameter("uiProviderClass");
-      cl = Class.forName(clname);
-      if (!IRedisFileSystemProvider.class.isAssignableFrom(cl)) {
+      if (!(clname.equals("local") || clname.equals("online"))) {
         data.msg = clname + " 不是 UI 文件映射接口";
         return false;
       }
@@ -58,21 +55,17 @@ public class UiConfig implements IStep {
       return false;
     }
 
-    if (cl == LocalFileMapping.class) {
+    if (clname.equals("local")) {
       data.cf.uiUrl = data.req.getParameter("uiUrl");
       if (Tool.isNulStr(data.cf.uiUrl )) {
-        data.msg = "请设置 静态文件根目录";
+        data.msg = "请设置 '静态文件根目录'";
         return false;
       }
+      return data.isDirectory(data.cf.uiUrl);
 
-      if (!new File(data.cf.uiUrl).isDirectory()) {
-        data.msg = data.cf.uiUrl + " 不是目录";
-        return false;
-      }
     } else {
       data.cf.uiUrl = "< Not use >";
     }
-
     return true;
   }
 

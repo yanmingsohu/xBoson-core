@@ -28,14 +28,20 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 
 public class TestTool extends Test {
@@ -49,7 +55,23 @@ public class TestTool extends Test {
     test_chinese();
     test_id();
     test_http_get();
+    test_calendar();
+    read_package();
+  }
 
+
+  public void read_package() throws Exception {
+    sub("Read package");
+    Set<Class> all = Tool.findPackage(TestTool.class);
+    msg("Package (com.xboson.test.*)", all);
+
+    Package p = okio.BufferedSink.class.getPackage();
+    Set<Class> a2 = Tool.findPackage(p);
+    msg("Package (okio.*)", a2);
+  }
+
+
+  public void test_calendar() {
     sub("Calendar");
     Calendar c = Calendar.getInstance();
     msg(c.getTime());
@@ -61,13 +83,19 @@ public class TestTool extends Test {
 
 
   public void test_http_get() throws Exception {
+    sub("Http client from okio");
+
     OkHttpClient client = new OkHttpClient();
     Request request = new Request.Builder()
             .url("http://bing.com")
             .build();
 
-    Response response = client.newCall(request).execute();
-    msg("GET", response.body().string().substring(0, 300), "...");
+    try {
+      Response response = client.newCall(request).execute();
+      msg("GET", response.body().string().substring(0, 300), "...");
+    } catch (Exception e) {
+      msg("BAD", e);
+    }
   }
 
 
@@ -175,9 +203,6 @@ public class TestTool extends Test {
 //		msg(Tool.allStack(e));
 		msg(Tool.miniStack(e, 5));
 
-		Set<Class> all = Tool.findPackage("com.xboson.test");
-		msg("Tool.findPackage: " + all);
-
 		eq(10, Tool.randomString(10).length(), "length");
     eq(20, Tool.randomString(20).length(), "length");
     for (int i=0; i<10; ++i) {
@@ -188,7 +213,8 @@ public class TestTool extends Test {
 
 	public void local_file_watcher() throws Throwable {
     LocalDirWatcher lfw = LocalDirWatcher.me();
-    String base = SysConfig.me().readConfig().configPath;
+    String base = System.getenv("TMP");
+//    String base = SysConfig.me().readConfig().configPath;
     Path p = Paths.get(base);
 
     final boolean[] sw = new boolean[1];

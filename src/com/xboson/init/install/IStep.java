@@ -23,6 +23,18 @@ public interface IStep {
 
   /**
    * 返回顺序, 越小优先级越高
+   * 0 - Welcome
+   * 1 - Copyright
+   * 2 - RootUser
+   * 3 - ConfigCoreDB
+   * 4 - ConfigRedis
+   * 5 - ConfigLog
+   * 6 - UiConfig
+   * 7 - NodeModuleConfig
+   * 8 - ConfigMongoDB
+   * 9 - ConfigShell
+   * 99  - SaveConfig
+   * 100 - RestartServer
    */
   int order();
 

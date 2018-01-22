@@ -47,8 +47,8 @@
           <tr>
             <td class='td1'>服务类型: </td><td>
               <select name="uiProviderClass" value="${ param.uiProviderClass }">
-                <option value="com.xboson.j2ee.ui.LocalFileMapping">本地静态文件</optione>
-                <option value="com.xboson.j2ee.ui.RedisFileMapping">远程虚拟文件</optione>
+                <option value="local">本地静态文件</option>
+                <option value="online">远程虚拟文件</option>
               </select>
             </td>
           </tr>
@@ -56,6 +56,10 @@
           <tr>
             <td class='td1'>静态文件根目录:</td><td>
               <input name="uiUrl" value="${ param.uiUrl }" />
+              <a href='#' val='/home/plat/web4xboson/public'
+                 setto='[name=uiUrl]'/>(Linux)</a>
+              <a href='#' val='C:\web4xboson\public'
+                 setto='[name=uiUrl]'/>(Windows)</a>
             </td>
           </tr>
 
@@ -63,7 +67,7 @@
             <td class='td1'>根路径跳转:</td><td>
               <input name="uiWelcome" value="${ param.uiWelcome }" />
               <a href='#' val='/face/ui/paas/login.html'
-                 setto='[name=uiWelcome]'/>(DS 静态文件目录树)</a>
+                 setto='[name=uiWelcome]'/>(默认登录页)</a>
             </td>
           </tr>
 

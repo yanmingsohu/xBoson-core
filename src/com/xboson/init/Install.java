@@ -57,9 +57,8 @@ public class Install extends HttpServlet {
     steps = new ArrayList<>();
     log = LogFactory.create();
 
-    Package p = Welcome.class.getPackage();
     try {
-      Iterator<Class> it = Tool.findPackage(p).iterator();
+      Iterator<Class> it = Tool.findPackage(Welcome.class).iterator();
       while (it.hasNext()) {
         Class c = it.next();
         if (IStep.class.isAssignableFrom(c)) {

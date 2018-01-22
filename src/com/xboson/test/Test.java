@@ -63,7 +63,7 @@ public class Test implements IConstant {
   private Test(boolean test_all) throws Throwable {
     centralized = true;
 
-    Set<Class> allclass = Tool.findPackage("com.xboson.test");
+    Set<Class> allclass = Tool.findPackage(Test.class);
     Iterator<Class> it = allclass.iterator();
     Test[] test = new Test[allclass.size()];
     int i = 0;

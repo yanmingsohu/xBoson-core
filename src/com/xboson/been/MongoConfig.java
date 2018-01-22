@@ -29,6 +29,8 @@ import java.util.List;
  */
 public class MongoConfig {
 
+  public static final int TIMEOUT = 3000;
+
   public String host;
   public int port;
   public String database;
@@ -57,6 +59,9 @@ public class MongoConfig {
 
 
   public MongoClientOptions options() {
-    return MongoClientOptions.builder().build();
+    MongoClientOptions.Builder opt = MongoClientOptions.builder();
+    opt.connectTimeout(TIMEOUT);
+    opt.serverSelectionTimeout(TIMEOUT);
+    return opt.build();
   }
 }

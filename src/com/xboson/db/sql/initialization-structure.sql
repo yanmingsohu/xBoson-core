@@ -19,6 +19,14 @@ CREATE TABLE `sys_upload_files` (
 CREATE TABLE `sys_pl_log_scheduler` (
   `scheduleid` VARCHAR(40) NOT NULL,
   `create_date` DATETIME NOT NULL,
-  `content` MEDIUMTEXT NULL),
+  `content` MEDIUMTEXT NULL,
   `api` VARCHAR(500) NOT NULL
-ENGINE = MyISAM;
+) ENGINE = MyISAM;
+
+
+CREATE TABLE `sys_pl_log_uimodify` (
+  `dt` DATETIME NOT NULL,
+  `patch` MEDIUMTEXT NOT NULL,
+  `path` VARCHAR(300) NOT NULL,
+  `user_id` VARCHAR(45) NOT NULL
+) COMMENT = 'UI modify history';
