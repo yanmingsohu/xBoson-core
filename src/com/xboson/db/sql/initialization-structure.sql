@@ -30,3 +30,8 @@ CREATE TABLE `sys_pl_log_uimodify` (
   `path` VARCHAR(300) NOT NULL,
   `user_id` VARCHAR(45) NOT NULL
 ) COMMENT = 'UI modify history';
+
+
+ALTER TABLE `sys_pl_log_access`
+CHANGE COLUMN `access_cd` `access_cd` CHAR(6) NULL DEFAULT NULL
+COMMENT '登录状态代码' ;

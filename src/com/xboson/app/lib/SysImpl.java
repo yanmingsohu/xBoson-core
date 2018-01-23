@@ -436,13 +436,15 @@ public class SysImpl extends DateImpl {
   }
 
 
-  public void printValue(Object v) {
+  public void printValue(Object... values) {
     if (printList == null) {
       printList = createJSList();
       cd.xres.bindResponse("print",
               new ScriptObjectMirrorJsonConverter.Warp(printList));
     }
-    printList.setSlot(printList.size(), v);
+    for (Object v : values) {
+      printList.setSlot(printList.size(), v);
+    }
   }
 
 

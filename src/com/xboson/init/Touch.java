@@ -47,12 +47,12 @@ public final class Touch {
     GlobalEventBus.me();
     SysConfig.me();
     LogFactory.me();
+    DbmsFactory.me().registeringDefaultDriver();
     UrlMapping.me();
     RedisMesmerizer.me();
     SandboxFactory.version();
     FileSystemFactory.me();
     AuthFactory.me();
-    DbmsFactory.me().registeringDefaultDriver();
     SqlReader.me();
     SystemStartupScript.me();
   }

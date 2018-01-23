@@ -20,10 +20,10 @@ import com.xboson.app.reader.ForDevelopment;
 import com.xboson.app.reader.ForProduction;
 import com.xboson.auth.IAWho;
 import com.xboson.been.ApiCall;
-import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.log.slow.RequestApiLog;
 import com.xboson.util.IConstant;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
@@ -44,6 +44,7 @@ public class AppContext implements IConstant {
   private AppPool development;
   private ThreadLocal<ThreadLocalData> ttld;
   private Set<String> shareApp;
+  private RequestApiLog apilog;
   private Log log;
 
 
@@ -54,6 +55,7 @@ public class AppContext implements IConstant {
     development = new AppPool(new ForDevelopment());
     shareApp    = JavaConverter.arr2setLower(
                   SysConfig.me().readConfig().shareAppList);
+    apilog      = new RequestApiLog();
   }
 
 
@@ -67,6 +69,7 @@ public class AppContext implements IConstant {
     try {
       ThreadLocalData tld = createLocalData(ac);
       make_extend_parameter(ac);
+      apilog.log(ac);
 
       //
       // 跨机构调用共享 APP 中的 api, 此时 org 可以是另一个机构, 这种跨机构
@@ -136,13 +139,13 @@ public class AppContext implements IConstant {
   private void make_extend_parameter(ApiCall ac) {
     Map<String, Object> ex = ac.exparam;
     if (ex == null) {
-      ex = new HashMap<>();
+      ac.exparam = ex = new HashMap<>();
     }
     ttld.get().exparam = ex;
     ex.put("org", ac.org);
     ex.put("app", ac.app);
     ex.put("mod", ac.mod);
-    ex.put("requestid", Tool.uuid.ds());
+    ex.put(REQUEST_ID, Tool.uuid.ds());
   }
 
 

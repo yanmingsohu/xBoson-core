@@ -85,4 +85,6 @@ public interface IConstant extends IDict {
   String INITIALIZATION = "Initialization";
   /** "销毁" */
   String DESTORYED = "Destoryed";
+  /** 生成的请求 ID */
+  String REQUEST_ID = "requestid";
 }

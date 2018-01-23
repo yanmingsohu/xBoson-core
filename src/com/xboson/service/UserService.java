@@ -17,6 +17,7 @@
 package com.xboson.service;
 
 import com.xboson.app.AppContext;
+import com.xboson.app.ErrorCodeMessage;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
@@ -25,6 +26,7 @@ import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
+import com.xboson.log.slow.AccessLog;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.*;
 import redis.clients.jedis.Jedis;
@@ -57,10 +59,12 @@ public class UserService extends XService implements IDict, IConstant {
 
 
   private Config cf;
+  private AccessLog access;
 
 
   public UserService() {
     cf = SysConfig.me().readConfig();
+    access = new AccessLog();
   }
 
 
@@ -91,6 +95,12 @@ public class UserService extends XService implements IDict, IConstant {
   }
 
 
+  private void msg(CallData data, String msg, int code) throws IOException {
+    data.xres.responseMsg(msg, code);
+    access.log(data.sess.login_user, code, msg);
+  }
+
+
   /**
    * TODO: 需要检查登录攻击, 失败次数, 验证图片
    * password 参数必须已经 md5 后传入接口.
@@ -98,14 +108,13 @@ public class UserService extends XService implements IDict, IConstant {
 	public void login(CallData data) throws Exception {
 	  if (isLogin(data)) {
       data.xres.bindResponse("openid", data.sess.login_user.userid);
-      data.xres.responseMsg("用户已经登录", 0);
+      msg(data, "用户已经登录", 0);
       return;
     }
 
     final int login_count = checkIpBan(data);
     if (login_count >= IP_BAN_COUNT) {
-      data.xres.responseMsg(
-              "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
+      msg(data, "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
 	    return;
     }
 
@@ -117,19 +126,19 @@ public class UserService extends XService implements IDict, IConstant {
     if (login_count >= IP_NEED_CAPTCHA) {
       String c = data.getString("c", 0, 20);
       if (! c.equalsIgnoreCase( data.sess.captchaCode )) {
-        data.xres.responseMsg("验证码错误", 10);
+        msg(data, "验证码错误", 10);
         ipLoginFail(data);
         return;
       }
     }
 
     if (lu == null) {
-      data.xres.responseMsg("用户不存在", 1014);
+      msg(data, "用户不存在", 1014);
       ipLoginFail(data);
       return;
     }
     if (! ZR001_ENABLE.equals(lu.status)) {
-      data.xres.responseMsg("用户已锁定", 1007);
+      msg(data, "用户已锁定", 1004);
       ipLoginFail(data);
       return;
     }
@@ -140,7 +149,7 @@ public class UserService extends XService implements IDict, IConstant {
 
     data.sess.login_user = lu;
     data.xres.bindResponse("openid", lu.userid);
-    data.xres.responseMsg("成功登录系统", 0);
+    msg(data, "成功登录系统", 0);
 	}
 
 
@@ -150,9 +159,12 @@ public class UserService extends XService implements IDict, IConstant {
       return;
     }
 
-    data.sess.login_user = null;
-    data.xres.responseMsg("已登出", 1007);
-    data.sess.destoryFlag();
+    try {
+      msg(data, "已登出", 1007);
+    } finally {
+      data.sess.login_user = null;
+      data.sess.destoryFlag();
+    }
   }
 
 
@@ -188,6 +200,7 @@ public class UserService extends XService implements IDict, IConstant {
     if (lu != null) {
       final String ps = Password.v1(lu.userid, md5ps, lu.password_dt);
       if (!ps.equals(lu.password)) {
+        access.log(userid, 1001, "用户名或密码错误");
         throw new XBosonException("用户名或密码错误", 1001);
       }
     }

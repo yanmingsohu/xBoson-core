@@ -85,8 +85,13 @@ public class NodeModuleProvider extends AbsModules implements IModuleProvider {
     if (mod != null)
       return mod;
 
+    boolean hasExt = Path.me.extname(name).length() > 1;
+
     for (int i=0; i<apply.paths.length && mod == null; ++i) {
       mod = findModule(apply.paths[i], name, apply);
+      if (mod == null && hasExt == false) {
+        mod = findModule(apply.paths[i], name + ".js", apply);
+      }
     }
 
     return mod;

@@ -204,7 +204,7 @@ public class DbmsFactory extends OnExitHandle {
     check_state();
 
     if (namemap.size() <= 0) {
-      throw new XBosonException("No DB driver in SysMongoFactory");
+      throw new XBosonException("No DB driver in DbmsFactory");
     }
 
     if (config.dbname != null) {

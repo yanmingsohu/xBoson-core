@@ -17,11 +17,14 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
 import com.xboson.script.IJSObject;
 import com.xboson.script.JSObject;
 import com.xboson.util.DateParserFactory;
 import com.xboson.util.DateParserFactory.ScopeCalendar;
 import com.xboson.util.Tool;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.objects.NativeDate;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -84,7 +87,8 @@ public class DateImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public String formattedTime(Date d, String format) throws Exception {
+  public String formattedTime(Object date, String format) throws Exception {
+    Date d = parse(date);
     try (DateParserFactory.DateParser dp = DateParserFactory.get(format)) {
       return dp.format(d);
     }
@@ -307,5 +311,21 @@ public class DateImpl extends RuntimeUnitImpl implements IJSObject {
       c.c.set(Calendar.MILLISECOND, n);
       return c.c.getTime();
     }
+  }
+
+
+  public Date parse(Object o) {
+    if (o == null) {
+      throw new XBosonException.NullParamException("Object data");
+    }
+    if (o instanceof Date) {
+      return (Date) o;
+    }
+    if (o instanceof NativeDate || o instanceof ScriptObjectMirror) {
+      long t = (long) NativeDate.getTime(o);
+      return new Date(t);
+    }
+    throw new XBosonException.BadParameter(
+            "Object data", "Is not Date type " + o.getClass());
   }
 }
