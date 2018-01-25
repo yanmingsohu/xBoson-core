@@ -17,6 +17,7 @@
 package com.xboson.script.lib;
 
 
+import com.xboson.been.XBosonException;
 import com.xboson.util.IConstant;
 
 import java.util.Iterator;
@@ -187,5 +188,45 @@ public class Path {
       return bn.substring(0, bn.length() - ext.length());
     }
     return bn;
+  }
+
+
+
+  /**
+   * 将路径格式化为类路径, 无效的路径返回 null.
+   */
+  public String toClassPath(String path) {
+    if (!path.endsWith(".class"))
+      throw new XBosonException.BadParameter(
+              "String path", "not class file: " + path);
+
+    final int size = path.length() - 6;
+    if (size <= 0) return null;
+    StringBuilder buf = new StringBuilder(size);
+    int i;
+    char ch;
+    int state = 0;
+
+    //
+    // 跳过前置 '/' 或 '\'
+    //
+    for (i = 0; i < size; ++i) {
+      ch = path.charAt(i);
+      if (ch != '/' && ch != '\\') break;
+    }
+
+    for (; i < size; ++i) {
+      ch = path.charAt(i);
+      if (ch == '/' || ch == '\\') {
+        // 连续的 '/' 被合并为一个 '.'
+        if (state == 1) continue;
+        buf.append('.');
+        state = 1;
+      } else {
+        buf.append(ch);
+        state = 0;
+      }
+    }
+    return buf.toString();
   }
 }

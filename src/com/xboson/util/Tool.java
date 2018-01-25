@@ -463,12 +463,12 @@ public final class Tool extends StaticLogProvider {
 
       if (name.endsWith(".class")) {
         if (name.indexOf('$') >= 0) continue;
-        name = name.substring(0, name.length() - 6);
-        name = name.replaceAll("/|\\\\", ".");
-        ret.add(Class.forName(name));
+        name = p.toClassPath(name);
+        if (name != null) {
+          ret.add(Class.forName(name));
+        }
       }
     }
-
     return ret;
   }
 

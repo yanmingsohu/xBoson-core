@@ -14,7 +14,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 
 * js 沙箱每次一个独立默认上下文.(当前为 app 共用且锁死) -- 使用 with() {}.
 * blob 保存时直接写入db, 而不在内存堆积.
-* api 沙箱超时管理, 内存管理.
+* api 沙箱超时管理, 内存管理 (api 进程管理).
 * 接管 Tomcat.
 * 区块链api
 * 云盘系统(api已经完成)
@@ -167,7 +167,10 @@ get 请求使用标准的 http url 参数.
 mysql 配置:
   
   如果出现中文变成 '???', 增加 mysql 配置文件项目到配置文件中:
-  `character_set_server = utf8`
+  `character_set_server=utf8`
+  
+  如果登录页面抛出 sql 执行异常, 修正配置文件:
+  `sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES`
   
   
 ## 日志级别配置文件:

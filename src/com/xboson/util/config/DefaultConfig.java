@@ -64,7 +64,7 @@ public final class DefaultConfig {
     c.logLevel          = "info";
     c.sessionTimeout    = 24 * 60;
     c.sessionPassword   = Test.randomString(20);
-    c.debugService      =  false;
+    c.debugService      = true;
     c.rootUserName      = "root";
     c.rootPassword      = "111111";
     c.rootPid           = uuid.ds();

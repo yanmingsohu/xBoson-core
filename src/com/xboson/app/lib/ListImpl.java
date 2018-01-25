@@ -61,20 +61,20 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public Object range(Object arr, int begin, int end) {
-    return NativeArray.slice(unwrap(arr), begin, end);
+  public Object range(ScriptObjectMirror arr, int begin, int end) {
+    return arr.callMember("slice", begin, end);
   }
 
 
-  public Object removeAt(Object arr, int remove_index) {
-    NativeArray.splice(unwrap(arr), remove_index, 1);
+  public Object removeAt(ScriptObjectMirror arr, int remove_index) {
+    arr.callMember("splice", remove_index, 1);
     return arr;
   }
 
 
-  public Object add(Object arr, Object val) {
+  public Object add(ScriptObjectMirror arr, Object val) {
     try {
-      NativeArray.push(unwrap(arr), unwrap(val));
+      arr.callMember("push", val);
       return arr;
     } catch(Exception e) {
       e.printStackTrace();
@@ -83,30 +83,30 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public Object addAt(Object arr, Object val, int index) {
-    NativeArray.splice(unwrap(arr), index, 0 , unwrap(val));
+  public Object addAt(ScriptObjectMirror arr, Object val, int index) {
+    arr.callMember("splice", index, 0, val);
     return arr;
   }
 
 
-  public Object addAll(Object arr, Object src) {
+  public Object addAll(ScriptObjectMirror arr, Object src) {
     ScriptObjectMirror jsarr = wrap(src);
     int end = jsarr.size();
     for (int i=0; i<end; ++i) {
-      NativeArray.push(unwrap(arr), unwrap(jsarr.getSlot(i)));
+      arr.callMember("push", jsarr.getSlot(i));
     }
     return arr;
   }
 
 
-  public Object reverse(Object arr) {
-    NativeArray.reverse(unwrap(arr));
+  public Object reverse(ScriptObjectMirror arr) {
+    arr.callMember("reverse");
     return arr;
   }
 
 
-  public String toString(Object arr, Object sp) {
-    return NativeArray.join(unwrap(arr), unwrap(sp));
+  public String toString(ScriptObjectMirror arr, Object sp) {
+    return (String) arr.callMember("join", sp);
   }
 
 
@@ -182,19 +182,17 @@ public class ListImpl extends RuntimeUnitImpl implements IJSObject {
   }
 
 
-  public Object remove(Object arr, Object removeVal) {
-    ScriptObjectMirror jsarr = wrap(arr);
-    int end = jsarr.size();
+  public Object remove(ScriptObjectMirror jsarr, Object removeVal) {
     removeVal = ScriptObjectMirror.wrap(removeVal, Context.getGlobal());
 
-    for (int i=0; i<end; ++i) {
+    for (int i=0; i<jsarr.size(); ++i) {
       Object o = jsarr.getSlot(i);
       if (_equals(removeVal, o)) {
-        NativeArray.splice(unwrap(arr), i, 1);
+        jsarr.callMember("splice", i, 1);
         continue;
       }
     }
-    return arr;
+    return jsarr;
   }
 
 

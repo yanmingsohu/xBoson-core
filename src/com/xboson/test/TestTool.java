@@ -17,31 +17,25 @@
 package com.xboson.test;
 
 import com.xboson.been.XBosonException;
+import com.xboson.db.driver.Mysql;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
 import com.xboson.util.ChineseInital;
-import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.util.*;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 
 public class TestTool extends Test {
@@ -65,9 +59,24 @@ public class TestTool extends Test {
     Set<Class> all = Tool.findPackage(TestTool.class);
     msg("Package (com.xboson.test.*)", all);
 
-    Package p = okio.BufferedSink.class.getPackage();
-    Set<Class> a2 = Tool.findPackage(p);
+    Set<Class> a2 = Tool.findPackage(okio.BufferedSink.class);
     msg("Package (okio.*)", a2);
+
+    Set<Class> cl = Tool.findPackage(Mysql.class);
+    msg("Package (db.driver.*)", cl);
+
+    com.xboson.script.lib.Path p = com.xboson.script.lib.Path.me;
+
+    eq("com.xboson.db.driver.DB2",
+            p.toClassPath("/com/xboson/db/driver/DB2.class"), "class1");
+
+    eq("com.xboson.db.driver.DB2",
+            p.toClassPath("com/xboson/db/driver/DB2.class"), "class2");
+
+    eq("com.xboson.db.driver.DB2",
+            p.toClassPath("com/xboson\\db\\/driver.DB2.class"), "class3");
+
+    msg("ok");
   }
 
 
