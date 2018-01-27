@@ -85,7 +85,6 @@ public class TemplateEngine extends GLHandle
   public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
     StringBufferOutputStream buf =
             Tool.readFileFromResource(UIFileFactory.class, fileName);
-    ScriptContext context = box.createContext();
 
     WrapJavaScript js = box.warp(fileName, buf.toString());
     js.compile(box);

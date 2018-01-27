@@ -32,6 +32,8 @@ import com.xboson.util.Tool;
 /**
  * 通过实现该类, 导入通用测试框架,
  * 这里的方法都没有考虑性能, 不要再非测试环境中使用.
+ *
+ * 子类可以实现一个 main() 以允许测试用例单独运行.
  */
 public class Test implements IConstant {
 	public static final String line =

@@ -35,3 +35,8 @@ CREATE TABLE `sys_pl_log_uimodify` (
 ALTER TABLE `sys_pl_log_access`
 CHANGE COLUMN `access_cd` `access_cd` CHAR(6) NULL DEFAULT NULL
 COMMENT '登录状态代码' ;
+
+
+ALTER TABLE `sys_pl_log_uimodify`
+ADD INDEX `user_id` (`user_id` ASC),
+ADD INDEX `time_dt` (`dt` DESC);

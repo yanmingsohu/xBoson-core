@@ -126,6 +126,7 @@ public abstract class LocalFileMapping implements
 
   private void writeLocalFile(Path file, byte[] content, long modify) {
     try {
+      Files.createDirectories(file.getParent());
       Files.write(file, content);
       Files.setLastModifiedTime(file, FileTime.fromMillis(modify));
       rb.clearContentFinderCache();

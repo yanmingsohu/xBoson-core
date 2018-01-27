@@ -23,6 +23,7 @@ var helper          = require("helper");
 var Event           = require("events");
 var fileChangeEvent = new Event(); // 该对象没有被绑定事件, 文件修改消息也没有实现.
 var console         = console.create("masquerade");
+var eventLoop       = [];
 
 var innerModule = {
 };
@@ -51,9 +52,13 @@ function __alias(name, aname) {
 }
 
 
-function setInterval(fn) { fn(); }
+function setInterval(fn) {
+  eventLoop.push(fn);
+}
 
-function setTimeout(fn) { fn(); };
+function setTimeout(fn) {
+  eventLoop.push(fn);
+};
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1343,7 +1348,7 @@ tool.addSystemVar(SAVE_KEY);
 //
 // <pit/>
 //
-module.exports = function(taginfo) {
+module.exports = function(taginfo, userTagFactory, errorHandle, filename) {
 
   if (!taginfo.selfend)
        throw new Error('must not have BODY');
@@ -1966,12 +1971,20 @@ module.exports = function(pool, tagFactory, EXT, fs) {
           context[n] = taginfo.attr[n];
         }
 
+        var pit_call = null;
+
+        //
+        // pit 渲染顺序:
+        // 1. renderPit 保存到上下文
+        // 2. <pit> 标签调用保存的 renderPit 方法注册自身渲染函数
+        // 3. renderPit 调用
+        // 4. tag_over 的回调函数被调用
+        // 5. renderTag 的回调函数被调用
+        //
         if (tag_over) {
-          var pit_call = null;
           var tag_scope = context.tag_scope;
           // tag_scope.controler.disable_sub();
           context[SAVE_KEY] = renderPit;
-
 
           tag_over(function() {
             tag_scope.controler.disable_sub();
@@ -1986,14 +1999,17 @@ module.exports = function(pool, tagFactory, EXT, fs) {
             delete context[SAVE_KEY];
             next();
           });
-
-          function renderPit(_over) {
-            tag_scope.controler.enable_sub();
-            pit_call = _over;
-            next();
-          }
         } else {
           renderTag(next);
+        }
+
+        //
+        // 引擎BUG: 该方法定义在 if 中无法调用
+        //
+        function renderPit(_over) {
+          tag_scope.controler.enable_sub();
+          pit_call = _over;
+          next();
         }
 
         function renderTag(_render_over) {
@@ -3622,6 +3638,7 @@ function masquerade(baseurl, debug, uifs) {
   var mid_process = mid(baseurl, config, debug, fs);
   service.reload_tags = mid_process.reload_tags;
   service.add_plugin = mid_process.add_plugin;
+  runEventLoop();
   return service;
 
   function service(servletReq, servletResp) {
@@ -3637,7 +3654,18 @@ function masquerade(baseurl, debug, uifs) {
     mid_process(req, resp, function(err) {
       if (err) console.error(err, new Error().stack);
     });
+
+    runEventLoop();
     resp.finished = true;
+  }
+}
+
+
+function runEventLoop() {
+  while (eventLoop.length > 0) {
+    var fn = eventLoop[0];
+    eventLoop.splice(0, 1);
+    fn();
   }
 }
 

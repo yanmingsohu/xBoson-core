@@ -18,10 +18,7 @@ package com.xboson.test;
 
 import com.xboson.app.AppContext;
 import com.xboson.app.lib.SysImpl;
-import com.xboson.been.ApiCall;
-import com.xboson.been.CallData;
-import com.xboson.been.LoginUser;
-import com.xboson.been.SessionData;
+import com.xboson.been.*;
 import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.j2ee.files.PrimitiveOperation;
@@ -148,7 +145,7 @@ public class TestApi extends Test {
       } catch(Exception e) {
         // show_code(app, XjApp.toFile(module_id, api_id));
         fail(e);
-        e.printStackTrace();
+        throw new XBosonException(e);
       }
     }
   }

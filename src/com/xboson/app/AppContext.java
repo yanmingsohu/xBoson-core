@@ -20,7 +20,10 @@ import com.xboson.app.reader.ForDevelopment;
 import com.xboson.app.reader.ForProduction;
 import com.xboson.auth.IAWho;
 import com.xboson.been.ApiCall;
+import com.xboson.been.IJson;
+import com.xboson.been.LoginUser;
 import com.xboson.been.XBosonException;
+import com.xboson.event.timer.TimeFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.log.slow.RequestApiLog;
@@ -29,9 +32,10 @@ import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -39,23 +43,26 @@ import java.util.Set;
  */
 public class AppContext implements IConstant {
 
+  /** 在线程超过这个运行时间后, 降低运行优先级, 毫秒 */
+  public static final long LOW_CPU_TIME = 2 * 60 * 1000;
+
   private static AppContext instance;
   private AppPool production;
   private AppPool development;
-  private ThreadLocal<ThreadLocalData> ttld;
   private Set<String> shareApp;
   private RequestApiLog apilog;
+  private ProcessManager pm;
   private Log log;
 
 
   private AppContext() {
     log         = LogFactory.create();
-    ttld        = new ThreadLocal<>();
     production  = new AppPool(new ForProduction());
     development = new AppPool(new ForDevelopment());
     shareApp    = JavaConverter.arr2setLower(
                   SysConfig.me().readConfig().shareAppList);
     apilog      = new RequestApiLog();
+    pm          = new ProcessManager();
   }
 
 
@@ -64,11 +71,12 @@ public class AppContext implements IConstant {
    * App Mod Api 参数都被转换为小写.
    */
   public void call(ApiCall ac) {
-    log.debug("Call::", ApiPath.getPath(ac));
+    String apiPath = ApiPath.getPath(ac);
+    log.debug("Call::", apiPath);
 
     try {
       ThreadLocalData tld = createLocalData(ac);
-      make_extend_parameter(ac);
+      make_extend_parameter(tld);
       apilog.log(ac);
 
       //
@@ -94,9 +102,34 @@ public class AppContext implements IConstant {
     } catch (Exception e) {
       throw new XBosonException(e);
 
+    } catch (ThreadDeath dead) {
+      log.warn("Api Stop", apiPath, Tool.miniStack(dead, 6));
+      makeLastMessage("Api Process Killed");
+
     } finally {
-      ThreadLocalData current = ttld.get();
-      ttld.set(current.nestedCall);
+      ThreadLocalData current = pm.get();
+      if (current.nestedCall != null) {
+        pm.start(current.nestedCall);
+      } else {
+        pm.exit();
+      }
+    }
+  }
+
+
+  /**
+   * 线程被 kill, 不能正常应答, 这里发送最后一条消息,
+   * 防止浏览器不停的请求这个没有应答的 api.
+   */
+  private void makeLastMessage(String msg) {
+    try {
+      PrintWriter out = pm.get().ac.call.resp.getWriter();
+      out.write('"');
+      out.write(msg);
+      out.write('"');
+      out.close();
+    } catch (IOException e) {
+      log.debug(e);
     }
   }
 
@@ -126,25 +159,26 @@ public class AppContext implements IConstant {
     tld.who = ac.call.sess.login_user;
     tld.orgid = ac.org;
     tld.ac = ac;
+    tld.beginAt = System.currentTimeMillis();
 
-    ThreadLocalData previous = ttld.get();
+    ThreadLocalData previous = pm.get();
     if (previous != null) {
       tld.nestedCall = previous;
     }
-    ttld.set(tld);
+    pm.start(tld);
     return tld;
   }
 
 
-  private void make_extend_parameter(ApiCall ac) {
-    Map<String, Object> ex = ac.exparam;
+  private void make_extend_parameter(ThreadLocalData tld) {
+    Map<String, Object> ex = tld.ac.exparam;
     if (ex == null) {
-      ac.exparam = ex = new HashMap<>();
+      tld.ac.exparam = ex = new HashMap<>();
     }
-    ttld.get().exparam = ex;
-    ex.put("org", ac.org);
-    ex.put("app", ac.app);
-    ex.put("mod", ac.mod);
+    tld.exparam = ex;
+    ex.put("org", tld.ac.org);
+    ex.put("app", tld.ac.app);
+    ex.put("mod", tld.ac.mod);
     ex.put(REQUEST_ID, Tool.uuid.ds());
   }
 
@@ -153,15 +187,15 @@ public class AppContext implements IConstant {
    * 返回扩展请求参数
    */
   public Map<String, Object> getExtendParameter() {
-    return ttld.get().exparam;
+    return pm.get().exparam;
   }
 
 
   /**
-   * 返回当前请求的 org-id, 当前 api 可能在另一个机构中.
+   * HTTP 原始请求时的机构参数, 在运行后 HTTP 中的参数可以被替换为机构 orgid
    */
   public String originalOrg() {
-    return ttld.get().orgid;
+    return pm.get().orgid;
   }
 
 
@@ -169,7 +203,7 @@ public class AppContext implements IConstant {
    * 返回当前 api 的抽象文件路径
    */
   public String getCurrentApiPath() {
-    return ttld.get().getApiPath();
+    return pm.get().getApiPath();
   }
 
 
@@ -177,7 +211,7 @@ public class AppContext implements IConstant {
    * 返回 api 类型
    */
   public ApiTypes getApiModeType() {
-    return ttld.get().__dev_mode;
+    return pm.get().__dev_mode;
   }
 
 
@@ -186,7 +220,7 @@ public class AppContext implements IConstant {
    * 在上下文中意味着可以安全的调用上下文相关函数而不会抛出异常.
    */
   public boolean isInContext() {
-    return ttld.get() != null;
+    return pm.get() != null;
   }
 
 
@@ -195,7 +229,7 @@ public class AppContext implements IConstant {
    * 不在脚本上下文中总是返回 -1.
    */
   public int readScriptCount(int add) {
-    ThreadLocalData tld = ttld.get();
+    ThreadLocalData tld = pm.get();
     if (tld == null)
       return -1;
     int c = tld.scriptReadCount;
@@ -209,7 +243,7 @@ public class AppContext implements IConstant {
    * 如果没有用户登录会抛出异常.
    */
   public IAWho who() {
-    IAWho r = ttld.get().who;
+    IAWho r = pm.get().who;
     if (r == null) {
       throw new XBosonException("not login");
     }
@@ -223,7 +257,15 @@ public class AppContext implements IConstant {
    * api 访问其他机构中的表.
    */
   public boolean isReplaceOrg() {
-    return ttld.get().replaceOrg;
+    return pm.get().replaceOrg;
+  }
+
+
+  /**
+   * 返回进程管理器
+   */
+  public ProcessManager getProcessManager() {
+    return pm;
   }
 
 
@@ -243,20 +285,36 @@ public class AppContext implements IConstant {
 
 
   /**
-   * 线程变量保存包装器
+   * 线程变量保存包装器, 构造函数在 createLocalData() 中.
+   * @see #createLocalData(ApiCall)
    */
-  private class ThreadLocalData {
-    ThreadLocalData nestedCall;
-    Map<String, Object> exparam;
-    IAWho who;
-    String orgid;
-    ApiCall ac;
-    boolean replaceOrg;
-    int scriptReadCount;
+  public class ThreadLocalData {
+    /** 嵌套调用时将前一个调用的数据保存 */
+    private ThreadLocalData nestedCall;
 
-    String __cache_path;
-    ApiTypes __dev_mode;
+    /** @see #getExtendParameter() */
+    private Map<String, Object> exparam;
 
+    /** 当前调用用户 */
+    private IAWho who;
+
+    /** @see #originalOrg() */
+    private String orgid;
+
+    private ApiCall ac;
+
+    /** true: HTTP 参数机构id 已经被替换 */
+    private boolean replaceOrg;
+
+    /** @see #readScriptCount(int)  */
+    private int scriptReadCount;
+
+    /** 请求开始的时间, ms */
+    private long beginAt;
+
+    private String __cache_path;
+    private ApiTypes __dev_mode;
+    private boolean __is_low_priority;
 
     /**
      * 返回未被替换的原始参数.
@@ -266,6 +324,164 @@ public class AppContext implements IConstant {
         __cache_path = ApiPath.getPath(exparam, ac.api);
       }
       return __cache_path;
+    }
+
+    private ThreadLocalData() {}
+  }
+
+
+  /**
+   * '进程' 管理器, 该对象会被导出到脚本环境, 必须仔细设计.
+   */
+  public class ProcessManager {
+    private final static long INTERVAL = 30 * 1000;
+    private Map<Thread, ThreadLocalData> running;
+    private Map<Long, Thread> id;
+
+
+    private ProcessManager() {
+      running = new ConcurrentHashMap<>();
+      id = new ConcurrentHashMap<>();
+      startCpuChecker();
+    }
+
+
+    private void startCpuChecker() {
+      TimeFactory.me().schedule(new TimerTask() {
+        public void run() {
+          cpuSafe();
+        }
+      }, INTERVAL, INTERVAL);
+    }
+
+
+    /**
+     * 请求线程开始进入管理区
+     */
+    private void start(ThreadLocalData data) {
+      Thread t = Thread.currentThread();
+      running.put(t, data);
+      id.put(t.getId(), t);
+    }
+
+
+    /**
+     * 请求线程退出
+     */
+    private void exit() {
+      Thread t = Thread.currentThread();
+      running.remove(t);
+      id.remove(t.getId());
+    }
+
+
+    /**
+     * 返回当前线程的绑定数据
+     */
+    private ThreadLocalData get() {
+      Thread t = Thread.currentThread();
+      return running.get(t);
+    }
+
+
+    /**
+     * 检查所有线程, 一旦发现线程执行时间过长, 则降低运行优先级
+     */
+    private void cpuSafe() {
+      for (Map.Entry<Thread, ThreadLocalData> entry : running.entrySet()) {
+        ThreadLocalData tld = entry.getValue();
+
+        if (tld.__is_low_priority == false
+                && System.currentTimeMillis() - tld.beginAt > LOW_CPU_TIME) {
+
+          Thread t = entry.getKey();
+          t.setPriority(Thread.MIN_PRIORITY);
+          tld.__is_low_priority = true;
+
+          log.debug("Change Process Min Priority, Thread:", t.getId(),
+                  '"'+ t.getName() +'"', ", API:", tld.getApiPath());
+        }
+      }
+    }
+
+
+    /**
+     * 列出所有运行中的线程
+     */
+    public PublicProcessData[] list() {
+      PublicProcessData[] ppd = new PublicProcessData[running.size()];
+      int i = -1;
+
+      for (Map.Entry<Thread, ThreadLocalData> entry : running.entrySet()) {
+        ppd[++i] = new PublicProcessData(entry.getKey(), entry.getValue());
+      }
+      return ppd;
+    }
+
+
+    /**
+     * 终止 api 进程.
+     * @param processId 进程 id
+     * @return 停止了正在运行的进程返回 true, 如果进程不存或已经停止在返回 false
+     */
+    public boolean kill(long processId) {
+      Thread t = id.get(processId);
+      if (t != null && t.isAlive()) {
+        //
+        // 必须这样做, 脚本上下文的设计可以保证安全的 stop 线程.
+        // [ 除非有 bug :( ]
+        //
+        t.stop();
+        return true;
+      }
+      return false;
+    }
+
+
+    public boolean stop(long processId) {
+      return kill(processId);
+    }
+  }
+
+
+  /**
+   * 进程公共数据, 全部 public 属性.
+   * 记录着调用 api 的必要数据.
+   */
+  public static class PublicProcessData implements IJson {
+    public long processId;
+    public String org;
+    public String app;
+    public String mod;
+    public String api;
+    public long beginAt;
+    public long runningTime;
+    public String callUser;
+
+
+    private PublicProcessData(Thread t, ThreadLocalData tld) {
+      processId = t.getId();
+      org = tld.ac.org;
+      app = tld.ac.app;
+      mod = tld.ac.mod;
+      api = tld.ac.api;
+      beginAt = tld.beginAt;
+      runningTime = System.currentTimeMillis() - tld.beginAt;
+
+      if (tld.who instanceof LoginUser) {
+        callUser = ((LoginUser) tld.who).userid;
+      } else {
+        callUser = tld.who.identification();
+      }
+    }
+
+
+    public PublicProcessData() {}
+
+
+    @Override
+    public String toJSON() {
+      return Tool.beautifyJson(PublicProcessData.class, this);
     }
   }
 }

@@ -41,3 +41,4 @@ require("./check-url.js");
 require("./check-uuid.js");
 require("./node-module-loader.js");
 require("./multi-line-str.js");
+require("./bug.js");

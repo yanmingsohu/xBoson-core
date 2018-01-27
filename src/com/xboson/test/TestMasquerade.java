@@ -37,7 +37,7 @@ public class TestMasquerade extends Test {
     TemplateEngine te = new TemplateEngine(uifs);
 
     String[] pages = new String[] {
-            "/face/t/paas/api-doc/md.htm",
+            "/face/t/paas/api-doc/index.htm",
             "/face/t/paas/mdms/datadictD/index.htm",
     };
 

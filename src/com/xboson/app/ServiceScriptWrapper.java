@@ -101,6 +101,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     mod.regClass("mongodb", MongoImpl.class);
     mod.regClass("shell", Shell.class);
     mod.regClass("schedule", Schedule.class);
+    mod.regClass("pm", PmImpl.class);
   }
 
 
