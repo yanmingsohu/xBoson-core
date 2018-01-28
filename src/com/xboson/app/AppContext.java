@@ -19,10 +19,7 @@ package com.xboson.app;
 import com.xboson.app.reader.ForDevelopment;
 import com.xboson.app.reader.ForProduction;
 import com.xboson.auth.IAWho;
-import com.xboson.been.ApiCall;
-import com.xboson.been.IJson;
-import com.xboson.been.LoginUser;
-import com.xboson.been.XBosonException;
+import com.xboson.been.*;
 import com.xboson.event.timer.TimeFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -440,7 +437,7 @@ public class AppContext implements IConstant {
       int i = -1;
 
       for (Map.Entry<Thread, ThreadLocalData> entry : running.entrySet()) {
-        ppd[++i] = new PublicProcessData(entry.getKey(), entry.getValue());
+        ppd[++i] = createPD(entry.getKey(), entry.getValue());
       }
       return ppd;
     }
@@ -478,47 +475,25 @@ public class AppContext implements IConstant {
     public int stop(long processId) {
       return kill(processId);
     }
-  }
 
 
-  /**
-   * 进程公共数据, 全部 public 属性.
-   * 记录着调用 api 的必要数据.
-   */
-  public static class PublicProcessData implements IJson {
-    public long processId;
-    public String org;
-    public String app;
-    public String mod;
-    public String api;
-    public long beginAt;
-    public long runningTime;
-    public String callUser;
-
-
-    private PublicProcessData(Thread t, ThreadLocalData tld) {
-      processId = t.getId();
-      org = tld.ac.org;
-      app = tld.ac.app;
-      mod = tld.ac.mod;
-      api = tld.ac.api;
-      beginAt = tld.beginAt;
-      runningTime = System.currentTimeMillis() - tld.beginAt;
+    private PublicProcessData createPD(Thread t, ThreadLocalData tld) {
+      PublicProcessData pd = new PublicProcessData();
+      pd.processId = t.getId();
+      pd.org = tld.ac.org;
+      pd.app = tld.ac.app;
+      pd.mod = tld.ac.mod;
+      pd.api = tld.ac.api;
+      pd.beginAt = tld.beginAt;
+      pd.runningTime = System.currentTimeMillis() - tld.beginAt;
 
       if (tld.who instanceof LoginUser) {
-        callUser = ((LoginUser) tld.who).userid;
+        pd.callUser = ((LoginUser) tld.who).userid;
       } else {
-        callUser = tld.who.identification();
+        pd.callUser = tld.who.identification();
       }
-    }
-
-
-    public PublicProcessData() {}
-
-
-    @Override
-    public String toJSON() {
-      return Tool.beautifyJson(PublicProcessData.class, this);
+      return pd;
     }
   }
+
 }

@@ -53,6 +53,9 @@ public abstract class XjPool<E> {
     E ret = pool.get(name);
 
     if (ret == null) {
+      //
+      // 即使 pool 已经同步, 仍然需要同步块来保证 createItem() 只调用一次.
+      //
       synchronized (this) {
         ret = pool.get(name);
         if (ret == null) {

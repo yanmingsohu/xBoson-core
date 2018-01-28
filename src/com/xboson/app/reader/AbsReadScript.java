@@ -41,6 +41,7 @@ public abstract class AbsReadScript implements IConstant, IApiConstant {
 
   /**
    * 必须实现该方法, 返回已经打过补丁的脚本源代码.
+   * 读取不到脚本必须抛出异常.
    */
   public abstract ScriptFile read(XjOrg org, String app, String mod, String api);
 

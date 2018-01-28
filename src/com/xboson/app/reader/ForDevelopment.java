@@ -52,13 +52,11 @@ public class ForDevelopment extends AbsReadScript {
 
         log.debug("Load Script from DB:", mod, '/', api);
         return file;
-
-      } else {
-        throw new XBosonException.NotFound("API:" + api);
       }
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);
     }
+    throw new XBosonException.NotFound("API:" + api);
   }
 
 }

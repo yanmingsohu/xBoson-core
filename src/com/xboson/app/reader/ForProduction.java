@@ -19,6 +19,7 @@ package com.xboson.app.reader;
 
 import com.xboson.app.ApiPath;
 import com.xboson.app.XjOrg;
+import com.xboson.been.XBosonException;
 import com.xboson.fs.script.ScriptAttr;
 import com.xboson.sleep.RedisMesmerizer;
 import redis.clients.jedis.Jedis;
@@ -26,7 +27,7 @@ import redis.clients.jedis.Jedis;
 import java.util.Date;
 
 
-public class ForProduction extends ForDevelopment {
+public class ForProduction extends AbsReadScript {
 
   public final static String REGION = _R_KEY_PREFIX_ + _CACHE_REGION_API_;
 
@@ -59,13 +60,10 @@ public class ForProduction extends ForDevelopment {
             return file;
           }
         }
-      } else {
-        log.warn("Redis cannot found",
-                mod, api, ", will be read from DB.");
       }
     } catch (Exception e) {
       log.warn("Script from Redis fail", mod, api);
     }
-    return super.read(org, app, mod, api);
+    throw new XBosonException.NotFound("API:" + api);
   }
 }
