@@ -16,8 +16,9 @@
 
 package com.xboson.been;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * 存储 KEY_TYPE 对应的名字, 该对象适合在 static 中使用, 线程安全
@@ -25,24 +26,22 @@ import java.util.Map;
  */
 public class NameCache<KEY_TYPE> {
 
-  private Map<KEY_TYPE, String> map = new HashMap<>();
+  private Map<KEY_TYPE, String> map;
 
 
-  public void NameCahce() {
+  public NameCache() {
+    map = new ConcurrentHashMap<>();
   }
 
 
   public void put(KEY_TYPE k, String name) {
-    synchronized (map) {
-      map.put(k, name);
-    }
+    map.put(k, name);
   }
 
 
   public String get(KEY_TYPE k) {
-    synchronized (map) {
-      return map.get(k);
-    }
+    if (k == null) return null;
+    return map.get(k);
   }
 
 

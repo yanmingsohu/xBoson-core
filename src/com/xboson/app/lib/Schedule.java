@@ -31,6 +31,7 @@ import okhttp3.*;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Schedule extends RuntimeUnitImpl {
@@ -41,7 +42,7 @@ public class Schedule extends RuntimeUnitImpl {
    * 每个应用都有独立的上下文自然会将不同的 org 分开
    */
   private final Map<String, Task>
-          management = Collections.synchronizedMap(new HashMap<>());
+          management = new ConcurrentHashMap<>();
 
   private final Log log;
   private OkHttpClient hc;

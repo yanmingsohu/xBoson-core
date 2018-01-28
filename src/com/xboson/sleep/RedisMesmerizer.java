@@ -56,9 +56,13 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   private BIN bin;
 
 
-  public synchronized static RedisMesmerizer me() {
+  public static RedisMesmerizer me() {
     if (instance == null) {
-      instance = new RedisMesmerizer();
+      synchronized (RedisMesmerizer.class) {
+        if (instance == null) {
+          instance = new RedisMesmerizer();
+        }
+      }
     }
     return instance;
   }

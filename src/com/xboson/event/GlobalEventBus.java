@@ -23,6 +23,8 @@ import com.xboson.util.Tool;
 
 import javax.naming.event.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * 全局事件总线, 线程安全的.
@@ -50,7 +52,7 @@ public class GlobalEventBus {
   }
 
 
-  private Map<String, GlobalEventContext> contexts = new HashMap<>();
+  private Map<String, GlobalEventContext> contexts;
   private SubscribeThread sub_thread;
   private Log log;
   private long myselfid;
@@ -61,6 +63,7 @@ public class GlobalEventBus {
    * 构造时什么也不做, 初始化都在 init() 中做.
    */
   private GlobalEventBus() {
+    contexts = new ConcurrentHashMap<>();
   }
 
 
@@ -118,10 +121,8 @@ public class GlobalEventBus {
     if (listener == null)
       throw new NullPointerException("listener");
 
-    synchronized (this) {
-      GlobalEventContext context = getContext(true, name);
-      context.on(listener);
-    }
+    GlobalEventContext context = getContext(true, name);
+    context.on(listener);
   }
 
 
@@ -174,15 +175,13 @@ public class GlobalEventBus {
       throw new XBosonException.Shutdown();
     }
 
-    synchronized (this) {
-      GlobalEventContext context = getContext(true, name);
-      context.emit(data, type, info);
+    GlobalEventContext context = getContext(true, name);
+    context.emit(data, type, info);
 
-      // 这是个特殊的事件, 当检查到退出系统的消息后, 等待所有处理器退出
-      // 然后 GlobalEventBus 执行自身的退出操作
-      if (Names.exit.equals(name)) {
-        destory();
-      }
+    // 这是个特殊的事件, 当检查到退出系统的消息后, 等待所有处理器退出
+    // 然后 GlobalEventBus 执行自身的退出操作
+    if (Names.exit.equals(name)) {
+      destory();
     }
     return true;
   }

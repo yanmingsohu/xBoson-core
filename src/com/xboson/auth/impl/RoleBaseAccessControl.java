@@ -24,6 +24,7 @@ import com.xboson.util.Ref;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -131,7 +132,7 @@ public class RoleBaseAccessControl {
                                  String auth) {
     Map<String, Ref<String>> resourceList = user2resource.get(userMask);
     if (resourceList == null) {
-      resourceList = Collections.synchronizedMap(new HashMap<>());
+      resourceList = new ConcurrentHashMap<>();
       user2resource.put(userMask, resourceList);
     }
     resourceList.put(resMask, new Ref(auth));

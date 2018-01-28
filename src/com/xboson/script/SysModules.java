@@ -24,8 +24,9 @@ import com.xboson.util.Tool;
 
 import javax.script.ScriptException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * require 方法提供的系统模块, 需要在初始化时将外部模块注入.
@@ -41,7 +42,7 @@ public class SysModules extends AbsModules implements IModuleProvider {
 
 
   public SysModules() {
-    modules = new HashMap<>();
+    modules = new ConcurrentHashMap<>();
   }
 
 

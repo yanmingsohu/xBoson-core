@@ -50,7 +50,11 @@ public class LogFactory extends OnExitHandle {
 
   public synchronized static LogFactory me() {
     if (instance == null) {
-      instance = new LogFactory();
+      synchronized (LogFactory.class) {
+        if (instance == null) {
+          instance = new LogFactory();
+        }
+      }
     }
     return instance;
   }

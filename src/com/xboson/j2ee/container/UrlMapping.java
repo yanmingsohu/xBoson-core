@@ -16,11 +16,6 @@
 
 package com.xboson.j2ee.container;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import com.xboson.been.UrlSplit;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
@@ -28,18 +23,27 @@ import com.xboson.log.LogFactory;
 import com.xboson.service.Fail;
 import com.xboson.service.ServiceClassList;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 
 public class UrlMapping extends OnExitHandle {
 
-	private static final Map<String, XService> map = new HashMap<String, XService>();
+	private static final Map<String, XService> map = new ConcurrentHashMap<>();
   private static UrlMapping instance;
 	private final Log log = LogFactory.create();
 
 
 
-	public synchronized static UrlMapping me() {
+	public static UrlMapping me() {
 		if (instance == null) {
-      instance = new UrlMapping();
+			synchronized (UrlMapping.class) {
+			  if (instance == null) {
+          instance = new UrlMapping();
+        }
+      }
     }
 		return instance;
 	}

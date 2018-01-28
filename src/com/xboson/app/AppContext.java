@@ -103,7 +103,7 @@ public class AppContext implements IConstant {
       throw new XBosonException(e);
 
     } catch (ThreadDeath dead) {
-      log.warn("Api Stop", apiPath, Tool.miniStack(dead, 6));
+      log.warn("Killed", apiPath, Tool.miniStack(dead, 6));
       makeLastMessage("Api Process Killed");
 
     } finally {
@@ -118,7 +118,7 @@ public class AppContext implements IConstant {
 
 
   /**
-   * 线程被 kill, 不能正常应答, 这里发送最后一条消息,
+   * 线程被 kill, 不能正常应答(抛异常或发送错误消息都不可用), 这里发送最后一条消息,
    * 防止浏览器不停的请求这个没有应答的 api.
    */
   private void makeLastMessage(String msg) {
@@ -127,9 +127,9 @@ public class AppContext implements IConstant {
       out.write('"');
       out.write(msg);
       out.write('"');
-      out.close();
+      out.flush();
     } catch (IOException e) {
-      log.debug(e);
+      log.error("makeLastMessage", e);
     }
   }
 
@@ -262,6 +262,15 @@ public class AppContext implements IConstant {
 
 
   /**
+   * 调用该方法允许该线程被 kill;
+   * 在完全初始化之后才调用, 否则会造成多线程共享对象不一致.
+   */
+  public void readyForKill() {
+    pm.get().readyForKill();
+  }
+
+
+  /**
    * 返回进程管理器
    */
   public ProcessManager getProcessManager() {
@@ -315,6 +324,7 @@ public class AppContext implements IConstant {
     private String __cache_path;
     private ApiTypes __dev_mode;
     private boolean __is_low_priority;
+    private boolean __is_ready_for_kill;
 
     /**
      * 返回未被替换的原始参数.
@@ -327,6 +337,14 @@ public class AppContext implements IConstant {
     }
 
     private ThreadLocalData() {}
+
+
+    /**
+     * @see AppContext#readyForKill()
+     */
+    private void readyForKill() {
+      __is_ready_for_kill = true;
+    }
   }
 
 
@@ -337,6 +355,15 @@ public class AppContext implements IConstant {
     private final static long INTERVAL = 30 * 1000;
     private Map<Thread, ThreadLocalData> running;
     private Map<Long, Thread> id;
+
+    /** kill 操作成功 */
+    public final int KILL_OK = 0;
+    /** kill 目标不存在 */
+    public final int KILL_NO_EXIST = 1;
+    /** 初始化未完成, 不能 kill */
+    public final int KILL_NO_READY = 2;
+    /** 已经被 kill */
+    public final int KILL_IS_KILLED = 3;
 
 
     private ProcessManager() {
@@ -424,21 +451,31 @@ public class AppContext implements IConstant {
      * @param processId 进程 id
      * @return 停止了正在运行的进程返回 true, 如果进程不存或已经停止在返回 false
      */
-    public boolean kill(long processId) {
+    public int kill(long processId) {
       Thread t = id.get(processId);
-      if (t != null && t.isAlive()) {
-        //
-        // 必须这样做, 脚本上下文的设计可以保证安全的 stop 线程.
-        // [ 除非有 bug :( ]
-        //
-        t.stop();
-        return true;
-      }
-      return false;
+      if (t == null)
+        return KILL_NO_EXIST;
+
+      if (! t.isAlive())
+        return KILL_IS_KILLED;
+
+      ThreadLocalData tld = running.get(t);
+      if (tld == null)
+        return KILL_NO_EXIST;
+
+      if (! tld.__is_ready_for_kill)
+        return KILL_NO_READY;
+
+      //
+      // 必须这样做, 脚本上下文的设计可以保证安全的 stop 线程.
+      // [ 除非有 bug :( ]
+      //
+      t.stop();
+      return KILL_OK;
     }
 
 
-    public boolean stop(long processId) {
+    public int stop(long processId) {
       return kill(processId);
     }
   }

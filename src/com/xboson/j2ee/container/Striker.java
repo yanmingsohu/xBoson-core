@@ -113,6 +113,11 @@ public class Striker extends HttpFilter {
 
 
   private void responseError(Throwable e, XResponse jr, HttpServletResponse response) {
+    if (response.isCommitted()) {
+      log.error("Error", e);
+      return;
+    }
+
     //
     // 初始化失败的情况
     //

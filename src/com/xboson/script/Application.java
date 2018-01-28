@@ -26,9 +26,8 @@ import com.xboson.util.Tool;
 import javax.script.ScriptException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -47,7 +46,7 @@ public class Application implements ICodeRunner, IModuleProvider {
   {
     this.vfs = vfs;
     this.log = LogFactory.create();
-    module_cache = Collections.synchronizedMap(new HashMap<>());
+    module_cache = new ConcurrentHashMap<>();
     sandbox = SandboxFactory.create();
 
     sandbox.bootstrap();

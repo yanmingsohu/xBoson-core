@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -62,8 +63,8 @@ public class DbmsFactory extends OnExitHandle {
 
 
   private DbmsFactory() {
-    idmap = new HashMap<>();
-    namemap = new HashMap<>();
+    idmap = new ConcurrentHashMap<>();
+    namemap = new ConcurrentHashMap<>();
     log = LogFactory.create();
 
     DBPoolConfig pc = SysConfig.me().readConfig().dbpool;
@@ -163,12 +164,11 @@ public class DbmsFactory extends OnExitHandle {
     String url = getUrl(dr, config);
 
     try {
-      synchronized (this) {
-        check_state();
-        Connection original = pool.borrowObject(config);
-        ConnectionProxy cp = new ConnectionProxy(pool, original, config);
-        return cp.getProxy();
-      }
+      check_state();
+      Connection original = pool.borrowObject(config);
+      ConnectionProxy cp = new ConnectionProxy(pool, original, config);
+      return cp.getProxy();
+
     } catch(Exception e) {
       log.error("open fail", e);
       throw new XBosonException.XSqlException(
@@ -199,7 +199,7 @@ public class DbmsFactory extends OnExitHandle {
    * 调用该方法获取 DBMS 的驱动,
    * 该方法会尽可能补全 dbname/dbid 属性.
    */
-  public synchronized IDriver getDriver(ConnectConfig config) {
+  public IDriver getDriver(ConnectConfig config) {
     IDriver dr = null;
     check_state();
 
@@ -233,7 +233,7 @@ public class DbmsFactory extends OnExitHandle {
    * @param nameOrID
    * @return
    */
-  public synchronized IDriver findDriver(String nameOrID) {
+  public IDriver findDriver(String nameOrID) {
     check_state();
 
     int id = -1;

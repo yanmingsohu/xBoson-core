@@ -16,8 +16,8 @@
 
 package com.xboson.auth;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -39,7 +39,7 @@ public class AuthFactory {
 
 
   private AuthFactory() {
-    whereMap = new HashMap<>();
+    whereMap = new ConcurrentHashMap<>();
   }
 
 

@@ -321,4 +321,10 @@ public class XBosonException extends RuntimeException
     }
   }
 
+
+  static public class Killed extends XBosonException {
+    public Killed(String msg) {
+      super(msg);
+    }
+  }
 }

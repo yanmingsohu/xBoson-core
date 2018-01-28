@@ -97,11 +97,11 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
    * 注册 js 模块, 在脚本中通过 require(..) 来引入
    */
   private void regModules(SysModules mod) {
-    mod.regClass("fs", FsImpl.class);
-    mod.regClass("mongodb", MongoImpl.class);
-    mod.regClass("shell", Shell.class);
-    mod.regClass("schedule", Schedule.class);
-    mod.regClass("pm", PmImpl.class);
+    mod.regClass("fs",        FsImpl.class);
+    mod.regClass("mongodb",   MongoImpl.class);
+    mod.regClass("shell",     Shell.class);
+    mod.regClass("schedule",  Schedule.class);
+    mod.regClass("pm",        PmImpl.class);
   }
 
 
@@ -163,6 +163,8 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       ModuleHandleContext.register(ModuleHandleContext.CLOSE, cs);
 
       config_return_func.get("__init_system_modules").call(null, sys);
+
+      AppContext.me().readyForKill();
       call.call(jsmod.exports, sys, sql, cache, http, se);
 
     } catch (ECMAException ec) {

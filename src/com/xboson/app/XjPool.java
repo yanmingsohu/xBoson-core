@@ -23,6 +23,7 @@ import com.xboson.log.LogFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -35,7 +36,7 @@ public abstract class XjPool<E> {
 
 
   protected XjPool() {
-    pool = Collections.synchronizedMap(new HashMap<>());
+    pool = new ConcurrentHashMap<>();
     log = LogFactory.create(this.getClass());
   }
 
