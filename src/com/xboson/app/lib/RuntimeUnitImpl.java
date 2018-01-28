@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.util.Tool;
+import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeArray;
@@ -78,9 +79,14 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     Object ret = ScriptObjectMirror.wrap(obj, Context.getGlobal());
     if (ret instanceof ScriptObjectMirror) {
       return (ScriptObjectMirror) ret;
-    } else if (obj == null) {
+    }
+    else if (ret instanceof ScriptObjectMirrorJsonConverter.Warp) {
+      return ((ScriptObjectMirrorJsonConverter.Warp) ret).getWarpedObject();
+    }
+    else if (obj == null) {
       throw new XBosonException.NullParamException("object");
-    } else {
+    }
+    else {
       throw new XBosonException.BadParameter(
               obj.getClass().getName(), "not js object");
     }

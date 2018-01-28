@@ -86,6 +86,7 @@ public class SysImpl extends DateImpl {
   private ScriptObjectMirror getRelatedTreeDataFunction;
   private ScriptObjectMirror setRetListFunction;
   private Map<String, Object> appCache;
+  private boolean isNestedCall;
 
 
   public SysImpl(CallData cd, ConnectConfig orgdb, XjApp app) {
@@ -94,6 +95,7 @@ public class SysImpl extends DateImpl {
     this.request = new RequestImpl(cd);
     this.requestParameterMap = new RequestParametersImpl(cd);
     this.appCache = app.getCacheData();
+    this.isNestedCall = AppContext.me().isNestedCall();
   }
 
 
@@ -126,13 +128,18 @@ public class SysImpl extends DateImpl {
 
 
   /**
-   * 该方法将直接把数据压入应答数据集中, 而非不等待 setRetData 进行压入
+   * 该方法将直接把数据压入应答数据集中, 而非不等待 setRetData 进行压入.
+   * 嵌套调用时不对结果做包装, 因为结果不会被发送到客户端.
    */
   void bindResult(String name, Object value) {
-    if (value instanceof ScriptObjectMirror) {
-      value = new ScriptObjectMirrorJsonConverter.Warp(value);
-    } else if (value instanceof ScriptObject) {
-      value = new ScriptObjectMirrorJsonConverter.Warp(wrap(value));
+    if (isNestedCall) {
+      value = wrap(value);
+    } else {
+      if (value instanceof ScriptObjectMirror) {
+        value = new ScriptObjectMirrorJsonConverter.Warp(value);
+      } else if (value instanceof ScriptObject) {
+        value = new ScriptObjectMirrorJsonConverter.Warp(wrap(value));
+      }
     }
     cd.xres.bindResponse(name, value);
   }

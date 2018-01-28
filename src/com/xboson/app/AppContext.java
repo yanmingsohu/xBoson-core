@@ -268,6 +268,14 @@ public class AppContext implements IConstant {
 
 
   /**
+   * 当前 js 环境是嵌套调用的返回 true.
+   */
+  public boolean isNestedCall() {
+    return pm.get().nestedCall != null;
+  }
+
+
+  /**
    * 返回进程管理器
    */
   public ProcessManager getProcessManager() {

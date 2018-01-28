@@ -165,6 +165,11 @@ public class ScriptObjectMirrorJsonConverter {
     public Warp(Object jsobj) {
       this.jsobj = (ScriptObjectMirror) jsobj;
     }
+
+
+    public ScriptObjectMirror getWarpedObject() {
+      return jsobj;
+    }
   }
 
 
