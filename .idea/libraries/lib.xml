@@ -1,14 +1,9 @@
 <component name="libraryTable">
   <library name="lib">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/okio-1.13.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/moshi-kotlin-1.5.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/jansi-1.16.jar!/" />
-      <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/moshi-1.5.0.jar!/" />
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
       <root url="jar://$PROJECT_DIR$/../.tomcat9/lib/catalina.jar!/" />
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
-      <root url="file://$PROJECT_DIR$/../[opensource-lib-other]" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
@@ -16,7 +11,6 @@
       <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/jvyamlb-src-0.2.7.zip!/jvyamlb-0.2.7/src/test" />
       <root url="file://$PROJECT_DIR$/../[opensource-lib-other]" />
     </SOURCES>
-    <jarDirectory url="file://$PROJECT_DIR$/../[opensource-lib-other]" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../[opensource-lib-other]" recursive="false" type="SOURCES" />

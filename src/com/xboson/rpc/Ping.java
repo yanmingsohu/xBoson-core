@@ -40,6 +40,6 @@ public class Ping implements IPing {
 
   @Override
   public String ping() throws RemoteException {
-    return "PONG";
+    return PONG;
   }
 }
