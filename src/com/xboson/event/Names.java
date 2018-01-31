@@ -56,6 +56,9 @@ public interface Names {
    */
   String inner_error = "sys.error";
 
+
+  String host_update = "host.update";
+
   
   /**
    * 文件修改事件前缀, 消息只发送给在线节点, 离线节点上线后也无法收到该消息.

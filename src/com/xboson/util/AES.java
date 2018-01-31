@@ -16,6 +16,8 @@
 
 package com.xboson.util;
 
+import com.xboson.been.XBosonException;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -52,38 +54,38 @@ public class AES implements IConstant {
    * 生成 aes 密钥
    * @throws Exception
    */
-  public static byte[] aesKey(String pass) throws ServletException {
+  public static byte[] aesKey(String pass) {
     try {
       SecretKeyFactory skf = SecretKeyFactory.getInstance(PBK1_NAME);
       PBEKeySpec spec = new PBEKeySpec(pass.toCharArray(), salt, itercount, keylen);
       SecretKey secretKey = skf.generateSecret(spec);
       return secretKey.getEncoded();
     } catch(Exception e) {
-      throw new ServletException(e);
+      throw new XBosonException(e);
     }
   }
 
 
-  public static byte[] Encode(byte[] data, byte[] password) throws ServletException {
+  public static byte[] Encode(byte[] data, byte[] password) {
     try {
       Cipher c = Cipher.getInstance(AES_C_P_NAME);
       SecretKeySpec key = new SecretKeySpec(password, AES_NAME);
       c.init(ENCRYPT_MODE, key, iv);
       return c.doFinal(data);
     } catch(Exception e) {
-      throw new ServletException(e);
+      throw new XBosonException(e);
     }
   }
 
 
-  public static byte[] Decode(byte[] data, byte[] password) throws ServletException {
+  public static byte[] Decode(byte[] data, byte[] password) {
     try {
       Cipher c = Cipher.getInstance(AES_C_P_NAME);
       SecretKeySpec key = new SecretKeySpec(password, AES_NAME);
       c.init(DECRYPT_MODE, key, iv);
       return c.doFinal(data);
     } catch(Exception e) {
-      throw new ServletException(e);
+      throw new XBosonException(e);
     }
   }
 }

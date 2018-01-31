@@ -18,7 +18,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 云盘系统(api已经完成)
 * 多语言
 * 集群管理
-* SqlServer 分页.
+* SqlServer 分页, oracle 查询全面测试.
 * 程序授权许可系统
 * 系统交叉登录(补充到计划任务调用api时的权限)
 
@@ -80,15 +80,18 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
     -- (okhttp-3.9.1.jar)[http://square.github.io/okhttp/]
     
 * (MongoDB 客户端)
-    -- (bson-3.6.1.jar)
-    -- (mongodb-driver-3.6.1.jar)
+    -- (bson-3.6.1.jar)[http://bsonspec.org/]
+    -- (mongodb-driver-3.6.1.jar)[http://mongodb.github.io/mongo-java-driver/]
     -- (mongodb-driver-core-3.6.1.jar)
     
 * (Microsoft Excel 报表)
-    -- (poi-3.17.jar)
+    -- (poi-3.17.jar)[https://poi.apache.org/]
     
 * (YAML 转换)
-    -- (yamlbeans-1.13.jar)
+    -- (yamlbeans-1.13.jar)[https://github.com/EsotericSoftware/yamlbeans/]
+    
+* (Hyperledger-Fabric 区块链)[http://hyperledger-fabric.readthedocs.io/en/release/]
+    -- (?)
 
 		
 # URL 映射约定
@@ -200,3 +203,9 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   * FATAL   | 以下日志都启用
   
   
+# 参考
+
+* (JVM 垃圾收集器调优)[http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html]
+* (Nashorn 上下文等)[https://wiki.openjdk.java.net/display/Nashorn/Nashorn+jsr223+engine+notes]
+* (Java 与区块链)[https://www.ibm.com/developerworks/cn/java/j-chaincode-for-java-developers/index.html]
+* (hyperledger 实现)[http://hyperledger-fabric.readthedocs.io/en/latest/blockchain.html]

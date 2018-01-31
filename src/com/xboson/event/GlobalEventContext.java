@@ -20,6 +20,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.ReverseIterator;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 
@@ -44,6 +45,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
   private Log log;
   private boolean skip_error;
   private final long myselfid;
+  private boolean isLiLo;
 
   private String channel_name;
 
@@ -54,6 +56,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
     this.name      = name;
     this.log       = LogFactory.create(GlobalEventContext.class +"$"+ name);
     this.myselfid  = myselfid;
+    this.isLiLo    = true;
 
     //
     // 带有 sys 开头的消息不会在集群中路由
@@ -131,16 +134,28 @@ class GlobalEventContext extends InitialContext implements EventContext {
     if (listeners.size() < 1)
       return;
 
-    Iterator<GlobalListener> its = listeners.iterator();
-
     Binding newbind = new Binding(name, data);
     NamingEvent event = new NamingEvent(
             this, type, newbind, oldbind, info);
     oldbind = newbind;
 
+    Iterator<GlobalListener> its = isLiLo
+            ? listeners.iterator() : new ReverseIterator(listeners);
+
     while (its.hasNext()) {
       EmitWithoutCluster.emit(its.next(), event, skip_error);
     }
+  }
+
+
+  /**
+   * 设置接收消息的顺序.
+   *    true: (默认) 先注册的监听器先接受到消息
+   *    false: 后注册的监听器, 先接受到消息
+   * @param isLilo
+   */
+  void setEmitOrder(boolean isLilo) {
+    this.isLiLo = isLilo;
   }
 
 

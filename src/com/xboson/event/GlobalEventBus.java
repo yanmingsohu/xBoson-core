@@ -127,6 +127,19 @@ public class GlobalEventBus {
 
 
   /**
+   * 设置接收消息的顺序.
+   *
+   * @param name 事件名称
+   * @param isLilo true: (默认) 先注册的监听器先接受到消息;
+   *               false: 后注册的监听器, 先接受到消息
+   */
+  public void setEmitOrder(String name, boolean isLilo) {
+    GlobalEventContext context = getContext(true, name);
+    context.setEmitOrder(isLilo);
+  }
+
+
+  /**
    * 删除事件监听器
    *
    * @param name 事件名称

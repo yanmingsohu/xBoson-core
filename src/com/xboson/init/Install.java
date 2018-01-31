@@ -17,14 +17,15 @@
 package com.xboson.init;
 
 import com.xboson.been.Config;
+import com.xboson.been.XBosonException;
 import com.xboson.db.DbmsFactory;
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
-import com.xboson.init.install.step.Welcome;
+import com.xboson.init.install.step.*;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.IConstant;
 import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -34,15 +35,34 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 
 public class Install extends HttpServlet {
 
   public static final String PAGE_PATH = "/WEB-INF/install-page/";
-  public static final String NULSTR = "";
+  public static final String NULSTR = IConstant.NULL_STR;
+
+
+  /**
+   * 按顺序执行初始化过程
+   */
+  private static final Class[] ALL_STEP = new Class[] {
+          Welcome.class,
+          Copyright.class,
+          RootUser.class,
+          ConfigCluster.class,
+          ConfigCoreDB.class,
+          ConfigRedis.class,
+          ConfigLog.class,
+          UiConfig.class,
+          NodeModuleConfig.class,
+          ConfigMongoDB.class,
+          ConfigShell.class,
+          SaveConfig.class,
+          RestartServer.class,
+  };
+
 
   private List<IStep> steps;
   private Config config;
@@ -51,31 +71,19 @@ public class Install extends HttpServlet {
 
 
   public Install() {
-    config = SysConfig.me().readConfig();
+    this.config = SysConfig.me().readConfig();
+    this.steps  = new ArrayList<>();
+    this.log    = LogFactory.create();
+
     LogFactory.me().setType("ConsoleOut");
     DbmsFactory.me().registeringDefaultDriver();
-    steps = new ArrayList<>();
-    log = LogFactory.create();
 
     try {
-      Iterator<Class> it = Tool.findPackage(Welcome.class).iterator();
-      while (it.hasNext()) {
-        Class c = it.next();
-        if (IStep.class.isAssignableFrom(c)) {
-          IStep step = (IStep) c.newInstance();
-          steps.add(step);
-          log.info("Get Install step: ", c);
-        }
+      for (Class c : ALL_STEP) {
+        steps.add((IStep) c.newInstance());
       }
-
-      steps.sort(new Comparator<IStep>() {
-        public int compare(IStep a, IStep b) {
-          return a.order() - b.order();
-        }
-      });
-
     } catch(Exception e) {
-      e.printStackTrace();
+      throw new XBosonException(e);
     }
   }
 

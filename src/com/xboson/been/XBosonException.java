@@ -160,6 +160,11 @@ public class XBosonException extends RuntimeException
       super("The Function parameter \"" + paramName + "\" can not be NULL");
       setCode(1);
     }
+
+    public static void check(Object value, String paramName) {
+      if (value == null)
+        throw new NullParamException(paramName);
+    }
   }
 
 
@@ -325,6 +330,13 @@ public class XBosonException extends RuntimeException
   static public class Killed extends XBosonException {
     public Killed(String msg) {
       super(msg);
+    }
+  }
+
+
+  static public class Remote extends XBosonException {
+    public Remote(Throwable throwable) {
+      super(throwable);
     }
   }
 }

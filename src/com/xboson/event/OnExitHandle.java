@@ -26,8 +26,19 @@ import javax.naming.event.NamingEvent;
  */
 public abstract class OnExitHandle extends GLHandle {
 
+  private static boolean orderInit = false;
+
+
   public OnExitHandle() {
     GlobalEventBus.me().on(Names.exit, this);
+
+    if (!orderInit) {
+      //
+      // 只在第一个使用 OnExitHandle 对象的地方设置一次消息顺序.
+      //
+      orderInit = true;
+      GlobalEventBus.me().setEmitOrder(Names.exit, false);
+    }
   }
 
 

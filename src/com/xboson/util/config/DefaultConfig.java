@@ -38,6 +38,7 @@ import java.util.Properties;
  */
 public final class DefaultConfig {
 
+  /** `sys_pl_` 前缀的表自动设置为共享表 */
   public static final String default_sys_tables = "sys_tenant,sys_tenant_user," +
           "sys_base_tbl,sys_config,sys_server,sys_system,sys_sqls,sys_userinfo," +
           "sys_user_identity,mdm_personal_info,mdm_org,sys_eeb_run_conf," +
@@ -48,7 +49,8 @@ public final class DefaultConfig {
           "ZYAPP_SYSMGT,ZYAPP_LOGIN,auth,c9e98ea6fc7148d186289e8c33776f8a," +
           "03229cbe4f4f11e48d6d6f51497a883b,d2c8511b47714faba5c71506a5029d94," +
           "26c0f25501d24c0993515d445e1215a5,c770045becc04c7583f626faacd3b456," +
-          "c879dcc94d204d96a98a34e0b7d75676";
+          "c879dcc94d204d96a98a34e0b7d75676,a20a0c6a82fb4cb085cb816e5526d4bc," +
+          "e0ef1b25da204227b305fd40382693e6";
 
   private static Properties p;
 
@@ -59,7 +61,7 @@ public final class DefaultConfig {
   public static void setto(Config c) {
     Uuid uuid = new Uuid();
 
-    c.configVersion     = "1.3.1";
+    c.configVersion     = Config.VERSION;
     c.loggerWriterType  = "ConsoleOut";
     c.logLevel          = "info";
     c.sessionTimeout    = 24 * 60;

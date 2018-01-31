@@ -20,6 +20,7 @@ import java.io.*;
 import java.security.SecureRandom;
 import java.util.*;
 
+import com.xboson.been.Config;
 import com.xboson.been.JsonHelper;
 import com.xboson.init.Touch;
 import com.xboson.log.Level;
@@ -27,6 +28,7 @@ import com.xboson.log.LogFactory;
 import com.xboson.sleep.ISleepwalker;
 import com.xboson.util.IConstant;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 /**
@@ -34,10 +36,15 @@ import com.xboson.util.Tool;
  * 这里的方法都没有考虑性能, 不要再非测试环境中使用.
  *
  * 子类可以实现一个 main() 以允许测试用例单独运行.
+ * 测试用例将节点 ID 改为 `18`
+ *
+ * @see Test#CLUSTER_NODE_ID
  */
 public class Test implements IConstant {
 	public static final String line =
 ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
+
+	public static final short CLUSTER_NODE_ID = 18;
 
 	private static int failcount = 0;
 	private static long time = 0;
@@ -53,6 +60,8 @@ public class Test implements IConstant {
 
   public Test() {
 	  if (centralized) return;
+    Config cf = SysConfig.me().readConfig();
+    cf.clusterNodeID = CLUSTER_NODE_ID;
 	  _test(new Test[] { this });
   }
 
@@ -339,8 +348,7 @@ public class Test implements IConstant {
       Thread t = it.next();
       buf.println("\u001b[;33m\nThread: " + t + "\u001b[m");
 
-      if (t.getThreadGroup().getName().equals("system") == false
-              && t.isDaemon() == false && t != myself) {
+      if (t.isDaemon() == false && t != myself) {
         StackTraceElement[] ste = all.get(t);
         for (int i = 0; i < ste.length; ++i) {
           buf.println("\u001b[;31m\t" + ste[i] + "\u001b[m");
@@ -377,6 +385,7 @@ public class Test implements IConstant {
       }
       throw new RuntimeException("cannot throw Throwable: " + _throws);
     }
+
     public abstract void run() throws Throwable;
   }
 }

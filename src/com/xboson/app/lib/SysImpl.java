@@ -132,9 +132,7 @@ public class SysImpl extends DateImpl {
    * 嵌套调用时不对结果做包装, 因为结果不会被发送到客户端.
    */
   void bindResult(String name, Object value) {
-    if (isNestedCall) {
-      value = wrap(value);
-    } else {
+    if (! isNestedCall) {
       if (value instanceof ScriptObjectMirror) {
         value = new ScriptObjectMirrorJsonConverter.Warp(value);
       } else if (value instanceof ScriptObject) {

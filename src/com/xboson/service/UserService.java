@@ -102,7 +102,7 @@ public class UserService extends XService implements IDict, IConstant {
 
 
   /**
-   * TODO: 需要检查登录攻击, 失败次数, 验证图片
+   * 检查登录攻击, 失败次数, 验证图片
    * password 参数必须已经 md5 后传入接口.
    */
 	public void login(CallData data) throws Exception {

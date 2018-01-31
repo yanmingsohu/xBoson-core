@@ -54,6 +54,8 @@
                 <%=c.uiWelcome %> </div>
           <div><a>JS 模块目录</a>
                 <%=c.nodeUrl %> </div>
+          <div><a>运算节点 ID</a>
+                <%=c.clusterNodeID %> </div>
         </section>
 
         <form method="POST">

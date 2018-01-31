@@ -25,6 +25,8 @@ import com.xboson.event.Names;
 import com.xboson.fs.script.FileSystemFactory;
 import com.xboson.j2ee.container.UrlMapping;
 import com.xboson.log.LogFactory;
+import com.xboson.rpc.ClusterManager;
+import com.xboson.rpc.RpcFactory;
 import com.xboson.script.SandboxFactory;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.SysConfig;
@@ -55,6 +57,8 @@ public final class Touch {
     AuthFactory.me();
     SqlReader.me();
     SystemStartupScript.me();
+    ClusterManager.me();
+    RpcFactory.me();
   }
 
 
