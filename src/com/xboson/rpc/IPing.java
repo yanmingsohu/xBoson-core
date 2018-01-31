@@ -19,6 +19,12 @@ package com.xboson.rpc;
 import java.rmi.RemoteException;
 
 
+/**
+ * 如果远程对象实现了 IPing 接口, 在从缓存取出前会检查网络连通情况.
+ */
 public interface IPing extends IXRemote {
+
   String ping(String a) throws RemoteException;
+
+  String ping() throws RemoteException;
 }

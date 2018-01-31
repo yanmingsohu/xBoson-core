@@ -6,26 +6,28 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-1-30 下午1:58
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/rpc/IXRemote.java
+// 文件创建日期: 18-1-31 下午12:03
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/app/IProcessState.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.rpc;
+package com.xboson.app;
 
-import java.io.Serializable;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
+public interface IProcessState {
 
+  /** kill 操作成功 */
+  int KILL_OK = 0;
 
-/**
- * 使用类名注册到注册表中;
- * 方法签名中必须抛出 RemoteException 异常.
- *
- * @see RemoteException
- */
-public interface IXRemote extends Remote, Serializable {
+  /** kill 目标不存在 */
+  int KILL_NO_EXIST = 1;
+
+  /** 初始化未完成, 不能 kill */
+  int KILL_NO_READY = 2;
+
+  /** 已经被 kill */
+  int KILL_IS_KILLED = 3;
+
 }

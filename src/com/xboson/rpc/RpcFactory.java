@@ -34,14 +34,18 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 
-/**
+ /**
  * 默认会绑定 Ping 对象, 可以在远程进行测试.
  * 连接需要安全认证.
+ * 大部分方法都会抛出 XBosonException.Remote 异常, 必要时需要检查.
+ *
+ * @see XBosonException.Remote
  */
 public final class RpcFactory extends OnExitHandle {
 
   private static RpcFactory instance;
 
+  private final String myselfNodeID;
   private SafeClientFactory clientf;
   private SafeServerFactory serverf;
   private Registry server;
@@ -64,15 +68,13 @@ public final class RpcFactory extends OnExitHandle {
       this.registryCache  = new HashMap<>();
       this.ref            = new HashMap<>();
       this.log            = LogFactory.create();
-      //
-      // 对自身节点的引用
-      //
-      createRemoteCache(ClusterManager.me().localNodeID(), server);
+
+      myselfNodeID = ClusterManager.me().localNodeID();
       bind(new Ping());
       attentionNodeUpdateEvent();
 
     } catch (RemoteException e) {
-      throw new XBosonException(e);
+      throw new XBosonException.Remote(e);
     }
   }
 
@@ -105,6 +107,7 @@ public final class RpcFactory extends OnExitHandle {
    * @param nodeID 远程节点 id
    * @param clazz 使用类型名称在注册表中寻找对象
    * @return 远程对象
+   * @see #lookup(String, String)
    */
   public <E extends IXRemote> E lookup(String nodeID, Class<E> clazz) {
     XBosonException.NullParamException.check(clazz, "Class clazz");
@@ -114,25 +117,38 @@ public final class RpcFactory extends OnExitHandle {
 
 
   /**
-   * 获取远程对象
+   * 获取远程对象(或本地对象), 如果远程对象会在某时刻从注册表删除, 在该方法返回的对象
+   * 上调用远程方法会抛出 NotBoundException 异常, 此时远程对象应该实现 IPing 接口
+   * 并可以继承默认实现 Ping, 该方法返回前会处理对象同步, 并且正确的抛出异常.
    *
    * @param nodeID 远程节点 id
    * @param name 注册表中的对象名称
    * @return 远程对象
+   * @see IPing
+   * @see Ping IPing 的默认实现
    */
   public synchronized Remote lookup(String nodeID, String name) {
     try {
       XBosonException.NullParamException.check(nodeID, "String node");
       XBosonException.NullParamException.check(name, "String name");
 
-      RegistryData data = findRegistryWithCache(nodeID);
-      return data.getOrCreate(name);
+      if (myselfNodeID.equals(nodeID)) {
+        return server.lookup(name);
+      }
 
-    } catch (ConnectException e) {
+      RegistryData data = findRegistryWithCache(nodeID);
+      Remote remote = data.getOrCreate(name);
+
+      if (remote instanceof IPing) {
+        ((IPing) remote).ping();
+      }
+      return remote;
+
+    } catch (ConnectException | NotBoundException e) {
       updateNodeRegistryCache(nodeID);
       throw new XBosonException.Remote(e);
 
-    } catch (RemoteException | NotBoundException e) {
+    } catch (RemoteException e) {
       throw new XBosonException.Remote(e);
     }
   }
@@ -145,6 +161,26 @@ public final class RpcFactory extends OnExitHandle {
   public void bind(IXRemote remote) {
     String name = getName(remote);
     bind(remote, name);
+  }
+
+
+  /**
+   * 检查注册表上是否已经有命名对象
+   *
+   * @param name 注册表对象名
+   * @return 如果注册表已经有该名称的对象返回 true
+   */
+  public boolean isBind(String name) {
+    return ref.containsKey(name);
+  }
+
+
+  /**
+   * 使用 remote 的类型名作为注册表名
+   * @see #isBind(String)
+   */
+  public boolean isBind(IXRemote remote) {
+    return isBind(getName(remote));
   }
 
 

@@ -16,28 +16,30 @@
 
 package com.xboson.rpc;
 
-import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
-import com.xboson.util.Tool;
-
 import java.rmi.RemoteException;
-import java.util.Date;
 
 
+/**
+ * 默认 RPC 注册表中有一个该对象的实力, 可以用来测试网络情况.
+ * 如果远程对象实现了 IPing 接口, 在从缓存取出前
+ */
 public class Ping implements IPing {
 
-  private Log log;
+  public static final String PONG = "PONG";
 
 
   public Ping() {
-    log = LogFactory.create();
   }
 
 
   @Override
   public String ping(String a) throws RemoteException {
-    String msg = "PING: "+ a +" ["+ Tool.formatDate(new Date()) +"]";
-    log.info(msg);
-    return msg;
+    return a;
+  }
+
+
+  @Override
+  public String ping() throws RemoteException {
+    return "PONG";
   }
 }

@@ -174,7 +174,7 @@ public class Striker extends HttpFilter {
       msg = e.toString();
     }
     jr.setData(msg);
-    log.error(msg);
+    log.error(Tool.allStack(e));
   }
 
 
@@ -183,6 +183,6 @@ public class Striker extends HttpFilter {
     Tool.xbosonStack(e, out);
     String msg = out.toString();
     jr.setData(msg, StackTraceElement.class);
-    log.error(msg);
+    log.error(Tool.allStack(e));
   }
 }

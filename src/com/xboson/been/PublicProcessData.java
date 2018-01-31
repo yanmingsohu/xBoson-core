@@ -33,6 +33,7 @@ public class PublicProcessData implements IJson {
   public long beginAt;
   public long runningTime;
   public String callUser;
+  public String nodeID;
 
 
   public PublicProcessData() {}

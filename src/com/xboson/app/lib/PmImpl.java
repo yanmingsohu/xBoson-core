@@ -17,22 +17,125 @@
 package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
+import com.xboson.app.IProcessState;
+import com.xboson.been.PublicProcessData;
 import com.xboson.been.XBosonException;
+import com.xboson.rpc.ClusterManager;
+import com.xboson.rpc.IXRemote;
+import com.xboson.rpc.RpcFactory;
+import com.xboson.util.Tool;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
- * 进程管理器
+ * 进程管理器, 支持集群
  */
 public class PmImpl {
 
+  public static final String RPC_NAME = "XB.rpc.ProcessManager";
 
-  public AppContext.ProcessManager open() {
-    boolean runOnSysOrg = (boolean) ModuleHandleContext._get("runOnSysOrg");
+
+  public PmImpl() {
+    try {
+      RpcFactory rpc = RpcFactory.me();
+      if (! rpc.isBind(RPC_NAME)) {
+        rpc.bind(new ExportRemote(), RPC_NAME);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+
+  public Object open() {
+    boolean runOnSysOrg = (boolean)
+            ModuleHandleContext._get("runOnSysOrg");
 
     if (!runOnSysOrg)
-      throw new XBosonException.NotImplements("只能在平台机构中引用");
+        throw new XBosonException.NotImplements("只能在平台机构中引用");
 
-    return AppContext.me().getProcessManager();
+    return new Local();
+  }
+
+
+  public interface IPM extends IXRemote {
+    PublicProcessData[] list() throws RemoteException;
+    int kill(long processId) throws RemoteException;
+    int stop(long processId) throws RemoteException;
+  }
+
+
+  /**
+   * 本机实现
+   */
+  public static class Local implements IProcessState {
+
+    public final int KILL_OK        = IProcessState.KILL_OK;
+    public final int KILL_NO_EXIST  = IProcessState.KILL_NO_EXIST;
+    public final int KILL_NO_READY  = IProcessState.KILL_NO_READY;
+    public final int KILL_IS_KILLED = IProcessState.KILL_IS_KILLED;
+
+    private RpcFactory fact = RpcFactory.me();
+    private ClusterManager cm = ClusterManager.me();
+
+
+    public PublicProcessData[] list() throws RemoteException {
+      List<PublicProcessData> list = new ArrayList<>();
+      for (String node : cm.list()) {
+        try {
+          IPM pm = (IPM) fact.lookup(node, RPC_NAME);
+          for (PublicProcessData pd : pm.list()) {
+            list.add(pd);
+          }
+        } catch (Exception e) {}
+      }
+      return list.toArray(new PublicProcessData[list.size()]);
+    }
+
+
+    public int kill(String nodeID, long processId) throws RemoteException {
+      IPM pm = (IPM) fact.lookup(nodeID, RPC_NAME);
+      return pm.kill(processId);
+    }
+
+
+    public int stop(String nodeID, long processId) throws RemoteException {
+      return kill(nodeID, processId);
+    }
+  }
+
+
+  /**
+   * 导出到集群中
+   */
+  private static class ExportRemote implements IPM {
+    private AppContext.ProcessManager pm;
+
+
+    private ExportRemote() {
+      pm = AppContext.me().getProcessManager();
+    }
+
+
+    @Override
+    public PublicProcessData[] list() {
+      return pm.list();
+    }
+
+
+    @Override
+    public int kill(long processId) {
+      return pm.kill(processId);
+    }
+
+
+    @Override
+    public int stop(long processId) {
+      return pm.stop(processId);
+    }
   }
 
 }

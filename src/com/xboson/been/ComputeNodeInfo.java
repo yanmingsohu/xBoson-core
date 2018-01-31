@@ -17,12 +17,14 @@
 package com.xboson.been;
 
 import com.xboson.util.Network;
+import com.xboson.util.Tool;
 
 import java.util.Properties;
 
 
 public class ComputeNodeInfo extends JsonHelper {
 
+  public long startAt;
   public String nodeID;
   public String[] ip;
   public String javaVersion;
@@ -53,5 +55,6 @@ public class ComputeNodeInfo extends JsonHelper {
     this.osArch        = sysattr.getProperty("os.arch");
     this.nodeID        = nodeid;
     this.rpcPort       = rpcPort;
+    this.startAt       = System.currentTimeMillis();
   }
 }

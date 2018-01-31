@@ -17,7 +17,6 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 区块链api
 * 云盘系统(api已经完成)
 * 多语言
-* 集群管理
 * SqlServer 分页, oracle 查询全面测试.
 * 程序授权许可系统
 * 系统交叉登录(补充到计划任务调用api时的权限)
@@ -42,7 +41,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 快如闪电的 json/xml 转换器.
 * 集群使用通用消息总线来发送通知/数据.
 * MongoDB 驱动.
-* 新的 API 进程管理.
+* 新的 API 进程模块, 集群模块, 计划任务模块.
 
 
 # JAR 依赖

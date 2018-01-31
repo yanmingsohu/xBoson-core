@@ -16,18 +16,22 @@
 
 package com.xboson.test;
 
+import com.xboson.app.lib.PmImpl;
 import com.xboson.auth.PermissionException;
 import com.xboson.been.ComputeNodeInfo;
+import com.xboson.been.PublicProcessData;
 import com.xboson.rpc.*;
 import com.xboson.util.Network;
 import com.xboson.util.Tool;
 
 import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.List;
 
 
 public class TestRPC extends Test {
+
+  static final String nodeID = "0";
+
 
   @Override
   public void test() throws Throwable {
@@ -36,6 +40,7 @@ public class TestRPC extends Test {
     safe();
     rpc();
 //    connectFail();
+    rpcApp();
   }
 
 
@@ -92,18 +97,21 @@ public class TestRPC extends Test {
 
 
   public void rpc() {
-    sub("RPC");
     try {
       RpcFactory rpc = RpcFactory.me();
 
-      msg("Reg List:", Arrays.toString(rpc.list("0")));
+      sub("----- Register Objects ------");
+      for (String s : rpc.list(nodeID)) {
+        msg(s);
+      }
 
+      sub("----- Ping -----");
       Ping lp = new Ping();
       rpc.rebind(lp);
 
       Tool.sleep(500);
 
-      IPing p = rpc.lookup("0", Ping.class);
+      IPing p = rpc.lookup(nodeID, Ping.class);
       msg("Local", lp);
       msg("Remote", p);
 
@@ -112,9 +120,29 @@ public class TestRPC extends Test {
       msg("Call ping()", p.ping("test 3"));
 
       ok(lp != p, "Remote Object");
+
     } catch(Exception e) {
-      red(Tool.allStack(e), "\n该测试的正确运行依赖一个 ID=0 的节点");
+      red(e, "\n该测试的正确运行依赖一个 ID=0 的节点");
     }
+  }
+
+
+  /**
+   * 需要有一个 tomcat 节点在运行
+   */
+  public void rpcApp() throws Exception {
+    RpcFactory rpc = RpcFactory.me();
+
+    sub("------- RPC Process List ---------");
+
+    //
+    // 服务器上运行过 PM 模块这个对象才注册到全局
+    //
+    PmImpl.IPM pm = (PmImpl.IPM) rpc.lookup(nodeID, PmImpl.RPC_NAME);
+    for (PublicProcessData pd : pm.list()) {
+      msg("Procdss:", pd.toJSON());
+    }
+    pm.equals(pm);
   }
 
 

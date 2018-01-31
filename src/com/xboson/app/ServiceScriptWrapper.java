@@ -102,6 +102,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     mod.regClass("shell",     Shell.class);
     mod.regClass("schedule",  Schedule.class);
     mod.regClass("pm",        PmImpl.class);
+    mod.regClass("cluster",   Cluster.class);
   }
 
 
@@ -148,6 +149,9 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     boolean runOnSysOrg = org.isSysORG();
 
     try (CloseableSet cs = new CloseableSet()) {
+      //
+      // 乱出新天地
+      //
       SqlImpl sql     = cs.add(new SqlImpl(cd, orgdb));
       SysImpl sys     = new SysImpl(cd, orgdb, app);
       CacheImpl cache = new CacheImpl(cd, org.id());

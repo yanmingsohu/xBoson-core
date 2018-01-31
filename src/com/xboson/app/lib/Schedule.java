@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppContext;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
@@ -24,29 +25,26 @@ import com.xboson.db.sql.SqlReader;
 import com.xboson.event.timer.TimeFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.rpc.*;
 import com.xboson.util.DateParserFactory;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import okhttp3.*;
 
 import java.math.BigDecimal;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.rmi.RemoteException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Map;
+import java.util.TimerTask;
 
 
-/**
- * TODO: 未处理集群
- */
 public class Schedule extends RuntimeUnitImpl {
 
   private static final String LOG_FILE = "insert-scheduler-log.sql";
+  public static final String RPC_PREFIX = "XB.rpc.Schedule.";
 
-  /**
-   * 每个应用都有独立的上下文自然会将不同的 org 分开
-   */
-  private final Map<String, Task>
-          management = new ConcurrentHashMap<>();
-
+  private final String nodeID;
   private final Log log;
   private OkHttpClient hc;
 
@@ -54,33 +52,105 @@ public class Schedule extends RuntimeUnitImpl {
   public Schedule() {
     super(null);
     this.log = LogFactory.create();
+    this.nodeID = ClusterManager.me().localNodeID();
   }
 
 
-  public void start(String id, Map<String, Object> config) {
-    getStr(id, "id");
-    Task task = management.get(id);
-    if (task != null) {
+  public void start(String id, Map<String, Object> config) throws Exception {
+    ITask exist = findTask(id);
+    if (exist != null) {
       throw new XBosonException(
-              "Schedule Task "+ task.schedulenm +"("+ id +") is running");
+              "Schedule Task "+ exist.name() +"("+ id +") is running");
     }
-    task = new Task(id, config);
-    management.put(id, task);
+    ExportTask task = new ExportTask(id, config);
+    RpcFactory.me().bind(task, task.rpcName);
+    log.debug("Start", task.rpcName);
   }
 
 
-  public boolean stop(String id) {
-    Task task = management.get(id);
-    if (task == null) {
-      return false;
+  public boolean stop(String id) throws RemoteException {
+    try {
+      ITask task = findTask(id);
+      if (task != null) {
+        task.stop();
+        return true;
+      }
+    } catch(Exception e) {
+      log.warn("stop", id, e);
     }
-    task.stop();
-    return true;
+    return false;
   }
 
 
   public Object info(String id) {
-    return management.get(id);
+    return findTask(id);
+  }
+
+
+  private ITask findTask(String id) {
+    getStr(id, "id");
+    RpcFactory fact = RpcFactory.me();
+    ClusterManager cm = ClusterManager.me();
+    String rpcName = rpcName(id);
+
+    for (String node : cm.list()) {
+      try {
+        ITask task = (ITask) fact.lookup(node, rpcName);
+        return task;
+      } catch (Exception e) {}
+    }
+    return null;
+  }
+
+
+  private String rpcName(String id) {
+    return RPC_PREFIX + AppContext.me().originalOrg() +'.'+ id;
+  }
+
+
+  public interface ITask extends IXRemote, IPing {
+    int state() throws RemoteException;
+    void stop() throws RemoteException;
+    String name() throws RemoteException;
+    Date nextDate() throws RemoteException;
+    String nodeID() throws RemoteException;
+  }
+
+
+  public class ExportTask extends Ping implements ITask {
+    private Task real;
+    private String rpcName;
+
+    private ExportTask(String id, Map<String, Object> config) {
+      real = new Task(id, config);
+      rpcName = rpcName(id);
+    }
+
+    @Override
+    public int state() {
+      return real.state;
+    }
+
+    @Override
+    public void stop() {
+      real.stop();
+      RpcFactory.me().unbind(rpcName);
+    }
+
+    @Override
+    public Date nextDate() {
+      return real.start_time;
+    }
+
+    @Override
+    public String nodeID() throws RemoteException {
+      return nodeID;
+    }
+
+    @Override
+    public String name() {
+      return real.name();
+    }
   }
 
 
@@ -112,6 +182,10 @@ public class Schedule extends RuntimeUnitImpl {
       this.db           = SysConfig.me().readConfig().db;
       this.state        = JOB_STATUS_INIT;
       this.id           = id;
+
+      if (start_time.getTime() < System.currentTimeMillis())
+        start_time = nextDate();
+
       TimeFactory.me().schedule(new Inner(), start_time);
     }
 
@@ -160,7 +234,6 @@ public class Schedule extends RuntimeUnitImpl {
 
     public void stop() {
       task.cancel();
-      management.remove(id);
     }
 
 

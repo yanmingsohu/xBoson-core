@@ -24,6 +24,7 @@ import com.xboson.event.timer.TimeFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.log.slow.RequestApiLog;
+import com.xboson.rpc.ClusterManager;
 import com.xboson.util.IConstant;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
@@ -49,6 +50,7 @@ public class AppContext implements IConstant {
   private Set<String> shareApp;
   private RequestApiLog apilog;
   private ProcessManager pm;
+  private String nodeID;
   private Log log;
 
 
@@ -60,6 +62,7 @@ public class AppContext implements IConstant {
                   SysConfig.me().readConfig().shareAppList);
     apilog      = new RequestApiLog();
     pm          = new ProcessManager();
+    nodeID      = ClusterManager.me().localNodeID();
   }
 
 
@@ -356,19 +359,10 @@ public class AppContext implements IConstant {
   /**
    * '进程' 管理器, 该对象会被导出到脚本环境, 必须仔细设计.
    */
-  public class ProcessManager {
+  public class ProcessManager implements IProcessState {
     private final static long INTERVAL = 30 * 1000;
     private Map<Thread, ThreadLocalData> running;
     private Map<Long, Thread> id;
-
-    /** kill 操作成功 */
-    public final int KILL_OK = 0;
-    /** kill 目标不存在 */
-    public final int KILL_NO_EXIST = 1;
-    /** 初始化未完成, 不能 kill */
-    public final int KILL_NO_READY = 2;
-    /** 已经被 kill */
-    public final int KILL_IS_KILLED = 3;
 
 
     private ProcessManager() {
@@ -494,6 +488,7 @@ public class AppContext implements IConstant {
       pd.api = tld.ac.api;
       pd.beginAt = tld.beginAt;
       pd.runningTime = System.currentTimeMillis() - tld.beginAt;
+      pd.nodeID = nodeID;
 
       if (tld.who instanceof LoginUser) {
         pd.callUser = ((LoginUser) tld.who).userid;
