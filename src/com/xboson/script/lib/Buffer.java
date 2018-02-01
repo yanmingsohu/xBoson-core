@@ -194,7 +194,7 @@ public class Buffer {
     private String encoding;
 
 
-    public JsBuffer(String encoding) {
+    private JsBuffer(String encoding) {
       this.encoding = encoding;
       config(JSObject.ExportsFunction.class);
       config(new JSObject.ExportsAttribute("length"));

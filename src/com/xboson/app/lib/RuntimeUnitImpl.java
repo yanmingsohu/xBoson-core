@@ -29,6 +29,7 @@ import jdk.nashorn.internal.runtime.Context;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -253,5 +254,116 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     if (o instanceof Boolean)
       return (Boolean) o;
     return false;
+  }
+
+
+  /**
+   * 创建 js 数组迭代器, 类型必须正确.
+   */
+  public static <E> Iterable<E> arrayIterator(ScriptObjectMirror arr, Class<E> c) {
+    return new Iterable<E>() {
+      @Override
+      public Iterator<E> iterator() {
+        return new ArrayIterator<E>(arr);
+      }
+    };
+  }
+
+
+  /**
+   * 方便迭代 js 数组对象
+   * @param <E>
+   */
+  public static class ArrayIterator<E> implements Iterator<E> {
+    private ScriptObjectMirror list;
+    private int size;
+    private int p;
+
+    /**
+     * 如果 list 不是数组会抛出异常
+     */
+    public ArrayIterator(ScriptObjectMirror list) {
+      if (! list.isArray())
+        throw new XBosonException.BadParameter(
+                "ScriptObjectMirror", "not Array");
+
+      this.list = list;
+      this.size = list.size();
+      this.p    = 0;
+    }
+
+    @Override
+    public boolean hasNext() {
+      return p < size;
+    }
+
+    @Override
+    public E next() {
+      return (E) list.getSlot(p++);
+    }
+  }
+
+
+  /**
+   * ScriptObjectMirror 的包装, 用来结构化获取数据
+   */
+  public static class Mirror {
+    public final ScriptObjectMirror original;
+
+    public Mirror(ScriptObjectMirror original) {
+      this.original = original;
+    }
+
+    /** name 属性必须是非空字符串, 否则抛出异常 */
+    public String string(String name) {
+      return (String) original.getMember(name);
+    }
+
+    /** name 属性必须是 int, 否则抛出异常 */
+    public int integer(String name) {
+      return (int) original.getMember(name);
+    }
+
+    /** name 属性必须是 long, 否则抛出异常 */
+    public long longint(String name) {
+      return (long) original.getMember(name);
+    }
+
+    /** name 属性必须是 double, 否则抛出异常 */
+    public double doublen(String name) {
+      return (double) original.getMember(name);
+    }
+
+    /** name 属性必须是 float, 否则抛出异常 */
+    public float floatn(String name) {
+      return (float) original.getMember(name);
+    }
+
+    /** name 属性必须是数组, 否则抛出异常 */
+    public Mirror list(String name) {
+      ScriptObjectMirror check = (ScriptObjectMirror) original.getMember(name);
+      if (! check.isArray())
+        throw new XBosonException.BadParameter(name, "not array");
+      return new Mirror(check);
+    }
+
+    /** name 属性必须是 js-object, 否则抛出异常 */
+    public Mirror jsobj(String name) {
+      return new Mirror((ScriptObjectMirror) original.getMember(name));
+    }
+
+    /** name 属性必须是非空对象, 否则抛出异常 */
+    public Object get(String name) {
+      return original.getMember(name);
+    }
+
+    public int size() {
+      return original.size();
+    }
+
+    /** 当前对象必须是数组, 用于创建迭代器 */
+    public <E> Iterable<E> each(Class<E> clazz) {
+      return arrayIterator(original, clazz);
+    }
   }
 }

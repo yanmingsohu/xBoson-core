@@ -24,10 +24,8 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 
 # 2.0 新特性
 
-* 图形化的安装.
-* 模块化可扩展的日志系统.
-* 多数据源连接池
-* 脚本可处理二进制数据
+* 图形化的系统安装.
+* 可以和区块链网络交换数据.
 * 完整的 js es5 脚本.
 * 可安装/调用 npm 模块, 并脱离 nodejs 运行.
 * ui 目录映射到虚拟文件系统中.
@@ -42,6 +40,8 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 集群使用通用消息总线来发送通知/数据.
 * MongoDB 驱动.
 * 新的内核模块: API 进程管理, 集群管理, 计划任务管理.
+* 模块化可扩展的日志系统.
+* 多数据源连接池.
 
 
 # JAR 依赖
@@ -90,7 +90,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
     -- (yamlbeans-1.13.jar)[https://github.com/EsotericSoftware/yamlbeans/]
     
 * (Hyperledger-Fabric 区块链)[http://hyperledger-fabric.readthedocs.io/en/release/]
-    -- (?)
+    -- (fabric-sdk-java-1.0.1-jar-with-dependencies.jar) 若干依赖库集合
 
 		
 # URL 映射约定

@@ -4,12 +4,14 @@
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
       <root url="jar://$PROJECT_DIR$/../.tomcat9/lib/catalina.jar!/" />
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
+      <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/fabric-sdk/fabric-sdk-java-1.0.1-jar-with-dependencies.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/jvyamlb-src-0.2.7.zip!/jvyamlb-0.2.7/src/main" />
       <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/jvyamlb-src-0.2.7.zip!/jvyamlb-0.2.7/src/test" />
       <root url="file://$PROJECT_DIR$/../[opensource-lib-other]" />
+      <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/fabric-sdk/fabric-sdk-java-1.0.1-jar-with-dependencies.jar!/" />
     </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
