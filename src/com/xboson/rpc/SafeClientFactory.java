@@ -17,6 +17,7 @@
 package com.xboson.rpc;
 
 import com.xboson.util.AES;
+import com.xboson.util.Tool;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -27,6 +28,7 @@ import java.rmi.server.RMIClientSocketFactory;
 public class SafeClientFactory implements RMIClientSocketFactory, Serializable {
 
   public static final int BUF_SIZE = SafeServerFactory.BUF_SIZE;
+  public static final int SOCK_TIMEOUT = SafeServerFactory.SOCK_TIMEOUT;
 
   private byte[] password;
 
@@ -40,6 +42,7 @@ public class SafeClientFactory implements RMIClientSocketFactory, Serializable {
   public Socket createSocket(String host, int port) throws IOException {
     //Tool.pl("Create Socket", host, port, "--------------------------");
     Socket sock = new Socket(host, port);
+    sock.setSoTimeout(SOCK_TIMEOUT);
     Certificate c = new Certificate(sock, password);
 
     try {

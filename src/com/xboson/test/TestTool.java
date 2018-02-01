@@ -42,6 +42,7 @@ public class TestTool extends Test {
 
   public void test() throws Throwable {
     tool();
+    color();
     local_file_watcher();
     // uri_object();
     red(new XBosonException("test").getMessage());
@@ -51,6 +52,22 @@ public class TestTool extends Test {
     test_http_get();
     test_calendar();
     read_package();
+  }
+
+
+  public void color() {
+    for (int i=1; i<8; ++i) {
+      System.out.print("\u001b[90;"+ i
+              +"m颜色测试字符串 Color Test ["+ i +"]\u001b[m\t");
+    }
+    for (int i=30; i<48; ++i) {
+      System.out.print("\u001b[90;"+ i
+              +"m颜色测试字符串 Color Test ["+ i +"]\u001b[m\t");
+    }
+    for (int i=91; i<107; ++i) {
+      System.out.print("\u001b[90;"+ i
+              +"m颜色测试字符串 Color Test ["+ i +"]\u001b[m\t");
+    }
   }
 
 

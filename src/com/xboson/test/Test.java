@@ -47,6 +47,9 @@ public class Test implements IConstant {
 	public static final short CLUSTER_NODE_ID = 18;
 
 	private static int failcount = 0;
+  private static int unitCount = 0;
+  private static int subCount = 0;
+  private static int warnCount = 0;
 	private static long time = 0;
 	private static String unitname;
 	private static boolean centralized = false;
@@ -127,11 +130,14 @@ public class Test implements IConstant {
 
 		// 打印结果
 		if (failcount > 0) {
-			System.out.println("\n\u001b[;31m>>>>>>>>>> Over, Get " + failcount + " fail \u001b[m");
+			System.out.print("\n\u001b[;31m>>>>>>>>>> Over, Get "+ failcount +" fail");
 		} else {
-			System.out.println("\n\u001b[;32m>>>>>>>>>> Over, All Passed \u001b[m");
+			System.out.print("\n\u001b[;32m>>>>>>>>>> Over, All Passed");
 		}
-
+		if (warnCount > 0) {
+		  System.out.print(", Has "+ warnCount +" warning");
+    }
+    System.out.println("\u001b[m");
     printRunningThread();
 	}
 
@@ -160,12 +166,27 @@ public class Test implements IConstant {
   }
 
 
+  public static void warn(Object ...o) {
+    System.out.println("\u001b[;33m" + _string(o) + "\u001b[m");
+    ++warnCount;
+  }
+
+
+  public static void dark(Object ...o) {
+    System.out.println("\u001b[;90m" + _string(o) + "\u001b[m");
+  }
+
+
 	/**
 	 * 开始一条测试用例, 原先是 public, 现在使用 sub 来替换.
 	 */
 	private static void unit(String name) {
-		System.out.println("\u001b[;33m\nTest " + name + "\u001b[m");
+    ++unitCount;
+		System.out.print("\u001b[90;103m\n ["+ unitCount
+            +"]    ############ [ Test "
+            + name + " ] ############\n\n\u001b[m");
     unitname = name;
+    subCount = 1;
 	}
 
 
@@ -174,7 +195,9 @@ public class Test implements IConstant {
    * @param msg
    */
 	public static void sub(Object ...msg) {
-    System.out.println("\n\u001b[;35m  " + _string(msg) + "\u001b[m");
+    ++subCount;
+    System.out.print("\n\u001b[7;35m  ("+ unitCount +"-"+ subCount
+            +") " + _string(msg) + "\n\u001b[m");
   }
 
 

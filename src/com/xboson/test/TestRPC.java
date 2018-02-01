@@ -122,7 +122,7 @@ public class TestRPC extends Test {
       ok(lp != p, "Remote Object");
 
     } catch(Exception e) {
-      red(e, "\n该测试的正确运行依赖一个 ID=0 的节点");
+      warn(e, "\n该测试的正确运行依赖一个 ID=0 的节点");
     }
   }
 
@@ -131,18 +131,23 @@ public class TestRPC extends Test {
    * 需要有一个 tomcat 节点在运行
    */
   public void rpcApp() throws Exception {
-    RpcFactory rpc = RpcFactory.me();
+    try {
+      RpcFactory rpc = RpcFactory.me();
 
-    sub("------- RPC Process List ---------");
+      sub("------- RPC Process List ---------");
 
-    //
-    // 服务器上运行过 PM 模块这个对象才注册到全局
-    //
-    PmImpl.IPM pm = (PmImpl.IPM) rpc.lookup(nodeID, PmImpl.RPC_NAME);
-    for (PublicProcessData pd : pm.list()) {
-      msg("Procdss:", pd.toJSON());
+      //
+      // 服务器上运行过 PM 模块这个对象才注册到全局
+      //
+      PmImpl.IPM pm = (PmImpl.IPM) rpc.lookup(nodeID, PmImpl.RPC_NAME);
+      for (PublicProcessData pd : pm.list()) {
+        msg("Procdss:", pd.toJSON());
+      }
+      pm.equals(pm);
+
+    } catch(Exception e) {
+      warn(e, "\n该测试的正确运行依赖一个 ID=0 的节点");
     }
-    pm.equals(pm);
   }
 
 
