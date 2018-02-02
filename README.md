@@ -14,7 +14,6 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 
 * blob 保存时直接写入db, 而不在内存堆积.
 * 接管 Tomcat.
-* 区块链api
 * 云盘系统(api已经完成)
 * 多语言
 * SqlServer 分页, oracle 查询全面测试.
@@ -42,6 +41,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 新的内核模块: API 进程管理, 集群管理, 计划任务管理.
 * 模块化可扩展的日志系统.
 * 多数据源连接池.
+* 可与区块链网络交换数据, 签订智能合约.
 
 
 # JAR 依赖

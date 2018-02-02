@@ -66,6 +66,9 @@ public class ModuleHandleContext implements IJSObject {
   }
 
 
+  /**
+   * 当对象退出脚本上下文后被关闭
+   */
   public static void autoClose(AutoCloseable ac) {
     CloseableSet c = (CloseableSet) _get(CLOSE);
     if (c == null)

@@ -49,17 +49,17 @@ public class JScriptException extends XBosonException {
 
 
   /**
-   * @see JScriptException#JScriptException(Exception, CodeFormater, int)
+   * @see JScriptException#JScriptException(Throwable, CodeFormater, int)
    */
-  public JScriptException(Exception fail) {
+  public JScriptException(Throwable fail) {
     this(fail, null, OffsetLineStack.offset);
   }
 
 
   /**
-   * @see JScriptException#JScriptException(Exception, CodeFormater, int)
+   * @see JScriptException#JScriptException(Throwable, CodeFormater, int)
    */
-  public JScriptException(Exception fail, byte[] code, String fileName) {
+  public JScriptException(Throwable fail, byte[] code, String fileName) {
     this(fail, new CodeFormater(ByteBuffer.wrap(code)), OffsetLineStack.offset);
     setFileName(fileName);
   }
@@ -67,15 +67,15 @@ public class JScriptException extends XBosonException {
 
   /**
    * 该方法将出错行的偏移设置为全局 OffsetLineStack
-   * @see JScriptException#JScriptException(Exception, CodeFormater, int)
+   * @see JScriptException#JScriptException(Throwable, CodeFormater, int)
    * @see OffsetLineStack
    */
-  public JScriptException(Exception fail, Reader code) {
+  public JScriptException(Throwable fail, Reader code) {
     this(fail, new CodeFormater(code), OffsetLineStack.offset);
   }
 
 
-  public JScriptException(Exception fail, Reader code, String filename) {
+  public JScriptException(Throwable fail, Reader code, String filename) {
     this(fail, new CodeFormater(code), OffsetLineStack.offset);
     setFileName(filename);
   }
@@ -85,7 +85,7 @@ public class JScriptException extends XBosonException {
    * 该构造方法会过滤 fail 中无关的错误堆栈项.
    * 并设置一个文件行偏移.
    */
-  public JScriptException(Exception fail, CodeFormater cf, int offset) {
+  public JScriptException(Throwable fail, CodeFormater cf, int offset) {
     super(fail.getMessage());
     this.lastFileName = null;
     this.lastLine = -1;
@@ -108,7 +108,7 @@ public class JScriptException extends XBosonException {
   }
 
 
-  private void collect_trace(Exception fail) {
+  private void collect_trace(Throwable fail) {
     if (fail instanceof JScriptException) {
       setStackTrace(fail.getStackTrace());
       initCause(fail.getCause());
@@ -132,18 +132,16 @@ public class JScriptException extends XBosonException {
 
 
   private void format_js_stack(Throwable e, List<StackTraceElement> trace) {
-    if (e instanceof ECMAException) {
-      ECMAException ecma = (ECMAException) e;
-      StackTraceElement[] st = ecma.getStackTrace();
-
-      for (int i=0; i<st.length; ++i) {
-        if (ECMAErrors.isScriptFrame(st[i])) {
-          trace.add( clear_trace(st[i]) );
-        }
-      }
-    } else if (e instanceof ScriptException) {
+    if (e instanceof ScriptException) {
       ScriptException se = (ScriptException) e;
       setNameAndLine(se.getFileName(), se.getLineNumber());
+    }
+
+    StackTraceElement[] st = e.getStackTrace();
+    for (int i=0; i<st.length; ++i) {
+      if (ECMAErrors.isScriptFrame(st[i])) {
+        trace.add( clear_trace(st[i]) );
+      }
     }
 
     Throwable t = e.getCause();

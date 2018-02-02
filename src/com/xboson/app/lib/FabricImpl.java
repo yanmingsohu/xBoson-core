@@ -16,30 +16,40 @@
 
 package com.xboson.app.lib;
 
-import com.xboson.been.XBosonException;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.Descriptors;
 import com.xboson.script.lib.Buffer;
-import com.xboson.util.IConstant;
+import com.xboson.util.ECDSA;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import org.hyperledger.fabric.protos.common.Common;
 import org.hyperledger.fabric.sdk.*;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.*;
-import java.security.KeyFactory;
+import java.io.Closeable;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 
 public class FabricImpl extends RuntimeUnitImpl {
 
   private static final Buffer BUF = new Buffer();
+  private final com.xboson.util.ECDSA ecdsa;
+
+  public final TimeUnit HOURS         = TimeUnit.HOURS;
+  public final TimeUnit MINUTES       = TimeUnit.MINUTES;
+  public final TimeUnit SECONDS       = TimeUnit.SECONDS;
+  public final TimeUnit MILLISECONDS  = TimeUnit.MILLISECONDS;
+  public final TimeUnit MICROSECONDS  = TimeUnit.MICROSECONDS;
 
 
-  public FabricImpl() {
+  public FabricImpl() throws NoSuchAlgorithmException {
     super(null);
+    ecdsa = ECDSA.me();
   }
 
 
@@ -48,23 +58,25 @@ public class FabricImpl extends RuntimeUnitImpl {
    *   name : "channel name",
    *   peer : [ 'grpcURL', ... ],
    *   orderer: [ 'grpcURL', ... ],
-   *   account : {
+   *   enrollment : {
    *     name : 'user name',
    *     mspid : '',
    *     roles : ['role', ... ],
    *     affiliation : '',
+   *     account : '',
    *     privateKey : '',
    *     certificate : '',
    *   }
    * }
    */
-  public Channel0 newChannel(ScriptObjectMirror conf) throws Exception {
+  public Channel0 newChannel(Object conf) throws Exception {
     return new Channel0(new Mirror(conf));
   }
 
 
   public class Channel0 implements Closeable {
 
+    private Map<ScriptObjectMirror, Collection<ProposalResponse>> prmap;
     private HFClient client;
     private Channel channel;
 
@@ -77,6 +89,7 @@ public class FabricImpl extends RuntimeUnitImpl {
       addPeers(conf);
       addOrderers(conf);
       channel.initialize();
+      prmap = new WeakHashMap<>();
       ModuleHandleContext.autoClose(this);
     }
 
@@ -110,39 +123,63 @@ public class FabricImpl extends RuntimeUnitImpl {
      *   args : [''],
      * }
      */
-    public Object queryByChaincode(ScriptObjectMirror $conf) throws Exception {
-      Mirror conf   = new Mirror($conf);
-      String name   = conf.string("chaincodeId");
-      String fcn    = conf.string("fcn");
-      Mirror jsarg  = conf.list("args");
-      String[] args = new String[jsarg.size()];
-      int i = -1;
+    public Object queryByChaincode(Object $conf) throws Exception {
+      Mirror conf = new Mirror($conf);
+      QueryByChaincodeRequest req = createQCR(client, conf);
+      Collection<ProposalResponse> resp = channel.queryByChaincode(req);
+      ScriptObjectMirror w = wrap(resp);
+      prmap.put(w, resp);
+      return w;
+    }
 
-      for (String arg : jsarg.each(String.class)) {
-        args[++i] = arg;
-      }
+    public Object sendTransactionProposal(Object $conf) throws Exception {
+      Mirror conf = new Mirror($conf);
+      TransactionProposalRequest req = createTPR(client, conf);
+      Collection<ProposalResponse> resp = channel.sendTransactionProposal(req);
+      ScriptObjectMirror w = wrap(resp);
+      prmap.put(w, resp);
+      return w;
+    }
 
-      QueryByChaincodeRequest req = client.newQueryProposalRequest();
-      ChaincodeID cid = ChaincodeID.newBuilder().setName(name).build();
-      req.setChaincodeID(cid);
-      req.setFcn(fcn);
-      req.setArgs(args);
+    public Object sendUpgradeProposal(Object $conf) throws Exception {
+      Mirror conf = new Mirror($conf);
+      UpgradeProposalRequest req = createUPR(client, conf);
+      Collection<ProposalResponse> resp = channel.sendUpgradeProposal(req);
+      ScriptObjectMirror w = wrap(resp);
+      prmap.put(w, resp);
+      return w;
+    }
 
-      Collection<ProposalResponse> resps = channel.queryByChaincode(req);
-      ScriptObjectMirror ret = createJSList(resps.size());
-      i = -1;
+    public Object	sendInstantiationProposal(Object $conf) throws Exception {
+      Mirror conf = new Mirror($conf);
+      InstantiateProposalRequest req = createIPR(client, conf);
+      Collection<ProposalResponse> resp = channel.sendInstantiationProposal(req);
+      ScriptObjectMirror w = wrap(resp);
+      prmap.put(w, resp);
+      return w;
+    }
 
-      for (ProposalResponse resp : resps) {
-        Buffer.JsBuffer payload =
-                BUF.from(resp.getChaincodeActionResponsePayload());
-        ScriptObjectMirror resData = createJSObject();
-        ret.setSlot(++i, resData);
+    public Object queryBlockByNumber(long blockNumber) throws Exception {
+      BlockInfo binfo = channel.queryBlockByNumber(blockNumber);
+      return wrap(binfo);
+    }
 
-        resData.setMember("status", resp.getChaincodeActionResponseStatus());
-        resData.setMember("message", resp.getMessage());
-        resData.setMember("payload", payload);
-      }
-      return ret;
+    public Object queryBlockByTransactionID(String txID) throws Exception {
+      BlockInfo binfo = channel.queryBlockByTransactionID(txID);
+      return wrap(binfo);
+    }
+
+    public Object queryBlockchainInfo() throws Exception {
+      BlockchainInfo info = channel.queryBlockchainInfo();
+      return wrap(info);
+    }
+
+    public Object sendTransaction(ScriptObjectMirror proposalResponses)
+            throws ExecutionException, InterruptedException {
+      Collection<ProposalResponse> resp = prmap.get(proposalResponses);
+      CompletableFuture<BlockEvent.TransactionEvent>
+              transactionEvent = channel.sendTransaction(resp);
+      return transactionEvent;
     }
   }
 
@@ -151,7 +188,7 @@ public class FabricImpl extends RuntimeUnitImpl {
     private Mirror user;
 
     private User0(Mirror conf) {
-      user = conf.jsobj("account");
+      user = conf.jsobj("enrollment");
     }
 
     @Override
@@ -171,7 +208,7 @@ public class FabricImpl extends RuntimeUnitImpl {
 
     @Override
     public String getAccount() {
-      return IConstant.NULL_STR;
+      return user.string("account");
     }
 
     @Override
@@ -200,15 +237,7 @@ public class FabricImpl extends RuntimeUnitImpl {
 
     @Override
     public PrivateKey getKey() {
-      try {
-        String str = formatPrivateKey(user.string("privateKey"));
-        byte[] encoded = DatatypeConverter.parseBase64Binary(str);
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-        KeyFactory kf = KeyFactory.getInstance("ECDSA");
-        return kf.generatePrivate(keySpec);
-      } catch (Exception e) {
-        throw new XBosonException(e);
-      }
+      return ecdsa.parsePrivateKey(user.string("privateKey"));
     }
 
     @Override
@@ -218,27 +247,193 @@ public class FabricImpl extends RuntimeUnitImpl {
   }
 
 
-  private String formatPrivateKey(String in) throws IOException {
-    BufferedReader br = new BufferedReader(new StringReader(in));
-    StringBuilder builder = new StringBuilder();
-    boolean inKey = false;
+  private QueryByChaincodeRequest createQCR(HFClient client, Mirror conf) {
+    QueryByChaincodeRequest req = client.newQueryProposalRequest();
+    setConfig(req, conf);
+    return req;
+  }
 
-    for (String line = br.readLine(); line != null; line = br.readLine()) {
-      if (!inKey) {
-        if (line.startsWith("-----BEGIN ")
-                && line.endsWith(" PRIVATE KEY-----")) {
-          inKey = true;
-        }
-        continue;
-      } else {
-        if (line.startsWith("-----END ")
-                && line.endsWith(" PRIVATE KEY-----")) {
-          // inKey = false;
-          break;
-        }
-        builder.append(line);
-      }
+
+  private TransactionProposalRequest createTPR(HFClient client, Mirror conf) {
+    TransactionProposalRequest req = client.newTransactionProposalRequest();
+    setConfig(req, conf);
+    return req;
+  }
+
+
+  private UpgradeProposalRequest createUPR(HFClient client, Mirror conf) {
+    UpgradeProposalRequest req = client.newUpgradeProposalRequest();
+    setConfig(req, conf);
+    return req;
+  }
+
+
+  private InstantiateProposalRequest createIPR(HFClient client, Mirror conf) {
+    InstantiateProposalRequest req = client.newInstantiationProposalRequest();
+    setConfig(req, conf);
+    return req;
+  }
+
+
+  private void setConfig(TransactionRequest req, Mirror conf) {
+    String id     = conf.string("chaincodeId");
+    String fcn    = conf.string("fcn");
+    String[] args = conf.list("args").toArray(String[].class);
+
+    ChaincodeID cid = ChaincodeID.newBuilder().setName(id).build();
+    req.setChaincodeID(cid);
+    req.setFcn(fcn);
+    req.setArgs(args);
+  }
+
+
+  private ScriptObjectMirror wrap(ProposalResponse pr) throws Exception {
+    Buffer.JsBuffer payload =
+            BUF.from(pr.getChaincodeActionResponsePayload());
+    ScriptObjectMirror resData = createJSObject();
+    resData.setMember("status", pr.getChaincodeActionResponseStatus());
+    resData.setMember("message", pr.getMessage());
+    resData.setMember("payload", payload);
+    return resData;
+  }
+
+
+  private ScriptObjectMirror wrap(Collection<ProposalResponse> resps)
+          throws Exception {
+    ScriptObjectMirror ret = createJSList(resps.size());
+    int i = -1;
+    for (ProposalResponse resp : resps) {
+      ScriptObjectMirror resData = wrap(resp);
+      ret.setSlot(++i, resData);
     }
-    return builder.toString();
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(BlockInfo info) throws Exception {
+    ScriptObjectMirror ret = createJSObject();
+    ret.setMember("block",          wrap(info.getBlock()));
+    ret.setMember("blockNumber",    info.getBlockNumber());
+    ret.setMember("channelId",      info.getChannelId());
+    ret.setMember("dataHash",       toBase64Str(info.getDataHash()));
+    ret.setMember("previousHash",   toBase64Str(info.getPreviousHash()));
+    ret.setMember("envelopeInfos",  wrap(info.getEnvelopeInfos()));
+    ret.setMember("transactionActionInfos",
+                  wrap(info.getTransactionActionInfos()));
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(Common.Block bl) {
+    ScriptObjectMirror ret = createJSObject();
+    ret.setMember("header",     wrap(bl.getHeader()));
+    ret.setMember("data",       wrap(bl.getData()));
+    ret.setMember("meta",       wrap(bl.getMetadata()));
+    ret.setMember("descriptor", wrap(bl.getDescriptorForType()));
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(Iterable<BlockInfo.EnvelopeInfo> iter) {
+    ScriptObjectMirror ret = createJSList();
+    int i = -1;
+    for (BlockInfo.EnvelopeInfo info : iter) {
+      ret.setSlot(++i, wrap(info));
+    }
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(BlockInfo.EnvelopeInfo info) {
+    ScriptObjectMirror ret = createJSObject();
+    ret.setMember("channelId",      info.getChannelId());
+    ret.setMember("epoch",          info.getEpoch());
+    ret.setMember("timestamp",      info.getTimestamp());
+    ret.setMember("transactionID",  info.getTransactionID());
+    ret.setMember("validationCode", info.getValidationCode());
+    ret.setMember("type",           info.getType().name());
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(Common.BlockHeader head) {
+    ScriptObjectMirror ret = createJSObject();
+    ret.setMember("number", head.getNumber());
+    ret.setMember("hash",   toBase64Str(head.getDataHash()));
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(Common.BlockData data) {
+    final int size = data.getDataCount();
+    ScriptObjectMirror ret = createJSList(size);
+    for (int i=0; i<size; ++i) {
+      ret.setSlot(i, toBase64Str(data.getData(i)));
+    }
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(Common.BlockMetadata meta) {
+    final int size = meta.getMetadataCount();
+    ScriptObjectMirror ret = createJSList(size);
+    for (int i=0; i<size; ++i) {
+      ret.setSlot(i, toBase64Str(meta.getMetadata(i)));
+    }
+    return ret;
+  }
+
+
+  private ScriptObjectMirror wrap(Descriptors.Descriptor desc) {
+    ScriptObjectMirror ret = basic(desc);
+    if (desc == null) return ret;
+    ret.setMember("index",           desc.getIndex());
+    ret.setMember("containningType", basic(desc.getContainingType()));
+    ret.setMember("nestedTypes",     wrapDescArr(desc.getNestedTypes()));
+    ret.setMember("fields",          wrapDescArr(desc.getFields()));
+    ret.setMember("enumTypes",       wrapDescArr(desc.getEnumTypes()));
+    ret.setMember("extensions",      wrapDescArr(desc.getExtensions()));
+    return ret;
+  }
+
+
+  private ScriptObjectMirror basic(Descriptors.GenericDescriptor desc) {
+    ScriptObjectMirror ret = createJSObject();
+    if (desc == null) return ret;
+    ret.setMember("name",     desc.getName());
+    ret.setMember("fullName", desc.getFullName());
+    return ret;
+  }
+
+
+  private <E extends Descriptors.GenericDescriptor>
+  ScriptObjectMirror wrapDescArr(List<E> list) {
+    final int size = list.size();
+    ScriptObjectMirror ret = createJSList(size);
+    for (int i=0; i<size; ++i) {
+      ret.setSlot(i, basic(list.get(i)));
+    }
+    return ret;
+  }
+
+
+  private Object toBase64Str(ByteString bs) {
+    return toBase64Str(bs.toByteArray());
+  }
+
+
+  private Object toBase64Str(byte[] b) {
+    return Base64.getEncoder().encodeToString(b);
+  }
+
+
+  private Object wrap(BlockchainInfo info) {
+    ScriptObjectMirror ret = createJSObject();
+    ret.setMember("height", info.getHeight());
+    ret.setMember("currentBlockHash",
+            toBase64Str(info.getCurrentBlockHash()));
+    ret.setMember("previousBlockHash",
+            toBase64Str(info.getPreviousBlockHash()));
+    return ret;
   }
 }

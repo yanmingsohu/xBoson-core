@@ -26,12 +26,10 @@ import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJSON;
 import jdk.nashorn.internal.runtime.Context;
 
+import java.lang.reflect.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -307,11 +305,15 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
   /**
    * ScriptObjectMirror 的包装, 用来结构化获取数据
    */
-  public static class Mirror {
+  public class Mirror {
     public final ScriptObjectMirror original;
 
     public Mirror(ScriptObjectMirror original) {
       this.original = original;
+    }
+
+    public Mirror(Object obj) {
+      this.original = wrap(obj);
     }
 
     /** name 属性必须是非空字符串, 否则抛出异常 */
@@ -364,6 +366,17 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     /** 当前对象必须是数组, 用于创建迭代器 */
     public <E> Iterable<E> each(Class<E> clazz) {
       return arrayIterator(original, clazz);
+    }
+
+    /** 转换为 clazz 类型数组, 类型错误会抛出异常 */
+    public <E> E[] toArray(Class<E[]> clazz) {
+      Class<E> itemType = (Class<E>) clazz.getComponentType();
+      E [] arr = (E[]) Array.newInstance(itemType, size());
+      int i = -1;
+      for (E item : each(itemType)) {
+        arr[++i] = item;
+      }
+      return arr;
     }
   }
 }
