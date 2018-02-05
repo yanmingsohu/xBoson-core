@@ -52,7 +52,9 @@ public class Test implements IConstant {
   private static int warnCount = 0;
 	private static long time = 0;
 	private static String unitname;
+	private static String subname;
 	private static boolean centralized = false;
+	private static List<Warn> warnList = new ArrayList<>();
 
 	
 
@@ -128,6 +130,13 @@ public class Test implements IConstant {
 		// 打印出积累的错误消息
 		System.out.println("\u001b[;31m" + strerr + "\u001b[m");
 
+		// 打印警告
+    if (warnList.size() > 0) {
+      for (Warn w : warnList)
+        System.out.println("\u001b[90;47m"+ w +"\u001b[m");
+      warnList.clear();
+    }
+
 		// 打印结果
 		if (failcount > 0) {
 			System.out.print("\n\u001b[;31m>>>>>>>>>> Over, Get "+ failcount +" fail");
@@ -167,7 +176,9 @@ public class Test implements IConstant {
 
 
   public static void warn(Object ...o) {
-    System.out.println("\u001b[;33m" + _string(o) + "\u001b[m");
+	  Warn w = new Warn(_string(o));
+    warnList.add(w);
+    System.out.println("\u001b[;33m" + w.msg + "\u001b[m");
     ++warnCount;
   }
 
@@ -196,8 +207,9 @@ public class Test implements IConstant {
    */
 	public static void sub(Object ...msg) {
     ++subCount;
+    subname = _string(msg);
     System.out.print("\n\u001b[7;35m  ("+ unitCount +"-"+ subCount
-            +") " + _string(msg) + "\n\u001b[m");
+            +") " + subname + "\n\u001b[m");
   }
 
 
@@ -410,5 +422,26 @@ public class Test implements IConstant {
     }
 
     public abstract void run() throws Throwable;
+  }
+
+
+  static private class Warn {
+    String unit;
+    String sub;
+    Date time;
+    String msg;
+
+    Warn(String msg) {
+      this.unit = unitname;
+      this.sub  = subname;
+      this.time = new Date();
+      this.msg  = msg;
+    }
+
+    public String toString() {
+      return String.format(
+              "[ Warning AT [%s] - [%s] ON %tT ]\n\t%s\n",
+              unit, sub, time, msg);
+    }
   }
 }

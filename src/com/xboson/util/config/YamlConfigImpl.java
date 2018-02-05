@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 18-1-9 下午6:05
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/config/YamlConfig.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/config/YamlConfigImpl.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,6 +16,7 @@
 
 package com.xboson.util.config;
 
+import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.xboson.been.Config;
@@ -25,19 +26,13 @@ import com.xboson.util.StringBufferOutputStream;
 import java.io.IOException;
 
 
-public class YamlConfig extends AbsConfigSerialization {
+public class YamlConfigImpl extends AbsConfigSerialization {
 
 
   @Override
   public String convert(Config c) throws IOException {
-    com.esotericsoftware.yamlbeans.YamlConfig yc =
-            new com.esotericsoftware.yamlbeans.YamlConfig();
-
-    yc.writeConfig.setKeepBeanPropertyOrder(true);
-    yc.writeConfig.setWriteDefaultValues(true);
-
     StringBufferOutputStream buf = new StringBufferOutputStream();
-    YamlWriter w = new YamlWriter(buf.openWrite(), yc);
+    YamlWriter w = new YamlWriter(buf.openWrite(), basicConfig());
     w.write(c);
     w.close();
     return addComments(buf.toString());
@@ -48,6 +43,15 @@ public class YamlConfig extends AbsConfigSerialization {
   public Config convert(String yaml) throws IOException {
     YamlReader r = new YamlReader(yaml);
     return r.read(Config.class);
+  }
+
+
+  public static YamlConfig basicConfig() {
+    YamlConfig yc = new YamlConfig();
+    yc.writeConfig.setKeepBeanPropertyOrder(true);
+    yc.writeConfig.setWriteDefaultValues(true);
+    yc.writeConfig.setEscapeUnicode(false);
+    return yc;
   }
 
 

@@ -16,8 +16,6 @@
 
 package com.xboson.util.config;
 
-import com.xboson.util.Tool;
-
 import java.util.Arrays;
 import java.util.Map;
 

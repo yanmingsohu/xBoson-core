@@ -16,18 +16,13 @@
 
 package com.xboson.test;
 
+import com.xboson.util.ECDSA;
 import org.hyperledger.fabric.sdk.*;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
 
-import javax.xml.bind.DatatypeConverter;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
 import java.security.PrivateKey;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -97,13 +92,7 @@ public class TestFabric extends Test {
 
   public static class FabricUser implements User, Enrollment {
 
-    String BASE = "D:\\javaee-project\\[opensource-lib-other]\\fabric-sdk\\";
-    private PrivateKey pkey;
-    private String cert;
-
     public FabricUser() throws IOException, GeneralSecurityException {
-      pkey = loadPrivateKey(Paths.get(BASE + "key.pem"));
-      cert = new String(Files.readAllBytes(Paths.get(BASE + "cert.pem")));
     }
 
     @Override
@@ -144,7 +133,7 @@ public class TestFabric extends Test {
 
     @Override
     public PrivateKey getKey() {
-      return pkey;
+      return ECDSA.me().parsePrivateKey(key);
     }
 
 
@@ -155,46 +144,26 @@ public class TestFabric extends Test {
   }
 
 
-  /***
-   * loading private key from .pem-formatted file, ECDSA algorithm
-   * (from some example on StackOverflow, slightly changed)
-   * @param fileName - file with the key
-   * @return Private Key usable
-   * @throws IOException
-   * @throws GeneralSecurityException
-   */
-  public static PrivateKey loadPrivateKey(Path fileName)
-          throws IOException, GeneralSecurityException {
-    PrivateKey key = null;
-    InputStream is = null;
-    try {
-      is = new FileInputStream(fileName.toString());
-      BufferedReader br = new BufferedReader(new InputStreamReader(is));
-      StringBuilder builder = new StringBuilder();
-      boolean inKey = false;
-      for (String line = br.readLine(); line != null; line = br.readLine()) {
-        if (!inKey) {
-          if (line.startsWith("-----BEGIN ") && line.endsWith(" PRIVATE KEY-----")) {
-            inKey = true;
-          }
-          continue;
-        } else {
-          if (line.startsWith("-----END ") && line.endsWith(" PRIVATE KEY-----")) {
-            inKey = false;
-            break;
-          }
-          builder.append(line);
-        }
-      }
-      //
-      byte[] encoded = DatatypeConverter.parseBase64Binary(builder.toString());
-      PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-      KeyFactory kf = KeyFactory.getInstance("ECDSA");
-      key = kf.generatePrivate(keySpec);
-    } finally {
-      is.close();
-    }
-    return key;
-  }
+  private final static String cert = "-----BEGIN CERTIFICATE-----\n" +
+          "MIICjzCCAjWgAwIBAgIUDBfrKy2R7Vi4v59hHoaR5Y4nniwwCgYIKoZIzj0EAwIw\n" +
+          "czELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWExFjAUBgNVBAcTDVNh\n" +
+          "biBGcmFuY2lzY28xGTAXBgNVBAoTEG9yZzEuZXhhbXBsZS5jb20xHDAaBgNVBAMT\n" +
+          "E2NhLm9yZzEuZXhhbXBsZS5jb20wHhcNMTgwMjAxMDkwMzAwWhcNMTkwMjAxMDkw\n" +
+          "ODAwWjBCMTAwDQYDVQQLEwZjbGllbnQwCwYDVQQLEwRvcmcxMBIGA1UECxMLZGVw\n" +
+          "YXJ0bWVudDExDjAMBgNVBAMTBXVzZXIxMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcD\n" +
+          "QgAEoAhOmOixnDx+XzReX2Zh5UzgqvqBbRJ5e486r4KXtt28JGyOQySQtXjJBeBD\n" +
+          "yCvRgepEgHZ12WRmgjO4wDiKWaOB1zCB1DAOBgNVHQ8BAf8EBAMCB4AwDAYDVR0T\n" +
+          "AQH/BAIwADAdBgNVHQ4EFgQUP2j/ub/qtY0LWnfsPy1Tkq+dH4QwKwYDVR0jBCQw\n" +
+          "IoAgQjmqDc122u64ugzacBhR0UUE0xqtGy3d26xqVzZeSXwwaAYIKgMEBQYHCAEE\n" +
+          "XHsiYXR0cnMiOnsiaGYuQWZmaWxpYXRpb24iOiJvcmcxLmRlcGFydG1lbnQxIiwi\n" +
+          "aGYuRW5yb2xsbWVudElEIjoidXNlcjEiLCJoZi5UeXBlIjoiY2xpZW50In19MAoG\n" +
+          "CCqGSM49BAMCA0gAMEUCIQCkRhlYr1EkjfBeLFFuQN70zwmGliUdlpC35g0Q+ITB\n" +
+          "QQIgOU6XdxRuqq5F5XKuz+YioqW8NUjtGKc39RmzDyI9suw=\n" +
+          "-----END CERTIFICATE-----";
 
+  private final static String key = "-----BEGIN PRIVATE KEY-----\n" +
+          "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgI3lxkVeWEahFcPn/\n" +
+          "OtrRu2ybyF6LMb5w+91bmEMcNQ2hRANCAASgCE6Y6LGcPH5fNF5fZmHlTOCq+oFt\n" +
+          "Enl7jzqvgpe23bwkbI5DJJC1eMkF4EPIK9GB6kSAdnXZZGaCM7jAOIpZ\n" +
+          "-----END PRIVATE KEY-----";
 }

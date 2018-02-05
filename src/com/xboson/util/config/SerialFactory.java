@@ -24,7 +24,7 @@ public final class SerialFactory {
   public static final String CONFIG_DIR 	= "/xBoson-config";
   public static final String LOG_DIR 			= "/logs";
 
-  private final static IConfigSerialization instance = new YamlConfig();
+  private final static IConfigSerialization instance = new YamlConfigImpl();
 
 
   public static IConfigSerialization get() {

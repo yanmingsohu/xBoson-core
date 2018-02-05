@@ -24,7 +24,7 @@ import com.xboson.util.config.DefaultConfig;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import com.xboson.util.config.JsonConfig;
-import com.xboson.util.config.YamlConfig;
+import com.xboson.util.config.YamlConfigImpl;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -49,7 +49,7 @@ public class TestConfig extends Test {
     SysConfig sys = SysConfig.me();
     Config c = sys.readConfig();
 //    msg(Tool.getAdapter(Config.class).toJson(c));
-    YamlConfig yc = new YamlConfig();
+    YamlConfigImpl yc = new YamlConfigImpl();
     msg(yc.convert(c));
   }
 
@@ -93,7 +93,7 @@ public class TestConfig extends Test {
 
   public void yaml() throws Exception {
 	  sub("YAML");
-    YamlConfig yc = new YamlConfig();
+    YamlConfigImpl yc = new YamlConfigImpl();
     Config c = new Config("~");
     DefaultConfig.setto(c);
 
