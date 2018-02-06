@@ -19,42 +19,38 @@ package com.xboson.test;
 import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.xboson.been.License;
-import com.xboson.crypto.Crypto;
-import com.xboson.crypto.ISignature;
 import com.xboson.util.StringBufferOutputStream;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.util.Base64;
+import com.xboson.util.config.YamlConfigImpl;
 
 
-public class TestSign extends Test implements ISignature {
-
-  License li;
+public class TestSign extends Test {
 
   @Override
   public void test() throws Throwable {
     write();
-//    Crypto.me().verification();
   }
 
 
   private void write() throws Exception {
     sub("Generate License Data");
-    li = new License();
+    License li = new License();
     li.appName    = "大数据平台内核";
     li.company    = "内测";
     li.dns        = "www.xboson.x.y.z";
     li.email      = "yanmingsohu@live.com";
     li.beginTime  = System.currentTimeMillis();
     li.endTime    = Long.MAX_VALUE;
+    li.init();
+
+    YamlConfig yc = YamlConfigImpl.basicConfig();
+    yc.setClassTag("License", li.getClass());
+    StringBufferOutputStream buf = new StringBufferOutputStream();
+    YamlWriter w = new YamlWriter(buf.openWrite(), yc);
+    w.write(li);
+    w.close();
 
     sub("Signature");
-    byte[] signBuf = Crypto.me().signature(this);
-    li.signature = Base64.getEncoder().encodeToString(signBuf);
-
-    sub("Write To License File");
-    li.writeLicense();
+    msg(buf.toString());
 
     msg("OK");
   }
@@ -64,15 +60,4 @@ public class TestSign extends Test implements ISignature {
     new TestSign();
   }
 
-
-  @Override
-  public String privateKeyFile() {
-    return "../xBoson-crypto/license/private_key.pem";
-  }
-
-
-  @Override
-  public byte[] message() {
-    return li.message();
-  }
 }

@@ -16,38 +16,33 @@
 
 package com.xboson.been;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlWriter;
-import com.xboson.crypto.IVerification;
+import com.xboson.crypto.AbsLicense;
 import com.xboson.util.SysConfig;
 import com.xboson.util.config.YamlConfigImpl;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Base64;
 
 
 /**
  * 软件使用证书
  */
-public class License implements IVerification {
+public class License extends AbsLicense {
 
   public static final String PUB_FILE = "/public_key.pem";
   public static final String LIC_FILE = "/license.txt";
 
-  public String appName;
-  public String company;
-  public String dns;
-  public String email;
-  public long beginTime;
-  public long endTime;
   public String signature;
-
-  private transient String base;
 
 
   public License() {
-    base = SysConfig.me().readConfig().configPath;
+    super(SysConfig.me().readConfig().configPath);
+  }
+
+
+  public void init() {
+    z();
   }
 
 
@@ -57,22 +52,16 @@ public class License implements IVerification {
   }
 
 
-  @Override
-  public byte[] message() {
-    return (appName + company + dns + email + beginTime + endTime).getBytes();
-  }
-
-
-  @Override
-  public byte[] signature() {
-    return Base64.getDecoder().decode(signature);
-  }
-
-
   public void writeLicense() throws IOException {
     FileWriter fileOut = new FileWriter(base + LIC_FILE);
     YamlWriter yaml = new YamlWriter(fileOut, YamlConfigImpl.basicConfig());
     yaml.write(this);
     yaml.close();
+  }
+
+
+  @Override
+  protected String signatureString() {
+    return signature;
   }
 }

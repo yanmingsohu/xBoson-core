@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/xBoson.iml" filepath="$PROJECT_DIR$/xBoson.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../xBoson-crypto/xBoson-crypto.iml" filepath="$PROJECT_DIR$/../xBoson-crypto/xBoson-crypto.iml" />
     </modules>
   </component>
 </project>
