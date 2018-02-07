@@ -16,13 +16,19 @@
 
 package com.xboson.been;
 
+import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.xboson.crypto.AbsLicense;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 import com.xboson.util.config.YamlConfigImpl;
 
+import javax.servlet.ServletContext;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 
 /**
@@ -32,36 +38,69 @@ public class License extends AbsLicense {
 
   public static final String PUB_FILE = "/public_key.pem";
   public static final String LIC_FILE = "/license.txt";
+  public static final String REQ_FILE = "/license.req";
 
+  public transient String publicKeyFile;
+  public transient String basePath;
   public String signature;
 
 
   public License() {
-    super(SysConfig.me().readConfig().configPath);
+    basePath = SysConfig.me().readConfig().configPath;
+    publicKeyFile = "./WebRoot/WEB-INF" + PUB_FILE;
   }
 
 
-  public void init() {
-    z();
+  public License(ServletContext sc) throws MalformedURLException {
+    basePath = SysConfig.me().readConfig().configPath;
+    URL url = sc.getResource("/WEB-INF" + PUB_FILE);
+    publicKeyFile = url.toString();
+  }
+
+
+  public String zz() {
+    if (z == null) {
+      super.z();
+      return singleline(z);
+    } else {
+      String oz = z;
+      super.z();
+      return singleline(oz);
+    }
   }
 
 
   @Override
   public String getPublicKeyFile() {
-    return base + PUB_FILE;
+    return publicKeyFile;
   }
 
 
-  public void writeLicense() throws IOException {
-    FileWriter fileOut = new FileWriter(base + LIC_FILE);
+  public File writeRequest() throws IOException {
+    return writeFile(REQ_FILE);
+  }
+
+
+  private File writeFile(String file) throws IOException {
+    File outFile = new File(basePath + file);
+    FileWriter fileOut = new FileWriter(outFile);
     YamlWriter yaml = new YamlWriter(fileOut, YamlConfigImpl.basicConfig());
     yaml.write(this);
     yaml.close();
+    return outFile;
+  }
+
+
+  public static License readLicense() throws IOException {
+    String basePath = SysConfig.me().readConfig().configPath;
+    StringBuilder buf = Tool.readFromFile(basePath + LIC_FILE);
+    YamlReader r = new YamlReader(buf.toString());
+    return r.read(License.class);
   }
 
 
   @Override
   protected String signatureString() {
-    return signature;
+    return singleline(signature);
   }
 }

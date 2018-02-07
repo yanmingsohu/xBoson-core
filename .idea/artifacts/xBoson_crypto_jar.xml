@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="xBoson-crypto:jar">
-    <output-path>$PROJECT_DIR$/WebRoot/WEB-INF/lib</output-path>
-    <root id="archive" name="xBoson-crypto.jar">
-      <element id="module-output" name="xBoson-crypto" />
-    </root>
-  </artifact>
-</component>

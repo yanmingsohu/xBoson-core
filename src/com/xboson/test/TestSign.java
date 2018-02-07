@@ -16,11 +16,14 @@
 
 package com.xboson.test;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.xboson.been.License;
-import com.xboson.util.StringBufferOutputStream;
-import com.xboson.util.config.YamlConfigImpl;
+import com.xboson.been.XBosonException;
+import com.xboson.crypto.Crypto;
+import com.xboson.util.Version;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 
 public class TestSign extends Test {
@@ -28,29 +31,52 @@ public class TestSign extends Test {
   @Override
   public void test() throws Throwable {
     write();
+    verification();
   }
 
 
   private void write() throws Exception {
-    sub("Generate License Data");
-    License li = new License();
-    li.appName    = "大数据平台内核";
-    li.company    = "内测";
-    li.dns        = "www.xboson.x.y.z";
-    li.email      = "yanmingsohu@live.com";
-    li.beginTime  = System.currentTimeMillis();
-    li.endTime    = Long.MAX_VALUE;
-    li.init();
+    sub("Generate License Request");
+    License req = new License();
+    req.appName    = Version.Name;
+    req.company    = "内测";
+    req.dns        = "www.xboson.x.y.z";
+    req.email      = "yanmingsohu@live.com";
+    req.beginTime  = 1514736000000L;
+    req.endTime    = 1546099200000L;
+    req.zz();
 
-    YamlConfig yc = YamlConfigImpl.basicConfig();
-    yc.setClassTag("License", li.getClass());
-    StringBufferOutputStream buf = new StringBufferOutputStream();
-    YamlWriter w = new YamlWriter(buf.openWrite(), yc);
-    w.write(li);
-    w.close();
+    File reqFile = req.writeRequest();
+    byte[] b = Files.readAllBytes(Paths.get(reqFile.toURI()));
+    String reqStr = new String(b);
+    sub("------- License REQ -------");
+    msg(reqStr);
+  }
 
-    sub("Signature");
-    msg(buf.toString());
+
+  private void verification() throws Exception {
+    sub("Verification");
+    License license = License.readLicense();
+
+    if (! license.zz().equals(License.singleline(license.z))) {
+      throw new XBosonException("Bad License, Application Prohibited copy");
+    }
+
+    if (! Version.Name.equals(license.appName)) {
+      throw new XBosonException("Bad License, Wrong application");
+    }
+
+    if (! Crypto.me().verification(license)) {
+      throw new XBosonException("Bad License, Signature fail");
+    }
+
+    if (license.beginTime > System.currentTimeMillis()) {
+      throw new XBosonException("Bad License, Has not yet started");
+    }
+
+    if (license.endTime < System.currentTimeMillis()) {
+      throw new XBosonException("Bad License, Over the use of time");
+    }
 
     msg("OK");
   }
