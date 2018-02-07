@@ -16,6 +16,9 @@
 
 package com.xboson.fs.watcher;
 
+import com.xboson.util.Tool;
+
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +28,7 @@ import java.nio.file.WatchEvent;
 /**
  * 监听单个文件的包装器
  */
-public class SingleFile implements INotify {
+public class SingleFile implements INotify, Closeable {
 
   /** 接收事件的最小间隔, 防止多次触发 */
   public static final long MIN_INTERVAL = 1000;
@@ -33,6 +36,7 @@ public class SingleFile implements INotify {
   private String fileName;
   private INotify recv;
   private long last;
+  private IWatcher watcher;
 
   /**
    * 构造单文件监听器, 该方法成功返回后, 文件处于监听状态.
@@ -47,7 +51,7 @@ public class SingleFile implements INotify {
     this.recv = recv;
 
     Path path = Paths.get(basePath);
-    LocalDirWatcher.me().watchModify(path, this);
+    watcher = LocalDirWatcher.me().watchModify(path, this);
   }
 
 
@@ -73,5 +77,11 @@ public class SingleFile implements INotify {
   @Override
   public void remove(String basename) {
     recv.remove(basename);
+  }
+
+
+  @Override
+  public void close() throws IOException {
+    Tool.close(watcher);
   }
 }

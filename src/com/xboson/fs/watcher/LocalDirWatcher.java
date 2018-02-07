@@ -28,22 +28,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 对本地文件系统目录的改变进行监控,
- * 仅对本层目录做监控, 深层目录需要另为启动监听.
+ * 仅对本层目录做监控, 深层目录需要另外启动监听.
  * 线程安全.
  */
 public class LocalDirWatcher implements Runnable {
 
   private static LocalDirWatcher instance;
-  public synchronized static LocalDirWatcher me() {
-    if (instance == null) {
-      try {
-        instance = new LocalDirWatcher();
-      } catch(Exception e) {
-        throw new XBosonException(e);
-      }
-    }
-    return instance;
-  }
 
   private final WatchService ws;
   private final Log log;
@@ -62,6 +52,22 @@ public class LocalDirWatcher implements Runnable {
     watchThread.start();
 
     log.info("Initialization Success");
+  }
+
+
+  public static LocalDirWatcher me() {
+    if (instance == null) {
+      synchronized (LocalDirWatcher.class) {
+        if (instance == null) {
+          try {
+            instance = new LocalDirWatcher();
+          } catch(Exception e) {
+            throw new XBosonException(e);
+          }
+        }
+      }
+    }
+    return instance;
   }
 
 
@@ -98,7 +104,6 @@ public class LocalDirWatcher implements Runnable {
             StandardWatchEventKinds.ENTRY_MODIFY,
             StandardWatchEventKinds.ENTRY_DELETE);
   }
-
 
 
   private IWatcher _watch(Watchable w, INotify n, WatchEvent.Kind ...kind)
@@ -163,6 +168,7 @@ public class LocalDirWatcher implements Runnable {
     @Override
     public void close() throws Exception {
       map.remove(key);
+      key.cancel();
     }
   }
 }

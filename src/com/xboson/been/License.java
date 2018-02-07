@@ -16,6 +16,7 @@
 
 package com.xboson.been;
 
+import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
@@ -101,7 +102,9 @@ public class License extends AbsLicense {
 
 
   public void writeTo(Writer out) throws YamlException {
-    YamlWriter yaml = new YamlWriter(out, YamlConfigImpl.basicConfig());
+    YamlConfig config = YamlConfigImpl.basicConfig();
+    config.writeConfig.setWriteClassname(YamlConfig.WriteClassName.NEVER);
+    YamlWriter yaml = new YamlWriter(out, config);
     yaml.write(this);
     yaml.close();
   }
