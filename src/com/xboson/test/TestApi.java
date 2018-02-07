@@ -22,8 +22,8 @@ import com.xboson.been.*;
 import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.j2ee.files.PrimitiveOperation;
-import com.xboson.test.impl.TestServletRequest;
-import com.xboson.test.impl.TestServletResponse;
+import com.xboson.j2ee.emu.TestServletRequest;
+import com.xboson.j2ee.emu.TestServletResponse;
 import com.xboson.util.IConstant;
 
 import java.io.IOException;

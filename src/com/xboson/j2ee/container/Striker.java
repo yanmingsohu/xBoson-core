@@ -44,7 +44,6 @@ import jdk.nashorn.internal.runtime.ECMAErrors;
  */
 public class Striker extends HttpFilter {
 
-  private static final long serialVersionUID = 8889985807692963369L;
   private Log log;
   private boolean debug;
   private String context_path;

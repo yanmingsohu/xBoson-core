@@ -47,7 +47,7 @@
             <td><input name="rpassword" 
               value="${ param.rpassword }" type="password" /></td>
           </tr>
-          </tr><tr><td></td>
+          <tr><td></td>
             <td> <input type='submit' value='确定' />
               <span class="red"><%=request.getAttribute("msg") %></span>
             </td>

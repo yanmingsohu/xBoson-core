@@ -8,6 +8,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * Docker: 平台访问整个操作系统的资源, 应该管理 Docker 而非被 Docker 管理.
 * 当平台没有完全初始化完成调用文件模块(fs) 的 open 方法会抛出 null 错误, 稍等即可.
 * sys_mdm001.url 字段与平台服务接口绑定.
+* 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
 
 
 # 需要做:
@@ -17,7 +18,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 云盘系统(api已经完成)
 * 多语言
 * SqlServer 分页, oracle 查询全面测试.
-* 程序授权许可系统
+* 程序授权许可系统(开发完成, 安装画面完成, win完成, linux 待测)
 * 系统交叉登录(补充到计划任务调用api时的权限)
 
 

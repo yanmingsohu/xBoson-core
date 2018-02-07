@@ -16,6 +16,7 @@
 
 package com.xboson.been;
 
+import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.xboson.crypto.AbsLicense;
@@ -27,6 +28,7 @@ import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -39,6 +41,7 @@ public class License extends AbsLicense {
   public static final String PUB_FILE = "/public_key.pem";
   public static final String LIC_FILE = "/license.txt";
   public static final String REQ_FILE = "/license.req";
+  public static final String PREFIX   = "file:";
 
   public transient String publicKeyFile;
   public transient String basePath;
@@ -53,8 +56,16 @@ public class License extends AbsLicense {
 
   public License(ServletContext sc) throws MalformedURLException {
     basePath = SysConfig.me().readConfig().configPath;
+    setPublicKeyFile(sc);
+  }
+
+
+  public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
     URL url = sc.getResource("/WEB-INF" + PUB_FILE);
     publicKeyFile = url.toString();
+    if (publicKeyFile.startsWith(PREFIX)) {
+      publicKeyFile = publicKeyFile.substring(PREFIX.length());
+    }
   }
 
 
@@ -84,10 +95,15 @@ public class License extends AbsLicense {
   private File writeFile(String file) throws IOException {
     File outFile = new File(basePath + file);
     FileWriter fileOut = new FileWriter(outFile);
-    YamlWriter yaml = new YamlWriter(fileOut, YamlConfigImpl.basicConfig());
+    writeTo(fileOut);
+    return outFile;
+  }
+
+
+  public void writeTo(Writer out) throws YamlException {
+    YamlWriter yaml = new YamlWriter(out, YamlConfigImpl.basicConfig());
     yaml.write(this);
     yaml.close();
-    return outFile;
   }
 
 

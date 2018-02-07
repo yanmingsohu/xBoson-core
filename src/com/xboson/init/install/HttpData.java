@@ -32,6 +32,7 @@ public class HttpData {
   public final ServletContext sc;
   public final Config cf;
   public boolean reset = false;
+  public boolean ajax = false;
 
   /**
    * 设定返回给页面的消息

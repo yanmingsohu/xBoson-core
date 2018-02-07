@@ -17,21 +17,42 @@
 package com.xboson.test;
 
 import com.xboson.been.License;
-import com.xboson.been.XBosonException;
-import com.xboson.crypto.Crypto;
 import com.xboson.util.Version;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
 
 
 public class TestSign extends Test {
 
+
   @Override
   public void test() throws Throwable {
+    init();
     write();
-    verification();
+  }
+
+
+  private void init() throws UnsupportedEncodingException {
+    String s[] = new String[] {
+//            "Bad License, Copy protection",
+//            "Bad License, Wrong application",
+//            "Bad License, Signature fail",
+//            "Bad License, Has not yet started",
+//            "Bad License, Over the use of time",
+//            "License",
+//            "Update",
+    };
+
+    msg("private static final String s[] = new String[] {");
+    for (int i=0; i<s.length; ++i) {
+      s[i] = Base64.getEncoder().encodeToString(s[i].getBytes("UTF8"));
+      msg("  \""+s[i]+"\",");
+    }
+    msg("};");
   }
 
 
@@ -49,36 +70,7 @@ public class TestSign extends Test {
     File reqFile = req.writeRequest();
     byte[] b = Files.readAllBytes(Paths.get(reqFile.toURI()));
     String reqStr = new String(b);
-    sub("------- License REQ -------");
     msg(reqStr);
-  }
-
-
-  private void verification() throws Exception {
-    sub("Verification");
-    License license = License.readLicense();
-
-    if (! license.zz().equals(License.singleline(license.z))) {
-      throw new XBosonException("Bad License, Application Prohibited copy");
-    }
-
-    if (! Version.Name.equals(license.appName)) {
-      throw new XBosonException("Bad License, Wrong application");
-    }
-
-    if (! Crypto.me().verification(license)) {
-      throw new XBosonException("Bad License, Signature fail");
-    }
-
-    if (license.beginTime > System.currentTimeMillis()) {
-      throw new XBosonException("Bad License, Has not yet started");
-    }
-
-    if (license.endTime < System.currentTimeMillis()) {
-      throw new XBosonException("Bad License, Over the use of time");
-    }
-
-    msg("OK");
   }
 
 

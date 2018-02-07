@@ -14,20 +14,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.test.impl;
+package com.xboson.j2ee.emu;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.IConstant;
-import com.xboson.util.StringBufferOutputStream;
-import com.xboson.util.Tool;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Locale;

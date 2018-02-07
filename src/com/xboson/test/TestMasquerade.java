@@ -19,8 +19,8 @@ package com.xboson.test;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.j2ee.ui.TemplateEngine;
-import com.xboson.test.impl.TestServletRequest;
-import com.xboson.test.impl.TestServletResponse;
+import com.xboson.j2ee.emu.TestServletRequest;
+import com.xboson.j2ee.emu.TestServletResponse;
 
 
 public class TestMasquerade extends Test {

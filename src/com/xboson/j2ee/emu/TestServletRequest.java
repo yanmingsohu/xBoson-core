@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.test.impl;
+package com.xboson.j2ee.emu;
 
 import com.xboson.util.IConstant;
 import com.xboson.util.Tool;

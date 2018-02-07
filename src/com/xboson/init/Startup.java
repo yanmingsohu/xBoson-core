@@ -85,6 +85,10 @@ public class Startup implements ServletContextListener {
             sc.addFilter("SessionCluster",
                     com.xboson.j2ee.container.SessionCluster.class);
 
+    FilterRegistration.Dynamic processes =
+            sc.addFilter("Processes",
+                    com.xboson.j2ee.container.Processes.class);
+
     ServletRegistration.Dynamic main =
             sc.addServlet("main",
                     com.xboson.j2ee.container.MainServlet.class);
@@ -100,6 +104,7 @@ public class Startup implements ServletContextListener {
 
     striker.addMappingForUrlPatterns(null, false, "/*");
     session.addMappingForUrlPatterns(null, false, "/*");
+    processes.addMappingForUrlPatterns(null, false, "/*");
 
     ui.addMapping("/face/*");
     ui.setLoadOnStartup(2);

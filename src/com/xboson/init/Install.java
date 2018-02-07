@@ -26,6 +26,7 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.IConstant;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -50,6 +51,7 @@ public class Install extends HttpServlet {
   private static final Class[] ALL_STEP = new Class[] {
           Welcome.class,
           Copyright.class,
+          RegLicense.class,
           RootUser.class,
           ConfigCluster.class,
           ConfigCoreDB.class,
@@ -103,6 +105,9 @@ public class Install extends HttpServlet {
         if (is.gotoNext(hd)) {
           ++step;
         }
+      } catch(NullPointerException e) {
+        hd.msg = "空值异常";
+        e.printStackTrace();
       } catch(Exception e) {
         hd.msg = e.getMessage();
       }
@@ -115,9 +120,9 @@ public class Install extends HttpServlet {
     is = steps.get(step);
     if (is == null) step = 0;
 
-    log.info("Run install Step:", is.getClass(), "#", is.order());
     String page = is.getPage(hd);
     String msg = hd.msg == null ? NULSTR : hd.msg;
+    log.info("Run install Step:", is.getClass(), "#", msg);
 
     if (page == null) {
       page = "_building_.jsp";
@@ -128,7 +133,12 @@ public class Install extends HttpServlet {
     //
     req.setAttribute("config", config);
     req.setAttribute("msg", msg);
-    req.getRequestDispatcher(PAGE_PATH + page).forward(req, resp);
+
+    if (hd.ajax) {
+      resp.getWriter().write(msg);
+    } else {
+      req.getRequestDispatcher(PAGE_PATH + page).forward(req, resp);
+    }
   }
 
 
