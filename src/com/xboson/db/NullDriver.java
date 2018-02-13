@@ -37,7 +37,7 @@ public abstract class NullDriver implements IDialect, IDriver {
 
 
   public String createCatalog(String name) {
-    throw new UnsupportedOperationException("createCatalog");
+    throw new UnsupportedOperationException("Unsupported Create Catalog");
   }
 
 
@@ -49,6 +49,6 @@ public abstract class NullDriver implements IDialect, IDriver {
 
   @Override
   public String limitResult(String selectSql, Page page) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("Unsupported Limit Result");
   }
 }

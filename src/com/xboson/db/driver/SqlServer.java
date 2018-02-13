@@ -16,9 +16,13 @@
 
 package com.xboson.db.driver;
 
+import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDriver;
 import com.xboson.db.NullDriver;
+import com.xboson.db.analyze.ParsedData;
+import com.xboson.db.analyze.SqlParser;
+import com.xboson.db.analyze.SqlParserCached;
 
 
 public class SqlServer extends NullDriver implements IDriver {
@@ -65,5 +69,24 @@ public class SqlServer extends NullDriver implements IDriver {
   @Override
   public String createCatalog(String name) {
     return "CREATE DATABASE " + name;
+  }
+
+
+  @Override
+  public String limitResult(String sql, Page page) {
+    SqlParserCached.ParsedDataHandle handle = SqlParserCached.parse(sql);
+    String tableName = SqlParser.orderOrName(handle);
+    StringBuilder out = new StringBuilder(sql);
+
+    if (tableName != null) {
+      out.append(" Order By ");
+      out.append(tableName);
+    }
+    out.append(" OFFSET ");
+    out.append(page.offset);
+    out.append(" ROWS FETCH NEXT ");
+    out.append(page.pageSize + page.offset);
+    out.append(" ROWS ONLY");
+    return out.toString();
   }
 }

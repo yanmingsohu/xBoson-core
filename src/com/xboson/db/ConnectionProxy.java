@@ -81,4 +81,17 @@ public class ConnectionProxy extends AutoCloseableProxy<Connection> {
     }
     return ret;
   }
+
+
+  @Override
+  protected Class[] appendInterfaces(Class[] interfaces) {
+    for (int i=0; i<interfaces.length; ++i) {
+      if (interfaces[i] == Connection.class) {
+        return interfaces;
+      }
+    }
+    Class[] ret = Arrays.copyOf(interfaces, interfaces.length + 1);
+    ret[interfaces.length] = Connection.class;
+    return ret;
+  }
 }

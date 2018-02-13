@@ -42,13 +42,13 @@ public class ParsedData {
     String up_unit = unit.toUpperCase();
 
     if (SqlKeyWords.beginTable.contains(up_unit)) {
-      TableNames nn = new TableNames(unit);
+      TableNames nn = new TableNames(unit, up_unit);
       nn.setParent(lastKeyWordUnit);
       units.add(nn);
       lastKeyWordUnit = nn;
     }
     else if (SqlKeyWords.key.contains(up_unit)) {
-      IUnit nn = new KeyWord(unit);
+      IUnit nn = new KeyWord(unit, up_unit);
       nn.setParent(lastKeyWordUnit);
       units.add(nn);
 

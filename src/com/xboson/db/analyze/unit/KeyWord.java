@@ -19,12 +19,17 @@ package com.xboson.db.analyze.unit;
 import com.xboson.db.analyze.AbsUnit;
 
 
+/**
+ * 关键字
+ */
 public class KeyWord extends AbsUnit<String> {
   private String key;
+  public final String upperKey;
 
 
-  public KeyWord(String key) {
+  public KeyWord(String key, String up_unit) {
     this.key = key;
+    this.upperKey = up_unit;
   }
 
   @Override

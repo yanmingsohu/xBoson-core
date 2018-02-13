@@ -126,9 +126,87 @@ public class SqlParser {
   }
 
 
+  /**
+   * 如果 sql 中有 order by 返回 null, 否则返回 select 中的第一个列名.
+   */
+  public static String orderOrName(ParsedData pd) {
+    Iterator<IUnit> it = pd.getUnits().iterator();
+    String tableName = null;
+    int flag = 0;
+
+    while (it.hasNext()) {
+      IUnit un = it.next();
+
+      if (un instanceof KeyWord) {
+        KeyWord key = (KeyWord) un;
+        if (flag == 0 && key.upperKey.equals("SELECT")) {
+          flag = 1;
+        } else if (key.upperKey.equals("ORDER")) {
+          return null;
+        } else {
+          flag = 3;
+        }
+        continue;
+      }
+
+      if (flag == 1 && un instanceof Expression) {
+        tableName = (String) un.getData();
+        if (tableName.equals("*")) {
+          tableName = null;
+        } else {
+          flag = 3;
+        }
+      }
+    }
+
+    if (tableName == null) {
+      throw new ParseException(
+              "Can not find the column used to sort, " +
+              "and not limit the results.");
+    }
+    return tableName;
+  }
+
+
+  /**
+   * 删除 select 中的 order
+   */
+  public static String removeOrder(ParsedData pd) {
+    StringBuilder out = new StringBuilder();
+    for (IUnit un : pd.getUnits()) {
+      if (un instanceof KeyWord) {
+        if ( ((KeyWord) un).upperKey.equals("ORDER")) {
+          break;
+        }
+      }
+      out.append(un.stringify());
+    }
+    return out.toString();
+  }
+
+
+  /**
+   * @see #tableNames(ParsedData, IUnitListener)
+   */
   public static void tableNames(SqlParserCached.ParsedDataHandle handle,
                                 IUnitListener ul) {
     tableNames(handle.pd, ul);
+  }
+
+
+  /**
+   * @see #orderOrName(ParsedData)
+   */
+  public static String orderOrName(SqlParserCached.ParsedDataHandle handle) {
+    return orderOrName(handle.pd);
+  }
+
+
+  /**
+   * @see #removeOrder(ParsedData)
+   */
+  public static String removeOrder(SqlParserCached.ParsedDataHandle handle) {
+    return removeOrder(handle.pd);
   }
 
 

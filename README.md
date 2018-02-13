@@ -17,10 +17,9 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
-* SqlServer 分页, oracle 查询全面测试.
-* 程序授权许可系统(开发完成, 安装画面完成, win完成, linux 待测)
 * 系统交叉登录(补充到计划任务调用api时的权限)
-* 假设 git 服务器.
+* 架设 git 服务器.
+* 锁公钥
 
 
 # 2.0 新特性

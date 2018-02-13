@@ -140,16 +140,18 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
           throws Exception {
     Connection conn = getConnection();
     conn.setAutoCommit(!manualCommit);
-    PreparedStatement ps = conn.prepareStatement(query_impl.replaceSql(sql));
 
-    if (param != null) {
-      for (int i = 1; i <= param.length; ++i) {
-        Object p = param[i - 1];
-        ps.setObject(i, p);
+    sql = query_impl.replaceSql(sql);
+
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      if (param != null) {
+        for (int i = 1; i <= param.length; ++i) {
+          Object p = param[i - 1];
+          ps.setObject(i, p);
+        }
       }
+      return ps.executeUpdate();
     }
-
-    return ps.executeUpdate();
   }
 
 
@@ -174,49 +176,52 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
     ScriptObjectMirror param_grp = wrap(_param_grp);
     Connection conn = getConnection();
     conn.setAutoCommit(! manualCommit);
-    PreparedStatement ps = conn.prepareStatement(query_impl.replaceSql(sql));
-    int total = 0;
 
-    final int len = param_grp.size();
+    sql = query_impl.replaceSql(sql);
 
-    for (int g = 0; g < len; ++g) {
-      ScriptObjectMirror param = wrap(param_grp.getSlot(g));
-      final int param_len = param.size();
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      int total = 0;
+      final int len = param_grp.size();
 
-      for (int i = 1; i <= param_len; ++i) {
-        Object p = param.getSlot(i-1);
-        ps.setObject(i, p);
+      for (int g = 0; g < len; ++g) {
+        ScriptObjectMirror param = wrap(param_grp.getSlot(g));
+        final int param_len = param.size();
+
+        for (int i = 1; i <= param_len; ++i) {
+          Object p = param.getSlot(i-1);
+          ps.setObject(i, p);
+        }
+        total += ps.executeUpdate();
       }
-      total += ps.executeUpdate();
+      return total;
     }
-
-    ps.close();
-    return total;
   }
 
 
   public Object metaData(String sql) throws Exception {
-    PreparedStatement ps = getConnection().prepareStatement(query_impl.replaceSql(sql));
-    ResultSetMetaData meta = ps.getMetaData();
-    int column_count = meta.getColumnCount();
-    ScriptObjectMirror attr_list = createJSList(column_count);
-    int attr_i = attr_list.size() - 1;
+    sql = query_impl.replaceSql(sql);
 
-    for (int i=1; i<=column_count; ++i) {
-      ScriptObjectMirror attr = createJSObject();
-      attr_list.setSlot(++attr_i, attr);
+    try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+      ResultSetMetaData meta = ps.getMetaData();
+      int column_count = meta.getColumnCount();
+      ScriptObjectMirror attr_list = createJSList(column_count);
+      int attr_i = attr_list.size() - 1;
 
-      attr.setMember("ColumnLabel",    meta.getColumnLabel(i));
-      attr.setMember("ColumnName",     meta.getColumnName(i));
-      attr.setMember("ColumnTypeName", meta.getColumnTypeName(i));
-      attr.setMember("Precision",      meta.getPrecision(i));
-      attr.setMember("Scale",          meta.getScale(i));
-      attr.setMember("TableName",      meta.getTableName(i));
-      attr.setMember("SchemaName",     meta.getSchemaName(i));
-      attr.setMember("CatalogName",    meta.getCatalogName(i));
+      for (int i=1; i<=column_count; ++i) {
+        ScriptObjectMirror attr = createJSObject();
+        attr_list.setSlot(++attr_i, attr);
+
+        attr.setMember("ColumnLabel",    meta.getColumnLabel(i));
+        attr.setMember("ColumnName",     meta.getColumnName(i));
+        attr.setMember("ColumnTypeName", meta.getColumnTypeName(i));
+        attr.setMember("Precision",      meta.getPrecision(i));
+        attr.setMember("Scale",          meta.getScale(i));
+        attr.setMember("TableName",      meta.getTableName(i));
+        attr.setMember("SchemaName",     meta.getSchemaName(i));
+        attr.setMember("CatalogName",    meta.getCatalogName(i));
+      }
+      return attr_list;
     }
-
-    return attr_list;
   }
 
 
@@ -232,13 +237,14 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   public String currentDBTimeString() throws Exception {
     IDialect dialect = DbmsFactory.me().getDriver(orgdb);
-    Statement stat = getConnection().createStatement();
-    ResultSet rs = stat.executeQuery(dialect.nowSql());
-    if (rs.next()) {
-      Timestamp d = rs.getTimestamp(IDialect.NOW_TIME_COLUMN);
-      return Tool.formatDate(d);
+    try (Statement stat = getConnection().createStatement()) {
+      ResultSet rs = stat.executeQuery(dialect.nowSql());
+      if (rs.next()) {
+        Timestamp d = rs.getTimestamp(IDialect.NOW_TIME_COLUMN);
+        return Tool.formatDate(d);
+      }
+      return null;
     }
-    return null;
   }
 
 

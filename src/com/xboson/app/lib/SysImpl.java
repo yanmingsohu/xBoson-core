@@ -128,7 +128,7 @@ public class SysImpl extends DateImpl {
 
 
   /**
-   * 该方法将直接把数据压入应答数据集中, 而非不等待 setRetData 进行压入.
+   * 该方法将直接把数据压入应答数据集中, 无需 setRetData 进行压入.
    * 嵌套调用时不对结果做包装, 因为结果不会被发送到客户端.
    */
   void bindResult(String name, Object value) {

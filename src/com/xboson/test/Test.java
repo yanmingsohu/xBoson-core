@@ -197,7 +197,7 @@ public class Test implements IConstant {
             +"]    ############ [ Test "
             + name + " ] ############\n\n\u001b[m");
     unitname = name;
-    subCount = 1;
+    subCount = 0;
 	}
 
 
@@ -402,7 +402,7 @@ public class Test implements IConstant {
 
 
   /**
-   * 抛出异常才认为是正确的行为
+   * 抛出异常才认为是正确的行为, 继承该类实现 run()
    */
   static public abstract class Throws {
     /**

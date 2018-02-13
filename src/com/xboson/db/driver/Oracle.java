@@ -44,7 +44,7 @@ public class Oracle extends NullDriver implements IDriver {
 
   @Override
   public String getUrl(ConnectConfig config) {
-    return "jdbc:oracle:thin:"
+    return "jdbc:oracle:thin:@"
             + config.getHost() + ":"
             + config.getPort() + ":"
             + config.getDatabase();
@@ -76,9 +76,9 @@ public class Oracle extends NullDriver implements IDriver {
 
 
   public static String limit(String sql, Page page) {
-    return "Select * From ( Select _Real_Table_.*, rownum _row_num_alias_ From (\n"
+    return "Select * From ( Select Real_Table_.*, rownum row_num_alias_ From (\n"
             + sql +
-           "  \n) _Real_Table_ where rownum <= " + (page.pageSize + page.offset) +
-           "\n) where _row_num_alias_ > " + page.offset;
+           "  \n) Real_Table_ Where rownum <= " + (page.pageSize + page.offset) +
+           "\n) Where row_num_alias_ > " + page.offset;
   }
 }

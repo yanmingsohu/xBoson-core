@@ -21,6 +21,8 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDialect;
 import com.xboson.db.SqlResult;
+import com.xboson.db.analyze.SqlParser;
+import com.xboson.db.analyze.SqlParserCached;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -72,27 +74,26 @@ public class QueryImpl {
    */
   public int query(ScriptObjectMirror list, String sql, Object[] param)
           throws Exception {
-    PreparedStatement ps = sc.open().prepareStatement(sql);
-
-    if (param != null) {
-      Object p = null;
-      for (int i = 1; i <= param.length; ++i) {
-        try {
-          p = param[i - 1];
-          ps.setObject(i, runtime.getSafeObjectForQuery(p));
-        } catch(SQLException e) {
-          log.error("PreparedStatement bind", p, e);
-          ps.setObject(i, null);
+    try (PreparedStatement ps = sc.open().prepareStatement(sql)) {
+      if (param != null) {
+        Object p = null;
+        for (int i = 1; i <= param.length; ++i) {
+          try {
+            p = param[i - 1];
+            ps.setObject(i, runtime.getSafeObjectForQuery(p));
+          } catch(SQLException e) {
+            log.error("PreparedStatement bind", p, e);
+            ps.setObject(i, null);
+          }
         }
       }
+
+      ResultSet rs = ps.executeQuery();
+      int row_count = copyToList(runtime, list, rs);
+
+      rs.close();
+      return row_count;
     }
-
-    ResultSet rs = ps.executeQuery();
-    int row_count = copyToList(runtime, list, rs);
-
-    rs.close();
-    ps.close();
-    return row_count;
   }
 
 
@@ -101,13 +102,25 @@ public class QueryImpl {
     IDialect dialect = DbmsFactory.me().getDriver(cc);
 
     if (p.totalCount <= 0) {
-      String countSql = dialect.count(sql);
-      // 不要关闭 sr, 否则 connect 也会被关闭
-      SqlResult sr = SqlResult.query(sc.open(), countSql, param);
-      ResultSet rs = sr.getResult();
-      rs.next();
-      p.totalCount = rs.getInt(IDialect.TOTAL_SIZE_COLUMN);
-      rs.close();
+      try {
+        //
+        // mssql 在子查询中有 order by 会抛出异常.
+        //
+        SqlParserCached.ParsedDataHandle handle = SqlParserCached.parse(sql);
+        String totalSql = SqlParser.removeOrder(handle);
+        String countSql = dialect.count(totalSql);
+        //
+        // 不要关闭 sr, 否则 connect 也会被关闭
+        //
+        SqlResult sr = SqlResult.query(sc.open(), countSql, param);
+        ResultSet rs = sr.getResult();
+        rs.next();
+        p.totalCount = rs.getInt(IDialect.TOTAL_SIZE_COLUMN);
+        rs.close();
+      } catch(Exception e) {
+        SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
+        sys.bindResult("warn0", "Calculate Page Fail: "+ e);
+      }
     }
 
     String limitSql;

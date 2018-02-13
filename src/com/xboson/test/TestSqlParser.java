@@ -21,8 +21,41 @@ import com.xboson.db.analyze.*;
 
 public class TestSqlParser extends Test {
 
-  @Override
   public void test() throws Throwable {
+    testTableName();
+    testPage();
+  }
+
+
+  public void testPage() throws Throwable {
+    columnName("select * from test1 Order By id ", null);
+    columnName("select a from test1 ", "a");
+    columnName("select a,b,c from test1 ", "a");
+    columnName("select a,b,c from test1 Order By a", null);
+
+    new Throws(ParseException.class) {
+      @Override
+      public void run() throws Throwable {
+        columnName("select * from test1", null);
+      }
+    };
+  }
+
+
+  private void columnName(String sql, String cn) {
+    sub("Column Name");
+    msg("[SQL]", sql);
+    msg("find:", cn);
+    ParsedData pd = SqlParser.parse(sql);
+    String tableName = SqlParser.orderOrName(pd);
+    if (tableName != cn) {
+      eq(tableName, cn, "columnName");
+    }
+    msg("ok");
+  }
+
+
+  public void testTableName() throws Throwable {
     testSqlParse("SELECT * FROM t1 INNER JOIN t2",
             "t1", "t2");
     testSqlParse("SELECT t1.*, t2.* FROM t1 INNER JOIN t2",

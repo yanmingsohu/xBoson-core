@@ -170,7 +170,7 @@ public class DbmsFactory extends OnExitHandle {
       return cp.getProxy();
 
     } catch(Exception e) {
-      log.error("open fail", e);
+      log.error("open fail", Tool.allStack(e));
       throw new XBosonException.XSqlException(
               "open connection " + config.host +":"+ config.port, e);
     }
