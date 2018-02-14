@@ -98,10 +98,12 @@ public class Processes extends HttpFilter {
   private class Point extends TimerTask implements INotify {
     private SingleFile sf;
 
+
     private Point() throws IOException {
       File f = new File(license.LIC_FILE);
       sf = new SingleFile(license.basePath, f.getName(), this);
     }
+
 
     @Override
     public void run() {

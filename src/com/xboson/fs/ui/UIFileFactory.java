@@ -49,7 +49,6 @@ public final class UIFileFactory extends AbsFactory {
   }
 
 
-
   protected IRedisFileSystemProvider createLocal(
           Config cf, IFileSystemConfig config) {
     RedisBase rb              = new RedisBase(config);

@@ -25,6 +25,7 @@ import com.xboson.db.analyze.SqlParser;
 import com.xboson.db.analyze.SqlParserCached;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.sql.*;
@@ -36,7 +37,6 @@ import java.sql.*;
  */
 public class QueryImpl {
 
-  private final static String NULSTR = "";
   private Log log;
 
 
@@ -117,6 +117,7 @@ public class QueryImpl {
         rs.next();
         p.totalCount = rs.getInt(IDialect.TOTAL_SIZE_COLUMN);
         rs.close();
+
       } catch(Exception e) {
         SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
         sys.bindResult("warn0", "Calculate Page Fail: "+ e);
@@ -165,7 +166,7 @@ public class QueryImpl {
 
       for (int c = 1; c <= column; ++c) {
         Object d = rs.getObject(c);
-        if (d == null) d = NULSTR;
+        if (d == null) d = IConstant.NULL_STR;
         row.setMember(columnLabels[c], d);
       }
     }

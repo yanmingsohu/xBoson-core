@@ -20,8 +20,7 @@ import java.rmi.RemoteException;
 
 
 /**
- * 默认 RPC 注册表中有一个该对象的实力, 可以用来测试网络情况.
- * 如果远程对象实现了 IPing 接口, 在从缓存取出前
+ * 默认 RPC 注册表中有一个该对象的实例, 可以用来测试网络情况.
  */
 public class Ping implements IPing {
 

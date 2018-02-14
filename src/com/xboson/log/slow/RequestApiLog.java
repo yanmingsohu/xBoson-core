@@ -42,19 +42,19 @@ public class RequestApiLog extends AbsSlowLog {
     insert( uuid.ds(),
             nowInternet(),
             ac.exparam.get(IConstant.REQUEST_ID),
-            max(ac.call.req.getRequestURI(), 2000),
+            cut(ac.call.req.getRequestURI(), 2000),
             ac.org,
             ac.call.sess.login_user.pid,
             ac.call.req.getRemoteAddr(),
             ac.app,
             ac.mod,
             ac.api,
-            max(ac.call.req.getHeader(HEADER_REFERRER), 200),
-            max(ac.call.req.getHeader(HEADER_USER_AGENT), 100) );
+            cut(ac.call.req.getHeader(HEADER_REFERRER), 200),
+            cut(ac.call.req.getHeader(HEADER_USER_AGENT), 100) );
   }
 
 
-  private String max(String str, int max) {
+  private String cut(String str, int max) {
     if (str == null) return null;
     if (str.length() > max) {
       return str.substring(0, max);

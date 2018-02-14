@@ -76,9 +76,9 @@ public class Oracle extends NullDriver implements IDriver {
 
 
   public static String limit(String sql, Page page) {
-    return "Select * From ( Select Real_Table_.*, rownum row_num_alias_ From (\n"
+    return "Select * From( Select Real_Table_.*, rownum row_num_alias_ From(\n"
             + sql +
-           "  \n) Real_Table_ Where rownum <= " + (page.pageSize + page.offset) +
+           "  \n) Real_Table_ Where rownum <= "+ (page.pageSize + page.offset)+
            "\n) Where row_num_alias_ > " + page.offset;
   }
 }

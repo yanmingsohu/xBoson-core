@@ -94,6 +94,9 @@ public abstract class AbsSlowLog extends OnExitHandle {
           Tool.close(__conn);
           __conn = null;
         }
+        if (ps == null || ps.isClosed()) {
+          __conn = null;
+        }
       } catch (Exception e) {
         log.warn("Check connect fail", e);
         __conn = null;
@@ -143,6 +146,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
     public void run() {
       Object[] param;
       int count = 0;
+      checkConnect();
 
       for (;;) {
         synchronized (queue) {
@@ -181,6 +185,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
 
   /**
    * 返回当前时间的 RFC3339 格式字符串
+   * "yyyy-MM-dd'T'HH:mm:ss.999Z"
    */
   protected String nowInternet() {
     return format.format(new Date());
