@@ -24,6 +24,7 @@ import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.SingleFile;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Tool;
 import com.xboson.util.Version;
 
 import javax.servlet.FilterChain;
@@ -34,14 +35,20 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.util.Base64;
 import java.util.TimerTask;
+import java.util.zip.CRC32;
 
 
 public class Processes extends HttpFilter {
 
-  /** 在 TestSign 中生成 */
+  /**
+   * 在 TestSign 中生成
+   * @see com.xboson.test.TestSign
+   */
   private static final String s[] = new String[] {
           "QmFkIExpY2Vuc2UsIENvcHkgcHJvdGVjdGlvbg==",
           "QmFkIExpY2Vuc2UsIFdyb25nIGFwcGxpY2F0aW9u",
@@ -50,6 +57,7 @@ public class Processes extends HttpFilter {
           "QmFkIExpY2Vuc2UsIE92ZXIgdGhlIHVzZSBvZiB0aW1l",
           "TGljZW5zZQ==",
           "VXBkYXRl",
+          "YmFkIHB1YmxpYyBrZXk=",
   };
 
   private String msg;
@@ -137,6 +145,14 @@ public class Processes extends HttpFilter {
 
 
   private void execution() throws Exception {
+    CRC32 crc = new CRC32();
+    crc.update(Tool.readAllBytes(license.getPublicKeyFile()));
+
+    if (crc.getValue() != Version.PKCRC) {
+      msg = s[7];
+      return;
+    }
+
     if (! license.zz().equals(License.singleline(license.z))) {
       msg = s[0];
       return;

@@ -615,4 +615,16 @@ public final class Tool extends StaticLogProvider {
     }
   }
 
+
+  /**
+   * 读取文件中的所有字节 (适合小文件读取).
+   * 想法来自 java.nio.file.Files 中的 readAllBytes, nio 库中的路径与 io 库中的
+   * 路径处理方法不一致, 该实现使用 io 中的路径.
+   */
+  public static byte[] readAllBytes(String file) throws IOException {
+    FileInputStream i = new FileInputStream(file);
+    StringBufferOutputStream o = new StringBufferOutputStream();
+    o.write(i);
+    return o.toBytes();
+  }
 }

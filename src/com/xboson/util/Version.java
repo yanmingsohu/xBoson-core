@@ -21,4 +21,9 @@ public class Version {
   public final static String xBoson = "2.03";
   public final static String Name = "智慧大数据开放平台";
 
+  /**
+   * 公钥 CRC, 不一致程序不能启动
+   */
+  public final static long PKCRC = 3128569923L;
+
 }

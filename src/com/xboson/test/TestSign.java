@@ -45,6 +45,7 @@ public class TestSign extends Test {
 //            "Bad License, Over the use of time",
 //            "License",
 //            "Update",
+//            "bad public key",
     };
 
     msg("private static final String s[] = new String[] {");

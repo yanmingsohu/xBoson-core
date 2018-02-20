@@ -694,6 +694,9 @@ public class SysImpl extends DateImpl {
     dir = Tool.normalize(DirectoryGenerate.get(cd) + '/' + dir);
     StringBufferOutputStream output = new StringBufferOutputStream();
 
+    //
+    // 如果希望在写数据的同时直接推入 db, 则需要重写 output 实现一个异步消费线程.
+    //
     try (CsvMapWriter csv = new CsvMapWriter(
             output.openWrite(charset), CsvPreference.STANDARD_PREFERENCE) ) {
 
@@ -1095,11 +1098,13 @@ public class SysImpl extends DateImpl {
   private void writeRow(ScriptObjectMirror obj, Row row,
                         Map<String, Integer> name2num) {
     for (Map.Entry<String, Object> entry : obj.entrySet()) {
-      Integer c = name2num.get(entry.getKey());
+      String colName = entry.getKey();
+      Integer c = name2num.get(colName);
       if (c == null) {
         c = name2num.size();
-        name2num.put(entry.getKey(), c);
+        name2num.put(colName, c);
       }
+
       Cell cell = row.createCell(c);
       Object value = entry.getValue();
 
