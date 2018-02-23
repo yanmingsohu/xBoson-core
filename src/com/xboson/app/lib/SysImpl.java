@@ -696,6 +696,7 @@ public class SysImpl extends DateImpl {
 
     //
     // 如果希望在写数据的同时直接推入 db, 则需要重写 output 实现一个异步消费线程.
+    // 用 PipedInputStream / PipedOutputStream 实现
     //
     try (CsvMapWriter csv = new CsvMapWriter(
             output.openWrite(charset), CsvPreference.STANDARD_PREFERENCE) ) {
