@@ -22,9 +22,14 @@ import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
+import javax.management.MBeanServer;
 import javax.servlet.*;
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.util.Calendar;
 import java.util.Enumeration;
+import java.util.Locale;
+import java.util.TimeZone;
 
 
 /**
@@ -45,7 +50,7 @@ public class Startup implements ServletContextListener {
     } else {
       install(sc);
     }
-    print_address(sc);
+    print_server_info(sc);
   }
 
 
@@ -117,17 +122,26 @@ public class Startup implements ServletContextListener {
   }
 
 
-  private void print_address(ServletContext sc) {
+  private void print_server_info(ServletContext sc) {
     Log log = LogFactory.create();
     log.info("Server Info:", sc.getServerInfo());
 
     Enumeration<String> names = sc.getAttributeNames();
     while (names.hasMoreElements()) {
       String name = names.nextElement();
-      log.debug("Server Atribute", name +":", sc.getAttribute(name));
+      log.info("Server Atribute", name +":", sc.getAttribute(name));
     }
 
-    Tool.pl("http://localhost"+ sc.getContextPath());
+    log.info("file.encoding =",
+            System.getProperty("file.encoding"));
+    log.info("Locale =",
+            Locale.getDefault());
+    log.info("java.library.path =",
+            System.getProperty("java.library.path"));
+
+    TimeZone zone = TimeZone.getDefault();
+    log.info("Time Zone Name =", zone.getDisplayName());
+    log.info("Time Zone ID =", zone.getID());
   }
 
 }
