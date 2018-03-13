@@ -530,7 +530,7 @@ public final class Tool extends StaticLogProvider {
 
 
   /**
-   * 生成随机字符串
+   * 生成随机字符串, 字符范围所有可打印 ascii.
    * @param charLength 字符数量.
    */
   public static String randomString(int charLength) {
@@ -543,7 +543,30 @@ public final class Tool extends StaticLogProvider {
 
 
   /**
-   * 生成随机长度字节数组
+   * 生成随机字符串, 字符范围大小写字母和数字
+   * @param charLength 字符数量.
+   */
+  public static String randomString2(int charLength) {
+    char[] ch = new char[charLength];
+    for (int i=0; i<charLength; ++i) {
+      switch ((int) (Math.random() *3)) {
+        case 0:
+          ch[i] = (char) (Math.random() * 10 + 48);
+          break;
+        case 1:
+          ch[i] = (char) (Math.random() * 26 + 65);
+          break;
+        case 2:
+          ch[i] = (char) (Math.random() * 26 + 97);
+          break;
+      }
+    }
+    return new String(ch);
+  }
+
+
+  /**
+   * 生成随机长度字节数组.
    * @param byteLength 字节数量
    */
   public static byte[] randomBytes(int byteLength) {

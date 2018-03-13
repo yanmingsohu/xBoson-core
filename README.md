@@ -88,7 +88,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
     
 * (Hyperledger-Fabric 区块链)[http://hyperledger-fabric.readthedocs.io/en/release/]
     -- (fabric-sdk-java-1.0.1-jar-with-dependencies.jar) 若干依赖库集合
-
+    
 		
 # URL 映射约定
 
@@ -205,3 +205,5 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 * (Nashorn 上下文等)[https://wiki.openjdk.java.net/display/Nashorn/Nashorn+jsr223+engine+notes]
 * (Java 与区块链)[https://www.ibm.com/developerworks/cn/java/j-chaincode-for-java-developers/index.html]
 * (hyperledger 实现)[http://hyperledger-fabric.readthedocs.io/en/latest/blockchain.html]
+* (OLTU WIKI)[https://cwiki.apache.org/confluence/display/OLTU/Index]
+* (OAuth2 规范文档)[https://oauth.net/2/]

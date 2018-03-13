@@ -199,7 +199,7 @@ public class UserService extends XService implements IDict, IConstant {
 
     if (lu != null) {
       final String ps = Password.v1(lu.userid, md5ps, lu.password_dt);
-      if (!ps.equals(lu.password)) {
+      if (! ps.equals(lu.password)) {
         access.log(userid, 1001, "用户名或密码错误");
         throw new XBosonException("用户名或密码错误", 1001);
       }
@@ -255,7 +255,7 @@ public class UserService extends XService implements IDict, IConstant {
         // schema 不支持变量绑定, 只能拼.
         //
         String sql = "Select roleid From " + orgid
-                + ".sys_user_role Where pid=? And status='1'";
+                   + ".sys_user_role Where pid=? And status='1'";
 
         SqlResult sr2 = sr.query(sql, pid);
         ResultSet role_rs = sr2.getResult();

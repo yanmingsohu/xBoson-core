@@ -40,3 +40,15 @@ COMMENT '登录状态代码' ;
 ALTER TABLE `sys_pl_log_uimodify`
 ADD INDEX `user_id` (`user_id` ASC),
 ADD INDEX `time_dt` (`dt` DESC);
+
+
+CREATE TABLE `sys_pl_app_token` (
+  `client_id` VARCHAR(32) NOT NULL,
+  `token` VARCHAR(90) NOT NULL,
+  `userid` VARCHAR(45) NOT NULL,
+  `birth_time` DATETIME NOT NULL DEFAULT now(),
+  `expires_in` INT NOT NULL COMMENT '生命长度, 秒',
+  `enable` TINYINT NOT NULL DEFAULT 1,
+  PRIMARY KEY (`token`),
+  UNIQUE INDEX `token_UNIQUE` (`token` ASC))
+COMMENT = '第三方应用登录令牌';
