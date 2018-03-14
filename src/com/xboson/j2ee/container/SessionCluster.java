@@ -17,47 +17,116 @@
 package com.xboson.j2ee.container;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.TimerTask;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.xboson.been.Config;
-import com.xboson.been.SessionData;
+import com.xboson.been.*;
+import com.xboson.db.ConnectConfig;
 import com.xboson.event.timer.EarlyMorning;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.service.OAuth2;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.AES;
 import com.xboson.util.SessionID;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IOAuth2;
 
 
-//@WebFilter(urlPatterns="/*")
 public class SessionCluster extends HttpFilter {
 
   private static final long serialVersionUID = -6654306025872001022L;
-  private static final String cookieName = "xBoson";
+  private static final String COOKIE_NAME = "xBoson";
 
   private static byte[] sessionPassword = null;
   private static int sessionTimeout = 0; // 分钟
 
   private final Log log = LogFactory.create();
   private String contextPath;
+  private ConnectConfig db;
 
 
   protected void doFilter(HttpServletRequest request,
                           HttpServletResponse response,
                           FilterChain chain)
-      throws IOException, ServletException {
+          throws IOException, ServletException {
+    SessionData sd = null;
 
-    Cookie ck = SessionID.getCookie(cookieName, request);
+    try {
+      sd = fromToken(request, response);
+      if (sd == null) {
+        sd = fromCookie(request, response);
+      }
+
+      request.setAttribute(SessionData.ATTRNAME, sd);
+      chain.doFilter(request, response);
+
+    } catch (SQLException e) {
+      throw new XBosonException.XSqlException(e);
+    } finally {
+      if (sd != null) {
+        RedisMesmerizer.me().sleep(sd);
+      }
+    }
+  }
+
+
+  /**
+   * 如果没有 token 参数则返回 null, 如果 token 无效会抛出异常.
+   */
+  private SessionData fromToken(HttpServletRequest request,
+                                HttpServletResponse response)
+          throws IOException, ServletException, SQLException
+  {
+    String token = request.getParameter(IOAuth2.PARM_TOKEN);
+    if (Tool.isNulStr(token) || token.length() != IOAuth2.TOKEN_LENGTH) {
+      return null;
+    }
+
+    SessionData sess = (SessionData)
+            RedisMesmerizer.me().wake(SessionData.class, token);
+    if (sess != null) {
+      return sess;
+    }
+
+    AppToken at = OAuth2.openToken(token, db);
+    if (at == null) {
+      throw new XBosonException("invalid Token: " + token, 21323);
+    }
+
+    LoginUser user = LoginUser.fromDb(at.userid, db, null);
+    if (user == null) {
+      throw new XBosonException("Token 对应的用户无法访问: "+ at.userid);
+    }
+    user.bindUserRoles(db);
+    user.password = null;
+
+    sess = new SessionData();
+    sess.login_user  = user;
+    sess.id          = token;
+    sess.loginTime   = user.loginTime;
+    log.debug("Token ID:", token);
+    return sess;
+  }
+
+
+  /**
+   * 总是会尽可能返回一个 SessionData, 在必要时会创建空的 SessionData
+   */
+  private SessionData fromCookie(HttpServletRequest request,
+                                 HttpServletResponse response)
+          throws IOException, ServletException
+  {
+    Cookie ck = SessionID.getCookie(COOKIE_NAME, request);
     SessionData sd = null;
 
     if (ck == null) {
@@ -93,15 +162,8 @@ public class SessionCluster extends HttpFilter {
     if (sd == null) {
       sd = new SessionData(ck, sessionTimeout);
     }
-
-    request.setAttribute(SessionData.attrname, sd);
-    log.debug("Session ID: " + ck.getValue());
-
-    try {
-      chain.doFilter(request, response);
-    } finally {
-      RedisMesmerizer.me().sleep(sd);
-    }
+    log.debug("Session ID:", ck.getValue());
+    return sd;
   }
 
 
@@ -109,7 +171,7 @@ public class SessionCluster extends HttpFilter {
    * 从请求中还原 session
    */
   public static SessionData resurrectionSession(HttpServletRequest request) {
-    Cookie ck = SessionID.getCookie(cookieName, request);
+    Cookie ck = SessionID.getCookie(COOKIE_NAME, request);
     return resurrectionSession(ck);
   }
 
@@ -125,7 +187,7 @@ public class SessionCluster extends HttpFilter {
 
   private Cookie createCookie(HttpServletResponse response)
           throws ServletException {
-    Cookie ck = new Cookie(cookieName,
+    Cookie ck = new Cookie(COOKIE_NAME,
             SessionID.generateSessionId(sessionPassword));
     ck.setHttpOnly(true);
     ck.setMaxAge(sessionTimeout * 60);
@@ -137,9 +199,10 @@ public class SessionCluster extends HttpFilter {
 
   public void init(FilterConfig filterConfig) throws ServletException {
     Config cfg = SysConfig.me().readConfig();
-    sessionTimeout = cfg.sessionTimeout;
+    sessionTimeout  = cfg.sessionTimeout;
     sessionPassword = AES.aesKey( cfg.sessionPassword );
-    contextPath = filterConfig.getServletContext().getContextPath();
+    contextPath     = filterConfig.getServletContext().getContextPath();
+    db              = cfg.db;
 
     if (cfg.enableSessionClear) {
       SessionData sd = new SessionData();

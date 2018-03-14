@@ -113,7 +113,8 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
    * 计算持久化时使用的 ID
    */
   String genid(ISleepwalker sw, String type) {
-    return "/" + type + "/" + sw.getClass().getName() + "/" + sw.getid();
+    String id = sw.getid();
+    return "/" + type + "/" + sw.getClass().getName() + "/" + id;
   }
 
 

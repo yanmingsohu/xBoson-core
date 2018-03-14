@@ -20,7 +20,7 @@ import com.esotericsoftware.yamlbeans.YamlConfig;
 import com.esotericsoftware.yamlbeans.YamlReader;
 import com.esotericsoftware.yamlbeans.YamlWriter;
 import com.xboson.been.Config;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.StringBufferOutputStream;
 
 import java.io.IOException;

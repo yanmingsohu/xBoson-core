@@ -18,12 +18,11 @@ package com.xboson.been;
 
 import com.xboson.script.JScriptException;
 import com.xboson.util.CodeFormater;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.internal.runtime.ECMAErrors;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
@@ -337,6 +336,13 @@ public class XBosonException extends RuntimeException
   static public class Remote extends XBosonException {
     public Remote(Throwable throwable) {
       super(throwable);
+    }
+  }
+
+
+  static public class TokenTimeout extends XBosonException {
+    public TokenTimeout() {
+      setCode(21327);
     }
   }
 }

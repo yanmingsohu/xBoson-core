@@ -24,7 +24,7 @@ import com.xboson.j2ee.container.XResponse;
 import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.j2ee.emu.TestServletRequest;
 import com.xboson.j2ee.emu.TestServletResponse;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -75,7 +75,7 @@ public class TestApi extends Test {
     sd.login_user = new Admin();
     sd.login_user.pid = "e3e5cf168dd24b44ba4b72775d5fb215";
     sd.login_user.userid = "root";
-    req.setAttribute(SessionData.attrname, sd);
+    req.setAttribute(SessionData.ATTRNAME, sd);
     return new CallData(req, resp);
   }
 

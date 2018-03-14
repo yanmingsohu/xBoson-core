@@ -33,7 +33,7 @@ public interface IMesmerizer {
    * 唤醒持久化的数据,
    * 当  继承了 ITimeout, 唤醒后发现对象超时则返回null, 且被删除.
    * @param c
-   * @param id
+   * @param id 如果为空会抛出异常
    * @return 如果找不到 id 对应的缓存对象, 则返回 null
    */
   ISleepwalker wake(Class<? extends ISleepwalker> c, String id);

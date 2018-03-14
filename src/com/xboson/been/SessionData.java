@@ -30,7 +30,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class SessionData implements IBean, IBinData, ITimeout {
 
-  public static final String attrname = "xBoson-session-data";
+  public static final String ATTRNAME = "xBoson-session-data";
 
   public LoginUser login_user;
   public String id;
@@ -45,7 +45,17 @@ public class SessionData implements IBean, IBinData, ITimeout {
 
 
   /**
-   * 将 this 绑定到 request attribute 上
+   * 使用 token 创建 session
+   */
+  public SessionData(AppToken token) {
+    this.id = token.token;
+    this.loginTime = System.currentTimeMillis();
+    this.endTime = token.over;
+  }
+
+
+  /**
+   * 使用 cookie 创建 session
    */
   public SessionData(Cookie ck, int sessionTimeoutMinute) {
     this.id = ck.getValue();
@@ -60,7 +70,7 @@ public class SessionData implements IBean, IBinData, ITimeout {
 
 
   public static SessionData get(HttpServletRequest request) throws ServletException {
-    SessionData sd = (SessionData) request.getAttribute(attrname);
+    SessionData sd = (SessionData) request.getAttribute(ATTRNAME);
     if (sd == null) {
       throw new ServletException("SessionData not init");
     }

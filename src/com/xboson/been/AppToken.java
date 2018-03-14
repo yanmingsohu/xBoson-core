@@ -34,7 +34,7 @@ public class AppToken implements IBinData, ITimeout {
 
 
   public AppToken(Date birth, int life) {
-    over = birth.getTime() + life;
+    over = birth.getTime() + life*1000;
   }
 
 

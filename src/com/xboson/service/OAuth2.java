@@ -17,38 +17,25 @@
 package com.xboson.service;
 
 import com.xboson.been.*;
+import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.sleep.RedisMesmerizer;
-import com.xboson.util.IConstant;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IOAuth2;
 
 import java.io.IOException;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.TimeoutException;
 
 
 @XPath("/oauth2")
-public class OAuth2 extends XService {
-
-  public static final String MSG
-          = "Provide sub-service name '/oauth2/[sub service]'";
-
-  public static final String PageBase
-          = "/xboson/face/ui/paas/oauth2/";
-
-  public static final String MODE = "authorization_code";
-
-  public static final int CODE_LENGTH  = 40;
-  public static final int TOKEN_LENGTH = 90;
-  /** 授权码有效期, 10 分钟, 单位毫秒 */
-  public static final int CODE_LIFE    = 10 * 60 * 1000;
-  /** 令牌有效期, 90 天, 单位秒 */
-  public static final int TOKEN_LIFE   = 90 * 24 * 60;
+public class OAuth2 extends XService implements IOAuth2 {
 
 
   private Config cf;
@@ -61,7 +48,7 @@ public class OAuth2 extends XService {
 
   @Override
   public void service(CallData data) throws Exception {
-    subService(data, MSG);
+    subService(data, URL_FAIL_MSG);
   }
 
 
@@ -83,34 +70,21 @@ public class OAuth2 extends XService {
   public void authorize(CallData data) throws Exception {
     try {
       if (! isLogin(data)) {
-        goPage(data, "login.html");
+        goPage(data, PAGE_LOGIN);
         return;
       }
-      String type = data.getString("grant_type", 1, 30);
-      String cid  = data.getString("client_id", 1, 99);
-      String stat = data.req.getParameter("state");
+      String type = data.getString(PARM_GTYPE, 1, 30);
+      String cid  = data.getString(PARM_CLI_ID, 1, 99);
+      String stat = data.req.getParameter(PARM_STATE);
 
-      if (! MODE.equals(type)) {
-        goPage(data, "badtype.html");
+      if (! GTYPE_AUTH_CODE.equals(type)) {
+        goPage(data, PAGE_BAD_TYPE);
         return;
       }
 
-      String uri = null;
-      String appnm = null;
-      boolean enable = false;
-
-      try (SqlResult sr = SqlReader.query(
-              "open_tp_app.sql", cf.db, cid)) {
-        ResultSet rs = sr.getResult();
-        if (rs.next()) {
-          uri    = rs.getString("uri");
-          appnm  = rs.getString("tp_appnm");
-          enable = rs.getInt("status") > 0;
-        }
-      }
-
-      if (enable == false && uri != null) {
-        goPage(data, "block.html");
+      AppInfo app = searchApp(cid);
+      if (app == null || app.uri == null) {
+        goPage(data, PAGE_BLOCK);
         return;
       }
 
@@ -121,12 +95,12 @@ public class OAuth2 extends XService {
       ocode.userid     = data.sess.login_user.userid;
       RedisMesmerizer.me().sleep(ocode);
 
-      goPage(data, "access.html",
-              "code", code, "uri", uri, "state", stat,
-              "appnm", appnm, "usernm", data.sess.login_user.userid);
+      goPage(data, PAGE_ACCESS,
+              "code", code, "uri", app.uri, "state", stat,
+              "appnm", app.name, "usernm", data.sess.login_user.userid);
 
     } catch(XBosonException.BadParameter e) {
-      goPage(data, "badp.html");
+      goPage(data, PAGE_BAD_PARM);
     } catch(Exception e) {
       data.resp.getWriter().write("Error: " + e.getMessage());
     }
@@ -138,32 +112,32 @@ public class OAuth2 extends XService {
    */
   public void access_token(CallData data) throws Exception {
     try {
-      String type = data.getString("grant_type", 1, 30);
-      String cid  = data.getString("client_id", 1, 99);
-      String ps   = data.getString("client_secret", 1, 99);
-      String code = data.getString("code", 1, CODE_LENGTH);
+      String type = data.getString(PARM_GTYPE, 1, 30);
+      String cid  = data.getString(PARM_CLI_ID, 1, 99);
+      String ps   = data.getString(PARM_CLI_PS, 1, 99);
+      String code = data.getString(PARM_CODE, 1, CODE_LENGTH+1);
 
-      if (! MODE.equals(type)) {
-        error(data, 21328, "unsupported_grant_type");
+      if (! GTYPE_AUTH_CODE.equals(type)) {
+        error(data, 21328, ERR_UNSUPPORT_GTYPE);
         return;
       }
 
-      OAuth2Code ocode =
-              (OAuth2Code) RedisMesmerizer.me().wake(OAuth2Code.class, code);
+      OAuth2Code ocode = (OAuth2Code) 
+              RedisMesmerizer.me().wake(OAuth2Code.class, code);
       if (ocode == null) {
-        error(data, 21325, "invalid_grant");
+        error(data, 21325, ERR_INV_GRANT);
         return;
       } else {
         RedisMesmerizer.me().remove(ocode);
       }
 
       if (! cid.equals(ocode.clientid)) {
-        error(data, 21324, "invalid_client");
+        error(data, 21324, ERR_INV_CLIENT);
         return;
       }
 
-      if (! checkClient(cid, ps)) {
-        error(data, 21324, "invalid_client");
+      if (null == searchApp(cid, ps)) {
+        error(data, 21324, ERR_INV_CLIENT);
         return;
       }
 
@@ -174,7 +148,7 @@ public class OAuth2 extends XService {
       at.userid    = ocode.userid;
 
       if (! saveTokenToDB(at, birth)) {
-        error(data, 21324, "invalid_client");
+        error(data, 21324, ERR_INV_CLIENT);
       }
       RedisMesmerizer.me().sleep(at);
 
@@ -184,7 +158,7 @@ public class OAuth2 extends XService {
       data.xres.responseMsg("ok", 0);
 
     } catch(XBosonException.BadParameter e) {
-      error(data, 21323, "invalid_request", e.getMessage());
+      error(data, 21323, ERR_INV_REQ_PARM, e.getMessage());
     }
   }
 
@@ -194,21 +168,18 @@ public class OAuth2 extends XService {
    */
   public void revoke_token(CallData data) throws Exception {
     try {
-      String cid   = data.getString("client_id", 1, 99);
-      String ps    = data.getString("client_secret", 1, 99);
-      String token = data.getString("access_token", 1, TOKEN_LENGTH);
+      String cid   = data.getString(PARM_CLI_ID, 1, 99);
+      String ps    = data.getString(PARM_CLI_PS, 1, 99);
+      String token = data.getString(PARM_TOKEN, 1, TOKEN_LENGTH+1);
 
-      if (! checkClient(cid, ps)) {
-        error(data, 21324, "invalid_client");
+      if (null == searchApp(cid, ps)) {
+        error(data, 21324, ERR_INV_CLIENT);
         return;
       }
 
-      try (SqlResult sr = SqlReader.query(
-              "delete_app_token.sql", cf.db, token, cid)) {
-        if (sr.getUpdateCount() != 1) {
-          error(data, 21327, "expired_token");
-          return;
-        }
+      if (! deleteTokenDB(cid, token)) {
+        error(data, 21327, ERR_TOKEN_EXP);
+        return;
       }
 
       AppToken at = new AppToken();
@@ -217,35 +188,94 @@ public class OAuth2 extends XService {
 
       data.xres.responseMsg("ok", 0);
     } catch(XBosonException.BadParameter e) {
-      error(data, 21323, "invalid_request", e.getMessage());
+      error(data, 21323, ERR_INV_REQ_PARM, e.getMessage());
     }
   }
 
 
-  private boolean checkClient(String clientId, String clientPs)
-          throws SQLException {
-    boolean enable = false;
+  private boolean deleteTokenDB(String cid, String token) {
+    try (SqlResult sr = SqlReader.query(SQL_DEL_TOKEN, cf.db, token, cid)) {
+      return sr.getUpdateCount() == 1;
+    }
+  }
 
-    try (SqlResult sr = SqlReader.query(
-            "open_tp_app_ps.sql", cf.db, clientId, clientPs)) {
-      ResultSet rs = sr.getResult();
-      if (rs.next()) {
-        enable = rs.getInt("status") > 0;
+
+  /**
+   * 该方法尝试从缓存中获取 token 对象, 或从数据库中获取 token 对象 (成功后缓存).
+   * token 不存在会返回 null.
+   * @throws XBosonException.TokenTimeout 令牌超时
+   */
+  public static AppToken openToken(String token, ConnectConfig db)
+          throws SQLException
+  {
+    if (Tool.isNulStr(token))
+      throw new NullPointerException("token cannot be null");
+
+    AppToken at = (AppToken) RedisMesmerizer.me().wake(AppToken.class, token);
+    if (at == null) {
+      try (SqlResult sr = SqlReader.query(SQL_GET_TOKEN, db, token)) {
+        ResultSet rs = sr.getResult();
+        if (! rs.next()) return null;
+
+        at = new AppToken(rs.getDate("birth_time"),
+                          rs.getInt("expires_in"));
+        at.clientid  = rs.getString("client_id");
+        at.userid    = rs.getString("userid");
+        at.token     = token;
+
+        if (at.isTimeout()) {
+          throw new XBosonException.TokenTimeout();
+        }
+        RedisMesmerizer.me().sleep(at);
       }
     }
-    return enable;
+    return at;
+  }
+
+
+  private AppInfo searchApp(String clientId, String clientPs)
+          throws SQLException {
+    return _searchApp(SQL_GET_APP_PS, clientId, clientPs);
+  }
+
+
+  private AppInfo searchApp(String clientId)
+          throws SQLException {
+    return _searchApp(SQL_GET_APP, clientId);
+  }
+
+
+  private AppInfo _searchApp(String sqlFile, Object... parm)
+          throws SQLException {
+    try (SqlResult sr = SqlReader.query(sqlFile, cf.db, parm)) {
+      ResultSet rs = sr.getResult();
+      if (rs.next()) {
+        if (rs.getInt("status") > 0) {
+          return new AppInfo(
+                  rs.getString("tp_appnm"), 
+                  rs.getString("uri"));
+        }
+      }
+    }
+    return null;
   }
 
 
   private boolean saveTokenToDB(AppToken at, Date birth) {
-    try (SqlResult sr = SqlReader.query(
-            "create_app_token.sql", cf.db,
+    try (SqlResult sr = SqlReader.query(SQL_NEW_TOKEN, cf.db,
             at.clientid, at.token, at.userid, birth, TOKEN_LIFE, 1)) {
-      return (sr.getUpdateCount() == 1);
+      return sr.getUpdateCount() == 1;
     }
   }
 
 
+  /**
+   * 跳转到页面并绑定请求参数
+   * @param data
+   * @param page 页面名(以 PageBase 为基础路径)
+   * @param p 绑定参数 [参数名1, 参数值1, 参数名2, ....]
+   * @throws Exception
+   */
   private void goPage(CallData data, String page, Object...p) throws Exception {
     StringBuilder uri = new StringBuilder();
     uri.append(PageBase);
@@ -258,12 +288,11 @@ public class OAuth2 extends XService {
         uri.append('=');
         if (p[i+1] != null) {
           uri.append(java.net.URLEncoder.encode(
-                  String.valueOf(p[i+1]), IConstant.CHARSET_NAME));
+                  String.valueOf(p[i+1]), CHARSET_NAME));
         }
         uri.append('&');
       }
     }
-
     data.resp.sendRedirect(uri.toString());
   }
 
@@ -273,10 +302,29 @@ public class OAuth2 extends XService {
   }
 
 
+  /**
+   * 返回 json 格式的 oauth2 应答.
+   * @param data
+   * @param code oauth2 代码
+   * @param err oauth2 错误字符串
+   * @param msg 自定义消息
+   * @throws IOException
+   */
   private void error(CallData data, int code, String err, String msg)
           throws IOException {
     data.xres.bindResponse("error", err);
     data.xres.bindResponse("error_code", code);
     data.xres.responseMsg(msg, code);
+  }
+  
+  
+  private class AppInfo {
+    String uri;
+    String name;
+
+    AppInfo(String name, String uri) {
+      this.name = name;
+      this.uri = uri;
+    }
   }
 }

@@ -19,7 +19,15 @@ package com.xboson.been;
 import com.xboson.auth.IAWho;
 import com.xboson.been.IBean;
 import com.xboson.been.JsonHelper;
+import com.xboson.db.ConnectConfig;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.service.UserService;
+import com.xboson.util.Password;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -46,5 +54,98 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
   @Override
   public boolean isRoot() {
     return false;
+  }
+
+
+  /**
+   * 检查输入的密码是否与当前用户密码一致
+   * @param md5ps 密码明文经过 md5 后的字符串
+   * @return 密码一致返回 true
+   */
+  public boolean checkPS(String md5ps) {
+    final String ps = Password.v1(userid, md5ps, password_dt);
+    return ps.equals(password);
+  }
+
+
+  /**
+   * 从数据库中恢复用户
+   * @param userid 用户 id
+   * @param db 数据库连接配置
+   * @param root 超级用户 id, null 则总是创建普通用户.
+   * @return 找不到返回 null
+   * @throws SQLException
+   */
+  public static LoginUser fromDb(String userid, ConnectConfig db, String root)
+          throws SQLException
+  {
+    //
+    // 把 userid 分别假设为 userid/tel/email 查出哪个算哪个
+    //
+    Object[] parmbind = new Object[] {userid, userid, userid};
+    LoginUser lu = null;
+
+    try (SqlResult sr = SqlReader.query("login.sql", db, parmbind)) {
+      ResultSet rs = sr.getResult();
+      while (rs.next()) {
+        int c = rs.getInt("c");
+        if (c == 1) {
+          userid          = rs.getString("userid");
+          lu              = userid.equals(root)
+                          ? new Root() : new LoginUser();
+          lu.pid          = rs.getString("pid");
+          lu.userid       = userid;
+          lu.password     = rs.getString("password");
+          lu.password_dt  = rs.getString("password_dt");
+          lu.tel          = rs.getString("tel");
+          lu.email        = rs.getString("email");
+          lu.status       = rs.getString("status");
+          lu.loginTime    = System.currentTimeMillis();
+          break;
+        }
+      }
+    }
+    return lu;
+  }
+
+
+  /**
+   * 绑定当前用户在所有机构中的角色
+   * @param db 数据库配置
+   */
+  public void bindUserRoles(ConnectConfig db) throws SQLException {
+    try (SqlResult sr = SqlReader.query("mdm_org", db)) {
+      ResultSet orgs = sr.getResult();
+      List<String> roles = new ArrayList<>();
+
+      while (orgs.next()) {
+        String orgid = orgs.getString("id");
+
+        //
+        // schema 不支持变量绑定, 只能拼.
+        //
+        String sql = "Select roleid From " + orgid
+                + ".sys_user_role Where pid=? And status='1'";
+
+        SqlResult sr2 = sr.query(sql, pid);
+        ResultSet role_rs = sr2.getResult();
+
+        while (role_rs.next()) {
+          roles.add(role_rs.getString("roleid"));
+        }
+      }
+
+      this.roles = roles;
+    }
+  }
+
+
+  /**
+   * 超级用户
+   */
+  static private final class Root extends LoginUser {
+    public boolean isRoot() {
+      return true;
+    }
   }
 }
