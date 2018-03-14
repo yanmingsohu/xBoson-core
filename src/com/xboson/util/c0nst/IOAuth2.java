@@ -55,6 +55,6 @@ public interface IOAuth2 extends IConstant {
   int CODE_LIFE = 10 * 60 * 1000;
 
   /** 令牌有效期, 90 天, 单位秒 */
-  int TOKEN_LIFE = 90 * 24 * 60;
+  int TOKEN_LIFE = 90 * 24 * 60 * 60;
 
 }

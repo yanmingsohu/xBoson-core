@@ -18,8 +18,9 @@ package com.xboson.been;
 
 import com.xboson.sleep.IBinData;
 import com.xboson.sleep.ITimeout;
+import com.xboson.util.Tool;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 
 public class AppToken implements IBinData, ITimeout {
@@ -33,8 +34,8 @@ public class AppToken implements IBinData, ITimeout {
   public AppToken() {}
 
 
-  public AppToken(Date birth, int life) {
-    over = birth.getTime() + life*1000;
+  public AppToken(Timestamp birth, int life) {
+    over = birth.getTime() + (long)life*1000;
   }
 
 

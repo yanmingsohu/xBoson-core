@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.app.*;
 import com.xboson.app.fix.SourceFix;
 import com.xboson.auth.impl.ResourceRoleTypes;
+import com.xboson.been.AppToken;
 import com.xboson.been.CallData;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
@@ -27,6 +28,7 @@ import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.event.OnFileChangeHandle;
 import com.xboson.j2ee.ui.TemplateEngine;
+import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
@@ -282,5 +284,16 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    */
   public void sendUITemplateReloadTag() {
     TemplateEngine.reloadTags();
+  }
+
+
+  /**
+   * 从缓存中删除 Token, 下次访问令牌将强制更新令牌.
+   * [原平台无该函数]
+   */
+  public void updateToken(String token) {
+    AppToken at = new AppToken();
+    at.token = token;
+    RedisMesmerizer.me().remove(at);
   }
 }

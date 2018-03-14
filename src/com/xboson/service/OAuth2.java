@@ -28,10 +28,9 @@ import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IOAuth2;
 
 import java.io.IOException;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.TimeoutException;
+import java.sql.Timestamp;
 
 
 @XPath("/oauth2")
@@ -141,7 +140,7 @@ public class OAuth2 extends XService implements IOAuth2 {
         return;
       }
 
-      Date birth = new Date(System.currentTimeMillis());
+      Timestamp birth = new Timestamp(System.currentTimeMillis());
       AppToken at  = new AppToken(birth, TOKEN_LIFE);
       at.clientid  = ocode.clientid;
       at.token     = Tool.randomString2(TOKEN_LENGTH);
@@ -217,7 +216,7 @@ public class OAuth2 extends XService implements IOAuth2 {
         ResultSet rs = sr.getResult();
         if (! rs.next()) return null;
 
-        at = new AppToken(rs.getDate("birth_time"),
+        at = new AppToken(rs.getTimestamp("birth_time"),
                           rs.getInt("expires_in"));
         at.clientid  = rs.getString("client_id");
         at.userid    = rs.getString("userid");
@@ -261,7 +260,7 @@ public class OAuth2 extends XService implements IOAuth2 {
   }
 
 
-  private boolean saveTokenToDB(AppToken at, Date birth) {
+  private boolean saveTokenToDB(AppToken at, Timestamp birth) {
     try (SqlResult sr = SqlReader.query(SQL_NEW_TOKEN, cf.db,
             at.clientid, at.token, at.userid, birth, TOKEN_LIFE, 1)) {
       return sr.getUpdateCount() == 1;

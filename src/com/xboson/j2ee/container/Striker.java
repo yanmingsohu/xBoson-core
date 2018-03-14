@@ -71,7 +71,7 @@ public class Striker extends HttpFilter {
 
     if (cf.uiWelcome != null) {
       this.welcome = Tool.normalize(context_path +'/'+ cf.uiWelcome);
-      log.debug("Welcome page:", this.welcome);
+      log.info("Welcome page:", this.welcome);
     }
   }
 

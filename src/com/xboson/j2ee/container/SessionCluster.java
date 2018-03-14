@@ -100,7 +100,7 @@ public class SessionCluster extends HttpFilter {
 
     AppToken at = OAuth2.openToken(token, db);
     if (at == null) {
-      throw new XBosonException("invalid Token: " + token, 21323);
+      throw new XBosonException("invalid Token: "+ token, 21323);
     }
 
     LoginUser user = LoginUser.fromDb(at.userid, db, null);
