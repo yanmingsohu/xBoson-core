@@ -22,10 +22,9 @@ import com.xboson.db.analyze.IUnit;
 import com.xboson.db.analyze.IUnitListener;
 import com.xboson.db.analyze.SqlParser;
 import com.xboson.db.analyze.SqlParserCached;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.util.Set;

@@ -23,7 +23,7 @@ import com.xboson.app.lib.IApiConstant;
 import com.xboson.fs.script.ScriptAttr;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 
 
 /**

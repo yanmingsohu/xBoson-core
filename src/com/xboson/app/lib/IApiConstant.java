@@ -16,7 +16,7 @@
 
 package com.xboson.app.lib;
 
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 
 
 public interface IApiConstant {

@@ -24,7 +24,7 @@ import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 
 import java.sql.Connection;

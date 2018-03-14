@@ -17,7 +17,6 @@
 package com.xboson.test;
 
 import java.io.*;
-import java.security.SecureRandom;
 import java.util.*;
 
 import com.xboson.been.Config;
@@ -26,7 +25,7 @@ import com.xboson.init.Touch;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.ISleepwalker;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;

@@ -25,7 +25,7 @@ import java.util.TimerTask;
 import com.xboson.log.ILogWriter;
 import com.xboson.log.Level;
 import com.xboson.log.OutBase;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 

@@ -20,7 +20,7 @@ import com.xboson.fs.redis.IFileSystemConfig;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 

@@ -16,7 +16,7 @@
 
 package com.xboson.j2ee.emu;
 
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 
 import javax.servlet.*;

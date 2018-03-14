@@ -18,7 +18,7 @@ package com.xboson.log.slow;
 
 import com.xboson.been.ApiCall;
 import com.xboson.db.sql.SqlReader;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 
 
 public class RequestApiLog extends AbsSlowLog {

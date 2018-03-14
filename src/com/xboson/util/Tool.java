@@ -26,6 +26,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.StaticLogProvider;
 import com.xboson.script.lib.Uuid;
+import com.xboson.util.c0nst.IConstant;
 
 import java.io.*;
 import java.net.URL;

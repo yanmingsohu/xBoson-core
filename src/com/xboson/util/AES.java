@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.xboson.been.XBosonException;
+import com.xboson.util.c0nst.IConstant;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -24,7 +25,6 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.servlet.ServletException;
 
 
 /**

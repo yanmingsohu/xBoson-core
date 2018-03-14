@@ -18,7 +18,7 @@ package com.xboson.fs.redis;
 
 import com.xboson.fs.basic.AbsFileAttr;
 import com.xboson.script.lib.Path;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 
 import java.io.Serializable;
 

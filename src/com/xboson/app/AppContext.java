@@ -25,7 +25,7 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.log.slow.RequestApiLog;
 import com.xboson.rpc.ClusterManager;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;

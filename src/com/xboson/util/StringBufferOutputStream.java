@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.xboson.been.XBosonException;
+import com.xboson.util.c0nst.IConstant;
 
 import java.io.*;
 import java.nio.ByteBuffer;

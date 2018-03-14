@@ -24,9 +24,8 @@ import com.xboson.init.install.IStep;
 import com.xboson.init.install.step.*;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;

@@ -18,7 +18,7 @@ package com.xboson.script.lib;
 
 
 import com.xboson.been.XBosonException;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 
 import java.util.Iterator;

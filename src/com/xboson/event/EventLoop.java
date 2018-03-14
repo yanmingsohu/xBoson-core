@@ -19,7 +19,7 @@ package com.xboson.event;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.IConstant;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 
 import java.util.concurrent.ExecutorService;

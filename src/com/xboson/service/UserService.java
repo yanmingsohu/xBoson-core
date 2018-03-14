@@ -17,10 +17,8 @@
 package com.xboson.service;
 
 import com.xboson.app.AppContext;
-import com.xboson.app.ErrorCodeMessage;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
-import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
@@ -29,6 +27,7 @@ import com.xboson.j2ee.container.XService;
 import com.xboson.log.slow.AccessLog;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.*;
+import com.xboson.util.c0nst.IConstant;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
@@ -121,8 +120,6 @@ public class UserService extends XService implements IDict, IConstant {
     final String md5ps  = data.getString("password", 6, 40);
     final String userid = data.getString("userid",   4, 50);
 
-    LoginUser lu = searchUser(userid, md5ps);
-
     if (login_count >= IP_NEED_CAPTCHA) {
       String c = data.getString("c", 0, 20);
       if (! c.equalsIgnoreCase( data.sess.captchaCode )) {
@@ -131,6 +128,8 @@ public class UserService extends XService implements IDict, IConstant {
         return;
       }
     }
+
+    LoginUser lu = LoginUser.fromDb(userid, cf.db, cf.rootUserName);
 
     if (lu == null) {
       msg(data, "用户不存在", 1014);
@@ -142,9 +141,12 @@ public class UserService extends XService implements IDict, IConstant {
       ipLoginFail(data);
       return;
     }
+    if (! lu.checkPS(md5ps)) {
+      access.log(userid, 1001, "用户名或密码错误");
+      throw new XBosonException("用户名或密码错误", 1001);
+    }
 
-    lu.roles = userRoles(lu.pid);
-    lu.loginTime = System.currentTimeMillis();
+    lu.bindUserRoles(cf.db);
     lu.password = null;
 
     data.sess.login_user = lu;
@@ -165,47 +167,6 @@ public class UserService extends XService implements IDict, IConstant {
       data.sess.login_user = null;
       data.sess.destoryFlag();
     }
-  }
-
-
-	private LoginUser searchUser(String userid, String md5ps)
-          throws SQLException {
-    //
-    // 把 userid 分别假设为 userid/tel/email 查出哪个算哪个
-    //
-    Object[] parmbind = new Object[] {userid, userid, userid};
-    LoginUser lu = null;
-    ConnectConfig db = cf.db;
-
-    try (SqlResult sr = SqlReader.query("login.sql", db, parmbind)) {
-      ResultSet rs = sr.getResult();
-      while (rs.next()) {
-        int c = rs.getInt("c");
-        if (c == 1) {
-          userid          = rs.getString("userid");
-          lu              = userid.equals(cf.rootUserName)
-                          ? new Root() : new LoginUser();
-          lu.pid          = rs.getString("pid");
-          lu.userid       = userid;
-          lu.password     = rs.getString("password");
-          lu.password_dt  = rs.getString("password_dt");
-          lu.tel          = rs.getString("tel");
-          lu.email        = rs.getString("email");
-          lu.status       = rs.getString("status");
-          break;
-        }
-      }
-    }
-
-    if (lu != null) {
-      final String ps = Password.v1(lu.userid, md5ps, lu.password_dt);
-      if (! ps.equals(lu.password)) {
-        access.log(userid, 1001, "用户名或密码错误");
-        throw new XBosonException("用户名或密码错误", 1001);
-      }
-    }
-
-    return lu;
   }
 
 
@@ -238,40 +199,6 @@ public class UserService extends XService implements IDict, IConstant {
   }
 
 
-  /**
-   * 查询用户在所有机构中的角色
-   * @param pid 用户 id
-   * @return 角色列表
-   */
-  private List<String> userRoles(String pid) {
-    try (SqlResult sr = SqlReader.query("mdm_org", cf.db)) {
-      ResultSet orgs = sr.getResult();
-      List<String> roles = new ArrayList<>();
-
-      while (orgs.next()) {
-        String orgid = orgs.getString("id");
-
-        //
-        // schema 不支持变量绑定, 只能拼.
-        //
-        String sql = "Select roleid From " + orgid
-                   + ".sys_user_role Where pid=? And status='1'";
-
-        SqlResult sr2 = sr.query(sql, pid);
-        ResultSet role_rs = sr2.getResult();
-
-        while (role_rs.next()) {
-          roles.add(role_rs.getString("roleid"));
-        }
-      }
-
-      return roles;
-    } catch (SQLException e) {
-      throw new XBosonException(e);
-    }
-  }
-
-
   private boolean isLogin(CallData data) {
     return data.sess.login_user != null
             && data.sess.login_user.userid != null;
@@ -283,13 +210,4 @@ public class UserService extends XService implements IDict, IConstant {
 		return false;
 	}
 
-
-  /**
-   * 超级用户
-   */
-	static private final class Root extends LoginUser {
-	  public boolean isRoot() {
-	    return true;
-    }
-  }
 }
