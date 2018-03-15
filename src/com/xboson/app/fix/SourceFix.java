@@ -25,7 +25,7 @@ import com.xboson.util.StringBufferOutputStream;
  */
 public class SourceFix {
 
-  public static final char[] GTRICT_MODE = "\"use strict\"".toCharArray();
+  public static final char[] STRICT_MODE = "\"use strict\"".toCharArray();
 
 
   /**
@@ -92,8 +92,8 @@ public class SourceFix {
   public static boolean isStrictMode(byte[] content) {
     int i = 0, g = 0;
     while (i < content.length && content[i] != '\n') {
-      if (content[i] == GTRICT_MODE[g]) {
-        if (++g >= GTRICT_MODE.length)
+      if (content[i] == STRICT_MODE[g]) {
+        if (++g >= STRICT_MODE.length)
           return true;
       } else {
         g = 0;
