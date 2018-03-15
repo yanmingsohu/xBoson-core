@@ -41,6 +41,7 @@ public class Application implements ICodeRunner, IModuleProvider {
   private Map<String, AbsWrapScript> module_cache;
   private Log log;
 
+
   public Application(IEnvironment env, IScriptFileSystem vfs)
           throws ScriptException
   {
@@ -129,8 +130,11 @@ public class Application implements ICodeRunner, IModuleProvider {
   }
 
 
+  /**
+   * 关于同步: 防止两个线程引用同一个模块导致模块加载两次而导致不一致.
+   */
   @Override
-  public Module getModule(String name, Module apply) {
+  public synchronized Module getModule(String name, Module apply) {
     Module mod = null;
     final String[] paths = apply.paths;
 

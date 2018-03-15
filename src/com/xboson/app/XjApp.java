@@ -117,13 +117,16 @@ public class XjApp extends XjPool<XjModule> implements IDict, IScriptFileSystem 
   }
 
 
+  /**
+   * 同步: 防止同一个脚本加载两次.
+   */
   @Override
-  public ByteBuffer readFile(String path) throws IOException {
+  public synchronized ByteBuffer readFile(String path) throws IOException {
     XjApi api = getApi(path);
     //
     // 在同一个上下文加载两次脚本, 则认为除了第一次之外的脚本都是通过 require 加载的.
     //
-    if (api.isRequired() || AppContext.me().readScriptCount(1) > 0) {
+    if (api.isRequired() || AppContext.me().readScriptCount(0) > 0) {
       log.debug("require() ->", path);
       api.setRequired(true);
       return ByteBuffer.wrap(api.getCode());

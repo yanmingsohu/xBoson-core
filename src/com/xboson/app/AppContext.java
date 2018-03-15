@@ -156,9 +156,9 @@ public class AppContext implements IConstant {
 
   private ThreadLocalData createLocalData(ApiCall ac) {
     ThreadLocalData tld = new ThreadLocalData();
-    tld.who = ac.call.sess.login_user;
-    tld.orgid = ac.org;
-    tld.ac = ac;
+    tld.who     = ac.call.sess.login_user;
+    tld.orgid   = ac.org;
+    tld.ac      = ac;
     tld.beginAt = System.currentTimeMillis();
 
     ThreadLocalData previous = pm.get();
@@ -227,13 +227,15 @@ public class AppContext implements IConstant {
   /**
    * 当读取了脚本代码后调用该方法, 返回计数器的值, 并将计数器 +add,
    * 不在脚本上下文中总是返回 -1.
+   * 该脚本加载数仅在脚本第一次被编译时决定状态,
+   * 一旦脚本被缓存, 脚本状态即确定, 该数值可能会不准确.
    */
   public int readScriptCount(int add) {
     ThreadLocalData tld = pm.get();
     if (tld == null)
       return -1;
     int c = tld.scriptReadCount;
-    ++tld.scriptReadCount;
+    tld.scriptReadCount += add;
     return c;
   }
 

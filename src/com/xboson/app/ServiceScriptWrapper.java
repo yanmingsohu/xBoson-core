@@ -148,6 +148,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
     ConnectConfig orgdb = org.getOrgDb();
     boolean runOnSysOrg = org.isSysORG();
+    AppContext context = AppContext.me();
 
     try (CloseableSet cs = new CloseableSet()) {
       //
@@ -169,7 +170,8 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
       config_return_func.get("__init_system_modules").call(null, sys);
 
-      AppContext.me().readyForKill();
+      context.readScriptCount(1);
+      context.readyForKill();
       call.call(jsmod.exports, sys, sql, cache, http, se);
 
     } catch (ECMAException ec) {

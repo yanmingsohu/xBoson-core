@@ -18,7 +18,6 @@ package com.xboson.been;
 
 import com.xboson.sleep.IBinData;
 import com.xboson.sleep.ITimeout;
-import com.xboson.util.Tool;
 
 import java.sql.Timestamp;
 
