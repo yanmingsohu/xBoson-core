@@ -23,19 +23,31 @@ assert.eq(typeof fncontext, 'undefined', 'fncontext not safe');
 
 var con = require("console").create(null).log('heha');
 
+//
+// 模拟一个com.xboson.script.Application 的实例
+//
 var _app = {
   isCached: function() { return true; },
+  flag: { IN_REQUIRE: 1, SCRIPT_OUT: 2 },
+  sendScriptEvent: function() {},
   run: function(name) {
     return { exports: require(name) };
   },
 };
 
-var safe__warp_main = false;
-__warp_main = null;
-__warp_main(function() {
-  safe__warp_main = true;
-})({ filename: 'test' }, _app);
-assert(safe__warp_main, "__warp_main not safe");
+try {
+  var safe__warp_main = false;
+  __warp_main = null;
+  __warp_main(function() {
+    safe__warp_main = true;
+  })({ filename: 'test' }, _app);
+  assert(safe__warp_main, "__warp_main not safe");
+} catch(e) {
+  if (e.message.indexOf("undefined") >= 0) {
+    console.error("出错原因可能是代码有改动, Application 模拟不完整");
+  }
+  throw e;
+}
 
 
 assert.throws(function() {

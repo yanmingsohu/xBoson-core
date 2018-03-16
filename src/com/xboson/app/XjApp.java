@@ -126,7 +126,7 @@ public class XjApp extends XjPool<XjModule> implements IDict, IScriptFileSystem 
     //
     // 在同一个上下文加载两次脚本, 则认为除了第一次之外的脚本都是通过 require 加载的.
     //
-    if (api.isRequired() || AppContext.me().readScriptCount(0) > 0) {
+    if (api.isRequired() || AppContext.me().isRequired()) {
       log.debug("require() ->", path);
       api.setRequired(true);
       return ByteBuffer.wrap(api.getCode());

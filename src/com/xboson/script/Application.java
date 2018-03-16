@@ -17,6 +17,7 @@
 package com.xboson.script;
 
 import com.xboson.been.Module;
+import com.xboson.been.ScriptEvent;
 import com.xboson.been.XBosonException;
 import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.log.Log;
@@ -26,7 +27,7 @@ import com.xboson.util.Tool;
 import javax.script.ScriptException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -39,16 +40,21 @@ public class Application implements ICodeRunner, IModuleProvider {
   private Sandbox sandbox;
   private IScriptFileSystem vfs;
   private Map<String, AbsWrapScript> module_cache;
+  private List<IScriptEventListener> events;
   private Log log;
+
+  public final EventFlag flag;
 
 
   public Application(IEnvironment env, IScriptFileSystem vfs)
           throws ScriptException
   {
-    this.vfs = vfs;
-    this.log = LogFactory.create();
-    module_cache = new ConcurrentHashMap<>();
-    sandbox = SandboxFactory.create();
+    this.vfs      = vfs;
+    this.log      = LogFactory.create();
+    this.flag     = new EventFlag();
+    module_cache  = new ConcurrentHashMap<>();
+    events        = new ArrayList<>();
+    sandbox       = SandboxFactory.create();
 
     sandbox.bootstrap();
     env.config(sandbox, this);
@@ -144,4 +150,24 @@ public class Application implements ICodeRunner, IModuleProvider {
     return mod;
   }
 
+
+  public void removeScriptEventListener(IScriptEventListener l) {
+    while (events.remove(l));
+  }
+
+
+  public void addScriptEventListener(IScriptEventListener l) {
+    events.add(l);
+  }
+
+
+  /**
+   * 发送一个脚本事件
+   */
+  public void sendScriptEvent(int flag, Module mod) {
+    ScriptEvent se = new ScriptEvent(flag, mod);
+    for (IScriptEventListener l : events) {
+      l.on(se);
+    }
+  }
 }

@@ -25,6 +25,8 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.log.slow.RequestApiLog;
 import com.xboson.rpc.ClusterManager;
+import com.xboson.script.EventFlag;
+import com.xboson.script.IScriptEventListener;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
@@ -39,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 作为全局脚本的入口, 维护所有运行着的沙箱/应用池
  */
-public class AppContext implements IConstant {
+public class AppContext implements IConstant, IScriptEventListener {
 
   /** 在线程超过这个运行时间后, 降低运行优先级, 毫秒 */
   public static final long LOW_CPU_TIME = 2 * 60 * 1000;
@@ -51,6 +53,7 @@ public class AppContext implements IConstant {
   private RequestApiLog apilog;
   private ProcessManager pm;
   private String nodeID;
+  private EventFlag seflag;
   private Log log;
 
 
@@ -63,6 +66,7 @@ public class AppContext implements IConstant {
     apilog      = new RequestApiLog();
     pm          = new ProcessManager();
     nodeID      = ClusterManager.me().localNodeID();
+    seflag      = new EventFlag();
   }
 
 
@@ -225,18 +229,33 @@ public class AppContext implements IConstant {
 
 
   /**
-   * 当读取了脚本代码后调用该方法, 返回计数器的值, 并将计数器 +add,
-   * 不在脚本上下文中总是返回 -1.
-   * 该脚本加载数仅在脚本第一次被编译时决定状态,
-   * 一旦脚本被缓存, 脚本状态即确定, 该数值可能会不准确.
+   * 返回 true 说明当前脚本是通过 require(..) 引入的,
+   * 该函数返回后这个标记被重置, 该标记是线程级别的.
    */
-  public int readScriptCount(int add) {
+  public boolean isRequired() {
     ThreadLocalData tld = pm.get();
-    if (tld == null)
-      return -1;
-    int c = tld.scriptReadCount;
-    tld.scriptReadCount += add;
-    return c;
+    if (tld != null && tld.__is_required) {
+      tld.__is_required = false;
+      return true;
+    }
+    return false;
+  }
+
+
+  @Override
+  public void on(ScriptEvent event) {
+    if (event.flag == seflag.IN_REQUIRE) {
+      ThreadLocalData tld = pm.get();
+      if (tld != null) {
+        tld.__is_required = true;
+      }
+    }
+    else if (event.flag == seflag.SCRIPT_OUT) {
+      ThreadLocalData tld = pm.get();
+      if (tld != null) {
+        tld.__is_required = false;
+      }
+    }
   }
 
 
@@ -325,9 +344,6 @@ public class AppContext implements IConstant {
     /** true: HTTP 参数机构id 已经被替换 */
     private boolean replaceOrg;
 
-    /** @see #readScriptCount(int)  */
-    private int scriptReadCount;
-
     /** 请求开始的时间, ms */
     private long beginAt;
 
@@ -335,6 +351,7 @@ public class AppContext implements IConstant {
     private ApiTypes __dev_mode;
     private boolean __is_low_priority;
     private boolean __is_ready_for_kill;
+    private boolean __is_required;
 
     /**
      * 返回未被替换的原始参数.

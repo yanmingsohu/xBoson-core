@@ -77,6 +77,7 @@ function __boot_over() {
 
 function __warp_main(fn) { // 主函数包装器
 	var app;
+	var eflag;
 	var currmodule;
 	var dirname;
 	var fncontext = {};
@@ -85,6 +86,7 @@ function __warp_main(fn) { // 主函数包装器
 	return function(module, _app) {
 	  if (!_app) throw new Error("app(vfs) not provide");
 		app = _app;
+		eflag = _app.flag;
 		module.exports = {};
 		module.children = {};
 		currmodule = module;
@@ -95,8 +97,12 @@ function __warp_main(fn) { // 主函数包装器
 		if (!module.paths) {
 		  module.paths = get_module_paths(dirname);
 		}
-		return fn.call(fncontext, require, module,
+		try {
+		  return fn.call(fncontext, require, module,
 		       dirname, module.filename, module.exports, console);
+		} finally {
+		  app.sendScriptEvent(eflag.SCRIPT_OUT, currmodule);
+		}
 	}
 
 
@@ -123,6 +129,7 @@ function __warp_main(fn) { // 主函数包装器
 	//
 	function require(path) {
 	  var mod;
+	  app.sendScriptEvent(eflag.IN_REQUIRE, currmodule);
 	  //
 	  // 一定从文件加载器加载
 	  //
