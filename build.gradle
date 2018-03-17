@@ -1,0 +1,23 @@
+apply plugin: 'war'  
+
+defaultTasks 'war'
+
+
+dependencies {
+}
+
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        compileClasspath = fileTree('WebRoot/WEB-INF/lib/') + fileTree('libs/')
+    }
+}
+
+
+war {
+    webInf { from('WebRoot/WEB-INF') }
+    archiveName = 'xboson.war'
+}

@@ -1,11 +1,11 @@
 .svn/*
-WebRoot/WEB-INF/classes/pc
-WebRoot/WEB-INF/classes/key
-WebRoot/WEB-INF/classes/*.properties
 WebRoot/WEB-INF/classes/**
 out/**
 Test/**
 .idea/workspace.xml
+.gradle/**
+gradle/**
+build/**
 
 *.class
 *.zip

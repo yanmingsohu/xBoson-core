@@ -167,7 +167,6 @@ public class Schedule extends RuntimeUnitImpl {
     private int     run_times;          // 运行次数, -1 不限制
     private String  task_api;           // 任务 api
     private String  id;
-    private String  orgid;
     private String  userid;
     private boolean inner_api;
     public  int     state;
@@ -185,7 +184,6 @@ public class Schedule extends RuntimeUnitImpl {
       task_api          = getStr(config, "task_api");
       schedule_interval = getInt(config, "schedule_interval");
       inner_api         = getInt(config, "inner_api") != 0;
-      orgid             = getStr(config, "orgid");
       userid            = getStr(config, "userid");
       run_end_time      = parseDate(config, "run_end_time");
       start_time        = parseDate(config, "start_time");
@@ -331,6 +329,7 @@ public class Schedule extends RuntimeUnitImpl {
      * 用来直接调用平台内部接口
      */
     private class InnerApiCall implements Runnable {
+      private final static String ID = "schedule-session";
       private SessionData sd;
 
       @Override
@@ -346,7 +345,7 @@ public class Schedule extends RuntimeUnitImpl {
           ac.exparam = new HashMap<>();
 
           Map<String, String> parameters = new HashMap<>();
-          for (int i = 0, size = url.querySize(); i < size; i++) {
+          for (int i = 0, size = url.querySize(); i < size; ++i) {
             parameters.put(url.queryParameterName(i),
                            url.queryParameterValue(i));
           }
@@ -354,8 +353,8 @@ public class Schedule extends RuntimeUnitImpl {
           EmuServletRequest req = new EmuServletRequest(parameters);
           req.context = context;
           req.requestUriWithoutContext = reqUri.substring(context.length());
-          BufScrvletOutputStream output = new BufScrvletOutputStream();
-          EmuServletResponse resp = new EmuServletResponse(output);
+          BufScrvletOutputStream stream = new BufScrvletOutputStream();
+          EmuServletResponse resp = new EmuServletResponse(stream);
 
           XResponse xr = new XResponse(req, resp);
           if (sd == null) login();
@@ -364,12 +363,11 @@ public class Schedule extends RuntimeUnitImpl {
 
           AppContext.me().call(ac);
 
-          scheduleLog(output.out.toString());
+          scheduleLog(stream.out.toString());
           state = JOB_STATUS_STOP;
         } catch (Exception e) {
           state = JOB_STATUS_ERR;
-          scheduleLog(e.getMessage());
-          e.printStackTrace();
+          scheduleLog(e.toString());
         }
       }
 
@@ -387,7 +385,7 @@ public class Schedule extends RuntimeUnitImpl {
         sd.login_user.password = null;
         sd.loginTime = System.currentTimeMillis();
         sd.endTime = Long.MAX_VALUE;
-        sd.id = "schedule-session";
+        sd.id = ID;
       }
     }
   }

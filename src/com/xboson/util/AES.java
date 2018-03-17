@@ -40,7 +40,7 @@ public class AES implements IConstant {
   static {
     salt = "xBoson XX 2017.11.2 --jym".getBytes();
 
-    // 随机生成切不可变化, 用于加强密钥
+    // 随机生成且不可变化, 用于加强密钥
     iv = new IvParameterSpec(new byte[]{
       0x33, 0x16, 0x71, 0x11,
       0x67, (byte)0x81, 0x01, 0x41,
