@@ -85,6 +85,7 @@ function __warp_main(fn) { // 主函数包装器
 	
 	return function(module, _app) {
 	  if (!_app) throw new Error("app(vfs) not provide");
+	  _app.sendScriptEvent( _app.flag.SCRIPT_PREPARE, module);
 		app = _app;
 		eflag = _app.flag;
 		module.exports = {};
@@ -98,6 +99,7 @@ function __warp_main(fn) { // 主函数包装器
 		  module.paths = get_module_paths(dirname);
 		}
 		try {
+		  app.sendScriptEvent(eflag.SCRIPT_RUN, currmodule);
 		  return fn.call(fncontext, require, module,
 		       dirname, module.filename, module.exports, console);
 		} finally {
@@ -158,6 +160,7 @@ function __warp_main(fn) { // 主函数包装器
     // 不应该每次运行都绑定
 		//mod.parent = currmodule;
 		//currmodule.children[mod.id] = mod;
+		app.sendScriptEvent(eflag.OUT_REQUIRE, currmodule);
 		return mod.exports;
 	}
 

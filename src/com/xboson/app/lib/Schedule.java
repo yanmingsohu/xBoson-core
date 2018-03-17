@@ -17,12 +17,16 @@
 package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
-import com.xboson.been.XBosonException;
+import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.event.timer.TimeFactory;
+import com.xboson.j2ee.container.XResponse;
+import com.xboson.j2ee.emu.BufScrvletOutputStream;
+import com.xboson.j2ee.emu.EmuServletRequest;
+import com.xboson.j2ee.emu.EmuServletResponse;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.rpc.*;
@@ -33,10 +37,8 @@ import okhttp3.*;
 
 import java.math.BigDecimal;
 import java.rmi.RemoteException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Map;
-import java.util.TimerTask;
+import java.sql.SQLException;
+import java.util.*;
 
 
 public class Schedule extends RuntimeUnitImpl {
@@ -47,12 +49,14 @@ public class Schedule extends RuntimeUnitImpl {
   private final String nodeID;
   private final Log log;
   private OkHttpClient hc;
+  private ConnectConfig db;
 
 
   public Schedule() {
     super(null);
     this.log = LogFactory.create();
     this.nodeID = ClusterManager.me().localNodeID();
+    this.db = SysConfig.me().readConfig().db;
   }
 
 
@@ -163,10 +167,14 @@ public class Schedule extends RuntimeUnitImpl {
     private int     run_times;          // 运行次数, -1 不限制
     private String  task_api;           // 任务 api
     private String  id;
+    private String  orgid;
+    private String  userid;
+    private boolean inner_api;
     public  int     state;
 
     private ConnectConfig db;
     private TimerTask task;
+    private Runnable callExecutor;
     
 
     private Task(String id, Map<String, Object> config)
@@ -176,6 +184,9 @@ public class Schedule extends RuntimeUnitImpl {
       run_times         = getInt(config, "run_times");
       task_api          = getStr(config, "task_api");
       schedule_interval = getInt(config, "schedule_interval");
+      inner_api         = getInt(config, "inner_api") != 0;
+      orgid             = getStr(config, "orgid");
+      userid            = getStr(config, "userid");
       run_end_time      = parseDate(config, "run_end_time");
       start_time        = parseDate(config, "start_time");
 
@@ -186,19 +197,26 @@ public class Schedule extends RuntimeUnitImpl {
       if (start_time.getTime() < System.currentTimeMillis())
         start_time = nextDate();
 
-      TimeFactory.me().schedule(new Inner(), start_time);
+      if (inner_api) {
+        callExecutor = new InnerApiCall();
+      } else {
+        callExecutor = new HttpCall();
+      }
+
+      TimeFactory.me().schedule(new TaskExecutor(), start_time);
     }
 
 
-    private class Inner extends TimerTask {
-      private Inner() {
+    private class TaskExecutor extends TimerTask {
+      private TaskExecutor() {
         task = this;
       }
+
       @Override
       public void run() {
         try {
           state = JOB_STATUS_RUNNING;
-          callApi();
+          callExecutor.run();
         } catch (Exception e) {
           log.error(e);
         }
@@ -227,7 +245,7 @@ public class Schedule extends RuntimeUnitImpl {
         }
 
         start_time = next;
-        TimeFactory.me().schedule(new Inner(), start_time);
+        TimeFactory.me().schedule(new TaskExecutor(), start_time);
       }
     }
 
@@ -239,30 +257,6 @@ public class Schedule extends RuntimeUnitImpl {
 
     public String name() {
       return schedulenm;
-    }
-
-
-    private void callApi() throws Exception {
-      log.debug("Call", task_api);
-      HttpUrl.Builder url = HttpUrl.parse(task_api).newBuilder();
-      Request.Builder req = new Request.Builder();
-      req.url(url.build());
-
-      Object[] parm = new Object[] { id, new Date(), null, task_api };
-
-      try {
-        Response resp = openClient().newCall(req.build()).execute();
-        ResponseBody body = resp.body();
-        parm[2] = body.byteStream();
-        state = JOB_STATUS_STOP;
-      } catch (Exception e) {
-        state = JOB_STATUS_ERR;
-        parm[2] = e.toString();
-      }
-
-      try (SqlResult sr = SqlReader.query(LOG_FILE, db, parm)) {
-        sr.getUpdateCount();
-      }
     }
 
 
@@ -294,9 +288,107 @@ public class Schedule extends RuntimeUnitImpl {
           c.add(Calendar.MINUTE, schedule_interval);
           break;
         default:
-          return null;
+          return new Date();
       }
       return c.getTime();
+    }
+
+
+    private void scheduleLog(Object content) {
+      Object[] parm = new Object[] { id, new Date(), content, task_api };
+      try (SqlResult sr = SqlReader.query(LOG_FILE, db, parm)) {
+        sr.getUpdateCount();
+      }
+    }
+
+
+    /**
+     * 用来调用外部接口
+     */
+    private class HttpCall implements Runnable {
+
+      @Override
+      public void run() {
+        log.debug("Call Http", task_api);
+        HttpUrl.Builder url = HttpUrl.parse(task_api).newBuilder();
+        Request.Builder req = new Request.Builder();
+        req.url(url.build());
+
+        try {
+          Response resp = openClient().newCall(req.build()).execute();
+          ResponseBody body = resp.body();
+          scheduleLog(body.byteStream());
+          state = JOB_STATUS_STOP;
+        } catch (Exception e) {
+          state = JOB_STATUS_ERR;
+          scheduleLog(e.toString());
+        }
+      }
+    }
+
+
+    /**
+     * 用来直接调用平台内部接口
+     */
+    private class InnerApiCall implements Runnable {
+      private SessionData sd;
+
+      @Override
+      public void run() {
+        log.debug("Call Inner", task_api);
+        try {
+          HttpUrl url = HttpUrl.parse(task_api);
+          List<String> ps = url.pathSegments();
+          String context = ps.get(0);
+          String reqUri = url.encodedPath();
+
+          ApiCall ac = new ApiCall(ps.get(2), ps.get(3), ps.get(4), ps.get(5));
+          ac.exparam = new HashMap<>();
+
+          Map<String, String> parameters = new HashMap<>();
+          for (int i = 0, size = url.querySize(); i < size; i++) {
+            parameters.put(url.queryParameterName(i),
+                           url.queryParameterValue(i));
+          }
+
+          EmuServletRequest req = new EmuServletRequest(parameters);
+          req.context = context;
+          req.requestUriWithoutContext = reqUri.substring(context.length());
+          BufScrvletOutputStream output = new BufScrvletOutputStream();
+          EmuServletResponse resp = new EmuServletResponse(output);
+
+          XResponse xr = new XResponse(req, resp);
+          if (sd == null) login();
+          req.setAttribute(SessionData.ATTRNAME, sd);
+          ac.call = new CallData(req, resp);
+
+          AppContext.me().call(ac);
+
+          scheduleLog(output.out.toString());
+          state = JOB_STATUS_STOP;
+        } catch (Exception e) {
+          state = JOB_STATUS_ERR;
+          scheduleLog(e.getMessage());
+          e.printStackTrace();
+        }
+      }
+
+      private void login() throws SQLException {
+        sd = new SessionData();
+        sd.login_user = LoginUser.fromDb(userid, db, null);
+
+        if (sd.login_user == null) {
+          throw new XBosonException("用户不存在", 1014);
+        }
+        if (! ZR001_ENABLE.equals(sd.login_user.status)) {
+          throw new XBosonException("用户已锁定", 1004);
+        }
+        sd.login_user.bindUserRoles(db);
+        sd.login_user.password = null;
+        sd.loginTime = System.currentTimeMillis();
+        sd.endTime = Long.MAX_VALUE;
+        sd.id = "schedule-session";
+      }
     }
   }
 
@@ -350,13 +442,16 @@ public class Schedule extends RuntimeUnitImpl {
     if (o instanceof Date) {
       return (Date) o;
     }
+    if (o == null) {
+      return new Date();
+    }
 
     try (DateParserFactory.DateParser
                  p = DateParserFactory.get(Tool.COMM_DATE_FORMAT)) {
       return p.parse(o.toString());
     } catch (Exception e) {
       log.debug("Parameter", name, e.toString());
-      return null;
+      return new Date();
     }
   }
 }

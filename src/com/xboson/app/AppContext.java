@@ -66,7 +66,7 @@ public class AppContext implements IConstant, IScriptEventListener {
     apilog      = new RequestApiLog();
     pm          = new ProcessManager();
     nodeID      = ClusterManager.me().localNodeID();
-    seflag      = new EventFlag();
+    seflag      = EventFlag.me;
   }
 
 
@@ -245,16 +245,12 @@ public class AppContext implements IConstant, IScriptEventListener {
   @Override
   public void on(ScriptEvent event) {
     if (event.flag == seflag.IN_REQUIRE) {
-      ThreadLocalData tld = pm.get();
-      if (tld != null) {
-        tld.__is_required = true;
-      }
+      pm.get().__is_required = true;
     }
-    else if (event.flag == seflag.SCRIPT_OUT) {
-      ThreadLocalData tld = pm.get();
-      if (tld != null) {
-        tld.__is_required = false;
-      }
+    else if (event.flag == seflag.SCRIPT_OUT
+            || event.flag == seflag.OUT_REQUIRE
+            || event.flag == seflag.SCRIPT_PREPARE) {
+      pm.get().__is_required = false;
     }
   }
 

@@ -20,7 +20,6 @@ import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDriver;
 import com.xboson.db.NullDriver;
-import com.xboson.db.analyze.ParsedData;
 import com.xboson.db.analyze.SqlParser;
 import com.xboson.db.analyze.SqlParserCached;
 

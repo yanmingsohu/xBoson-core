@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-23 上午11:40
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/test/impl/TestServletRequest.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/test/impl/EmuServletRequest.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -31,18 +31,31 @@ import java.util.*;
 /**
  * 对于模拟的请求参数, 数据类型总是 json, 调试参数 's' 总是开发模式.
  */
-public class TestServletRequest implements HttpServletRequest {
+public class EmuServletRequest implements HttpServletRequest {
 
-  Map<String, Object> attr = new HashMap<>();
-  Hashtable<String, String> header = new Hashtable<>();
-  Map<String, String> parameters = new HashMap<>();
+  private Map<String, String> parameters;
+  private Map<String, Object> attr;
+  private Hashtable<String, String> header;
 
-  public String requestUri = "/app/";
+  public String requestUriWithoutContext = "/app/";
+  public String context = "/xboson";
+  public boolean randomParameters;
 
 
-  public TestServletRequest() {
-
+  public EmuServletRequest() {
+    parameters = new HashMap<>();
+    attr = new HashMap<>();
+    header = new Hashtable<>();
+    randomParameters = true;
   }
+
+
+  public EmuServletRequest(Map<String, String> parameters) {
+    this.parameters = parameters;
+    attr = new HashMap<>();
+    header = new Hashtable<>();
+  }
+
 
   @Override
   public String getAuthType() {
@@ -106,7 +119,7 @@ public class TestServletRequest implements HttpServletRequest {
 
   @Override
   public String getContextPath() {
-    return "/xboson";
+    return context;
   }
 
 
@@ -142,7 +155,7 @@ public class TestServletRequest implements HttpServletRequest {
 
   @Override
   public String getRequestURI() {
-    return getContextPath() + requestUri;
+    return getContextPath() + requestUriWithoutContext;
   }
 
 
@@ -289,6 +302,8 @@ public class TestServletRequest implements HttpServletRequest {
     String ret = parameters.get(s);
     if (ret != null)
       return ret;
+    if (!randomParameters)
+      return null;
 
     if ("$format".equals(s)) {
       ret = "json";
@@ -306,13 +321,15 @@ public class TestServletRequest implements HttpServletRequest {
 
   @Override
   public Enumeration<String> getParameterNames() {
-    return Collections.emptyEnumeration();
+    return Collections.enumeration(parameters.keySet());
   }
 
 
   @Override
   public String[] getParameterValues(String s) {
-    return new String[0];
+    String p = getParameter(s);
+    if (p == null) return null;
+    return new String[] {p};
   }
 
 

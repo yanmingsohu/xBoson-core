@@ -21,7 +21,15 @@ package com.xboson.been;
  */
 public class ScriptEvent {
 
+  /**
+   * 事件标记
+   * @see com.xboson.script.EventFlag
+   */
   public int flag;
+
+  /**
+   * 模块属性可能为 null
+   */
   public Module mod;
 
 

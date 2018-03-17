@@ -19,8 +19,8 @@ package com.xboson.test;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.j2ee.ui.TemplateEngine;
-import com.xboson.j2ee.emu.TestServletRequest;
-import com.xboson.j2ee.emu.TestServletResponse;
+import com.xboson.j2ee.emu.EmuServletRequest;
+import com.xboson.j2ee.emu.EmuServletResponse;
 
 
 public class TestMasquerade extends Test {
@@ -42,9 +42,9 @@ public class TestMasquerade extends Test {
     };
 
     for (String page : pages) {
-      TestServletResponse resp = new TestServletResponse();
-      TestServletRequest req = new TestServletRequest();
-      req.requestUri = page;
+      EmuServletResponse resp = new EmuServletResponse();
+      EmuServletRequest req = new EmuServletRequest();
+      req.requestUriWithoutContext = page;
       te.service(req, resp);
     }
   }

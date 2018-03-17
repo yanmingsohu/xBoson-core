@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-23 上午11:40
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/test/impl/TestServletResponse.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/test/impl/EmuServletResponse.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -28,15 +28,19 @@ import java.util.Collection;
 import java.util.Locale;
 
 
-public class TestServletResponse implements HttpServletResponse {
+public class EmuServletResponse implements HttpServletResponse {
 
-  Log log = LogFactory.create("InnerServletResponse");
-  TestServletOutputStream out;
+  private Log log = LogFactory.create("InnerServletResponse");
+  public final ServletOutputStream out;
 
 
-  public TestServletResponse() {
-    log = LogFactory.create("InnerServletResponse");
-    out = new TestServletOutputStream(log);
+  public EmuServletResponse() {
+    out = new LogServletOutputStream(log);
+  }
+
+
+  public EmuServletResponse(ServletOutputStream out) {
+    this.out = out;
   }
 
 

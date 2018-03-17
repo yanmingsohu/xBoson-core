@@ -43,6 +43,7 @@ public class Application implements ICodeRunner, IModuleProvider {
   private List<IScriptEventListener> events;
   private Log log;
 
+  /** 在脚本中引用的属性 */
   public final EventFlag flag;
 
 
@@ -51,7 +52,7 @@ public class Application implements ICodeRunner, IModuleProvider {
   {
     this.vfs      = vfs;
     this.log      = LogFactory.create();
-    this.flag     = new EventFlag();
+    this.flag     = EventFlag.me;
     module_cache  = new ConcurrentHashMap<>();
     events        = new ArrayList<>();
     sandbox       = SandboxFactory.create();

@@ -8,6 +8,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * Docker: 平台访问整个操作系统的资源, 应该管理 Docker 而非被 Docker 管理.
 * sys_mdm001.url 字段与平台服务接口绑定.
 * 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
+* SqlServer 2012 之后的版本支持分页查询.
 
 
 # 需要做:
@@ -15,7 +16,6 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
-* 补充到计划任务调用api时的权限
 * 架设 git 服务器.
 
 

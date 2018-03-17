@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 17-11-23 下午1:14
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/test/impl/TestServletOutputStream.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/test/impl/LogServletOutputStream.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -30,13 +30,13 @@ import java.io.Writer;
 /**
  * 控制台必须是 utf8 编码, 否则乱码
  */
-public class TestServletOutputStream extends ServletOutputStream {
+public class LogServletOutputStream extends ServletOutputStream {
 
   private StringBufferOutputStream out;
   private Log log;
 
 
-  public TestServletOutputStream(Log log) {
+  public LogServletOutputStream(Log log) {
     this.log = log;
     out = new StringBufferOutputStream(1000);
   }

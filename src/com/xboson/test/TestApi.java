@@ -21,9 +21,9 @@ import com.xboson.app.lib.SysImpl;
 import com.xboson.been.*;
 import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.j2ee.container.XResponse;
+import com.xboson.j2ee.emu.EmuServletRequest;
+import com.xboson.j2ee.emu.EmuServletResponse;
 import com.xboson.j2ee.files.PrimitiveOperation;
-import com.xboson.j2ee.emu.TestServletRequest;
-import com.xboson.j2ee.emu.TestServletResponse;
 import com.xboson.util.c0nst.IConstant;
 
 import java.io.IOException;
@@ -68,8 +68,8 @@ public class TestApi extends Test {
 
 
   public static CallData simulationCallData() throws Exception {
-    TestServletRequest req = new TestServletRequest();
-    TestServletResponse resp = new TestServletResponse();
+    EmuServletRequest req = new EmuServletRequest();
+    EmuServletResponse resp = new EmuServletResponse();
     XResponse xr = new XResponse(req, resp);
     SessionData sd = new SessionData();
     sd.login_user = new Admin();

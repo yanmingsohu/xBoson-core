@@ -20,7 +20,9 @@ import com.xboson.app.AppContext;
 import com.xboson.app.InnerXResponse;
 import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
+import com.xboson.been.ScriptEvent;
 import com.xboson.j2ee.container.XResponse;
+import com.xboson.script.EventFlag;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -207,7 +209,7 @@ public class HttpImpl extends RuntimeUnitImpl {
             getNNStringAttr(api, "mod"),
             getNNStringAttr(api, "api")
     );
-    ac.exparam = new HashMap<>();
+    //ac.exparam = new HashMap<>();
 
     ScriptObjectMirror ret = createJSObject();
     ScriptObjectMirror data = createJSObject();
@@ -236,7 +238,12 @@ public class HttpImpl extends RuntimeUnitImpl {
       }
     }
 
-    AppContext.me().call(ac);
+    AppContext context = AppContext.me();
+    //
+    // 防止 api 脚本被编译成引入型脚本.
+    //
+    context.on(new ScriptEvent(EventFlag.me.OUT_REQUIRE, null));
+    context.call(ac);
     return ret;
   }
 
