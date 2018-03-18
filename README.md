@@ -6,9 +6,11 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 # 注意:
 
 * Docker: 平台访问整个操作系统的资源, 应该管理 Docker 而非被 Docker 管理.
+* JEE 容器必须以 UTF-8 模式启动.
 * sys_mdm001.url 字段与平台服务接口绑定.
 * 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
 * SqlServer 2012 之后的版本支持分页查询.
+* 使用 `gradle` 构建/发布混淆后的 war 包.
 
 
 # 需要做:

@@ -17,6 +17,7 @@
 package com.xboson.fs.watcher;
 
 import com.xboson.been.XBosonException;
+import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
@@ -31,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 仅对本层目录做监控, 深层目录需要另外启动监听.
  * 线程安全.
  */
-public class LocalDirWatcher implements Runnable {
+public class LocalDirWatcher extends OnExitHandle implements Runnable {
 
   private static LocalDirWatcher instance;
 
@@ -39,6 +40,7 @@ public class LocalDirWatcher implements Runnable {
   private final Log log;
   private final Thread watchThread;
   private final Map<WatchKey, InnerData> map;
+  private boolean running;
 
 
   private LocalDirWatcher() throws IOException {
@@ -46,8 +48,9 @@ public class LocalDirWatcher implements Runnable {
     ws = fs.newWatchService();
     log = LogFactory.create();
     map = new ConcurrentHashMap<>();
+    running = true;
 
-    watchThread = new Thread(this);
+    watchThread = new Thread(this, "local-dir-watcher");
     watchThread.setDaemon(true);
     watchThread.start();
 
@@ -124,7 +127,7 @@ public class LocalDirWatcher implements Runnable {
     WatchKey key;
 
     try {
-      for (;;) {
+      while (running) {
         key = ws.take();
         InnerData d = map.get(key);
         if (d == null) {
@@ -157,6 +160,26 @@ public class LocalDirWatcher implements Runnable {
     } catch (InterruptedException x) {}
 
     log.info("Local Watcher Thread Stop");
+  }
+
+
+  @Override
+  protected void exit() {
+    running = false;
+    if (watchThread.isAlive()) {
+      watchThread.interrupt();
+    }
+    try {
+      watchThread.join(3000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+
+    for (WatchKey wk : map.keySet()) {
+      wk.cancel();
+    }
+    map.clear();
+    instance = null;
   }
 
 

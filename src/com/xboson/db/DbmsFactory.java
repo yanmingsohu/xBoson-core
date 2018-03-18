@@ -27,12 +27,10 @@ import org.apache.commons.pool2.KeyedObjectPool;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -79,6 +77,15 @@ public class DbmsFactory extends OnExitHandle {
     pool = null;
     idmap = null;
     namemap = null;
+
+    try {
+      Enumeration<Driver> e = DriverManager.getDrivers();
+      while (e.hasMoreElements()) {
+        DriverManager.deregisterDriver(e.nextElement());
+      }
+    } catch(Exception e) {
+      log.error(e);
+    }
   }
 
 
