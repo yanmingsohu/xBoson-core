@@ -19,6 +19,7 @@ package com.xboson.fs.redis;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.Tool;
 
 import java.io.File;
@@ -40,7 +41,7 @@ import java.util.Set;
  * 写入: 更新本地文件后更新 redis 文件, 不发送任何通知.
  */
 public abstract class LocalFileMapping implements
-        IRedisFileSystemProvider, IFileChangeListener {
+        IRedisFileSystemProvider, IFileChangeListener, IVisitByScript {
 
   public static final int ID = 2;
   public static final int RETRY = 3;

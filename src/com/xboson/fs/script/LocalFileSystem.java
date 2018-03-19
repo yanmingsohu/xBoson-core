@@ -19,6 +19,7 @@ package com.xboson.fs.script;
 import com.xboson.app.fix.SourceFix;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.script.IVisitByScript;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,7 +31,8 @@ import java.util.Map;
 /**
  * 将测试目录文件映射到虚拟目录
  */
-public class LocalFileSystem extends FSHelper implements IScriptFileSystem {
+public class LocalFileSystem extends FSHelper
+        implements IScriptFileSystem, IVisitByScript {
 
   /** <virtual_filename, code> */
   private final Map<String, ByteBuffer> file_cache;

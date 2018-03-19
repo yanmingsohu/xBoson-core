@@ -18,6 +18,7 @@ package com.xboson.fs.redis;
 
 import com.xboson.been.XBosonException;
 import com.xboson.fs.basic.AbsFileSystemUtil;
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.Tool;
 
 import java.util.Set;
@@ -31,7 +32,7 @@ import java.util.Set;
  *      将修改记录加入消息队列
  */
 public abstract class RedisFileMapping extends AbsFileSystemUtil<RedisFileAttr>
-        implements IRedisFileSystemProvider {
+        implements IRedisFileSystemProvider, IVisitByScript {
 
   public static final int ID = 1;
 

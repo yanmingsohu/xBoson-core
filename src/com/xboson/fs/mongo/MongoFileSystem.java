@@ -25,6 +25,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.xboson.been.XBosonException;
 import com.xboson.fs.basic.AbsFileSystemUtil;
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Path;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -40,7 +41,7 @@ import static com.xboson.fs.basic.IFileAttribute.T_FILE;
  * 文件结构会被删除, 文件内容 (的多个版本) 将永久保留.
  */
 public class MongoFileSystem extends AbsFileSystemUtil<MongoFileAttr>
-        implements IMongoFileSystem {
+        implements IMongoFileSystem, IVisitByScript {
 
   public static final String STRUCT_SUFFIX = ".struct";
 

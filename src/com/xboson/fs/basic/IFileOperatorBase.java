@@ -17,6 +17,7 @@
 package com.xboson.fs.basic;
 
 import com.xboson.been.XBosonException;
+import com.xboson.script.IVisitByScript;
 
 import java.util.Set;
 

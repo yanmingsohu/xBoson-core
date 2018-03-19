@@ -19,9 +19,11 @@ package com.xboson.fs.node;
 import com.xboson.fs.redis.LocalFileMapping;
 import com.xboson.fs.redis.RedisBase;
 import com.xboson.fs.redis.RedisFileMapping;
+import com.xboson.script.IVisitByScript;
 
 
-public class NodeLocalFileMapping extends LocalFileMapping {
+public class NodeLocalFileMapping extends LocalFileMapping
+        implements IVisitByScript {
 
   /**
    * 本地模式需要同步远程数据, 用到了 RedisFileMapping 里的方法

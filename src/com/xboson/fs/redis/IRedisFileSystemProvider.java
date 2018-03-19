@@ -26,8 +26,8 @@ import com.xboson.fs.basic.IFinder;
  * 所有的路径参数已经规范化, 不包含任何 "/./" 和 "/../", 并且使用 unix 分隔符,
  * 路径为 ui 虚拟目录, 跟目录应该包含 'ui' 't' 'web' 'lib' 等目录
  */
-public interface IRedisFileSystemProvider
-        extends IBlockOperator<RedisFileAttr>, IFinder<FinderResult> {
+public interface IRedisFileSystemProvider extends
+        IBlockOperator<RedisFileAttr>, IFinder<FinderResult> {
 
 
   /** 结果集最大数量, 超过后的数据被忽略 */

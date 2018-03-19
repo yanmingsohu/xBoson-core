@@ -18,9 +18,11 @@ package com.xboson.fs.node;
 
 import com.xboson.fs.redis.RedisBase;
 import com.xboson.fs.redis.RedisFileMapping;
+import com.xboson.script.IVisitByScript;
 
 
-public class NodeRedisFileMapping extends RedisFileMapping {
+public class NodeRedisFileMapping extends RedisFileMapping
+        implements IVisitByScript {
 
   public NodeRedisFileMapping(RedisBase rb) {
     super(rb);

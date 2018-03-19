@@ -87,18 +87,22 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'public class com.xboson.fs.* { public *; }'
     keep 'public class com.xboson.fs.redis.FindContentInRedisWithLua'
     keep 'public class com.xboson.fs.ui.UIFileFactory'
-    keep 'public class com.xboson.j2ee.ui.MimeTypeFactory'
     keep 'interface com.xboson.fs.basic.* { public *; }'
+
+    // UI / Service
+    keep 'public class com.xboson.j2ee.ui.MimeTypeFactory'
+    keepclassmembers 'class * extends com.xboson.j2ee.container.XService \
+        { public *; }'
+    keepclassmembers 'public class com.xboson.service.* { public *; }'
 
     // init
     keep 'public class com.xboson.init.install.step.* { public *; }'
     keep 'public class com.xboson.init.Startup'
 
-    // Test / Service / log / Sleep
-    keep 'public class com.xboson.test.* { public *; }'
-    keepclassmembers 'public class com.xboson.service.* { public *; }'
+    // Test / log / Sleep
     keep 'class * implements com.xboson.sleep.ISleepwalker { public *; }'
     keep 'class com.xboson.log.writer.* { public *; }'
+    keep 'public class com.xboson.test.* { public *; }'
     keeppackagenames 'com.xboson.test.js'
 
     // RPC
