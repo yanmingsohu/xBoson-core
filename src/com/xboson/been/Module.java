@@ -16,13 +16,14 @@
 
 package com.xboson.been;
 
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.Tool;
 
 
 /**
  * js 运行后生成的模块.
  */
-public class Module implements IBean {
+public class Module implements IBean, IVisitByScript {
   public String   id;
   public String   filename;
   public boolean  loaded;

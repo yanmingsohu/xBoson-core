@@ -30,7 +30,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 /**
  * 一个编译好的脚本, 可以反复运行.
  */
-public class Sandbox {
+public class Sandbox implements IVisitByScript {
 
   private ScriptEngine js;
   private Bindings bind;

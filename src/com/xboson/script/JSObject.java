@@ -37,7 +37,7 @@ import java.util.Map;
 /**
  * 用于辅助 js 对象与 java 对象桥接和转换.
  */
-public abstract class JSObject implements IJSObject {
+public abstract class JSObject implements IJSObject, IVisitByScript {
 
 
 	@Override

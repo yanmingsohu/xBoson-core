@@ -16,7 +16,10 @@
 
 package com.xboson.been;
 
-public class Page {
+import com.xboson.script.IVisitByScript;
+
+
+public class Page implements IVisitByScript {
 
   public final static int PAGE_DEFAULT_COUNT = -1;
 

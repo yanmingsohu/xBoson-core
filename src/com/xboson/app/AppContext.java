@@ -27,6 +27,7 @@ import com.xboson.log.slow.RequestApiLog;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.script.EventFlag;
 import com.xboson.script.IScriptEventListener;
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
@@ -41,7 +42,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 作为全局脚本的入口, 维护所有运行着的沙箱/应用池
  */
-public class AppContext implements IConstant, IScriptEventListener {
+public class AppContext implements
+        IConstant, IScriptEventListener, IVisitByScript {
 
   /** 在线程超过这个运行时间后, 降低运行优先级, 毫秒 */
   public static final long LOW_CPU_TIME = 2 * 60 * 1000;
@@ -374,7 +376,7 @@ public class AppContext implements IConstant, IScriptEventListener {
   /**
    * '进程' 管理器, 该对象会被导出到脚本环境, 必须仔细设计.
    */
-  public class ProcessManager implements IProcessState {
+  public class ProcessManager implements IProcessState, IVisitByScript {
     private final static long INTERVAL = 30 * 1000;
     private Map<Thread, ThreadLocalData> running;
     private Map<Long, Thread> id;

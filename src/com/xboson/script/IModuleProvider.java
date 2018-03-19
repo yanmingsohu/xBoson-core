@@ -22,7 +22,7 @@ import com.xboson.been.Module;
 /**
  * 模块加载器
  */
-public interface IModuleProvider {
+public interface IModuleProvider extends IVisitByScript {
 
   int LOADER_ID_APPLICATION = 1;
   int LOADER_ID_SYS_MODULE  = 2;

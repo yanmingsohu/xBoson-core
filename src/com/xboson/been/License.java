@@ -113,7 +113,9 @@ public class License extends AbsLicense {
   public static License readLicense() throws IOException {
     String basePath = SysConfig.me().readConfig().configPath;
     StringBuilder buf = Tool.readFromFile(basePath + LIC_FILE);
-    YamlReader r = new YamlReader(buf.toString());
+    YamlConfig yc = new YamlConfig();
+    yc.setClassTag("com.xboson.been.License", License.class);
+    YamlReader r = new YamlReader(buf.toString(), yc);
     return r.read(License.class);
   }
 

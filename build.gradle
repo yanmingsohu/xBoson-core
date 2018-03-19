@@ -66,61 +66,68 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     obfuscationdictionary 'obfuscate-keywords.txt'
     classobfuscationdictionary 'class-keywords.txt'
 
-    // keep 'public class * { public *; }'
+    // 优化次数: 5:12s | 10:18s | 20:26s | 99:93s
+    optimizationpasses 99
+
+    // Database
     keep 'public class com.xboson.db.driver.* { public *; }'
-    keep 'public class com.xboson.db.sql.SqlReader'
     keep 'public class com.xboson.db.ConnectConfig { public *; }'
+    keeppackagenames 'com.xboson.db.sql'
 
+    // Script
     keep 'public class com.xboson.script.JSObject { public *; }'
-    keep 'public class com.xboson.script.Application { public *; }'
-    keep 'public class com.xboson.script.lib.* { public *; }'
-    keep 'interface com.xboson.script.IModuleProvider { public *; }'
-    keep 'interface com.xboson.script.ICodeRunner { public *; }'
-    keep 'public class com.xboson.script.AbsModules { public *; }'
-    keep 'public class com.xboson.app.lib.* { public *; }'
-    keep 'public class com.xboson.app.AppContext { public *; }'
+    keepclassmembers 'public class com.xboson.script.lib.* { public *; }'
+    keepclassmembers 'public class com.xboson.app.lib.* { public *; }'
+    keep 'interface com.xboson.script.IVisitByScript'
+    keepclassmembers 'class * implements com.xboson.script.IVisitByScript {*;}'
+    keeppackagenames 'com.xboson.app.lib'
+    keeppackagenames 'com.xboson.script.lib'
 
+    // File system
     keep 'public class com.xboson.fs.* { public *; }'
     keep 'public class com.xboson.fs.redis.FindContentInRedisWithLua'
     keep 'public class com.xboson.fs.ui.UIFileFactory'
     keep 'public class com.xboson.j2ee.ui.MimeTypeFactory'
     keep 'interface com.xboson.fs.basic.* { public *; }'
 
+    // init
     keep 'public class com.xboson.init.install.step.* { public *; }'
-    keep 'public class com.xboson.init.Startup { public *; }'
+    keep 'public class com.xboson.init.Startup'
 
+    // Test / Service / log / Sleep
     keep 'public class com.xboson.test.* { public *; }'
-    keep 'public class com.xboson.service.* { public *; }'
+    keepclassmembers 'public class com.xboson.service.* { public *; }'
     keep 'class * implements com.xboson.sleep.ISleepwalker { public *; }'
     keep 'class com.xboson.log.writer.* { public *; }'
-    keep 'public class * implements java.io.Serializable { public *; *; }'
+    keeppackagenames 'com.xboson.test.js'
 
+    // RPC
     keep 'class com.xboson.rpc.* { public *; *; }'
     keep 'interface com.xboson.rpc.* { public *; *; }'
     keep 'class * implements java.rmi.Remote { *; public *; }'
 
+    // Been
     keep 'public class com.xboson.been.XBosonException { public *; }'
     keep 'public class com.xboson.been.Config { public *; }'
     keep 'public class com.xboson.been.LoginUser { public *; }'
-    keep 'public class com.xboson.been.Module { public *; }'
     keep 'public class com.xboson.been.MongoConfig { public *; }'
-    keep 'public class com.xboson.been.Page { public *; }'
-    keep 'public class com.xboson.been.License { public *; }'
-    keep 'public class com.xboson.been.SysPlDrmDs001 { public *; }'
-    keep 'public class com.xboson.been.PublicProcessData { public *; }'
-    keep 'public class com.xboson.been.PackageInf { public *; }'
+    keep 'public class com.xboson.been.SessionData { public *; }'
+    keep 'public class com.xboson.been.AppToken { public *; }'
+    keepclassmembers 'public class com.xboson.been.License { public *; }'
 
     keepattributes '*Annotation*'
     renamesourcefileattribute 'SourceFile'
-    keepattributes 'SourceFile, LineNumberTable, Exceptions'
+    keepattributes 'SourceFile, LineNumberTable, Exceptions, Signature'
+    keep 'public class * implements java.io.Serializable { public *; *; }'
     keepclassmembers 'class * implements java.io.Serializable'
+    keepclassmembers 'enum * { public *; }'
+
 }
 
 
 task remove_proguard_out(type: Delete) {
     delete 'build/guard-out'
 }
-
 
 
 war.dependsOn proguard

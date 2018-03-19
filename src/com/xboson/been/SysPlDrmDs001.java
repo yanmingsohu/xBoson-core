@@ -16,13 +16,15 @@
 
 package com.xboson.been;
 
+import com.xboson.script.IVisitByScript;
+
 import java.math.BigDecimal;
 
 
 /**
  * sys_pl_drm_ds001 表映射, 数据库资源管理
  */
-public class SysPlDrmDs001 {
+public class SysPlDrmDs001 implements IVisitByScript {
   public String did;    // 数据源ID
   public String dn;     // 数据源名称
   public String owner;  // 所有者, 就是 orgid

@@ -35,7 +35,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 应用存储在二级目录中, 第一级是模块名, 第二级是接口名
  * 不直接支持多线程.
  */
-public class Application implements ICodeRunner, IModuleProvider {
+public class Application implements
+        ICodeRunner, IModuleProvider, IVisitByScript {
 
   private Sandbox sandbox;
   private IScriptFileSystem vfs;

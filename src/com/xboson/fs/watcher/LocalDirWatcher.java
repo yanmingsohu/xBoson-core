@@ -20,6 +20,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Tool;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -179,6 +180,7 @@ public class LocalDirWatcher extends OnExitHandle implements Runnable {
       wk.cancel();
     }
     map.clear();
+    Tool.close(ws);
     instance = null;
   }
 

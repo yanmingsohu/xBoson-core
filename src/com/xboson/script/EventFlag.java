@@ -20,7 +20,7 @@ package com.xboson.script;
  * 脚本事件标记, 全部为公共终结属性.
  * 实现需要自行维护标记的重置
  */
-public class EventFlag {
+public class EventFlag implements IVisitByScript {
 
   public final static EventFlag me = new EventFlag();
 

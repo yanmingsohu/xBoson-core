@@ -16,6 +16,7 @@
 
 package com.xboson.been;
 
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.Tool;
 
 
@@ -23,7 +24,7 @@ import com.xboson.util.Tool;
  * 进程公共数据, 全部 public 属性.
  * 记录着调用 api 的必要数据.
  */
-public class PublicProcessData implements IJson {
+public class PublicProcessData implements IJson, IVisitByScript {
 
   public long processId;
   public String org;
