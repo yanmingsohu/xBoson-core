@@ -140,6 +140,11 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
   }
 
 
+  public String toString() {
+    return "[PID: "+ pid +", USERID: "+ userid +"]";
+  }
+
+
   /**
    * 超级用户
    */

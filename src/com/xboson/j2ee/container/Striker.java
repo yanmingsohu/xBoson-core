@@ -21,6 +21,7 @@ import java.io.Writer;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
@@ -38,7 +39,8 @@ import jdk.nashorn.internal.runtime.ECMAErrors;
 
 
 /**
- * 抓住所有异常, 编码转换, 等初始化操作
+ * 抓住所有异常, 编码转换, 等初始化操作;
+ * 该对象持有线程级 jee 相关变量.
  *
  * @see com.xboson.init.Startup 配置到容器
  */
@@ -54,6 +56,20 @@ public class Striker extends HttpFilter {
   private int check1len;
   private int check2hash;
   private int check2len;
+
+  private static ThreadLocal<JeeContext> tl = new ThreadLocal<>();
+
+
+  /**
+   * 该方法返回当前线程 servlet 请求的相关变量, 如果当前线程不是 jee 请求返回 null.
+   */
+  public static JeeContext jee() {
+    JeeContext j = tl.get();
+    if (j == null) {
+      throw new XBosonException("Not in JEE request");
+    }
+    return j;
+  }
 
 
   @Override
@@ -102,18 +118,21 @@ public class Striker extends HttpFilter {
     }
 
     try {
+      tl.set(new JeeContext(request, response));
       jr = new XResponse(request, response);
       chain.doFilter(request, response);
 
     } catch(Throwable e) {
       responseError(e, jr, response);
+    } finally {
+      tl.remove();
     }
   }
 
 
   private void responseError(Throwable e, XResponse jr, HttpServletResponse response) {
+    log.error("ResponseError", Tool.allStack(e));
     if (response.isCommitted()) {
-      log.error("Error", e);
       return;
     }
 
@@ -173,7 +192,6 @@ public class Striker extends HttpFilter {
       msg = e.toString();
     }
     jr.setData(msg);
-    log.error(Tool.allStack(e));
   }
 
 
@@ -182,6 +200,18 @@ public class Striker extends HttpFilter {
     Tool.xbosonStack(e, out);
     String msg = out.toString();
     jr.setData(msg, StackTraceElement.class);
-    log.error(Tool.allStack(e));
+  }
+
+
+  public class JeeContext {
+    public final ServletContext servletContext;
+    public final HttpServletRequest request;
+    public final HttpServletResponse response;
+
+    private JeeContext(HttpServletRequest req, HttpServletResponse resp) {
+      this.request = req;
+      this.response = resp;
+      this.servletContext = req.getServletContext();
+    }
   }
 }
