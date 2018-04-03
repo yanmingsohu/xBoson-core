@@ -17,6 +17,9 @@
 package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
@@ -41,7 +44,7 @@ import java.sql.SQLException;
 import java.util.*;
 
 
-public class Schedule extends RuntimeUnitImpl {
+public class Schedule extends RuntimeUnitImpl implements IAResource {
 
   private static final String LOG_FILE = "insert-scheduler-log.sql";
   public static final String RPC_PREFIX = "XB.rpc.Schedule.";
@@ -60,12 +63,21 @@ public class Schedule extends RuntimeUnitImpl {
   }
 
 
+  @Override
+  public String description() {
+    return "app.module.schedule.functions()";
+  }
+
+
   public void start(String id, Map<String, Object> config) throws Exception {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+
     ITask exist = findTask(id);
     if (exist != null) {
       throw new XBosonException(
               "Schedule Task "+ exist.name() +"("+ id +") is running");
     }
+
     ExportTask task = new ExportTask(id, config);
     RpcFactory.me().bind(task, task.rpcName);
     log.debug("Start", task.rpcName);
@@ -73,6 +85,7 @@ public class Schedule extends RuntimeUnitImpl {
 
 
   public boolean stop(String id) throws RemoteException {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     try {
       ITask task = findTask(id);
       if (task != null) {
@@ -87,6 +100,7 @@ public class Schedule extends RuntimeUnitImpl {
 
 
   public Object info(String id) {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     return findTask(id);
   }
 

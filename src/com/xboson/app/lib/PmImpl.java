@@ -18,6 +18,9 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.app.IProcessState;
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.been.PublicProcessData;
 import com.xboson.been.XBosonException;
 import com.xboson.rpc.ClusterManager;
@@ -33,7 +36,7 @@ import java.util.List;
 /**
  * 进程管理器, 支持集群
  */
-public class PmImpl {
+public class PmImpl implements IAResource {
 
   public static final String RPC_NAME = "XB.rpc.ProcessManager";
 
@@ -51,6 +54,8 @@ public class PmImpl {
 
 
   public Object open() {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+
     boolean runOnSysOrg = (boolean)
             ModuleHandleContext._get("runOnSysOrg");
 
@@ -58,6 +63,12 @@ public class PmImpl {
         throw new XBosonException.NotImplements("只能在平台机构中引用");
 
     return new Local();
+  }
+
+
+  @Override
+  public String description() {
+    return "app.module.apipm.functions()";
   }
 
 

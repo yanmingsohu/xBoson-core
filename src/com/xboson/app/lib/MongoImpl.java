@@ -21,6 +21,9 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.util.MongoDBPool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
@@ -37,7 +40,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 
-public class MongoImpl extends RuntimeUnitImpl {
+public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
   public MongoImpl() {
     super(null);
@@ -45,8 +48,15 @@ public class MongoImpl extends RuntimeUnitImpl {
 
 
   public Client connect(String url) {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     MongoDBPool.VirtualMongoClient client = MongoDBPool.me().get(url);
     return new Client(client);
+  }
+
+
+  @Override
+  public String description() {
+    return "app.module.mongodb.functions()";
   }
 
 

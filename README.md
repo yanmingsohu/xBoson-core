@@ -5,7 +5,6 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 
 # 注意:
 
-* Docker: 平台访问整个操作系统的资源, 应该管理 Docker 而非被 Docker 管理.
 * JEE 容器必须以 UTF-8 模式启动.
 * sys_mdm001.url 字段与平台服务接口绑定.
 * 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
@@ -29,7 +28,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 脚本将被编译在内存中, 直到脚本被修改后自动重新编译.
 * 可安装/调用 NPM 模块, 并脱离 Nodejs 运行.
 * UI 服务使用平台脚本重写, 并加入修改履历. (不再依赖 nodejs 服务).
-* UI 文件不再依赖操作系统提供的网络文件系统进行同步, 也不依赖第三方中间件.
+* UI 文件不再依赖操作系统提供的网络文件系统进行集群同步, 也不依赖第三方中间件.
 * 针对大数据开发的 JEE 超轻量高速框架.
 * 快如闪电的 json/xml 转换器.
 * 新的内核模块: API 进程管理, 集群管理, 计划任务管理, MongoDB 驱动; 全部可在脚本中调用.
@@ -103,7 +102,7 @@ get 请求使用标准的 http url 参数.
 
 `/app/机构ID/APP ID/模块ID/API?参数`
 
-当请求参数中有 jsonp=functionname, 则返回 jsonp 格式的数据, 
+当请求参数中有 `$format=jsonp cb=functionname`, 则返回 jsonp 格式的数据, 
 并使用 functionname 来作为回调函数.
 
 
@@ -199,6 +198,19 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   * WARN    | 以下日志都启用
   * ERROR   | 以下日志都启用
   * FATAL   | 以下日志都启用
+  
+  
+## API 分级授权代码
+
+这些功能需要授权后方可正式使用.
+
+`app.module.schedule.functions()`   计划任务
+`app.module.shell.functions()`      外壳脚本
+`app.module.mongodb.functions()`    MongoDB 驱动
+`app.module.fabric.functions()`     区块链驱动
+`app.module.cluster.functions()`    集群管理
+`app.module.apipm.functions()`      API 进程管理
+`app.module.sql.switch.org()`       连接外部数据源
   
   
 # 参考

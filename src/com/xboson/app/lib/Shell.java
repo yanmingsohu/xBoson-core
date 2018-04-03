@@ -17,6 +17,9 @@
 package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.event.timer.TimeFactory;
@@ -32,7 +35,7 @@ import java.io.InputStream;
 import java.util.TimerTask;
 
 
-public class Shell extends RuntimeUnitImpl {
+public class Shell extends RuntimeUnitImpl implements IAResource {
 
   public final static int MAX_RUN_TIME = 30 * 60 * 1000;
 
@@ -50,6 +53,7 @@ public class Shell extends RuntimeUnitImpl {
 
 
   public Inner open() throws Exception {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     boolean runOnSysOrg = (boolean) ModuleHandleContext._get("runOnSysOrg");
 
     if (!runOnSysOrg) {
@@ -64,6 +68,12 @@ public class Shell extends RuntimeUnitImpl {
       }
     }
     return new Inner();
+  }
+
+
+  @Override
+  public String description() {
+    return "app.module.shell.functions()";
   }
 
 

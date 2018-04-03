@@ -18,6 +18,9 @@ package com.xboson.app.lib;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.script.lib.Buffer;
 import com.xboson.util.ECDSA;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -35,7 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 
-public class FabricImpl extends RuntimeUnitImpl {
+public class FabricImpl extends RuntimeUnitImpl implements IAResource {
 
   private static final Buffer BUF = new Buffer();
   private final com.xboson.util.ECDSA ecdsa;
@@ -70,7 +73,14 @@ public class FabricImpl extends RuntimeUnitImpl {
    * }
    */
   public Channel0 newChannel(Object conf) throws Exception {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     return new Channel0(new Mirror(conf));
+  }
+
+
+  @Override
+  public String description() {
+    return "app.module.fabric.functions()";
   }
 
 

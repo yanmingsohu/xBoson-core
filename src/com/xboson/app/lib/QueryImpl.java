@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppContext;
 import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
@@ -23,12 +24,14 @@ import com.xboson.db.IDialect;
 import com.xboson.db.SqlResult;
 import com.xboson.db.analyze.SqlParser;
 import com.xboson.db.analyze.SqlParserCached;
+import com.xboson.log.Level;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.sql.*;
+import java.util.Arrays;
 
 
 /**
@@ -59,7 +62,7 @@ public class QueryImpl {
   public QueryImpl(SqlConnect sc, RuntimeUnitImpl runtime) {
     this.sc = sc;
     this.runtime = runtime;
-    this.log = LogFactory.create();
+    this.log = LogFactory.create("app.sql");
   }
 
 
@@ -74,6 +77,10 @@ public class QueryImpl {
    */
   public int query(ScriptObjectMirror list, String sql, Object[] param)
           throws Exception {
+    if (! log.blocking(Level.DEBUG)) {
+      log(sql, param);
+    }
+
     try (PreparedStatement ps = sc.open().prepareStatement(sql)) {
       if (param != null) {
         Object p = null;
@@ -179,5 +186,14 @@ public class QueryImpl {
    */
   public String replaceSql(String sql) {
     return sql;
+  }
+
+
+  private void log(String sql, Object[] param) {
+    AppContext ac = AppContext.me();
+    log.debug("User:", ac.who(),
+            "; API:", ac.getCurrentApiPath(),
+            "; SQL:", sql,
+            "; BIND:", Arrays.toString(param));
   }
 }

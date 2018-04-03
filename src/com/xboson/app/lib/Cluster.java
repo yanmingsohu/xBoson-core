@@ -16,6 +16,9 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.been.ComputeNodeInfo;
 import com.xboson.been.XBosonException;
 import com.xboson.rpc.ClusterManager;
@@ -23,10 +26,12 @@ import com.xboson.rpc.ClusterManager;
 import java.util.Set;
 
 
-public class Cluster {
+public class Cluster implements IAResource {
 
 
   public Object open() {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+
     boolean runOnSysOrg = (boolean)
             ModuleHandleContext._get("runOnSysOrg");
 
@@ -34,6 +39,12 @@ public class Cluster {
       throw new XBosonException.NotImplements("只能在平台机构中引用");
 
     return new Local();
+  }
+
+
+  @Override
+  public String description() {
+    return "app.module.cluster.functions()";
   }
 
 
