@@ -40,6 +40,7 @@ public class TestApi extends Test {
   }
 
 
+  // 需要模拟一个 servlet 上下文, 否则测试错误
   public void test_pool() throws Exception {
     sub("Test app pool");
 

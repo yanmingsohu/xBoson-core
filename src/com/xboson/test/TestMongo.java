@@ -44,6 +44,7 @@ public class TestMongo extends Test {
   }
 
 
+  // 需要模拟一个 servlet 上下文, 否则测试错误
   public void script() throws Throwable {
     sub("Script Module");
     new ModuleHandleContext().init();

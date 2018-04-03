@@ -44,6 +44,7 @@ public class TestRPC extends Test {
   }
 
 
+  // 需要模拟一个 servlet 上下文, 否则测试错误
   private void safe() throws InterruptedException {
     sub("Bad password throws PermissionException");
     SafeServerFactory server = new SafeServerFactory("123");

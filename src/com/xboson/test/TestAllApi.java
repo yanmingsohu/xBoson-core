@@ -92,6 +92,7 @@ public class TestAllApi extends Test implements IScriptFileSystem {
   }
 
 
+  // 需要模拟一个 servlet 上下文, 否则测试错误
   public void compile() throws Exception {
     sub("Compile all code");
     ServiceScriptWrapper ssw = new ServiceScriptWrapper();
