@@ -27,19 +27,23 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthFactory {
 
   private static AuthFactory instance;
-  public static AuthFactory me() {
-    if (instance == null) {
-      instance = new AuthFactory();
-    }
-    return instance;
-  }
-
-
   private Map<Class, IAWhere> whereMap;
 
 
   private AuthFactory() {
     whereMap = new ConcurrentHashMap<>();
+  }
+
+
+  public static AuthFactory me() {
+    if (instance == null) {
+      synchronized (AuthFactory.class) {
+        if (instance == null) {
+          instance = new AuthFactory();
+        }
+      }
+    }
+    return instance;
   }
 
 

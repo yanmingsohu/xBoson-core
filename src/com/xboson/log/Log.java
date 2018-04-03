@@ -46,9 +46,7 @@ public class Log {
 
 
   public void logs(final Level l, Object[] msg) {
-    if (cl == Level.INHERIT) {
-      if (LogFactory.blocking(l)) return;
-    } else if (cl.blocking(l)) {
+    if (blocking(l)) {
       return;
     }
 
@@ -67,6 +65,21 @@ public class Log {
 
   String getName() {
     return name;
+  }
+
+
+  /**
+   * 指定的日志级别不需要打印(执行)返回 true;
+   * 该方法用于优化复杂的日志参数在无需打印时不再执行初始化操作.
+   */
+  public boolean blocking(Level l) {
+    if (cl == Level.INHERIT) {
+      if (LogFactory.blocking(l))
+        return true;
+    } else if (cl.blocking(l)) {
+      return true;
+    }
+    return false;
   }
 
 

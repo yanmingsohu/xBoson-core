@@ -55,18 +55,17 @@ public class License extends AbsLicense {
   }
 
 
-  public License(ServletContext sc) throws MalformedURLException {
-    basePath = SysConfig.me().readConfig().configPath;
-    setPublicKeyFile(sc);
+  public void setPublicKeyFile(URL url) throws MalformedURLException {
+    publicKeyFile = url.toString();
+    if (publicKeyFile.startsWith(PREFIX)) {
+      publicKeyFile = publicKeyFile.substring(PREFIX.length());
+    }
   }
 
 
   public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
     URL url = sc.getResource("/WEB-INF" + PUB_FILE);
-    publicKeyFile = url.toString();
-    if (publicKeyFile.startsWith(PREFIX)) {
-      publicKeyFile = publicKeyFile.substring(PREFIX.length());
-    }
+    setPublicKeyFile(url);
   }
 
 

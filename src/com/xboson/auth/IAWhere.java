@@ -17,7 +17,8 @@
 package com.xboson.auth;
 
 /**
- * 该接口实现需要切实的实施权限检查
+ * 该接口实现需要切实的实施权限检查;
+ * 必须有默认构造函数.
  */
 public interface IAWhere {
 
@@ -29,5 +30,14 @@ public interface IAWhere {
    * @param res 被访问的资源
    */
   boolean apply(IAWho who, IAResource res);
+
+
+  /**
+   * 返回 true 则超级用户总是通过权限检查
+   * @return 默认实现返回 true
+   */
+  default boolean passAdmin() {
+    return true;
+  }
 
 }

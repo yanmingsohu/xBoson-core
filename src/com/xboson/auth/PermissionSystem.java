@@ -47,7 +47,7 @@ public class PermissionSystem {
     if (where == null)
       throw new XBosonException.NullParamException("IAWhere where");
 
-    if (who.isRoot()) // root 是无敌的
+    if (where.passAdmin() && who.isRoot())
       return;
 
     if (where.apply(who, res) == false) {
