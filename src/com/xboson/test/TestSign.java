@@ -46,12 +46,13 @@ public class TestSign extends Test {
 //            "License",
 //            "Update",
 //            "bad public key",
+//            "No license to run the function, ",
     };
 
     msg("private static final String s[] = new String[] {");
     for (int i=0; i<s.length; ++i) {
       s[i] = Base64.getEncoder().encodeToString(s[i].getBytes("UTF8"));
-      msg("  \""+s[i]+"\",");
+      msg("  /*", i, "*/ \""+s[i]+"\",");
     }
     msg("};");
   }

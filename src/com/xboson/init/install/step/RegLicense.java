@@ -42,11 +42,15 @@ public class RegLicense implements IStep {
   public boolean gotoNext(HttpData data) throws Exception {
     int op = data.getInt("op");
     if (op == 1) {
+      if (data.getStr("skip") != null) {
+        return true;
+      }
       op1genreq(data);
     }
     else if (op == 2) {
       return op2uplicense(data);
     }
+
     return false;
   }
 

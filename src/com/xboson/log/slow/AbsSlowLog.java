@@ -58,7 +58,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
 
   protected AbsSlowLog() {
     try {
-      this.log        = LogFactory.create();
+      this.log        = LogFactory.create(this.getClass());
       this.queue      = new LinkedList<>();
       this.insert     = new Insert();
       this.hasWorker  = false;
@@ -163,6 +163,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
           }
           ps.executeUpdate();
           ++count;
+          log.debug(Arrays.toString(param));
         } catch (Exception e) {
           log.error("Insert log fail", e, Arrays.toString(param));
           checkConnect();

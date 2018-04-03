@@ -25,7 +25,9 @@
 
         <section>
           填写完成申请表, 下载后将授权申请与本公司负责人连接,
-          申请通过后, 您将接收到程序的授权许可
+          申请通过后, 您将接收到程序的授权许可;<br/>
+
+          可以跳过该步骤, 但务必保留授权申请表以备后用.
         </section>
 
         <form method="POST">
@@ -33,19 +35,25 @@
           <input type="hidden" name="op" value="1"/>
           <h6>授权申请表</h6>
 
-          <table>
+          <table><tbody>
           <tr>
             <td>公司名称:</td>
             <td><input name="company" value="${ param.company }" /></td>
             </td>
-          </tr><tr>
+          </tr>
+
+          <tr>
             <td>域名地址: </td>
             <td><input name="dns" value="${ param.dns }" /></a>
             </td>
-          </tr><tr>
+          </tr>
+
+          <tr>
             <td>邮箱地址: </td>
             <td><input name="email" value="${ param.email }"/></td>
-          </tr><tr>
+          </tr>
+
+          <tr>
             <td>使用时间: </td>
             <td>
               <select name="useTime" value="${ param.useTime }">
@@ -56,26 +64,34 @@
                 <option value='10'>10年</option>
               </select>
             </td>
-          </tr><tr>
+          </tr>
+
+          <tr>
             <td></td>
             <td>
               <input type='submit' value='下载授权申请' id='download'/>
               <span class="red" id='message'></span>
             </td>
-          </tr><tr>
+          </tr>
+
+          <tr>
             <td>授权许可文件:</td>
             <td>
               <input type='file' id='filepath'/>
               <span class="red" id='message'></span>
             </td>
-          </tr><tr>
+          </tr>
+
+          <tr>
             <td></td>
             <td>
               <input type='button' value='上传授权许可' id='upload'/>
+              <input value='跳过授权' name='skip' type='submit'/>
               <span class="red" id='message2'></span>
             </td>
           </tr>
-          </table>
+
+          </tbody></table>
         </form>
       </div>
 
@@ -94,9 +110,9 @@ jQuery(function($) {
   }
 
   $("#upload").click(function() {
-    var m
     var data = { op:2, yaml: "", next: 1 };
     var reader = new FileReader();
+
     reader.readAsText( $("#filepath")[0].files[0] );
     reader.onload = function() {
       data.yaml = reader.result;
