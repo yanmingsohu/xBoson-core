@@ -29,18 +29,22 @@ import com.xboson.util.Version;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.util.Base64;
 import java.util.TimerTask;
 import java.util.zip.CRC32;
+
+import static com.xboson.been.License.PUB_FILE;
 
 
 public class Processes extends HttpFilter {
@@ -49,7 +53,7 @@ public class Processes extends HttpFilter {
    * 在 TestSign 中生成
    * @see com.xboson.test.TestSign
    */
-  private static final String s[] = new String[] {
+  public static final String s[] = new String[] {
           "QmFkIExpY2Vuc2UsIENvcHkgcHJvdGVjdGlvbg==",
           "QmFkIExpY2Vuc2UsIFdyb25nIGFwcGxpY2F0aW9u",
           "QmFkIExpY2Vuc2UsIFNpZ25hdHVyZSBmYWls",
@@ -59,6 +63,14 @@ public class Processes extends HttpFilter {
           "VXBkYXRl",
           "YmFkIHB1YmxpYyBrZXk=",
   };
+
+  static {
+    Base64.Decoder d = Base64.getDecoder();
+    for (int i=0; i<s.length; ++i) {
+      s[i] = new String(d.decode(s[i]));
+    }
+  }
+
 
   private String msg;
   private License license;
@@ -82,16 +94,16 @@ public class Processes extends HttpFilter {
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
     super.init(filterConfig);
-    try {
-      Base64.Decoder d = Base64.getDecoder();
-      for (int i=0; i<s.length; ++i) {
-        s[i] = new String(d.decode(s[i]));
-      }
+    init(filterConfig.getServletContext());
+  }
 
+
+  public void init(ServletContext sc) {
+    try {
       final long PERIOD = 12 * 60 * 60 * 1000;
       log = LogFactory.create(s[5]);
       license = License.readLicense();
-      license.setPublicKeyFile(filterConfig.getServletContext());
+      license.setPublicKeyFile(sc);
 
       Point point = new Point();
       point.run();
@@ -116,7 +128,7 @@ public class Processes extends HttpFilter {
     @Override
     public void run() {
       try {
-        execution();
+        msg = execution(license);
       } catch (Exception e) {
         msg = e.getMessage();
       }
@@ -144,40 +156,50 @@ public class Processes extends HttpFilter {
   }
 
 
-  private void execution() throws Exception {
+  private String execution(License license) throws Exception {
     CRC32 crc = new CRC32();
     crc.update(Tool.readAllBytes(license.getPublicKeyFile()));
 
     if (crc.getValue() != Version.PKCRC) {
-      msg = s[7];
-      return;
+      return s[7];
     }
 
     if (! license.zz().equals(License.singleline(license.z))) {
-      msg = s[0];
-      return;
+      return s[0];
     }
 
     if (! Version.Name.equals(license.appName)) {
-      msg = s[1];
-      return;
+      return s[1];
     }
 
     if (! Crypto.me().verification(license)) {
-      msg = s[2];
-      return;
+      return s[2];
     }
 
     if (license.beginTime > System.currentTimeMillis()) {
-      msg = s[3];
-      return;
+      return s[3];
     }
 
     if (license.endTime < System.currentTimeMillis()) {
-      msg = s[4];
-      return;
+      return s[4];
     }
 
-    msg = null;
+    return null;
+  }
+
+
+  /**
+   * 返回错误消息, 当返回 null 说明授权基础验证通过.
+   */
+  public String message() {
+    return msg;
+  }
+
+
+  /**
+   * 返回初始化完成的证书对象
+   */
+  public License message2() {
+    return license;
   }
 }
