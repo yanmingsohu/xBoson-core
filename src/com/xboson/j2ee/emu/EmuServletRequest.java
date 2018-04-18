@@ -40,6 +40,8 @@ public class EmuServletRequest implements HttpServletRequest {
   public String requestUriWithoutContext = "/app/";
   public String context = "/xboson";
   public boolean randomParameters;
+  public String encoding = IConstant.CHARSET_NAME;
+  public ServletContext servlet_context;
 
 
   public EmuServletRequest() {
@@ -263,13 +265,13 @@ public class EmuServletRequest implements HttpServletRequest {
 
   @Override
   public String getCharacterEncoding() {
-    return IConstant.CHARSET_NAME;
+    return encoding;
   }
 
 
   @Override
   public void setCharacterEncoding(String s) throws UnsupportedEncodingException {
-    throw new UnsupportedEncodingException();
+    encoding = s;
   }
 
 
@@ -449,7 +451,7 @@ public class EmuServletRequest implements HttpServletRequest {
 
   @Override
   public ServletContext getServletContext() {
-    return null;
+    return servlet_context;
   }
 
 

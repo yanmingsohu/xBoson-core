@@ -37,9 +37,9 @@ import com.xboson.util.Tool;
  * 则使用该参数指定的应答格式.
  */
 public class XResponse {
-	
-	private static final String attrname   = "xBoson-X-response";
-	private static final String attrformat = "$format";
+
+  private static final String attrname   = "xBoson-X-response";
+  private static final String attrformat = "$format";
   private static NameCache<Class> namecache = new NameCache<>();
 	
 	private HttpServletRequest request;

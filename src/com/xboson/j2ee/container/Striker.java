@@ -61,7 +61,7 @@ public class Striker extends HttpFilter {
 
 
   /**
-   * 该方法返回当前线程 servlet 请求的相关变量, 如果当前线程不是 jee 请求返回 null.
+   * 该方法返回当前线程 servlet 请求的相关变量, 如果当前线程不是 jee 请求抛出异常.
    */
   public static JeeContext jee() {
     JeeContext j = tl.get();
@@ -110,7 +110,7 @@ public class Striker extends HttpFilter {
       // 后缀一致由长度保证. 这种优化方法仅在这个场景可用 !
       //
       if ( (uri_len == check1len && uri.hashCode() == check1hash) ||
-              (uri_len == check2len && uri.hashCode() == check2hash) )
+           (uri_len == check2len && uri.hashCode() == check2hash) )
       {
         response.sendRedirect(welcome);
         return;

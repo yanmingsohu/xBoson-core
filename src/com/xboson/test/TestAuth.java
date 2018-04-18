@@ -17,6 +17,7 @@
 package com.xboson.test;
 
 import com.xboson.auth.*;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.db.SqlResult;
@@ -35,6 +36,36 @@ public class TestAuth extends Test {
     cc = TestDS.connect_config();
     password();
     sql_reader();
+    licenseAuth();
+  }
+
+
+  public void licenseAuth() {
+    sub("ApiAuthorizationRating.class");
+
+    PermissionSystem.applyWithApp(
+            ApiAuthorizationRating.class,
+            new IAResource() {
+      @Override
+      public String description() {
+        return "app.module.sql.switch.org()";
+      }
+    });
+
+    sub("Not pass");
+
+    new Throws(ApiAuthorizationRating.NoLicense.class) {
+      public void run() {
+        PermissionSystem.applyWithApp(
+                ApiAuthorizationRating.class,
+                new IAResource() {
+          @Override
+          public String description() {
+            return "app.nopass()";
+          }
+        });
+      }
+    };
   }
 
 

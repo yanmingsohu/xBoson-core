@@ -146,6 +146,7 @@ public class TestApi extends Test {
       } catch(Exception e) {
         // show_code(app, XjApp.toFile(module_id, api_id));
         fail(e);
+        e.printStackTrace();
         throw new XBosonException(e);
       }
     }

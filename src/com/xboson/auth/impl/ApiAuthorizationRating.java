@@ -64,8 +64,8 @@ public class ApiAuthorizationRating implements IAWhere {
   }
 
 
-  private class NoLicense extends PermissionException {
-    public NoLicense(String msg) {
+  public class NoLicense extends PermissionException {
+    private NoLicense(String msg) {
       super(Processes.s[8] + msg);
     }
   }

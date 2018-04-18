@@ -19,9 +19,15 @@ package com.xboson.test;
 import java.io.*;
 import java.util.*;
 
-import com.xboson.been.Config;
-import com.xboson.been.JsonHelper;
+import com.xboson.app.AppContext;
+import com.xboson.been.*;
 import com.xboson.init.Touch;
+import com.xboson.j2ee.container.Striker;
+import com.xboson.j2ee.container.XResponse;
+import com.xboson.j2ee.emu.EmuFilterConfig;
+import com.xboson.j2ee.emu.EmuServletContext;
+import com.xboson.j2ee.emu.EmuServletRequest;
+import com.xboson.j2ee.emu.EmuServletResponse;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.ISleepwalker;
@@ -30,9 +36,16 @@ import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+
+
 /**
  * 通过实现该类, 导入通用测试框架,
- * 这里的方法都没有考虑性能, 不要再非测试环境中使用.
+ * 这里的方法都没有考虑性能, 不要在非测试环境中使用.
  *
  * 子类可以实现一个 main() 以允许测试用例单独运行.
  * 测试用例将节点 ID 改为 `18`
@@ -100,7 +113,7 @@ public class Test implements IConstant {
 
 
 	@SuppressWarnings("rawtypes")
-	public final void _test(Test[] cl) {
+	private final void _test(Test[] cl) {
     Touch.me();
     LogFactory.me().setType("TestOut");
     LogFactory.setLevel(Level.ALL);
@@ -108,20 +121,7 @@ public class Test implements IConstant {
 		StringBufferOutputStream strerr = new StringBufferOutputStream();
 		PrintStream buf = new PrintStream(strerr);
 
-		for (int i=0; i<cl.length; ++i) {
-			try {
-				unit(cl[i].getClass().getName());
-				Test t = cl[i];
-				t.test();
-				success();
-			} catch(Throwable e) {
-				fail(cl[i].getClass().getName());
-				buf.println("\n" + line);
-				buf.println("####\t" + cl[i].getClass().getName());
-				buf.println(line);
-				e.printStackTrace(buf);
-			}
-		}
+    startInJeeContext((req, resp) -> run(cl, buf));
 
 		// 通知系统进入销毁流程
 		Touch.exit();
@@ -148,6 +148,79 @@ public class Test implements IConstant {
     System.out.println("\u001b[m");
     printRunningThread();
 	}
+
+
+	private void run(Test[] cl, PrintStream buf) {
+    for (int i=0; i<cl.length; ++i) {
+      try {
+        unit(cl[i].getClass().getName());
+        Test t = cl[i];
+        t.test();
+        success();
+      } catch(Throwable e) {
+        fail(cl[i].getClass().getName());
+        buf.println("\n" + line);
+        buf.println("####\t" + cl[i].getClass().getName());
+        buf.println(line);
+        e.printStackTrace(buf);
+      }
+    }
+  }
+
+
+  /**
+   * 在 JEE 模拟环境中运行一个 servlet 链实例,
+   * 当授权正确, 该环境可以正确运行受限的代码.
+   */
+	private void startInJeeContext(FilterChain fc) {
+    Striker st = new Striker();
+    EmuServletRequest req   = new EmuServletRequest();
+    EmuServletResponse resp = new EmuServletResponse();
+    EmuServletContext sc    = new EmuServletContext();
+    EmuFilterConfig fconf   = new EmuFilterConfig();
+    fconf.servlet_context   = sc;
+    req.servlet_context     = sc;
+
+    try {
+      SessionData sd = new SessionData();
+      req.setAttribute(SessionData.ATTRNAME, sd);
+      sd.login_user = new TestApi.Admin();
+
+      //
+      // 模拟 servelt 环境
+      //
+      st.init(fconf);
+      st.doFilter(req, resp, new FilterChain() {
+        @Override
+        public void doFilter(ServletRequest req0,
+                             ServletResponse resp0)
+                throws IOException, ServletException {
+
+          ApiCall ac = new ApiCall("a", "b", "c", "d");
+          ac.call = new CallData(req, resp);
+          AppContext app = AppContext.me();
+
+          //
+          // 模拟 app 环境
+          //
+          app.call(ac, new Runnable() {
+            public void run() {
+              try {
+                msg("Init JEE License");
+                fc.doFilter(req, resp);
+              } catch (Exception e) {
+                e.printStackTrace();
+                fail(e);
+              }
+            }
+          });
+        }
+      });
+    } catch (Exception e) {
+      e.printStackTrace();
+      fail(e);
+    }
+  }
 
 
 	public static void success() {

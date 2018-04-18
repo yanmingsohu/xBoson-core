@@ -124,6 +124,19 @@ public class AppContext implements
 
 
   /**
+   * 该方法仅用于测试
+   */
+  public void call(ApiCall ac, Runnable r) {
+    try {
+      createLocalData(ac);
+      r.run();
+    } finally {
+      pm.exit();
+    }
+  }
+
+
+  /**
    * 线程被 kill, 不能正常应答(抛异常或发送错误消息都不可用), 这里发送最后一条消息,
    * 防止浏览器不停的请求这个没有应答的 api.
    */
@@ -167,7 +180,7 @@ public class AppContext implements
     tld.ac      = ac;
     tld.beginAt = System.currentTimeMillis();
 
-    ThreadLocalData previous = pm.get();
+    ThreadLocalData previous = pm.getMaybeNull();
     if (previous != null) {
       tld.nestedCall = previous;
     }
@@ -419,9 +432,22 @@ public class AppContext implements
 
 
     /**
-     * 返回当前线程的绑定数据
+     * 返回当前线程的绑定数据, 不在应用上下文中调用会抛出异常
      */
     private ThreadLocalData get() {
+      Thread t = Thread.currentThread();
+      ThreadLocalData ret = running.get(t);
+      if (ret == null) {
+        throw new NullPointerException("Not in AppContext");
+      }
+      return ret;
+    }
+
+
+    /**
+     * 返回当前线程的绑定数据, 不在应用上下文中调用返回 null
+     */
+    public ThreadLocalData getMaybeNull() {
       Thread t = Thread.currentThread();
       return running.get(t);
     }
