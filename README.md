@@ -87,8 +87,12 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * (YAML 转换)
     -- (yamlbeans-1.13.jar)[https://github.com/EsotericSoftware/yamlbeans/]
     
+* (软件授权许可)
+    -- (xBoson-crypto.jar)
+    
 * (Hyperledger-Fabric 区块链)[http://hyperledger-fabric.readthedocs.io/en/release/]
-    -- (fabric-sdk-java-1.0.1-jar-with-dependencies.jar) 若干依赖库集合
+    -- (fabric-sdk-java-*-with-dependencies.jar) sdk 及若干依赖库集合
+    -- (shim-client-*-with-dependencies.jar) java chaincode 支持及依赖库
     
 		
 # URL 映射约定

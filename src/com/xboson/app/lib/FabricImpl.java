@@ -328,8 +328,9 @@ public class FabricImpl extends RuntimeUnitImpl implements IAResource {
     ret.setMember("dataHash",       toBase64Str(info.getDataHash()));
     ret.setMember("previousHash",   toBase64Str(info.getPreviousHash()));
     ret.setMember("envelopeInfos",  wrap(info.getEnvelopeInfos()));
-    ret.setMember("transactionActionInfos",
-                  wrap(info.getTransactionActionInfos()));
+    // getTransactionActionInfos 与 getEnvelopeInfos 返回相同数据所以删除
+    //    ret.setMember("transactionActionInfos",
+    //                  wrap(info.getTransactionActionInfos()));
     return ret;
   }
 
