@@ -27,7 +27,7 @@ VALUES
   ?, -- logid
   ?, -- now(),
   'INFO',
-  'NONE',
+  ?, -- log_error_type, 字典: 异常类型(ZR.0024)
   ?, -- requestid
   null,
   ?, -- log
@@ -39,7 +39,7 @@ VALUES
   ?, -- <{appid: }>,
   ?, -- <{moduleid: }>,
   ?, -- <{apiid: }>,
-  null,
+  ?, -- elapsed
   ?, -- <{user_referer: }>,
   ?, -- <{user_agent: }>,
   null, -- <{cookie: }>,

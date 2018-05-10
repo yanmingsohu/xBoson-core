@@ -57,4 +57,8 @@ public interface IDict {
   int JOB_STATUS_LOG      = 6;
   /** 任务已经删除 */
   int JOB_STATUS_DEL      = 7;
+
+  /** 异常类型(ZR.0024) */
+  String ERR_TYPE_API     = "API";
+  String ERR_TYPE_NONE    = "NONE";
 }

@@ -16,6 +16,8 @@
 
 package com.xboson.been;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Map;
 
 
@@ -71,5 +73,23 @@ public class ApiCall implements IBean {
 
   private String toLower(String s) {
     return s == null ? null : s.toLowerCase();
+  }
+
+
+  /**
+   * <b>谨慎调用 !!</b><br/>
+   * 线程被 kill, 不能正常应答(抛异常或发送错误消息都不可用), 这里发送最后一条消息,
+   * 防止浏览器不停的请求这个没有应答的 api.
+   */
+  public void makeLastMessage(String msg) {
+    try {
+      PrintWriter out = call.resp.getWriter();
+      out.write('"');
+      out.write(msg);
+      out.write('"');
+      out.flush();
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 }

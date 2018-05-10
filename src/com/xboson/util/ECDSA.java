@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.xboson.been.XBosonException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.BufferedReader;
@@ -30,17 +31,23 @@ import java.security.spec.PKCS8EncodedKeySpec;
 
 
 /**
- * ECDSA 的对称加密算法辅助类
+ * ECDSA 的对称加密算法辅助类.
+ *
+ * 该对象依赖 BouncyCastleProvider 类,
+ * BouncyCastleProvider 在 bcprov-jdk15on-1.59.jar 包,
+ * 该包已经集成在 fabric-sdk-java 中.
  */
 public class ECDSA {
 
   private static ECDSA instance;
   private KeyFactory fact;
+  private BouncyCastleProvider provider;
 
 
   private ECDSA() {
     try {
-      fact = KeyFactory.getInstance("ECDSA");
+      provider = new BouncyCastleProvider();
+      fact = KeyFactory.getInstance("ECDSA", provider);
     } catch (NoSuchAlgorithmException e) {
       Tool.pl("WARN", e);
     }
@@ -65,7 +72,7 @@ public class ECDSA {
   public PrivateKey parsePrivateKey(String pem) {
     try {
       if (fact == null)
-        fact = KeyFactory.getInstance("ECDSA");
+        fact = KeyFactory.getInstance("ECDSA", provider);
 
       String key = formatPrivateKey(pem);
       byte[] encoded = DatatypeConverter.parseBase64Binary(key);

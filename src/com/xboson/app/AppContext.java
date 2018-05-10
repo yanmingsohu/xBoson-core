@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeoutException;
 
 
 /**
@@ -47,6 +48,7 @@ public class AppContext implements
 
   /** 在线程超过这个运行时间后, 降低运行优先级, 毫秒 */
   public static final long LOW_CPU_TIME = 2 * 60 * 1000;
+  public static final String API_KILL_MSG = "Api Process Killed";
 
   private static AppContext instance;
   private AppPool production;
@@ -77,13 +79,14 @@ public class AppContext implements
    * App Mod Api 参数都被转换为小写.
    */
   public void call(ApiCall ac) {
+    long begin = System.currentTimeMillis();
+    Throwable fail = null;
     String apiPath = ApiPath.getPath(ac);
     log.debug("Call::", apiPath);
 
     try {
       ThreadLocalData tld = createLocalData(ac);
       make_extend_parameter(tld);
-      apilog.log(ac);
 
       //
       // 跨机构调用共享 APP 中的 api, 此时 org 可以是另一个机构, 这种跨机构
@@ -103,14 +106,17 @@ public class AppContext implements
       app.run(ac.call, ac.mod, ac.api);
 
     } catch (XBosonException x) {
+      fail = x;
       throw x;
 
     } catch (Exception e) {
+      fail = e;
       throw new XBosonException(e);
 
     } catch (ThreadDeath dead) {
-      log.warn("Killed", apiPath, Tool.miniStack(dead, 6));
-      makeLastMessage("Api Process Killed");
+      log.warn(API_KILL_MSG, apiPath, Tool.miniStack(dead, 6));
+      ac.makeLastMessage(API_KILL_MSG);
+      fail = new TimeoutException(API_KILL_MSG);
 
     } finally {
       ThreadLocalData current = pm.get();
@@ -118,6 +124,7 @@ public class AppContext implements
         pm.start(current.nestedCall);
       } else {
         pm.exit();
+        apilog.log(ac, System.currentTimeMillis() - begin, fail);
       }
     }
   }
@@ -132,23 +139,6 @@ public class AppContext implements
       r.run();
     } finally {
       pm.exit();
-    }
-  }
-
-
-  /**
-   * 线程被 kill, 不能正常应答(抛异常或发送错误消息都不可用), 这里发送最后一条消息,
-   * 防止浏览器不停的请求这个没有应答的 api.
-   */
-  private void makeLastMessage(String msg) {
-    try {
-      PrintWriter out = pm.get().ac.call.resp.getWriter();
-      out.write('"');
-      out.write(msg);
-      out.write('"');
-      out.flush();
-    } catch (IOException e) {
-      log.error("makeLastMessage", e);
     }
   }
 
@@ -260,12 +250,14 @@ public class AppContext implements
   @Override
   public void on(ScriptEvent event) {
     if (event.flag == seflag.IN_REQUIRE) {
-      pm.get().__is_required = true;
+      ThreadLocalData tld = pm.getMaybeNull();
+      if (tld != null) tld.__is_required = true;
     }
     else if (event.flag == seflag.SCRIPT_OUT
             || event.flag == seflag.OUT_REQUIRE
             || event.flag == seflag.SCRIPT_PREPARE) {
-      pm.get().__is_required = false;
+      ThreadLocalData tld = pm.getMaybeNull();
+      if (tld != null) tld.__is_required = false;
     }
   }
 

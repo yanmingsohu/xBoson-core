@@ -17,6 +17,7 @@
 package com.xboson.log.slow;
 
 import com.xboson.been.ApiCall;
+import com.xboson.db.IDict;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.util.c0nst.IConstant;
 
@@ -38,28 +39,37 @@ public class RequestApiLog extends AbsSlowLog {
   }
 
 
-  public void log(ApiCall ac) {
+  public void log(ApiCall ac, long elapsed, Throwable err) {
     insert( uuid.ds(),
             nowInternet(),
+            err == null ? IDict.ERR_TYPE_NONE : IDict.ERR_TYPE_API,
             ac.exparam.get(IConstant.REQUEST_ID),
-            cut(ac.call.req.getRequestURI(), 2000),
+            cut(ac.call.req.getRequestURI(), err, 2000),
             ac.org,
             ac.call.sess.login_user.pid,
             ac.call.req.getRemoteAddr(),
             ac.app,
             ac.mod,
             ac.api,
-            cut(ac.call.req.getHeader(HEADER_REFERRER), 200),
-            cut(ac.call.req.getHeader(HEADER_USER_AGENT), 100) );
+            elapsed,
+            cut(ac.call.req.getHeader(HEADER_REFERRER), null, 200),
+            cut(ac.call.req.getHeader(HEADER_USER_AGENT), null, 100) );
   }
 
 
-  private String cut(String str, int max) {
-    if (str == null) return null;
-    if (str.length() > max) {
-      return str.substring(0, max);
+  private String cut(String str, Throwable err, int max) {
+    StringBuilder buf = new StringBuilder();
+    if (err != null) {
+      buf.append(err.getMessage());
+      buf.append(", \n");
     }
-    return str;
+    if (str != null) {
+      buf.append(str);
+    }
+    if (buf.length() > max) {
+      return buf.substring(0, max);
+    }
+    return buf.toString();
   }
 
 }

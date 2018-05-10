@@ -181,12 +181,10 @@ public class CodeFormater {
 
     StringBuilder out = new StringBuilder();
     out.append(file_name);
-    out.append('[');
-    out.append(begin);
-    out.append(',');
-    out.append(end-1);
+    out.append(" [");
+    out.append(line);
     out.append(']');
-    out.append("\n");
+    out.append('\n');
 
     try {
       printCode(out, begin, end);
