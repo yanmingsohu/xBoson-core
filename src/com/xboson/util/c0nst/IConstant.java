@@ -58,6 +58,12 @@ public interface IConstant extends IDict {
   String SYS_TABLE_NOT_REPLACE = "sys_pl_";
 
   /**
+   * 默认运算节点 ID
+   */
+  short DEFAULT_NODE_ID_SHORT = 0;
+  String DEFAULT_NODE_ID = DEFAULT_NODE_ID_SHORT +"";
+
+  /**
    * 常用加密/摘要算法名字
    */
   String MD5_NAME       = "MD5";

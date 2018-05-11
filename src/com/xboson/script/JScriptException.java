@@ -17,6 +17,8 @@
 package com.xboson.script;
 
 import com.xboson.been.XBosonException;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.util.CodeFormater;
 import com.xboson.util.Tool;
 import jdk.nashorn.internal.runtime.ECMAErrors;
@@ -41,11 +43,13 @@ import java.util.List;
 public class JScriptException extends XBosonException {
 
   private static final String CLASS_NAME = "<javascript>";
+
   private int line_offset = 0;
   private String lastFileName;
   private String fileName;
   private int lastLine;
   private CodeFormater cf;
+  private Log log = LogFactory.create("Script.Inner.ERR");
 
 
   /**
@@ -92,6 +96,7 @@ public class JScriptException extends XBosonException {
     this.cf = cf;
     setLineOffset(offset);
     collect_trace(fail);
+    log.debug(Tool.allStack(fail));
   }
 
 

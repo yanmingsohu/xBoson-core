@@ -24,7 +24,15 @@ import java.rmi.RemoteException;
  */
 public interface IPing extends IXRemote {
 
-  String ping(String a) throws RemoteException;
+  String PONG = "PONG";
 
-  String ping() throws RemoteException;
+
+  default String ping(String a) throws RemoteException {
+    return a;
+  }
+
+
+  default String ping() throws RemoteException {
+    return PONG;
+  }
 }

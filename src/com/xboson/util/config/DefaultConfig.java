@@ -26,6 +26,7 @@ import com.xboson.test.Test;
 import com.xboson.util.Password;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
 import redis.clients.jedis.JedisPoolConfig;
 
 import java.io.IOException;
@@ -77,7 +78,7 @@ public final class DefaultConfig {
     c.uiProviderClass   = "local";
     c.uiUrl             = "/web4xboson/public";
     c.uiWelcome         = "/face/ui/paas/login.html";
-    c.clusterNodeID     = 0;
+    c.clusterNodeID     = IConstant.DEFAULT_NODE_ID_SHORT;
     c.sysTableList      = toList(default_sys_tables);
     c.shareAppList      = toList(default_share_app);
     c.nodeProviderClass = "local";

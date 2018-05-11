@@ -39,6 +39,9 @@ public class Path {
     if (p.indexOf("/../") >= 0) {
       throw new IllegalArgumentException("path block '/../' string");
     }
+    if (p.indexOf("../") >= 0) {
+      throw new IllegalArgumentException("path block '/../' string");
+    }
   }
 
 

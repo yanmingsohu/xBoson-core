@@ -78,7 +78,7 @@ public class TestFabircShim {
 
 
     @Override
-    public Response invoke(ChaincodeStub chaincodeStub) {
+    public Response invoke(ChaincodeStub stub) {
       Test.msg("CC invoke");
       return newSuccessResponse();
     }

@@ -16,29 +16,13 @@
 
 package com.xboson.rpc;
 
-import java.rmi.RemoteException;
-
-
 /**
  * 默认 RPC 注册表中有一个该对象的实例, 可以用来测试网络情况.
+ * [不再需要]
  */
 public class Ping implements IPing {
-
-  public static final String PONG = "PONG";
-
 
   public Ping() {
   }
 
-
-  @Override
-  public String ping(String a) throws RemoteException {
-    return a;
-  }
-
-
-  @Override
-  public String ping() throws RemoteException {
-    return PONG;
-  }
 }

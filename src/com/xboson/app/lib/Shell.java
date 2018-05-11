@@ -22,22 +22,32 @@ import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
-import com.xboson.event.timer.TimeFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.rpc.IPing;
+import com.xboson.rpc.IXRemote;
+import com.xboson.rpc.RpcFactory;
 import com.xboson.script.lib.Path;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
+import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.TimerTask;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class Shell extends RuntimeUnitImpl implements IAResource {
 
-  public final static int MAX_RUN_TIME = 30 * 60 * 1000;
+  public static final String RPC_NAME = "XB.rpc.OS.Shell";
+  public final static int MAX_RUN_TIME = 30 * 60;
 
   private final String basePath;
   private final boolean isWindows;
@@ -46,13 +56,27 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
 
   public Shell() {
     super(null);
-    basePath = SysConfig.me().readConfig().shellUrl + '/';
+    basePath = SysConfig.me().readConfig().shellUrl;
     isWindows = System.getProperty("os.name").toLowerCase().contains("windows");
-    log = LogFactory.create();
+    log = LogFactory.create("script.lib.shell");
+
+    try {
+      RpcFactory rpc = RpcFactory.me();
+      if (! rpc.isBind(RPC_NAME)) {
+        rpc.bind(new ShellImpl(), RPC_NAME);
+      }
+    } catch (Exception e) {
+      log.error(e);
+    }
   }
 
 
-  public Inner open() throws Exception {
+  public IShell open() throws Exception {
+    return open(IConstant.DEFAULT_NODE_ID);
+  }
+
+
+  public IShell open(String nodeID) throws Exception {
     PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     boolean runOnSysOrg = (boolean) ModuleHandleContext._get("runOnSysOrg");
 
@@ -67,42 +91,106 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
         throw new XBosonException.NotImplements("只有平台管理员可以调用");
       }
     }
-    return new Inner();
+
+    RpcFactory rpc = RpcFactory.me();
+    return (IShell) rpc.lookup(nodeID, RPC_NAME);
   }
 
 
-  @Override
-  public String description() {
-    return "app.module.shell.functions()";
+  public interface IShell extends IXRemote {
+    Object execute(String fileName)  throws IOException;
+    Object execute(String fileName, String[] args) throws IOException;
+    void putEnv(String name, String val) throws RemoteException;
+    String getEnv(String name) throws RemoteException;
+    void clearEnv() throws RemoteException;
   }
 
 
-  public class Inner {
-    private Inner() {}
+  private class ShellImpl implements IShell, IPing {
+    private ThreadLocal<Map<String, String>> envVar;
 
-    public Object execute(String fileName) throws IOException {
+
+    private ShellImpl() {
+      envVar = new ThreadLocal<>();
+    }
+
+
+    @Override
+    public Object execute(String fileName)  throws IOException {
+      return execute(fileName, null);
+    }
+
+
+    @Override
+    public Object execute(String fileName, String[] args) throws IOException {
+      long begin = System.currentTimeMillis();
       fileName = Path.me.normalize(fileName);
+      File fullPath = findExeFile(fileName);
 
-      if (! fileName.contains(".")) {
-        if (isWindows) {
-          fileName += ".cmd";
-        } else {
-          fileName += ".sh";
+      List<String> command = new ArrayList<>();
+      command.add(fullPath.getPath());
+
+      if (args != null && args.length > 0) {
+        for (int i=0; i<args.length; ++i) {
+          command.add(args[i] +"");
         }
       }
 
-      ProcessBuilder build = new ProcessBuilder(basePath + fileName);
+      //
+      // ProcessBuilder 内部也将数组转换为 List
+      //
+      ProcessBuilder build = new ProcessBuilder(command);
+      build.directory(new File(fullPath.getParent()));
       build.redirectErrorStream(true);
-      Process process = build.start();
-      Stoper stop = new Stoper(process);
-      TimeFactory.me().schedule(stop, MAX_RUN_TIME);
+      Map<String, String> env = envVar.get();
+      if (env != null) {
+        build.environment().putAll(env);
+      }
 
-      ScriptObjectMirror ret = createJSObject();
-      ret.setMember("output", toString(process.getInputStream()));
-      ret.setMember("code",   process.exitValue());
-      ret.setMember("path",   basePath + fileName);
-      stop.cancel();
+      Process process = build.start();
+      try {
+        process.waitFor(MAX_RUN_TIME, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        log.warn("Shell", e);
+      } finally {
+        if (process.isAlive()) {
+          process.destroy();
+        }
+      }
+
+      Map<String, Object> ret = new HashMap<>();
+      ret.put("output", toString(process.getInputStream()));
+      ret.put("code",   process.exitValue());
+      ret.put("path",   fullPath.getPath());
+      ret.put("elapsed",System.currentTimeMillis() - begin);
       return ret;
+    }
+
+
+    @Override
+    public void putEnv(String name, String val) throws RemoteException {
+      env().put(name, val);
+    }
+
+
+    @Override
+    public String getEnv(String name) throws RemoteException {
+      return env().get(name);
+    }
+
+
+    public void clearEnv() throws RemoteException {
+      env().clear();
+    }
+
+
+    private Map<String, String> env() {
+      Map<String, String> env = envVar.get();
+      if (env == null) {
+        env = new HashMap<>();
+        envVar.set(env);
+      }
+      return env;
     }
 
 
@@ -111,25 +199,34 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
       buf.write(in);
       return buf.toString();
     }
+
+
+    private File findExeFile(String fileName) throws IOException {
+      File full = new File(basePath, fileName);
+      if (! fileName.contains(".")) {
+        if (! full.exists()) {
+          if (isWindows) {
+            full = new File(basePath, fileName + ".cmd");
+            if (! full.exists())
+              full = new File(basePath, fileName + ".bat");
+            if (! full.exists())
+              full = new File(basePath, fileName + ".exe");
+          } else {
+            full = new File(basePath, fileName + ".sh");
+          }
+
+          if (! full.exists()) {
+            throw new IOException("not found "+ fileName);
+          }
+        }
+      }
+      return full;
+    }
   }
 
 
-  private class Stoper extends TimerTask {
-    private Process p;
-
-    private Stoper(Process p) {
-      this.p = p;
-    }
-
-    @Override
-    public void run() {
-      try {
-        cancel();
-        p.destroy();
-        log.debug("Destory Timeout process", p);
-      } catch (Exception e) {
-        log.error("Destroy Shell process", p, e);
-      }
-    }
+  @Override
+  public String description() {
+    return "app.module.shell.functions()";
   }
 }
