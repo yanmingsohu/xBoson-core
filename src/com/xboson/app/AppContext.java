@@ -33,8 +33,6 @@ import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
@@ -58,6 +56,7 @@ public class AppContext implements
   private ProcessManager pm;
   private String nodeID;
   private EventFlag seflag;
+  private Map<String, ThreadLocalData> crossThread;
   private Log log;
 
 
@@ -71,6 +70,7 @@ public class AppContext implements
     pm          = new ProcessManager();
     nodeID      = ClusterManager.me().localNodeID();
     seflag      = EventFlag.me;
+    crossThread = new ConcurrentHashMap();
   }
 
 
@@ -120,6 +120,7 @@ public class AppContext implements
 
     } finally {
       ThreadLocalData current = pm.get();
+      exitCrossContext(current);
       if (current.nestedCall != null) {
         pm.start(current.nestedCall);
       } else {
@@ -229,7 +230,64 @@ public class AppContext implements
    * 在上下文中意味着可以安全的调用上下文相关函数而不会抛出异常.
    */
   public boolean isInContext() {
-    return pm.get() != null;
+    return pm.getMaybeNull() != null;
+  }
+
+
+  /**
+   * 保存 app 上下文到句柄中, 通过这个句柄可以恢复上下文;
+   * 当主线程退出会删除所有关联到其他线程的上下文;
+   * 当前线程必须在 app 上下文中, 否则抛出 IllegalStateException
+   */
+  public String saveContext() {
+    ThreadLocalData ctx = pm.get();
+    String handle;
+    do {
+      handle = Tool.randomString(24);
+    } while (crossThread.containsKey(handle));
+
+    if (ctx.__cross_handle == null) {
+      ctx.__cross_handle = new ContextHandle(Thread.currentThread());
+    }
+    ctx.__cross_handle.handle.add(handle);
+    crossThread.put(handle, ctx);
+    return handle;
+  }
+
+
+  /**
+   * 使用句柄恢复保存的上下文到当前线程中, 当主线程退出会删除所有关联到其他线程的上下文;
+   * 如果当前线程已经在上下文中会抛出 IllegalStateException,
+   * 如果句柄无效会抛出 IllegalArgumentException.
+   */
+  public void restoreContext(String handle) {
+    if (isInContext()) {
+      throw new IllegalStateException(
+              "The context already exists and cannot be restored");
+    }
+    ThreadLocalData ctx = crossThread.get(handle);
+    if (ctx == null) {
+      throw new IllegalArgumentException("Invalid handle to restore context");
+    }
+    ctx.__cross_handle.related.add(Thread.currentThread());
+    pm.start(ctx);
+  }
+
+
+  /**
+   * 当主线程退出时调用, 会删除所有关联到其他线程的上下文引用句柄;
+   */
+  private void exitCrossContext(ThreadLocalData current) {
+    if (current.__cross_handle == null)
+      return;
+
+    for (String h : current.__cross_handle.handle) {
+      crossThread.remove(h);
+    }
+    for (Thread t : current.__cross_handle.related) {
+      pm.exit(t);
+    }
+    current.__cross_handle = null;
   }
 
 
@@ -327,6 +385,7 @@ public class AppContext implements
 
   /**
    * 线程变量保存包装器, 构造函数在 createLocalData() 中.
+   * 该对象的实例会在多个线程中访问.
    * @see #createLocalData(ApiCall)
    */
   public class ThreadLocalData {
@@ -349,6 +408,9 @@ public class AppContext implements
 
     /** 请求开始的时间, ms */
     private long beginAt;
+
+    /** 关联多个线程的句柄列表 */
+    private ContextHandle __cross_handle;
 
     private String __cache_path;
     private ApiTypes __dev_mode;
@@ -382,6 +444,7 @@ public class AppContext implements
    * '进程' 管理器, 该对象会被导出到脚本环境, 必须仔细设计.
    */
   public class ProcessManager implements IProcessState, IVisitByScript {
+    /** 检查 cpu 使用情况间隔, ms */
     private final static long INTERVAL = 30 * 1000;
     private Map<Thread, ThreadLocalData> running;
     private Map<Long, Thread> id;
@@ -417,20 +480,25 @@ public class AppContext implements
      * 请求线程退出
      */
     private void exit() {
-      Thread t = Thread.currentThread();
+      exit(Thread.currentThread());
+    }
+
+
+    private void exit(Thread t) {
       running.remove(t);
       id.remove(t.getId());
     }
 
 
     /**
-     * 返回当前线程的绑定数据, 不在应用上下文中调用会抛出异常
+     * 返回当前线程的绑定数据,
+     * 不在应用上下文中调用会抛出 IllegalStateException
      */
     private ThreadLocalData get() {
       Thread t = Thread.currentThread();
       ThreadLocalData ret = running.get(t);
       if (ret == null) {
-        throw new NullPointerException("Not in AppContext");
+        throw new IllegalStateException("Not in App Context");
       }
       return ret;
     }
@@ -439,7 +507,7 @@ public class AppContext implements
     /**
      * 返回当前线程的绑定数据, 不在应用上下文中调用返回 null
      */
-    public ThreadLocalData getMaybeNull() {
+    private ThreadLocalData getMaybeNull() {
       Thread t = Thread.currentThread();
       return running.get(t);
     }
