@@ -16,14 +16,13 @@
 
 package com.xboson.app;
 
-import com.xboson.been.ApiCall;
 import com.xboson.been.XBosonException;
 import com.xboson.event.EventLoop;
+import com.xboson.j2ee.emu.EmuJeeContext;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.test.TestApi;
-import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
 
 
 /**
@@ -57,13 +56,9 @@ public class SystemStartupScript implements IConstant, Runnable {
       //
       // 初始化 cache 脚本所在的机构/app/模块
       //
-      ApiCall ac = new ApiCall(SYS_ORG,
-              "26c0f25501d24c0993515d445e1215a5",
+      EmuJeeContext ac = new EmuJeeContext();
+      ac.callApi(SYS_ORG, "26c0f25501d24c0993515d445e1215a5",
               "cacheinit", "total");
-      ac.call = TestApi.simulationCallData();
-
-      AppContext.me().call(ac);
-      ac.call.resp.flushBuffer();
 
       log.info(INITIALIZATION, "Success");
 

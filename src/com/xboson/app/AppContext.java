@@ -136,7 +136,8 @@ public class AppContext implements
    */
   public void call(ApiCall ac, Runnable r) {
     try {
-      createLocalData(ac);
+      ThreadLocalData tld = createLocalData(ac);
+      make_extend_parameter(tld);
       r.run();
     } finally {
       pm.exit();

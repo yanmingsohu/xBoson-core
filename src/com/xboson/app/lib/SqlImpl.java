@@ -268,10 +268,16 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     ConnectConfig db =  SysConfig.me().readConfig().db;
     String userid = cd.sess.login_user.userid;
 
+    if (userid == null) {
+      throw new XBosonException("Cannot found USER_ID in request");
+    }
+
     try (SqlResult sr = SqlReader.query(
             "open_db_with_userid", db, key, userid)) {
       ResultSet rs = sr.getResult();
-      rs.next();
+      if (! rs.next()) {
+        throw new XBosonException("Cannot connect to DB: " + key);
+      }
 
       ConnectConfig connsetting = new ConnectConfig();
       connsetting.setDbid(rs.getInt("dbid"));

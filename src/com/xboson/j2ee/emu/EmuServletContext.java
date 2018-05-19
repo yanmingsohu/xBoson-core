@@ -19,6 +19,7 @@ package com.xboson.j2ee.emu;
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -32,6 +33,9 @@ import java.util.Set;
 
 public class EmuServletContext implements ServletContext {
 
+  public String basePath = ".";
+
+
   @Override
   public String getContextPath() {
     return "xboson";
@@ -40,7 +44,7 @@ public class EmuServletContext implements ServletContext {
 
   @Override
   public ServletContext getContext(String s) {
-    return null;
+    return this;
   }
 
 
@@ -82,14 +86,18 @@ public class EmuServletContext implements ServletContext {
 
   @Override
   public URL getResource(String s) throws MalformedURLException {
-    Path p = Paths.get("./WebRoot/" + s);
+    Path p = Paths.get(basePath +"/WebRoot/"+ s);
     return p.toUri().toURL();
   }
 
 
   @Override
   public InputStream getResourceAsStream(String s) {
-    return null;
+    try {
+      return getResource(s).openStream();
+    } catch (IOException e) {
+      return null;
+    }
   }
 
 

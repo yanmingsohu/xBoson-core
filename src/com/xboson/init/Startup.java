@@ -38,12 +38,13 @@ import java.util.TimeZone;
 public class Startup implements ServletContextListener {
 
   public static final String INIT_FILE = "/system_initialize_finish";
+  private static ServletContext sc;
 
 
   public void contextInitialized(ServletContextEvent sce) {
     Config config = SysConfig.me().readConfig();
     File init_file = new File(config.configPath + INIT_FILE);
-    ServletContext sc = sce.getServletContext();
+    sc = sce.getServletContext();
 
     if (init_file.exists()) {
       system_startup(sc);
@@ -56,6 +57,7 @@ public class Startup implements ServletContextListener {
 
   public void contextDestroyed(ServletContextEvent sce) {
     Touch.exit();
+    sc = null;
   }
 
 
@@ -145,6 +147,14 @@ public class Startup implements ServletContextListener {
     TimeZone zone = TimeZone.getDefault();
     log.info("Time Zone Name =", zone.getDisplayName());
     log.info("Time Zone ID =", zone.getID());
+  }
+
+
+  /**
+   * 在系统初始化之后, 系统退出之前返回有效的对象, 否则返回 null
+   */
+  public static ServletContext getServletContext() {
+    return sc;
   }
 
 }
