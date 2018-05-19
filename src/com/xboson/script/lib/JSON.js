@@ -39,12 +39,9 @@ function warp(_json) {
   //        /Reference/Global_Objects/JSON/stringify#toJSON_方法
   //
   function stringify(obj, a, b) {
-    var ret = _json.stringify(obj, a, b);
-    if (ret) return ret;
-
-    if (obj && ret == undefined && typeof obj.toJSON == 'function') {
+    if (obj && typeof obj.toJSON == 'function') {
       return obj.toJSON();
     }
-    return ret;
+    return _json.stringify(obj, a, b);
   }
 }

@@ -18,6 +18,7 @@ package com.xboson.script.lib;
 
 import com.xboson.script.JSObject;
 import com.xboson.util.Tool;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
@@ -329,6 +330,26 @@ public class Buffer {
       try {
         for (int i = 0; i < other.length; ++i) {
           int a = (int) other[i];
+          int b = Byte.toUnsignedInt(buf.get(i));
+          if (a != b) {
+            return false;
+          }
+        }
+        return true;
+      } catch(Exception e) {
+        return false;
+      }
+    }
+
+
+    public boolean equals(ScriptObjectMirror arr) {
+      final int len = getLength();
+      if (len != arr.size())
+        return false;
+
+      try {
+        for (int i = 0; i < len; ++i) {
+          int a = (int) arr.getSlot(i);
           int b = Byte.toUnsignedInt(buf.get(i));
           if (a != b) {
             return false;
@@ -699,22 +720,22 @@ public class Buffer {
     }
 
 
-    public long readUInt32BE(int offset) {
+    public Object readUInt32BE(int offset) {
       return Integer.toUnsignedLong(readInt32BE(offset));
     }
 
 
-    public long readUInt32LE(int offset) {
+    public Object readUInt32LE(int offset) {
       return Integer.toUnsignedLong(readInt32LE(offset));
     }
 
 
-    public long readUIntBE(int offset, int byteLength) {
+    public Object readUIntBE(int offset, int byteLength) {
       return Integer.toUnsignedLong(readIntBE(offset, byteLength));
     }
 
 
-    public long readUIntLE(int offset, int byteLength) {
+    public Object readUIntLE(int offset, int byteLength) {
       return Integer.toUnsignedLong(readIntLE(offset, byteLength));
     }
 

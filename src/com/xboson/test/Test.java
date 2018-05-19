@@ -19,15 +19,9 @@ package com.xboson.test;
 import java.io.*;
 import java.util.*;
 
-import com.xboson.app.AppContext;
 import com.xboson.been.*;
 import com.xboson.init.Touch;
-import com.xboson.j2ee.container.Striker;
-import com.xboson.j2ee.container.XResponse;
-import com.xboson.j2ee.emu.EmuFilterConfig;
-import com.xboson.j2ee.emu.EmuServletContext;
-import com.xboson.j2ee.emu.EmuServletRequest;
-import com.xboson.j2ee.emu.EmuServletResponse;
+import com.xboson.j2ee.emu.*;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.ISleepwalker;
@@ -35,12 +29,6 @@ import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
-
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
 
 
 /**
@@ -125,7 +113,8 @@ public class Test implements IConstant {
 		StringBufferOutputStream strerr = new StringBufferOutputStream();
 		PrintStream buf = new PrintStream(strerr);
 
-    startInJeeContext((req, resp) -> run(cl, buf));
+    EmuJeeContext jc = new EmuJeeContext();
+    jc.appContext(() -> runAllTest(cl, buf));
 
 		// 通知系统进入销毁流程
 		Touch.exit();
@@ -154,7 +143,7 @@ public class Test implements IConstant {
 	}
 
 
-	private void run(Test[] cl, PrintStream buf) {
+	private void runAllTest(Test[] cl, PrintStream buf) {
     for (int i=0; i<cl.length; ++i) {
       try {
         unit(cl[i].getClass().getName());
@@ -168,61 +157,6 @@ public class Test implements IConstant {
         buf.println(line);
         e.printStackTrace(buf);
       }
-    }
-  }
-
-
-  /**
-   * 在 JEE 模拟环境中运行一个 servlet 链实例,
-   * 当授权正确, 该环境可以正确运行受限的代码.
-   */
-	private void startInJeeContext(FilterChain fc) {
-    Striker st = new Striker();
-    EmuServletRequest req   = new EmuServletRequest();
-    EmuServletResponse resp = new EmuServletResponse();
-    EmuServletContext sc    = new EmuServletContext();
-    EmuFilterConfig fconf   = new EmuFilterConfig();
-    fconf.servlet_context   = sc;
-    req.servlet_context     = sc;
-
-    try {
-      SessionData sd = new SessionData();
-      req.setAttribute(SessionData.ATTRNAME, sd);
-      sd.login_user = new TestApi.Admin();
-
-      //
-      // 模拟 servelt 环境
-      //
-      st.init(fconf);
-      st.doFilter(req, resp, new FilterChain() {
-        @Override
-        public void doFilter(ServletRequest req0,
-                             ServletResponse resp0)
-                throws IOException, ServletException {
-
-          ApiCall ac = new ApiCall("a", "b", "c", "d");
-          ac.call = new CallData(req, resp);
-          AppContext app = AppContext.me();
-
-          //
-          // 模拟 app 环境
-          //
-          app.call(ac, new Runnable() {
-            public void run() {
-              try {
-                msg("Init JEE License");
-                fc.doFilter(req, resp);
-              } catch (Exception e) {
-                e.printStackTrace();
-                fail(e);
-              }
-            }
-          });
-        }
-      });
-    } catch (Exception e) {
-      e.printStackTrace();
-      fail(e);
     }
   }
 

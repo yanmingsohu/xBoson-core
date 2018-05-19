@@ -188,7 +188,7 @@ assert.eq(buf1.length, 26, "Buffer.length must readonly");
 //
 var bufstr = JSON.stringify(buf1);
 assert(bufstr, "JSON.stringify return undefined");
-assert.eq(JSON.stringify(buf1), buf1.toJSON(), 'JSON.stringify not working');
+assert.eq(bufstr, buf1.toJSON(), 'JSON.stringify not working');
 
 var _data = JSON.parse(bufstr);
 assert.eq(_data.type, "Buffer", "type attribute");
