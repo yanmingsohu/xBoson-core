@@ -35,12 +35,14 @@ import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.TimerTask;
 import java.util.zip.CRC32;
 
@@ -110,8 +112,32 @@ public class Processes extends HttpFilter {
       point.run();
       TimeFactory.me().schedule(point, PERIOD, PERIOD);
 
+    } catch (FileNotFoundException nf) {
+      writeNulLicense();
+      throw new XBosonException(
+              "Cannot found license file, make it first.", nf);
+
     } catch (IOException e) {
       throw new XBosonException(e);
+    }
+  }
+
+
+  private void writeNulLicense() {
+    License lic   = new License();
+    lic.appName   = Version.Name;
+    lic.company   = "未知";
+    lic.dns       = "unknow.com";
+    lic.email     = "unknow@unknow.com";
+    lic.beginTime = System.currentTimeMillis();
+    lic.endTime   = System.currentTimeMillis() + 24*60*60*1000;
+    lic.api       = new HashSet<>();
+    lic.zz();
+
+    try {
+      lic.writeLicense();
+    } catch (IOException e) {
+      throw new XBosonException("Cannot make license file", e);
     }
   }
 

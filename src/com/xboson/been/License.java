@@ -92,6 +92,11 @@ public class License extends AbsLicense {
   }
 
 
+  public File writeLicense() throws IOException {
+    return writeFile(LIC_FILE);
+  }
+
+
   private File writeFile(String file) throws IOException {
     File outFile = new File(basePath + file);
     FileWriter fileOut = new FileWriter(outFile);

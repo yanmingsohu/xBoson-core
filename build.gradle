@@ -36,6 +36,7 @@ task copyResource(type: Copy) {
     include '**/*.sql'
     include '**/*.lua'
     include '**/*.properties'
+    include '**/*.prop'
     include '**/*.json'
     includeEmptyDirs = false
 }

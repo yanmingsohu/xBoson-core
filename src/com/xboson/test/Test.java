@@ -98,7 +98,11 @@ public class Test implements IConstant {
 
     while (it.hasNext()) {
       Class c = it.next();
-      test[i] = (Test) c.newInstance();
+      try {
+        test[i] = (Test) c.newInstance();
+      } catch(ClassCastException skip) {
+        msg("SKIP Test", c);
+      }
       ++i;
     }
     _test(test);

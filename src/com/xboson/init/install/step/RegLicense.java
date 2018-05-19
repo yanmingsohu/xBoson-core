@@ -28,6 +28,7 @@ import java.io.FileWriter;
 import java.io.StringWriter;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 
 
 public class RegLicense implements IStep {
@@ -110,10 +111,13 @@ public class RegLicense implements IStep {
 
     req.beginTime = now.getTime();
     req.endTime = then.getTimeInMillis();
+    req.api = new HashSet<>();
     req.zz();
 
     StringWriter out = new StringWriter();
     req.writeTo(out);
+    req.writeLicense();
+    req.writeRequest();
 
     AjaxData d = new AjaxData();
     d.msg = "ok";
