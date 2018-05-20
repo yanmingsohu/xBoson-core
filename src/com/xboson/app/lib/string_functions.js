@@ -46,4 +46,56 @@ __bind_sql_functions([
   "dbType", "msAccessConnection",
 ]);
 
+
+//
+// Function.call.apply 不能正确的调用 java 中重载的方法;
+// 这些方法被单独重写.
+//
+String.prototype.query = function(_sql, _param, _name) {
+  var sql = moduleHandleContext.get("sql");
+  return sql.query(_sql, _param, _name || 'result');
+};
+
+
+String.prototype.queryPaging = function(_sql, _param,
+      _pageNum, _pageSize, _save_to, _totalCount) {
+  var sql = moduleHandleContext.get("sql");
+  return sql.queryPaging(
+      _sql,
+      _param,
+      _pageNum,
+      _pageSize,
+      _save_to || 'result',
+      _totalCount || -1);
+};
+
+
+String.prototype.update = function(_sql, _param, _mcommit) {
+  var sql = moduleHandleContext.get("sql");
+  return sql.update(_sql, _param, _mcommit || false);
+};
+
+
+String.prototype.updateBatch = function(_sql, _param, _mcommit) {
+  var sql = moduleHandleContext.get("sql");
+  return sql.updateBatch(_sql, _param, _mcommit);
+};
+
+
+String.prototype.connection = function(key_url, user, ps) {
+  var sql = moduleHandleContext.get("sql");
+
+  switch (arguments.length) {
+    case 0:
+      return sql.connection();
+    case 1:
+      return sql.connection(key_url);
+    case 3:
+      return sql.connection(key_url, user, ps);
+    default:
+      throw new Error("bad arguments call sql.connection");
+  }
+};
+
+
 })();

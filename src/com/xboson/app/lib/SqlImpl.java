@@ -237,7 +237,10 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public void rollback() throws Exception {
-    getConnection().rollback();
+    Connection conn = getConnection();
+    if (! conn.getAutoCommit()) {
+      conn.rollback();
+    }
   }
 
 

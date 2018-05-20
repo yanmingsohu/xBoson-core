@@ -3751,7 +3751,12 @@ function uifs_to_nodefs(uifs) {
 function servlet_request_to_node(servletReq) {
   var cp  = servletReq.getContextPath();
   var rq  = servletReq.getRequestURI();
+  var qr  = servletReq.getQueryString();
   var url = rq.substring(cp.length, rq.length);
+  if (qr != null) {
+    url += '?' + qr;
+  }
+
   var req = {
     url     : url,
     headers : servletReq.getHeaderNames(),

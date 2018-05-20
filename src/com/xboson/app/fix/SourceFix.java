@@ -109,7 +109,7 @@ public class SourceFix {
    *
    * "for (row in MAP) {"
    * 重写为:
-   * "for (var _index_ in MAP) { var row = MAP[_index_];"
+   * "for (var row__index in MAP) { var row = MAP[row__index];"
    */
   public static byte[] fixFor(byte[] content) {
     int size = (int) (content.length * 1.7);
