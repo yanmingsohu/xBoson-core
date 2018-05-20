@@ -76,44 +76,44 @@ function __boot_over() {
 
 
 function __warp_main(fn) { // 主函数包装器
-	var app;
-	var eflag;
-	var currmodule;
-	var dirname;
-	var fncontext = {};
-	
-	
-	return function(module, _app) {
-	  if (!_app) throw new Error("app(vfs) not provide");
-	  _app.sendScriptEvent( _app.flag.SCRIPT_PREPARE, module);
-		app = _app;
-		eflag = _app.flag;
-		module.exports = {};
-		module.children = {};
-		currmodule = module;
-
-		var console = require('console').create(module.filename);
-		var dirname = get_dirname(module.filename);
-
-		if (!module.paths) {
-		  module.paths = get_module_paths(dirname);
-		}
-		try {
-		  app.sendScriptEvent(eflag.SCRIPT_RUN, currmodule);
-		  return fn.call(fncontext, require, module,
-		       dirname, module.filename, module.exports, console);
-		} finally {
-		  app.sendScriptEvent(eflag.SCRIPT_OUT, currmodule);
-		}
-	}
+  var app;
+  var eflag;
+  var currmodule;
+  var dirname;
+  var fncontext = {};
 
 
-	function get_dirname(filename) {
-	  if (dirname)
-	    return dirname;
+  return function(module, _app) {
+    if (!_app) throw new Error("app(vfs) not provide");
+    _app.sendScriptEvent( _app.flag.SCRIPT_PREPARE, module);
+    app = _app;
+    eflag = _app.flag;
+    module.exports = {};
+    module.children = {};
+    currmodule = module;
 
-	  if (!filename)
-	    return '.';
+    var console = require('console').create(module.filename);
+    var dirname = get_dirname(module.filename);
+
+    if (!module.paths) {
+      module.paths = get_module_paths(dirname);
+    }
+    try {
+      app.sendScriptEvent(eflag.SCRIPT_RUN, currmodule);
+      return fn.call(fncontext, require, module,
+           dirname, module.filename, module.exports, console);
+    } finally {
+      app.sendScriptEvent(eflag.SCRIPT_OUT, currmodule);
+    }
+  }
+
+
+  function get_dirname(filename) {
+    if (dirname)
+      return dirname;
+
+    if (!filename)
+      return '.';
 
     dirname = filename.split("/");
     if (dirname.length > 2) {
@@ -123,53 +123,53 @@ function __warp_main(fn) { // 主函数包装器
       dirname = '/';
     }
     return dirname;
-	}
-	
+  }
 
-	//
-	// 所有的缓存都在 java 上处理.
-	//
-	function require(path) {
-	  var mod;
-	  app.sendScriptEvent(eflag.IN_REQUIRE, currmodule);
-	  //
-	  // 一定从文件加载器加载
-	  //
-	  if (path[0] == '/') {
-	    path = pathlib.normalize(get_dirname() + path);
-	    return app.run(path).exports;
-	  }
 
-	  if (path[0] == '.') {
-	    mod = app.getModule(path, currmodule);
-	    if (mod) return mod.exports;
-	  }
+  //
+  // 所有的缓存都在 java 上处理.
+  //
+  function require(path) {
+    var mod;
+    app.sendScriptEvent(eflag.IN_REQUIRE, currmodule);
+    //
+    // 一定从文件加载器加载
+    //
+    if (path[0] == '/') {
+      path = pathlib.normalize(get_dirname() + path);
+      return app.run(path).exports;
+    }
+
+    if (path[0] == '.') {
+      mod = app.getModule(path, currmodule);
+      if (mod) return mod.exports;
+    }
     else if (app.isCached(path)) {
       //
       // 系统加载过的模块将缓存在 app 中
       //
-	    mod = app.run(path);
-	    if (mod) return mod.exports;
-	  }
+      mod = app.run(path);
+      if (mod) return mod.exports;
+    }
 
     mod = sys_module_provider.getModule(path, currmodule);
 
-	  if (!mod) {
+    if (!mod) {
       throw new Error("Cannot found Module: " + path);
     }
     // 不应该每次运行都绑定
-		//mod.parent = currmodule;
-		//currmodule.children[mod.id] = mod;
-		app.sendScriptEvent(eflag.OUT_REQUIRE, currmodule);
-		return mod.exports;
-	}
+    //mod.parent = currmodule;
+    //currmodule.children[mod.id] = mod;
+    app.sendScriptEvent(eflag.OUT_REQUIRE, currmodule);
+    return mod.exports;
+  }
 
 
-	function get_module_paths(dirname) {
-	  if (!dirname) return [];
+  function get_module_paths(dirname) {
+    if (!dirname) return [];
 
-	  var ret = [ dirname ];
-	  if (dirname != '/') {
+    var ret = [ dirname ];
+    if (dirname != '/') {
       var sp = dirname.split('/');
       while (sp.length > 1) {
         ret.push(sp.join('/') + MODULE_NAME);
@@ -177,9 +177,9 @@ function __warp_main(fn) { // 主函数包装器
       }
     }
 
-	  ret.push(MODULE_NAME);
-	  return ret;
-	}
+    ret.push(MODULE_NAME);
+    return ret;
+  }
 }
 
 
