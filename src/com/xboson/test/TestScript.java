@@ -138,13 +138,15 @@ public class TestScript extends Test {
 		
 		Object o = null;
 		try {
-      eval("console = null; console.log=null; console.a='bad', console.log('hello', console.a)");
+      eval("console.log=null; console.a='bad', console.log('hello', console.a)");
       eval("if (console.a) throw new Error('console.a is changed.')");
       success("cannot modify java object");
-    } catch(Exception e) {}
+    } catch(Exception e) {
+			fail("console module be modified");
+		}
 		
 		eval("try { test.notcall() } catch(e) { test.log(e.stack); }; }), a=19, (function cc(){ return cc");
-		success("hack the ");
+		success("hack the Script Wrap");
 		
 		eval("if (typeof a !='undefined') throw new Error('bad');");
 		success("cannot make THIS value");
@@ -158,9 +160,9 @@ public class TestScript extends Test {
 		
 		try {
 			eval("setTimeout(function() { console.log('setTimeout !!') }, 1000)");
-			fail("be not has setTimeout function");
+			fail("has setTimeout function");
 		} catch(Exception e) {
-			success("setTimeout done");
+			success("setTimeout not exists, done");
 		}
 		
 		WrapJavaScript ws = sandbox.warp("/test/hello.js",

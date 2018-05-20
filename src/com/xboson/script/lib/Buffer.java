@@ -721,22 +721,32 @@ public class Buffer {
 
 
     public Object readUInt32BE(int offset) {
-      return Integer.toUnsignedLong(readInt32BE(offset));
+      return wrap(Integer.toUnsignedLong(readInt32BE(offset)));
     }
 
 
     public Object readUInt32LE(int offset) {
-      return Integer.toUnsignedLong(readInt32LE(offset));
+      return wrap(Integer.toUnsignedLong(readInt32LE(offset)));
     }
 
 
     public Object readUIntBE(int offset, int byteLength) {
-      return Integer.toUnsignedLong(readIntBE(offset, byteLength));
+      return wrap(Integer.toUnsignedLong(readIntBE(offset, byteLength)));
     }
 
 
     public Object readUIntLE(int offset, int byteLength) {
-      return Integer.toUnsignedLong(readIntLE(offset, byteLength));
+      return wrap(Integer.toUnsignedLong(readIntLE(offset, byteLength)));
+    }
+
+
+    /**
+     * jdk 8u111 之后 js 引擎不会将 long 自动转换为 Number;
+     * 也不会将 Number 数字自动包装为 Long 传给 java 函数;
+     */
+    private Object wrap(long l) {
+      return jdk.nashorn.internal.objects.NativeNumber.constructor(
+              false, null, l);
     }
 
 
@@ -796,7 +806,7 @@ public class Buffer {
     }
 
 
-    public int writeFloatBE(long value, int offset) {
+    public int writeFloatBE(double value, int offset) {
       return writeFloatBE((float) value, offset);
     }
 
@@ -811,7 +821,7 @@ public class Buffer {
       }
     }
 
-    public int writeFloatLE(long value, int offset) {
+    public int writeFloatLE(double value, int offset) {
       return writeFloatLE((float) value, offset);
     }
 
@@ -881,13 +891,23 @@ public class Buffer {
     }
 
 
-    public int writeUInt32BE(long value, int offset) {
-      return writeInt32BE((int) value, offset);
+    public int writeUInt32BE(double value, int offset) {
+      long l = (long) value;
+      int low = (int)(0xFFFF & l);
+      int hig = (int)((0xFFFF0000 & l) >> 16);
+      writeInt16BE(hig, 0);
+      writeInt16BE(low, 2);
+      return 4 + offset;
     }
 
 
-    public int writeUInt32LE(long value, int offset) {
-      return writeInt32LE((int) value, offset);
+    public int writeUInt32LE(double value, int offset) {
+      long l = (long) value;
+      int low = (int)(0xFFFF & l);
+      int hig = (int)((0xFFFF0000 & l) >> 16);
+      writeInt16LE(hig, 2);
+      writeInt16LE(low, 0);
+      return 4 + offset;
     }
 
 

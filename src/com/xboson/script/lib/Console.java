@@ -22,6 +22,7 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.JSObject;
 import com.xboson.util.Tool;
+import jdk.nashorn.api.scripting.NashornException;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.util.Arrays;
@@ -105,10 +106,13 @@ public class Console extends JSObject {
       if (msg[i] instanceof ScriptObjectMirror) {
         ScriptObjectMirror js = (ScriptObjectMirror) msg[i];
 
-        if (! js.isEmpty()) {
+        if (!js.isEmpty()) {
           ret[i] = Tool.beautifyJson(ScriptObjectMirror.class, js);
+        } else {
+          ret[i] = js.toString();
         }
-      } else {
+      }
+      else {
         ret[i] = msg[i];
       }
     }

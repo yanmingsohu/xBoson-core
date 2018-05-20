@@ -17,17 +17,24 @@
 try {
   if (1==1) {
     //
-    // throw 'TypeError: Cannot call undefined'
+    // 8u?? : throw 'TypeError: Cannot call undefined'
+    // 8u111: throw 'TypeError: f1 is not a function'
     //
     var r = f1();
-    console.log(r, 'bug fixed');
+    console.log(r, 'nashorn bug fixed !');
 
+    //
+    // nashorn 引擎不能调用 if 语句块中定义的函数, 除非该函数在调用前定义.
+    //
     function f1() {
       return 'ok';
     }
   }
 } catch(e) {
-  if (e.message.indexOf("call") >= 0) {
+  var msg = e && e.message;
+
+  if (msg.indexOf("call undefined") >= 0 ||
+      msg.indexOf("not a function") >= 0) {
     console.warn("BUG: Cannot define function in IF statement");
   } else {
     throw e;
