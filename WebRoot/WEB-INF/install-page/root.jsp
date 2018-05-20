@@ -24,8 +24,8 @@
         <h2>xBoson 大数据平台</h2>
 
         <section>
-          设置超级用户权限, 该用户不受权限任何约束, 初始系统的第一个用户;
-          您将自己对任何因密码强度不够导致数据泄露, 或引起的商业损失而负责.
+          指定一个用户为超级用户, 该用户不受任何权限约束;<br/>
+          该用户应该已经存在于平台上, 指定不存在的用户可能引起安全风险.
         </section>
 
         <form method="POST">
@@ -34,16 +34,25 @@
 
           <table>
             <tr>
-            <td>用户:</td><td> <input name="rootUserName" 
-              value="${ param.rootUserName }"/> (最短4个字符) </td>
+            <td>用户:</td><td>
+              <input name="rootUserName"
+                     value="${ param.rootUserName }"/>
+              <a href='#' val='admin-pl'
+                 setto='[name=rootUserName]'>(default)</a>
+              (最短4个字符)
+              </td>
             </tr>
+
             <tr>
-              <td>密码: </td><td><input name="rootPassword" type="password" 
-              value="${ param.rootPassword }"/> (最短6个字符) </td>
+            <td>PID:</td><td>
+              <input name="rootPID"
+                     value="${ param.rootPID }"/>
+              <a href='#' val='1f33f752805443e59bfe5f8f77481443'
+                 setto='[name=rootPID]'>(default)</a>
+              </td>
+            </td>
             </tr>
-            <tr>
-              <td>密码: </td><td><input name="again" type="password" /> (重复输入)</td>
-            </tr>
+
             <tr><td></td><td>
               <input type='submit' value='确定' />
               <span class="red"><%=request.getAttribute("msg") %></span>

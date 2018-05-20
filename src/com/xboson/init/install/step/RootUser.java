@@ -32,18 +32,16 @@ public class RootUser implements IStep {
   @Override
   public boolean gotoNext(HttpData data) {
     String un = data.req.getParameter("rootUserName");
-    String up = data.req.getParameter("rootPassword");
-    String p2 = data.req.getParameter("again");
+    String id = data.req.getParameter("rootPID");
 
     if (un == null || un.length()<4) {
       data.msg = "用户名不能小于4个字符";
-    } else if (up == null || up.length()<6) {
-      data.msg = "密码不能小于6个字符";
-    } else if (!up.equals(p2)) {
-      data.msg = "重复密码错误";
+    } else if (id == null || id.length() < 1) {
+      data.msg = "PID 不能为空";
     } else {
       data.cf.rootUserName = un;
-      data.cf.rootPassword = Password.v1(un, Password.md5lowstr(up));
+      data.cf.rootPassword = "unnecessary";
+      data.cf.rootPid = id;
       return true;
     }
 

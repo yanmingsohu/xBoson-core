@@ -1,6 +1,6 @@
 # 大数据平台 v2
 
-Java JDK 8, Tomcat 9, Servlet 4.0.
+Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 
 # 注意:
@@ -10,6 +10,7 @@ Java JDK 8, Tomcat 9, Servlet 4.0.
 * 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
 * SqlServer 2012 之后的版本支持分页查询.
 * 使用 `gradle` 构建/发布混淆后的 war 包.
+* 配置文件中 `rootUserName: admin-pl`, `rootPid: 1f33f752805443e59bfe5f8f77481443` 方可启用超级用户
 
 
 # 需要做:
