@@ -360,9 +360,6 @@ public class SysImpl extends DateImpl {
    * 该方法与 se.encodePlatformPassword 区别是 ps 已经 md5
    */
   public String encodePlatformPassword(String uid, String date, String ps) {
-    if (! AppContext.me().originalOrg().equalsIgnoreCase(IConstant.SYS_ORG)) {
-      throw new XBosonException("No auth call encodePlatformPassword()");
-    }
     return Password.v1(uid, ps, date);
   }
 

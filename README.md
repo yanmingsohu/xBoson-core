@@ -5,6 +5,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 # 注意:
 
+* java 版本 >= JDK 8u111
 * JEE 容器必须以 UTF-8 模式启动 `set JAVA_OPTS=-Dfile.encoding=UTF-8`.
 * sys_mdm001.url 字段与平台服务接口绑定.
 * 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
