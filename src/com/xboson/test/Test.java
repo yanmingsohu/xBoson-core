@@ -88,10 +88,10 @@ public class Test implements IConstant {
       Class c = it.next();
       try {
         test[i] = (Test) c.newInstance();
+        ++i;
       } catch(ClassCastException skip) {
         msg("SKIP Test", c);
       }
-      ++i;
     }
     _test(test);
   }
@@ -145,6 +145,7 @@ public class Test implements IConstant {
 
 	private void runAllTest(Test[] cl, PrintStream buf) {
     for (int i=0; i<cl.length; ++i) {
+      if (cl[i] == null) continue;
       try {
         unit(cl[i].getClass().getName());
         Test t = cl[i];

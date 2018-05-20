@@ -68,9 +68,9 @@ public final class DefaultConfig {
     c.sessionTimeout    = 24 * 60;
     c.sessionPassword   = Test.randomString(20);
     c.debugService      = true;
-    c.rootUserName      = "root";
-    c.rootPassword      = "111111";
-    c.rootPid           = uuid.ds();
+    c.rootUserName      = "admin-pl";
+    c.rootPassword      = "000000";
+    c.rootPid           = "1f33f752805443e59bfe5f8f77481443";
 
     c.rootPassword =
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));
