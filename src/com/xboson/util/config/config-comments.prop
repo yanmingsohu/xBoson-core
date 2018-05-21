@@ -9,8 +9,6 @@ loggerWriterType: 日志输出类型, 可选的: ConsoleOut | FileOut | FileAndC
 sessionPassword: session 密钥, 集群中所有节点必须相同
 sessionTimeout: session 超时时间, 分钟
 debugService: HTTP 服务接口, 是否输出错误堆栈
-rootUserName: 超级管理员用户名
-rootPassword: 超级管理员密码
 
 
 uiProviderClass:  ui 获取方式, 有集群缓冲区以及本地目录, 两种模式, \

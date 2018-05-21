@@ -69,7 +69,7 @@ public final class DefaultConfig {
     c.sessionPassword   = Test.randomString(20);
     c.debugService      = true;
     c.rootUserName      = "admin-pl";
-    c.rootPassword      = "000000";
+    c.rootPassword      = "unnecessary";
     c.rootPid           = "1f33f752805443e59bfe5f8f77481443";
 
     c.rootPassword =
