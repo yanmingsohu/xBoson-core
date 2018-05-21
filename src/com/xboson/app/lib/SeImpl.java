@@ -202,6 +202,35 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
+  /**
+   * 重新加载指定用户的角色缓存信息, 相当于重新登录.
+   * 省去客户在浏览器上重登录. [空实现, 什么都不做]
+   */
+  public void reloadUserRole(Object[] userid) {
+  }
+
+
+  /**
+   * @see #reloadUserRole(Object[])
+   */
+  public void reloadUserGroupRole(Object[] grpid) {
+  }
+
+
+  /**
+   * @see #reloadUserRole(Object[])
+   */
+  public void reloadUserInfo(Object[] userid) {
+  }
+
+
+  /**
+   * @see #reloadUserRole(Object[])
+   */
+  public void reloadClientRole(Object[] clientid) {
+  }
+
+
   @Override
   public void close() throws Exception {
     if (__conn != null) {

@@ -153,7 +153,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
       if (param != null) {
         for (int i = 1; i <= param.length; ++i) {
           Object p = param[i - 1];
-          ps.setObject(i, p);
+          ps.setObject(i, getSafeObjectForQuery(p));
         }
       }
       return ps.executeUpdate();
@@ -195,7 +195,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
         for (int i = 1; i <= param_len; ++i) {
           Object p = param.getSlot(i-1);
-          ps.setObject(i, p);
+          ps.setObject(i, getSafeObjectForQuery(p));
         }
         total += ps.executeUpdate();
       }
@@ -267,7 +267,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public void connection(String key) throws Exception {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    //PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     ConnectConfig db =  SysConfig.me().readConfig().db;
     String userid = cd.sess.login_user.userid;
 

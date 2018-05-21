@@ -51,7 +51,7 @@ public class Install extends HttpServlet {
           Welcome.class,
           Copyright.class,
           RegLicense.class,
-          RootUser.class,
+          // RootUser.class, // 不希望用户知道超级用户的存在
           ConfigCluster.class,
           ConfigCoreDB.class,
           ConfigRedis.class,
