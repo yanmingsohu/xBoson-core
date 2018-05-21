@@ -18,12 +18,16 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.been.CallData;
+import com.xboson.been.IJson;
 import com.xboson.been.XBosonException;
 import com.xboson.script.JSObject;
+import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Checker;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.AbstractJSObject;
+import okhttp3.MultipartBody;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
@@ -34,7 +38,9 @@ import java.util.concurrent.Executors;
  *
  * 自定义参数优先级高于 http 参数.
  */
-public class RequestImpl extends JSObject.Helper {
+public class RequestImpl extends JSObject.Helper implements IJson {
+
+  public final static int MAX_BODY_LENGTH = 5 * 1024 * 1024;
 
   private CallData cd;
   private Map<String, Object> extendParameter;
@@ -47,7 +53,7 @@ public class RequestImpl extends JSObject.Helper {
     this.ck = new Checker();
 
     //
-    // 该方法会导出
+    // 类中的方法会导出, 供 js 调用
     //
     super.config(new JSObject.ExportsFunction());
   }
@@ -277,5 +283,67 @@ public class RequestImpl extends JSObject.Helper {
    */
   public String getSafePath(String name) {
     return getSafePath(name, false);
+  }
+
+
+  public Buffer.JsBuffer body() throws IOException {
+    return body(MAX_BODY_LENGTH);
+  }
+
+
+  /**
+   * 以 Buffer 对象的形式返回 http body 的二进制数据.
+   * 如果内容长度超过限制抛出异常;
+   * 如果没有 body 数据返回 null;
+   */
+  public Buffer.JsBuffer body(int limit) throws IOException {
+    if (limit <= 0) {
+      limit = MAX_BODY_LENGTH;
+    }
+    final int clen = cd.req.getContentLength();
+    if (clen > limit) {
+      throw new XBosonException(
+              "Http Body too bigher, max: "+ limit +" bytes.");
+    } else if (clen <= 0) {
+      return null;
+    }
+    byte[] buf = new byte[clen];
+    int rlen = cd.req.getInputStream().read(buf);
+    Buffer.JsBuffer buffer = new Buffer().from(buf, 0, rlen);
+    return buffer;
+  }
+
+
+  public int contentLength() {
+    return cd.req.getContentLength();
+  }
+
+
+  public String contentType() {
+    return cd.req.getContentType();
+  }
+
+
+  public Object multipart() throws IOException {
+    Multipart mp = new Multipart(cd.req);
+    mp.checkLimit(MAX_BODY_LENGTH);
+    return mp.parse();
+  }
+
+
+  public String toJSON() {
+    StringBuilder buf = new StringBuilder();
+    buf.append("{\"parm\": ");
+    Map<String, String[]> map = cd.req.getParameterMap();
+    buf.append(Tool.getAdapter(Map.class).toJson(map));
+    buf.append(", \"ex\": ");
+    buf.append(Tool.getAdapter(Map.class).toJson(extendParameter));
+    buf.append("}");
+    return buf.toString();
+  }
+
+
+  public String toString() {
+    return toJSON();
   }
 }

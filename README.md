@@ -96,6 +96,9 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
     -- (fabric-sdk-java-*-with-dependencies.jar) sdk 及若干依赖库集合
     -- (shim-client-*-with-dependencies.jar) java chaincode 支持及依赖库
     
+* (文件上传解析)
+    -- (commons-fileupload-1.3.3.jar)[http://commons.apache.org/proper/commons-fileupload/]
+    
 		
 # URL 映射约定
 

@@ -17,6 +17,7 @@
 package com.xboson.fs.basic;
 
 import com.xboson.been.XBosonException;
+import com.xboson.script.lib.Buffer;
 
 
 public interface IBlockOperator<ATTR extends IFileAttribute>
@@ -44,4 +45,10 @@ public interface IBlockOperator<ATTR extends IFileAttribute>
   void writeFile(String path, byte[] bytes);
 
 
+  /**
+   * 将 js 中的 Buffer 写入文件.
+   */
+  default void writeFile(String path, Buffer.JsBuffer buf) {
+    writeFile(path, buf._buffer().array());
+  }
 }
