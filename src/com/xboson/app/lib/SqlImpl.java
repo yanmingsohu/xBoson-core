@@ -299,6 +299,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   }
 
 
+
   /**
    * 没有建立连接池
    */

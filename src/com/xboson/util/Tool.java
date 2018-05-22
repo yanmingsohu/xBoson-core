@@ -516,8 +516,20 @@ public final class Tool extends StaticLogProvider {
   }
 
 
+  /**
+   * 比 `String.trim().length() <= 0` 判断性能更好.
+   */
   public static boolean isNulStr(String s) {
-    return s == null || s.trim().length() == 0;
+    if (s == null)
+      return true;
+
+    int len = s.length();
+    for (int i=0; i<len; ++i) {
+      char ch = s.charAt(i);
+      if (ch > IConstant.SP_CH)
+        return false;
+    }
+    return true;
   }
 
 

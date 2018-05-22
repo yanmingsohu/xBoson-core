@@ -76,6 +76,7 @@ public interface IConstant extends IDict {
   int DECRYPT_MODE = Cipher.DECRYPT_MODE;
   int ENCRYPT_MODE = Cipher.ENCRYPT_MODE;
 
+  char SP_CH = ' ';
   /** 2个空格 */
   String SP     = "  ";
   /** 4个空格 */

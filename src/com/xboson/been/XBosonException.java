@@ -345,4 +345,18 @@ public class XBosonException extends RuntimeException
       setCode(21327);
     }
   }
+
+
+  static public class SyntaxError extends XBosonException {
+    /**
+     * 创建语法错误异常
+     * @param lang 语言名称
+     * @param code 出错代码
+     * @param th 底层错误
+     */
+    public SyntaxError(String lang, String code, Throwable th) {
+      super(th +"; <BEGIN-"+ lang +"::>"+
+              code + "<::END-"+ lang +">");
+    }
+  }
 }

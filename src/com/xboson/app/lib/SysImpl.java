@@ -51,6 +51,7 @@ import javax.servlet.ServletInputStream;
 import java.io.*;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -71,6 +72,7 @@ public class SysImpl extends DateImpl {
   private static final String ORG_SQL_NAME = "user_org_list.sql";
   private static final String USER_ID_TO_PID_SQL = "user_id_to_pid.sql";
   private static final String ADMIN_FLAG_SQL = "user_admin_flag.sql";
+  private static final String PID_TO_UID_SQL = "pid_to_userid.sql";
 
   /**
    * 公共属性
@@ -214,20 +216,14 @@ public class SysImpl extends DateImpl {
   }
 
 
-  public String getUserPID(String userid) throws Exception {
-    try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
-      String sql = SqlReader.read(USER_ID_TO_PID_SQL);
-      List<Map<String, Object>> rows = scr.query(sql, userid);
-      if (rows.size() > 0) {
-        Map<String, Object> o = rows.get(0);
-        return (String) o.get("pid");
-      }
-    }
-    return null;
+  public Object getUserPID(String userid) throws Exception {
+    Map<String, Object> ret = getUserPID(new String[] { userid });
+    if (ret.isEmpty()) return null;
+    return ret.get(userid);
   }
 
 
-  public Object getUserPID(String ...users) throws Exception {
+  public Map<String, Object> getUserPID(String ...users) throws Exception {
     Map<String, Object> ret = new HashMap<>(users.length);
 
     try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
@@ -283,6 +279,31 @@ public class SysImpl extends DateImpl {
 
   public Object getUserOrgList() throws Exception {
     return getUserOrgList(cd.sess.login_user.userid);
+  }
+
+
+  public Object getUserIdByPID(String[] pids) throws SQLException {
+    ScriptObjectMirror ret = createJSObject();
+    for (int i=0; i<pids.length; ++i) {
+      String pid  = pids[i];
+      String ckey = "ACPU:"+ pid;
+      String uid  = (String) appCache.get(ckey);
+
+      if (uid != null) {
+        ret.setMember(pid, uid);
+        continue;
+      }
+
+      try (SqlResult sr = SqlReader.query(PID_TO_UID_SQL, orgdb, pid)) {
+        ResultSet rs = sr.getResult();
+        if (rs.next()) {
+          uid = rs.getString(1);
+          ret.setMember(pid, uid);
+          appCache.put(ckey, uid);
+        }
+      }
+    }
+    return ret;
   }
 
 
@@ -370,6 +391,11 @@ public class SysImpl extends DateImpl {
 
 
   public String pinyinFirstLetter(String zh) {
+    return ChineseInital.getAllFirstLetter(zh);
+  }
+
+
+  public String getPinyinFirstLetter(String zh) {
     return ChineseInital.getAllFirstLetter(zh);
   }
 
@@ -1148,7 +1174,12 @@ public class SysImpl extends DateImpl {
   /**
    * 没有 api 用到这个函数
    */
-  public void bizLog(String logid, Object... parms) {
+  public void bizLog(String logid, Object... params) {
     throw new UnsupportedOperationException("bizLog");
+  }
+
+
+  public Object httpGet(Object... params) {
+    throw new UnsupportedOperationException("Use http.platformGet(..)");
   }
 }

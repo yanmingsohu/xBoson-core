@@ -162,17 +162,24 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
 
 
   /**
-   * 解析 json 字符串转换为 js 内部对象
+   * 解析 json 字符串转换为 js 内部对象;
+   * str 为空字符串或 null 则返回 null;
+   * 如果 json 字符串有语法错误抛出异常;
    */
   protected Object jsonParse(String str) {
-    if (str == null)
+    if (Tool.isNulStr(str))
       return null;
-    return NativeJSON.parse(this, str, null);
+
+    try {
+      return NativeJSON.parse(this, str, null);
+    } catch(Exception e) {
+      throw new XBosonException.SyntaxError("JSON", str, e);
+    }
   }
 
 
   /**
-   * ScriptObjectMirror 不应该直接传到 js 环境, 应该把底层 js 对象传递,
+   * ScriptObjectMirror 不应该直接传到 js 环境, 而是传递底层 js 对象,
    * 通过该方法获取 ScriptObjectMirror 包装的底层对象.
    */
   protected Object unwrap(Object mirror) {
