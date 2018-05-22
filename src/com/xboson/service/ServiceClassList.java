@@ -27,6 +27,7 @@ public interface ServiceClassList {
 					UserService.class,
           Captcha.class,
           OAuth2.class,
+          OlderApi.class,
   };
 
 }

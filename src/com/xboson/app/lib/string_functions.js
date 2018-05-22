@@ -78,7 +78,7 @@ String.prototype.update = function(_sql, _param, _mcommit) {
 
 String.prototype.updateBatch = function(_sql, _param, _mcommit) {
   var sql = moduleHandleContext.get("sql");
-  return sql.updateBatch(_sql, _param, _mcommit);
+  return sql.updateBatch(_sql, _param, _mcommit || false);
 };
 
 

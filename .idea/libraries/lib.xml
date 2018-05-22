@@ -5,7 +5,9 @@
       <root url="jar://$PROJECT_DIR$/../.tomcat9/lib/catalina.jar!/" />
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
     </CLASSES>
-    <JAVADOC />
+    <JAVADOC>
+      <root url="https://docs.oracle.com/javaee/7/api/" />
+    </JAVADOC>
     <SOURCES />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />

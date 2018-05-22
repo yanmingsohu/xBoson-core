@@ -636,15 +636,29 @@ public class SysImpl extends DateImpl {
 
 
   /**
+   * 将给出的目录与 DBFS 系统的目录连接,
+   * 当 dir 有不安全字符串时抛出 checkMag 指定的异常.
+   */
+  private String getDirFromDBFileSystem(String dir, String checkMsg) {
+    if (Tool.isNulStr(dir)) {
+      dir = DirectoryGenerate.get(cd);
+    } else {
+      Checker.me.safepath(dir, checkMsg);
+      dir = DirectoryGenerate.get(cd) + '/' + dir;
+    }
+    return Tool.normalize(dir);
+  }
+
+
+  /**
    * 从文件中解析 csv
    * @param fileInfo [dirname(忽略), filename, charset]
    * @see #parseCsv(Reader, String, String, String, String[], int)
    */
   public Object csvToList(String[] fileInfo, String delimiter, String quote,
                           String escape, String[] header, int preview) {
-    String dir = fileInfo[0];
-    Checker.me.safepath(dir, "param fileInfo[0] (dirname)");
-    dir = Tool.normalize(DirectoryGenerate.get(cd) + '/' + dir);
+    String dir = getDirFromDBFileSystem(
+            fileInfo[0], "param fileInfo[0] (dirname)");
 
     try (FileInfo info = PrimitiveOperation.me().openReadFile(dir, fileInfo[1])) {
       InputStreamReader reader = new InputStreamReader(info.input, fileInfo[2]);
@@ -714,8 +728,7 @@ public class SysImpl extends DateImpl {
    */
   public void listToCsv(String dir, String filename,
                         String charset, Object olist) throws IOException {
-    Checker.me.safepath(dir, "param 1 (dir)");
-    dir = Tool.normalize(DirectoryGenerate.get(cd) + '/' + dir);
+    dir = getDirFromDBFileSystem(dir, "param 1 (dir)");
     StringBufferOutputStream output = new StringBufferOutputStream();
 
     //
