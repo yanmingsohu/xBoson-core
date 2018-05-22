@@ -68,3 +68,37 @@ function __virtual_attr(_obj, _attr_name) {
     throw new Error("Unsupport object.~" + _attr_name);
   }
 }
+
+
+//
+// 创建含有 {key, value} 属性的字符串对象
+//
+function __createKVString(key, value) {
+  var ret;
+  if (typeof value == 'string') {
+    ret = new String(value);
+  } else if (value !== null && value !== undefined) {
+    ret = value;
+  } else {
+    return value;
+  }
+
+  if (! ret.key) {
+    Object.defineProperty(ret, 'key', {
+      enumerable  : false,
+      writable    : false,
+      configurable: true,
+      value       : key,
+    });
+  }
+
+  if (! ret.value) {
+    Object.defineProperty(ret, 'value', {
+      enumerable  : false,
+      writable    : false,
+      configurable: true,
+      value       : value,
+    });
+  }
+  return ret;
+}

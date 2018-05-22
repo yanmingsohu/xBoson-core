@@ -106,10 +106,7 @@ public class SourceFix {
 
   /**
    * 修正 beetl 中 for 循环与 js 不兼容.
-   *
-   * "for (row in MAP) {"
-   * 重写为:
-   * "for (var row__index in MAP) { var row = MAP[row__index];"
+   * @see com.xboson.app.fix.state.S_For_Output
    */
   public static byte[] fixFor(byte[] content) {
     int size = (int) (content.length * 1.7);

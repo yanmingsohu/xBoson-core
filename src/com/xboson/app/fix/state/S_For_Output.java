@@ -24,7 +24,12 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
-
+/**
+ * for (row in MAP) { <br/>
+ * 重写为: <br/>
+ * for (var row__index in MAP) { var row = MAP[row__index]; <br/>
+ * for (var row__index in MAP) { var row = __createKVString(row__index, MAP[row__index]);
+ */
 public class S_For_Output extends SState implements ILastRunning {
   private int varIndex, expIndex;
 
@@ -48,15 +53,16 @@ public class S_For_Output extends SState implements ILastRunning {
       out.append(objName);
       out.append(") { var ");
       out.append(keyName);
-      out.append(" = ");
+      out.append(" = __createKVString(");
+      out.append(indexName);
+      out.append(", ");
       out.append(objName);
       out.append("[");
       out.append(indexName);
-      out.append("];");
+      out.append("]);");
     } catch (IOException e) {
       throw new XBosonException(e);
     }
-
     return NEXT_AND_BACK;
   }
 }
