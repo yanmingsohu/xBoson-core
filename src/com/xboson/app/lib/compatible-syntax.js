@@ -83,22 +83,28 @@ function __createKVString(key, value) {
     return value;
   }
 
-  if (! ret.key) {
-    Object.defineProperty(ret, 'key', {
-      enumerable  : false,
-      writable    : false,
-      configurable: true,
-      value       : key,
-    });
-  }
+  try {
+    if (! ret.key) {
+      Object.defineProperty(ret, 'key', {
+        enumerable  : false,
+        writable    : false,
+        configurable: true,
+        value       : key,
+      });
+    }
 
-  if (! ret.value) {
-    Object.defineProperty(ret, 'value', {
-      enumerable  : false,
-      writable    : false,
-      configurable: true,
-      value       : value,
-    });
+    if (! ret.value) {
+      Object.defineProperty(ret, 'value', {
+        enumerable  : false,
+        writable    : false,
+        configurable: true,
+        value       : value,
+      });
+    }
+  } catch(e) {
+    var sys = moduleHandleContext.get("sys");
+    sys.printValue("WARN: {for} Key Value not bind; "+ e.message);
+    return value;
   }
   return ret;
 }

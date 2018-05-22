@@ -171,7 +171,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
       throw new UnsupportedOperationException("不支持替换 schema");
 
     ScriptObjectMirror arr = createJSList();
-    sys.bindResult(save_to, arr);
+    sys.addRetData(arr, save_to);
     return query.query(arr, sql, param);
   }
 
