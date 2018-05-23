@@ -52,6 +52,37 @@ public class TestTool extends Test {
     test_http_get();
     test_calendar();
     read_package();
+    null_speed();
+  }
+
+
+  /**
+   * 空字符串性能测试对比
+   * count     trim(ms) Tool(ms) 效能(倍)
+   * 10000     3        4        0.9
+   * 100000    25       8        3
+   * 1000000   108      20       5
+   * 10000000  807      84       10
+   */
+  public void null_speed() {
+    int count = 1000000;
+    String str = "  cccc    ";
+
+    beginTime();
+    for (int i=0; i<count; ++i) {
+      if (str.trim().length() == 0) {
+        throw new XBosonException("bad");
+      }
+    }
+    endTime("String.trim().length()", count);
+
+    beginTime();
+    for (int i=0; i<count; ++i) {
+      if (Tool.isNulStr(str)) {
+        throw new XBosonException("bad");
+      }
+    }
+    endTime("Tool.isNulStr()", count);
   }
 
 

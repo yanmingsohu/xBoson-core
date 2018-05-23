@@ -74,6 +74,7 @@ public class StringBufferOutputStream extends OutputStream {
 
   /**
    * 弹出缓冲区中的最后一个字符, 这件使缓冲区长度减一.
+   * 在空缓冲区上继续 pop 会抛出异常.
    */
   public byte pop() {
     return buf[--pos];

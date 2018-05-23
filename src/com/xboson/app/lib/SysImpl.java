@@ -817,7 +817,7 @@ public class SysImpl extends DateImpl {
 
 
   public boolean isEmpty(String o) {
-    return o == null || o.length() < 1;
+    return Tool.isNulStr(o);
   }
 
 

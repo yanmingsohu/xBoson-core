@@ -240,6 +240,10 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     if (o instanceof jdk.nashorn.internal.runtime.ScriptObject) {
       return o.toString();
     }
+    if (o instanceof ScriptObjectMirror) {
+      o = ScriptUtils.unwrap(o);
+      return o +"";
+    }
     return o;
   }
 
