@@ -111,4 +111,16 @@ public class ModuleHandleContext implements IJSObject {
   public void destory() {
     moduleHandle = null;
   }
+
+
+  /**
+   * 返回的关闭类在线程退出时调用.
+   */
+  public static void exitThread() {
+    if (moduleHandle == null) return;
+    Map<String, Object> map = moduleHandle.get();
+    if (map != null) {
+      map.clear();
+    }
+  }
 }

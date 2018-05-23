@@ -128,11 +128,6 @@ public final class ConnectConfig extends JsonHelper {
   }
 
 
-  private void __computer_hashcode() {
-    __hashcode = ('/'+ host +'/'+ dbname +'/'+ username).hashCode();
-  }
-
-
   public Integer getDbid() {
     return dbid;
   }
@@ -153,10 +148,18 @@ public final class ConnectConfig extends JsonHelper {
               && host.equals(cc.host)
               && dbname != null
               && dbname.equals(cc.dbname)
+              && port != null
+              && port.equals(cc.port)
               && username != null
               && username.equals(cc.username);
     }
     return false;
+  }
+
+
+  private void __computer_hashcode() {
+    __hashcode = ('/'+ host +'/'+ port
+            +'/'+ dbname +'/'+ username).hashCode();
   }
 
 

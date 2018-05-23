@@ -167,9 +167,6 @@ public class DbmsFactory extends OnExitHandle {
     if (config == null)
       throw new XBosonException.NullParamException("ConnectConfig config");
 
-    IDriver dr = getDriver(config);
-    String url = getUrl(dr, config);
-
     try {
       check_state();
       Connection original = pool.borrowObject(config);

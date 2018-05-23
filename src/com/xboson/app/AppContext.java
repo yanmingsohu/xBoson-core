@@ -16,6 +16,7 @@
 
 package com.xboson.app;
 
+import com.xboson.app.lib.ModuleHandleContext;
 import com.xboson.app.reader.ForDevelopment;
 import com.xboson.app.reader.ForProduction;
 import com.xboson.auth.IAWho;
@@ -96,7 +97,8 @@ public class AppContext implements
       // 即使 org 是其他机构, 运行的仍然是平台机构中的 api, 所以不会有代码越权访问资源,
       // 必须保证平台机构 api 逻辑安全.
       //
-      if (shareApp.contains(ac.app)) {
+      if (shareApp.contains(ac.app)
+              && (! SYS_ORG.equals(ac.org)) ) {
         ac.org = SYS_ORG;
         tld.replaceOrg = true;
       }
@@ -121,10 +123,12 @@ public class AppContext implements
     } finally {
       ThreadLocalData current = pm.get();
       exitCrossContext(current);
+
       if (current.nestedCall != null) {
         pm.start(current.nestedCall);
       } else {
         pm.exit();
+        ModuleHandleContext.exitThread();
         apilog.log(ac, System.currentTimeMillis() - begin, fail);
       }
     }

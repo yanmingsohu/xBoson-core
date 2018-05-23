@@ -29,7 +29,7 @@ public class ApiCall implements IBean {
   /** 必须, HTTP 请求参数 */
   public CallData call;
 
-  /** 必须, 机构 id */
+  /** 必须, 机构 id, 该参数可能在运行时被替换, exparam 始终保存请求值 */
   public String org;
 
   /** 必须, 应用 id */
