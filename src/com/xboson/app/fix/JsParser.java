@@ -62,6 +62,10 @@ public class JsParser implements IStateOperator {
       for (int i = 0; i < content.length; ++i) {
         byte ch = content[i];
 
+        //
+        // 0 号状态机具有 js 注释/字符串范围 检测,
+        // 其他状态机必须自己处理所有字符.
+        //
         if (step == 0) {
           //
           // 当在字符串中, 不做任何额外的处理
@@ -166,6 +170,7 @@ public class JsParser implements IStateOperator {
           currentState = role[step];
         }
 
+        // if: directive == NOTHING or END or RESET
         output.write(ch);
       }
 

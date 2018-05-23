@@ -18,6 +18,7 @@ package com.xboson.app.fix;
 
 import com.xboson.app.fix.state.*;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
 
 
 /**
@@ -190,8 +191,11 @@ public class SourceFix {
     int size = (int) (content.length * 1.7);
     StringBufferOutputStream buf = new StringBufferOutputStream(size);
 
+    S_BeginMultiLineString multiLine = new S_BeginMultiLineString();
+
     SState[] all_state = new SState[] {
-            new S_BeginMultiLineString(),
+            multiLine.createBegin(),
+            multiLine,
     };
 
     JsParser.rewrite(content, buf, all_state, 2);

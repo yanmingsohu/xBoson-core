@@ -73,6 +73,14 @@ public class StringBufferOutputStream extends OutputStream {
 
 
   /**
+   * 弹出缓冲区中的最后一个字符, 这件使缓冲区长度减一.
+   */
+  public byte pop() {
+    return buf[--pos];
+  }
+
+
+  /**
    * 如果最终读取的是字符/字符串, 则 toString() 比 toBuffer()/toBytes() 更高效.
    * @return 缓冲区转换为字符串
    */

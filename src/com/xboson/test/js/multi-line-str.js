@@ -16,6 +16,9 @@
 
 var assert = require('assert');
 
+//
+// fix`var str = ""\s+\+ "\\nl1,"\s+\+ "\\nl2,"\s+\+ "\\nl3,"\s+\+ "\\nl4,"\s+\+ "\\nend"`>>
+//
 var str = `
 l1,
 l2,
@@ -26,10 +29,53 @@ end`;
 console.log(str);
 assert.eq("\nl1,\nl2,\nl3,\nl4,\nend", str, "multi-line-string");
 
-
+//
+// fix`var s1\s= "abc`def`xxx"`>>
+//
 var s1 = "abc`def`xxx";
 console.log(s1);
 assert.eq("abc`def`xxx", s1);
 
+//
+// fix`var s2\s=\s"xxjj"`>>
+//
 var s2 = `xxjj`;
 assert.eq('xxjj', s2);
+
+//
+// fix`var s3\s=\s"hello `world`"`>>
+//
+var s3 = `hello \`world\``
+
+// ----------------------------------------------------------
+//
+// fix`var s = ""\s+\+ "\\n  SELECT`>>
+//
+function getFromDB(typecd) {
+  var s = `
+  SELECT
+      dictcd id,
+      dictnm name,
+      version,
+      CONCAT(dictnm, '(', IFNULL(shortkey, ''), ')') text
+  FROM
+      `+ orgid +`sys_mdm002 t2
+  WHERE
+      t2.version = (SELECT
+              version
+          FROM
+              `+ orgid +`sys_mdm001 t1
+          WHERE
+              t1.typecd = t2.typecd)
+  	and t2.typecd = ?
+  `;
+
+  sql.query(s, [typecd], "_children");
+  var _children = sys.result._children;
+  se.setCache(_CACHE_REGION_MDM_, orgid +":"+ typecd, _children, 0);
+  return _children;
+}
+
+
+
+

@@ -19,6 +19,7 @@ package com.xboson.app.fix.state;
 import com.xboson.app.fix.SState;
 import com.xboson.been.XBosonException;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -29,9 +30,9 @@ import java.util.List;
 
 public class S_BeginMultiLineString extends SState {
 
-  private int state = 0;
   private List<String> lines;
   private StringBufferOutputStream out;
+  private byte last;
 
 
   public S_BeginMultiLineString() {
@@ -40,38 +41,53 @@ public class S_BeginMultiLineString extends SState {
   }
 
 
-  @Override
-  public int read(byte ch) {
-    if (state == 0) {
+  public SState createBegin() {
+    return new Begin();
+  }
+
+
+  /**
+   * 初始状态机用于 js 注释/字符串范围 检测,
+   * 其他状态机必须自己处理所有字符.
+   */
+  private class Begin extends SState {
+    public int read(byte ch) {
       if (ch == '`') {
         lines.clear();
-        out.clear();
-        state = 1;
+        S_BeginMultiLineString.this.out.clear();
         return NEXT;
       }
       return NOTHING;
-    } else {
-      if (ch == '`') {
-        lines.add(out.toString());
-        build();
-        lines.clear();
-        out.clear();
-        state = 0;
-        return NEXT;
-      } else if (ch == '\r') {
-        // do nothing
-      } else if (ch == '\n') {
-        lines.add(out.toString());
-        out.clear();
-      } else {
-        try {
-          out.write(ch);
-        } catch (IOException e) {
-          throw new XBosonException.IOError(e);
-        }
-      }
-      return NEXT;
     }
+  }
+
+
+  @Override
+  public int read(byte ch) throws IOException {
+    if (ch == '`') {
+      if (last == '\\') {
+        out.pop();
+        out.write(ch);
+        return KEEP;
+      }
+
+      lines.add(out.toString());
+      build();
+      lines.clear();
+      out.clear();
+      return NEXT;
+
+    } else if (ch == '\r') {
+      // do nothing
+    } else if (ch == '\n') {
+      lines.add(out.toString());
+      out.clear();
+    } else {
+      out.write(ch);
+    }
+
+    last = ch;
+    return KEEP;
   }
 
 

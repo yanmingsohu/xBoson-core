@@ -16,6 +16,7 @@
 
 package com.xboson.app.fix;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ public interface ISState extends IStateOperator {
    * 读取一个字符, 返回操作码
    * @see IStateOperator 操作码枚举接口
    */
-  int read(byte ch);
+  int read(byte ch) throws IOException;
 
 
   /**
