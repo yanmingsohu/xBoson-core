@@ -35,6 +35,7 @@ public class TestSourceFix extends Test {
   public void test() throws Throwable {
     test_file("js/need-fix.js", false);
     test_file("js/strict-mode.js", true);
+    test_file("js/multi-line-str.js", false);
     not_modify("js/fix-not-change.js");
   }
 
@@ -71,6 +72,7 @@ public class TestSourceFix extends Test {
       byte[] fix = SourceFix.fixFor(src);
       fix = SourceFix.fixJavaCall(fix);
       fix = SourceFix.fixVirtualAttr(fix);
+      fix = SourceFix.multiLineString(fix);
 
       String fixed_source = new String(fix);
       test_fix_framework(fixed_source);
@@ -82,15 +84,17 @@ public class TestSourceFix extends Test {
 
   /**
    * 在代码中写入正则表达式来验证转换结果.
-   * 测试框架语法, 在注释中写入 fix`正则表达式`, 不可有多余空格,
-   * 将测试表达式写在被测代码附近.
-   * 单行模式匹配, 注意不要让表达式匹配自己.
+   * 测试框架语法, 在注释中写入<br/>
+   * <code>fix`正则表达式`>></code><br/>
+   * 不可有多余空格, 将测试表达式写在被测代码附近.
+   * 单行模式匹配, 注意不要让表达式匹配自己
+   * (表达式含有 '/' 符号可以避免匹配自身).
    * @param source
    */
   private void test_fix_framework(final String source) throws IOException {
     List<Pattern> re = new ArrayList<>();
     final String s1 = "fix`";
-    final String s2 = "`";
+    final String s2 = "`>>";
     final int s1len = s1.length();
 
     int i = 0, e = 0;
@@ -126,7 +130,7 @@ public class TestSourceFix extends Test {
     String code = p.toString();
     int i = source.indexOf(code);
     int begin = Math.max(0, i-100);
-    int end = Math.min(i+code.length()+100, source.length());
+    int end = Math.min(i+code.length()+200, source.length());
 
     if (i > 0) {
       String subcode = source.substring(begin, end);

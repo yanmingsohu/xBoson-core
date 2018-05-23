@@ -22,6 +22,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
+import com.xboson.j2ee.container.IHttpHeader;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Path;
@@ -50,10 +51,10 @@ import java.util.Set;
  *
  * @see com.xboson.init.Startup 配置到容器
  */
-public class UIEngineServlet extends HttpServlet {
+public class UIEngineServlet extends HttpServlet implements IHttpHeader {
 
   public static final String MY_URL = "/face";
-  public static final String HTML_TYPE = "text/html";
+  public static final String HTML_TYPE = CONTENT_TYPE_HTML;
 
   private IRedisFileSystemProvider file_provider;
   private TemplateEngine template;
@@ -145,7 +146,7 @@ public class UIEngineServlet extends HttpServlet {
       }
       else if (fs.isDir() && list_dir) {
         resp.setContentType(HTML_TYPE);
-        resp.setHeader("Cache-Control", "no-cache");
+        resp.setHeader(HEAD_CACHE, VAL_CACHE_NO);
         Set<RedisFileAttr> files = file_provider.readDir(fs.path);
         HtmlDirList.toHtml(resp.getWriter(), files, baseurl + path);
       }

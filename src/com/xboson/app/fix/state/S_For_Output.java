@@ -27,10 +27,10 @@ import java.io.Writer;
 /**
  * for (row in MAP) { <br/>
  * 重写为: <br/>
- * for (var row__index in MAP) { var row = MAP[row__index]; <br/>
  * for (var row__index in MAP) { var row = __createKVString(row__index, MAP[row__index]);
  */
 public class S_For_Output extends SState implements ILastRunning {
+
   private int varIndex, expIndex;
 
 

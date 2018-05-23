@@ -29,7 +29,7 @@ public interface IApiConstant {
   String _CACHE_REGION_RBAC_            = "/rbac";
   String _CACHE_REGION_PAGE_            = "/page";
   String _CACHE_REGION_LOGON_           = "/logon";
-  String _CACHE_REGION_MDM_             = "/mem";
+  String _CACHE_REGION_MDM_             = "/mdm";
   String _CACHE_REGION_TP_APP_          = "/app";
   String _CACHE_REGION_CONFIG_          = "/config";
   String _CACHE_REGION_JDBC_CONNECTION_ = "/jdbc";

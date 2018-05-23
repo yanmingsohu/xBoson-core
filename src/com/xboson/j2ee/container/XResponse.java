@@ -36,12 +36,12 @@ import com.xboson.util.Tool;
  * 对应答数据的转换器, 默认应答格式为 json, 当参数中有 '$format'
  * 则使用该参数指定的应答格式.
  */
-public class XResponse {
+public class XResponse implements IHttpHeader {
 
   private static final String attrname   = "xBoson-X-response";
   private static final String attrformat = "$format";
   private static NameCache<Class> namecache = new NameCache<>();
-	
+
 	private HttpServletRequest request;
 	private HttpServletResponse response;
 	private Map<String, Object> ret_root;
@@ -243,7 +243,7 @@ public class XResponse {
 	  if (is_responsed)
 	    throw new XBosonException("Is responsed, Don't do it second time");
 
-	  if (!is_set_msg) {
+	  if (! is_set_msg) {
 	    Object code = ret_root.get("code");
 	    if (code != null && code instanceof Integer) {
         setMessage( ErrorCodeMessage.get((int) code) );
