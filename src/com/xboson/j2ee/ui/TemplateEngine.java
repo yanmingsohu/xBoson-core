@@ -66,6 +66,7 @@ public class TemplateEngine extends GLHandle
 
       SysModules sysmod = EnvironmentFactory.createDefaultSysModules();
       sysmod.regLib("helper", helper);
+
       IConfigurableModuleProvider nodejs_mod =
               NodeFileFactory.openNodeModuleProvider(sysmod);
 

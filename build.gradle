@@ -93,6 +93,7 @@ task proguard(type: proguard.gradle.ProGuardTask) {
 
     // UI / Service
     keep 'public class com.xboson.j2ee.ui.MimeTypeFactory'
+    keepclassmembers 'public class com.xboson.j2ee.ui.HelperModule { public *; }'
     keepclassmembers 'class * extends com.xboson.j2ee.container.XService \
         { public *; }'
     keepclassmembers 'public class com.xboson.service.* { public *; }'
