@@ -21,6 +21,7 @@ import com.xboson.auth.IAResource;
 import com.xboson.been.LoginUser;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Ref;
+import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
@@ -34,6 +35,8 @@ public class RoleBaseAccessControl {
 
   /** 表示用户可以访问对应的资源, 但是程序中只是判断是否返回非空 */
   public final static String PASS = "0";
+
+  public final static String NOAUTH = null;
 
   public final static String RBAC_HKEY
           = IApiConstant._R_KEY_PREFIX_
@@ -80,7 +83,7 @@ public class RoleBaseAccessControl {
     Ref<String> ref = fromMemory(userMask, resMask);
     if (ref != null) return ref.x;
 
-    String hasAuth  = null;
+    String hasAuth  = NOAUTH;
 
     try (Jedis client = RedisMesmerizer.me().open()) {
       for (String roleid : user.roles) {
@@ -89,7 +92,7 @@ public class RoleBaseAccessControl {
         // roleid : typeID : resource
         //
         hasAuth = client.hget(RBAC_HKEY, type.toKEY(roleid, resID));
-        if (hasAuth != null) break;
+        if (hasAuth != NOAUTH) break;
 
         //
         // 公共资源
@@ -97,7 +100,7 @@ public class RoleBaseAccessControl {
         //
         if (checkPublic) {
           hasAuth = client.hget(RBAC_HKEY, type.toKEY(resID));
-          if (hasAuth != null) break;
+          if (hasAuth != NOAUTH) break;
         }
       }
     }
