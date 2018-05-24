@@ -88,6 +88,7 @@ public final class ConnectConfig extends JsonHelper {
 
 
   public void setPort(String port) {
+    __hashcode = 0;
     this.port = port;
   }
 
@@ -148,8 +149,7 @@ public final class ConnectConfig extends JsonHelper {
               && host.equals(cc.host)
               && dbname != null
               && dbname.equals(cc.dbname)
-              && port != null
-              && port.equals(cc.port)
+              && (port == null ? null == cc.port : port.equals(cc.port))
               && username != null
               && username.equals(cc.username);
     }
@@ -157,28 +157,26 @@ public final class ConnectConfig extends JsonHelper {
   }
 
 
-  private void __computer_hashcode() {
-    __hashcode = ('/'+ host +'/'+ port
-            +'/'+ dbname +'/'+ username).hashCode();
-  }
-
+  private transient int __hashcode = 0;
 
   @Override
   public int hashCode() {
-    if (__hashcode == 0)
-      __computer_hashcode();
+    if (__hashcode == 0) {
+      __hashcode = toString().hashCode();
+    }
 
     return __hashcode;
   }
 
-  private transient int __hashcode = 0;
 
-
+  /**
+   * 该方法的实现影响 hashcode 的计算
+   */
   public String toString() {
-    return "["+ host +':'+ port
-            +'@'+ username
-            +'/'+ dbname +'/'+ database
-            +"]";
+    return   "Connect://"+ host
+            +':'+ (port == null ? "0" : port)
+            +"/"+ username
+            +'@'+ dbname +'/'+ database;
   }
 
 
@@ -188,13 +186,13 @@ public final class ConnectConfig extends JsonHelper {
   @Override
   public ConnectConfig clone() {
     ConnectConfig cc = new ConnectConfig();
-    cc.database = database;
-    cc.dbname = dbname;
-    cc.dbid = dbid;
-    cc.username = username;
-    cc.port = port;
-    cc.host = host;
-    cc.__hashcode = __hashcode;
+    cc.database      = database;
+    cc.dbname        = dbname;
+    cc.dbid          = dbid;
+    cc.username      = username;
+    cc.port          = port;
+    cc.host          = host;
+    cc.__hashcode    = __hashcode;
     return cc;
   }
 }
