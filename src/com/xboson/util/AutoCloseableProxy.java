@@ -97,6 +97,10 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
     callClose(null);
   }
 
+  @Override
+  public String toString() {
+    return "Proxy="+ this.hashCode() +","+ original.toString();
+  }
 
   /**
    * 当返回的代理类的 close() 被调用后该方法被触发,

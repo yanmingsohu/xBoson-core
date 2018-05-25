@@ -21,6 +21,7 @@ import com.xboson.db.analyze.unit.KeyWord;
 import com.xboson.db.analyze.unit.TableNames;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,6 +32,7 @@ import java.util.List;
 public class ParsedData {
   private List<IUnit> units;
   private IUnit lastKeyWordUnit;
+  private boolean isLocked;
 
 
   public ParsedData() {
@@ -39,6 +41,9 @@ public class ParsedData {
 
 
   public void add(String unit) {
+    if (isLocked)
+      throw new UnsupportedOperationException("is locked");
+
     String up_unit = unit.toUpperCase();
 
     if (SqlKeyWords.beginTable.contains(up_unit)) {
@@ -63,6 +68,9 @@ public class ParsedData {
 
 
   public void addExp(String unit) {
+    if (isLocked)
+      throw new UnsupportedOperationException("is locked");
+
     IUnit nn = new Expression(unit);
     nn.setParent(lastKeyWordUnit);
     units.add(nn);
@@ -70,6 +78,9 @@ public class ParsedData {
 
 
   public void add(IUnit n) {
+    if (isLocked)
+      throw new UnsupportedOperationException("is locked");
+
     units.add(n);
     checkOperating(n);
   }
@@ -115,6 +126,26 @@ public class ParsedData {
    * 获取所有的组件
    */
   public List<IUnit> getUnits() {
-    return units;
+    return Collections.unmodifiableList(units);
+  }
+
+
+  public boolean isLocked() {
+    return isLocked;
+  }
+
+
+  /**
+   * 锁定语法树, 使之无法改变.
+   */
+  public void lock() {
+    if (isLocked) return;
+    isLocked = true;
+
+    for (IUnit u : units) {
+      u.lock();
+    }
+
+    units = new ArrayList<>(units);
   }
 }

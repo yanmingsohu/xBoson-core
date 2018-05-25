@@ -20,17 +20,41 @@ package com.xboson.db.analyze;
 public abstract class AbsUnit<E> implements IUnit<E> {
   protected IUnit parent;
   protected UnitOperating type;
+  private boolean isLocked;
 
 
   @Override
   public void setParent(IUnit n) {
+    checkLock();
     this.parent = n;
   }
 
 
   @Override
   public void setOperating(UnitOperating t) {
+    checkLock();
     this.type = t;
+  }
+
+
+  @Override
+  public void lock() {
+    isLocked = true;
+  }
+
+
+  @Override
+  public boolean isLocked() {
+    return isLocked;
+  }
+
+
+  /**
+   * 在锁定状态调用该方法会抛出异常
+   */
+  protected void checkLock() {
+    if (isLocked)
+      throw new UnsupportedOperationException("is locked");
   }
 
 

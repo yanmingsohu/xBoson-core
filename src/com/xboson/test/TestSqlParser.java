@@ -17,6 +17,7 @@
 package com.xboson.test;
 
 import com.xboson.db.analyze.*;
+import com.xboson.util.Tool;
 
 
 public class TestSqlParser extends Test {
@@ -24,6 +25,53 @@ public class TestSqlParser extends Test {
   public void test() throws Throwable {
     testTableName();
     testPage();
+    multThread();
+  }
+
+
+  public void multThread() {
+    final int threadCount = 8;
+    final int loopCount = 10000;
+    Thread[] all = new Thread[threadCount];
+
+    final String comm = "; -- "+
+            Tool.randomString2(SqlParserCached.CACHE_SQL_LENGTH);
+    final String sql = "Select * from a"+ comm;
+    msg("SQL:", sql);
+
+    for (int i=0; i<threadCount; ++i) {
+      all[i] = new Thread(() -> {
+        final String prefix = Tool.randomString2(3) +".";
+        final String right = "Select * from "+ prefix +"a"+ comm;
+        msg("Prefix:", prefix, ", SQL:", right);
+
+        for (int c=0; c<loopCount; ++c) {
+          SqlParserCached.ParsedDataHandle handle
+                  = SqlParserCached.parse(sql);
+          SqlParser.tableNames(handle, new ReplaseSchema(prefix));
+          String xsql = SqlParser.stringify(handle);
+
+          if (! right.equals(xsql)) {
+            fail("Wrong On Thread", c, ":\n\t",
+                    xsql, "\n!=\n\t", right);
+            break;
+          }
+        }
+      });
+      sub("Thread", i, "start");
+      all[i].start();
+    }
+
+    for (int i=0; i<threadCount; ++i) {
+      try {
+        all[i].getStackTrace();
+        all[i].join();
+        all[i].getUncaughtExceptionHandler();
+        success("Thread", i, "quit");
+      } catch (InterruptedException e) {
+        fail("Thread", i, e.getMessage());
+      }
+    }
   }
 
 
@@ -323,6 +371,22 @@ public class TestSqlParser extends Test {
 
     public void checkCount() {
       eq(rightTableNames.length, index, "table name count");
+    }
+  }
+
+
+  class ReplaseSchema implements IUnitListener {
+
+    String replaceSchemaPrefix;
+
+    public ReplaseSchema(String name) {
+      replaceSchemaPrefix = name;
+    }
+
+    @Override
+    public void on(IUnit u) {
+      String tableName = (String) u.getData();
+      u.setData(replaceSchemaPrefix + tableName);
     }
   }
 }

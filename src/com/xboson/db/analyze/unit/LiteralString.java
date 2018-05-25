@@ -30,6 +30,7 @@ public class LiteralString extends AbsUnit<String> {
 
   @Override
   public void setData(String d) {
+    checkLock();
     this.s = d;
   }
 

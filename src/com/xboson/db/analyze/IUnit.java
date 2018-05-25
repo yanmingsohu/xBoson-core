@@ -17,21 +17,22 @@
 package com.xboson.db.analyze;
 
 /**
- * 解析后的语法单位
+ * 解析后的语法单位;
+ * 注意线程安全: 解析后的语法树会被缓存, 并循环利用.
  */
 public interface IUnit<T> {
 
   /**
-   * 给单位设置参数, 单位需要自行解析 sql 字符串为自身变量
+   * 给单位设置参数, 单位需要自行解析 sql 字符串为自身变量.
+   * 注意: 该方法的实现在必要时使用线程级变量.
    */
   void setData(String d);
 
-
   /**
-   * 获取值
+   * 获取值;
+   * 注意: 该方法的实现在必要时使用线程级变量.
    */
   T getData();
-
 
   /**
    * 设置父级关键字
@@ -39,13 +40,18 @@ public interface IUnit<T> {
   void setParent(IUnit n);
   IUnit getParent();
 
-
   void setOperating(UnitOperating t);
   UnitOperating getOperating();
-
 
   /**
    * 输出为 sql 时被调用
    */
   String stringify();
+
+  /**
+   * 锁定当前组件, set 方法默认将抛出异常,
+   * 由于组件可以被多线程访问, 实现需要在必要时检查锁, 决定 set 的行为.
+   */
+  void lock();
+  boolean isLocked();
 }

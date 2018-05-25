@@ -97,6 +97,7 @@ public class SqlParser {
       }
     }
 
+    pd.lock();
     return pd;
   }
 

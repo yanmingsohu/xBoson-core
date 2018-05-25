@@ -19,18 +19,26 @@ package com.xboson.db.analyze.unit;
 import com.xboson.db.analyze.AbsUnit;
 
 
+/**
+ * 该对象线程安全.
+ * 可通过 setData() 改变表达式的前缀.
+ * 多线程复用时, 必须保证 setData() 总是被调用, 否则
+ * 会残留上一个线程设置的值.
+ */
 public class Expression extends AbsUnit<String> {
-  private String exp;
+  private ThreadLocal<String> replaseExp;
+  private final String exp;
 
 
   public Expression(String exp) {
     this.exp = exp;
+    this.replaseExp = new ThreadLocal<>();
   }
 
 
   @Override
   public void setData(String d) {
-    exp = d;
+    replaseExp.set(d);
   }
 
 
@@ -42,6 +50,11 @@ public class Expression extends AbsUnit<String> {
 
   @Override
   public String stringify() {
-    return exp;
+    String rep = replaseExp.get();
+    if (rep == null) {
+      return exp;
+    } else {
+      return rep;
+    }
   }
 }
