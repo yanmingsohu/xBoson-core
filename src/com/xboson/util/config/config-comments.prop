@@ -69,3 +69,6 @@ maxIdlePerKey: 每种(不同的DB类型, 不同的连接参数)数据库连接�
 minIdle: 允许空闲对象最小值, 不足的部分立即创建补足.
 maxIdle: 允许空闲对象最大值, 超过的部分直接释放资源
 maxTotal: 允许创建资源的最大数量,默认值 8,-1 代表无数量限制
+
+# rootPassword: MD5 of Password
+# rootUserName: 配置为 root 用户的用户名

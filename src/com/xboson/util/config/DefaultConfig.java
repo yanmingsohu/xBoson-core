@@ -70,7 +70,7 @@ public final class DefaultConfig {
     c.debugService      = true;
     c.rootUserName      = "admin-pl";
     c.rootPassword      = "unnecessary";
-    c.rootPid           = "1f33f752805443e59bfe5f8f77481443";
+    c.rootPid           = "unnecessary";
 
     c.rootPassword =
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));

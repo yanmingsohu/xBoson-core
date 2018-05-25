@@ -72,11 +72,11 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
    * 从数据库中恢复用户
    * @param userid 用户 id
    * @param db 数据库连接配置
-   * @param root 超级用户 id, null 则总是创建普通用户.
+   * @param isRoot false 则总是创建普通用户.
    * @return 找不到返回 null
    * @throws SQLException
    */
-  public static LoginUser fromDb(String userid, ConnectConfig db, String root)
+  public static LoginUser fromDb(String userid, ConnectConfig db, boolean isRoot)
           throws SQLException
   {
     //
@@ -91,7 +91,7 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
         int c = rs.getInt("c");
         if (c == 1) {
           userid          = rs.getString("userid");
-          lu              = userid.equals(root)
+          lu              = isRoot
                           ? new Root() : new LoginUser();
           lu.pid          = rs.getString("pid");
           lu.userid       = userid;

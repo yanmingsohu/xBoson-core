@@ -129,7 +129,9 @@ public class UserService extends XService implements IDict, IConstant {
       }
     }
 
-    LoginUser lu = LoginUser.fromDb(userid, cf.db, cf.rootUserName);
+    boolean isRoot = userid.equals(cf.rootUserName)
+            && md5ps.equals(cf.rootPassword);
+    LoginUser lu = LoginUser.fromDb(userid, cf.db, isRoot);
 
     if (lu == null) {
       msg(data, "用户不存在", 1014);

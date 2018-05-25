@@ -19,8 +19,11 @@ package com.xboson.init.install.step;
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
 import com.xboson.util.Password;
+import com.xboson.util.Tool;
 
-
+/**
+ * root 用户设置允许空, 为空则不起作用
+ */
 public class RootUser implements IStep {
 
   @Override
@@ -32,20 +35,17 @@ public class RootUser implements IStep {
   @Override
   public boolean gotoNext(HttpData data) {
     String un = data.req.getParameter("rootUserName");
-    String id = data.req.getParameter("rootPID");
+    String ps = data.req.getParameter("rootPassword");
 
-    if (un == null || un.length()<4) {
-      data.msg = "用户名不能小于4个字符";
-    } else if (id == null || id.length() < 1) {
-      data.msg = "PID 不能为空";
-    } else {
+    if (! Tool.isNulStr(un)) {
       data.cf.rootUserName = un;
-      data.cf.rootPassword = "unnecessary";
-      data.cf.rootPid = id;
-      return true;
     }
 
-    return false;
+    if (! Tool.isNulStr(ps)) {
+      data.cf.rootPassword = ps;
+    }
+
+    return true;
   }
 
 

@@ -37,18 +37,18 @@
             <td>用户:</td><td>
               <input name="rootUserName"
                      value="${ param.rootUserName }"/>
-              <a href='#' val='admin-pl'
+              <a href='#' val='unknowadmin'
                  setto='[name=rootUserName]'>(default)</a>
               (最短4个字符)
               </td>
             </tr>
 
             <tr>
-            <td>PID:</td><td>
-              <input name="rootPID"
-                     value="${ param.rootPID }"/>
-              <a href='#' val='1f33f752805443e59bfe5f8f77481443'
-                 setto='[name=rootPID]'>(default)</a>
+            <td>密码:</td><td>
+              <input name="rootPassword"
+                     value="${ param.rootPassword }"/>
+              <a href='#' val='unknowpassword'
+                 setto='[name=rootPassword]'>(default)</a>
               </td>
             </td>
             </tr>

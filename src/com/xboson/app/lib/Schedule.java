@@ -387,7 +387,7 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
 
       private void login() throws SQLException {
         sd = new SessionData();
-        sd.login_user = LoginUser.fromDb(userid, db, null);
+        sd.login_user = LoginUser.fromDb(userid, db, false);
 
         if (sd.login_user == null) {
           throw new XBosonException("用户不存在", 1014);
