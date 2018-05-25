@@ -31,6 +31,7 @@ public interface IUnit<T> {
   /**
    * 获取值;
    * 注意: 该方法的实现在必要时使用线程级变量.
+   * 该方法返回的值未必与 setData 设置的值相同, 不保证对称.
    */
   T getData();
 
