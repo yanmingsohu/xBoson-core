@@ -22,7 +22,8 @@ package com.xboson.db.analyze;
 public interface IUnitListener {
 
   /**
-   * 可以修改组件的内容
+   * 遍历被选中的组件, 通过 ctx 可以修改组件的内容
    */
-  void on(IUnit u);
+  void on(SqlContext ctx, IUnit u);
+
 }

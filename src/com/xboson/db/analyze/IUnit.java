@@ -47,7 +47,7 @@ public interface IUnit<T> {
   /**
    * 输出为 sql 时被调用
    */
-  String stringify();
+  String stringify(SqlContext ctx);
 
   /**
    * 锁定当前组件, set 方法默认将抛出异常,

@@ -38,7 +38,7 @@ public abstract class AbsNotation extends AbsUnit<String> {
 
 
   @Override
-  public String stringify() {
+  public String stringify(SqlContext ctx) {
     return non;
   }
 }

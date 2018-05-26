@@ -105,7 +105,7 @@ public class SqlParser {
   /**
    * 迭代解析后的 sql 指令, 将所有 '表格名称' 相关的字段发送给 ul
    */
-  public static void tableNames(ParsedData pd, IUnitListener ul) {
+  public static void tableNames(SqlContext ctx, ParsedData pd, IUnitListener ul) {
     Iterator<IUnit> it = pd.getUnits().iterator();
     int name_flag = 0;
 
@@ -120,7 +120,7 @@ public class SqlParser {
       if (name_flag == 0
               && un instanceof Expression
               && un.getParent() instanceof TableNames) {
-        ul.on(un);
+        ul.on(ctx, un);
         ++name_flag;
       }
     }
@@ -174,24 +174,27 @@ public class SqlParser {
    */
   public static String removeOrder(ParsedData pd) {
     StringBuilder out = new StringBuilder();
+    SqlContext ctx = new SqlContext();
+
     for (IUnit un : pd.getUnits()) {
       if (un instanceof KeyWord) {
         if ( ((KeyWord) un).upperKey.equals("ORDER")) {
           break;
         }
       }
-      out.append(un.stringify());
+      out.append(un.stringify(ctx));
     }
     return out.toString();
   }
 
 
   /**
-   * @see #tableNames(ParsedData, IUnitListener)
+   * @see #tableNames(SqlContext, ParsedData, IUnitListener)
    */
-  public static void tableNames(SqlParserCached.ParsedDataHandle handle,
+  public static void tableNames(SqlContext ctx,
+                                SqlParserCached.ParsedDataHandle handle,
                                 IUnitListener ul) {
-    tableNames(handle.pd, ul);
+    tableNames(ctx, handle.pd, ul);
   }
 
 
@@ -212,22 +215,23 @@ public class SqlParser {
 
 
   /**
-   * 将语法树还原为 sql 文
+   * 将语法树还原为 sql 文, 部分组件将使用 ctx 中提供的变量改变 sql 的输出结果
    */
-  public static String stringify(ParsedData pd) {
+  public static String stringify(SqlContext ctx, ParsedData pd) {
     StringBuilder out = new StringBuilder();
     Iterator<IUnit> it = pd.getUnits().iterator();
     while (it.hasNext()) {
-      out.append(it.next().stringify());
+      out.append(it.next().stringify(ctx));
     }
     return out.toString();
   }
 
 
   /**
-   * @see #stringify(ParsedData)
+   * @see #stringify(SqlContext, ParsedData)
    */
-  public static String stringify(SqlParserCached.ParsedDataHandle handle) {
-    return stringify(handle.pd);
+  public static String stringify(SqlContext ctx,
+                                 SqlParserCached.ParsedDataHandle handle) {
+    return stringify(ctx, handle.pd);
   }
 }

@@ -17,6 +17,7 @@
 package com.xboson.db.analyze.unit;
 
 import com.xboson.db.analyze.AbsUnit;
+import com.xboson.db.analyze.SqlContext;
 
 
 /**
@@ -26,19 +27,17 @@ import com.xboson.db.analyze.AbsUnit;
  * 会残留上一个线程设置的值.
  */
 public class Expression extends AbsUnit<String> {
-  private ThreadLocal<String> replaseExp;
   private final String exp;
 
 
   public Expression(String exp) {
     this.exp = exp;
-    this.replaseExp = new ThreadLocal<>();
   }
 
 
   @Override
   public void setData(String d) {
-    replaseExp.set(d);
+    throw new UnsupportedOperationException();
   }
 
 
@@ -49,12 +48,12 @@ public class Expression extends AbsUnit<String> {
 
 
   @Override
-  public String stringify() {
-    String rep = replaseExp.get();
+  public String stringify(SqlContext ctx) {
+    Object rep = ctx.get(this);
     if (rep == null) {
       return exp;
     } else {
-      return rep;
+      return rep.toString();
     }
   }
 }

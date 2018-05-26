@@ -44,12 +44,13 @@ public class TestSqlParser extends Test {
         final String prefix = Tool.randomString2(3) +".";
         final String right = "Select * from "+ prefix +"a"+ comm;
         msg("Prefix:", prefix, ", SQL:", right);
+        SqlContext ctx = new SqlContext();
 
         for (int c=0; c<loopCount; ++c) {
           SqlParserCached.ParsedDataHandle handle
                   = SqlParserCached.parse(sql);
-          SqlParser.tableNames(handle, new ReplaseSchema(prefix));
-          String xsql = SqlParser.stringify(handle);
+          SqlParser.tableNames(ctx, handle, new ReplaseSchema(prefix));
+          String xsql = SqlParser.stringify(ctx, handle);
 
           if (! right.equals(xsql)) {
             fail("Wrong On Thread", c, ":\n\t",
@@ -294,13 +295,14 @@ public class TestSqlParser extends Test {
 
   private void testSqlParse(String sql, String...tableNames) {
     sub(sql, "(length:", sql.length() +")");
+    SqlContext ctx = new SqlContext();
 
     try (SqlParserCached.ParsedDataHandle pd = SqlParserCached.parse(sql)) {
       ParseChecker pc = new ParseChecker(tableNames);
-      SqlParser.tableNames(pd, pc);
+      SqlParser.tableNames(ctx, pd, pc);
       pc.checkCount();
 
-      msg(SqlParser.stringify(pd));
+      msg(SqlParser.stringify(ctx, pd));
     } catch (Error e) {
       throw e;
     }
@@ -328,15 +330,16 @@ public class TestSqlParser extends Test {
                     "     (SELECT 50,11*s1 FROM t4 UNION SELECT 50,77 FROM\n" +
                     "      (SELECT * FROM t5) AS t5)));";
 
-    IUnitListener donothing = unit -> { return; };
+    IUnitListener donothing = (ctx, unit) -> { return; };
+    SqlContext ctx = new SqlContext();
 
     beginTime();
     int count = 100000;
     for (int i=0; i<count; ++i) {
       // 80% 的开销
       SqlParserCached.ParsedDataHandle pd = SqlParserCached.parse(sql);
-      SqlParser.tableNames(pd, donothing);
-      SqlParser.stringify(pd);
+      SqlParser.tableNames(ctx, pd, donothing);
+      SqlParser.stringify(ctx, pd);
       pd.close();
     }
     endTime("Loop", count);
@@ -358,7 +361,7 @@ public class TestSqlParser extends Test {
     }
 
     @Override
-    public void on(IUnit u) {
+    public void on(SqlContext ctx, IUnit u) {
       String info = "at " + index +", "+ u + "  [" + u.getParent() + "]";
       if (index >= rightTableNames.length) {
         throw new AssertionError(info);
@@ -366,7 +369,7 @@ public class TestSqlParser extends Test {
       eq(rightTableNames[index], u.getData(), info);
       msg("--- OK", info);
       ++index;
-      u.setData("<CHANGE>." + u.getData());
+      ctx.set(u, "<CHANGE>." + u.getData());
     }
 
     public void checkCount() {
@@ -384,9 +387,9 @@ public class TestSqlParser extends Test {
     }
 
     @Override
-    public void on(IUnit u) {
+    public void on(SqlContext ctx, IUnit u) {
       String tableName = (String) u.getData();
-      u.setData(replaceSchemaPrefix + tableName);
+      ctx.set(u, replaceSchemaPrefix + tableName);
     }
   }
 }

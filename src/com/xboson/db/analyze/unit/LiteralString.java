@@ -17,6 +17,7 @@
 package com.xboson.db.analyze.unit;
 
 import com.xboson.db.analyze.AbsUnit;
+import com.xboson.db.analyze.SqlContext;
 
 
 public class LiteralString extends AbsUnit<String> {
@@ -42,7 +43,7 @@ public class LiteralString extends AbsUnit<String> {
 
 
   @Override
-  public String stringify() {
+  public String stringify(SqlContext ctx) {
     return s;
   }
 }

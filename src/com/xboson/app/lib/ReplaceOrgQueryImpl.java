@@ -18,10 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.been.Page;
 import com.xboson.db.ConnectConfig;
-import com.xboson.db.analyze.IUnit;
-import com.xboson.db.analyze.IUnitListener;
-import com.xboson.db.analyze.SqlParser;
-import com.xboson.db.analyze.SqlParserCached;
+import com.xboson.db.analyze.*;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
@@ -64,14 +61,15 @@ public class ReplaceOrgQueryImpl extends QueryImpl
 
 
   public String replaceSql(String sql) {
+    SqlContext ctx = new SqlContext();
     SqlParserCached.ParsedDataHandle handle = SqlParserCached.parse(sql);
-    SqlParser.tableNames(handle, this);
-    return SqlParser.stringify(handle);
+    SqlParser.tableNames(ctx, handle, this);
+    return SqlParser.stringify(ctx, handle);
   }
 
 
   @Override
-  public void on(IUnit u) {
+  public void on(SqlContext ctx, IUnit u) {
     String tableName = (String) u.getData();
 
     //
@@ -86,6 +84,6 @@ public class ReplaceOrgQueryImpl extends QueryImpl
     if (sysTables.contains(tableName))
       return;
 
-    u.setData(replaceSchemaPrefix + tableName);
+    ctx.set(u, replaceSchemaPrefix + tableName);
   }
 }
