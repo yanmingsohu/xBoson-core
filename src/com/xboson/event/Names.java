@@ -16,8 +16,6 @@
 
 package com.xboson.event;
 
-import com.xboson.fs.redis.RedisBase;
-
 
 /**
  * 已有的事件列表, 带有 sys 开头的消息不会在集群中路由
@@ -47,6 +45,11 @@ public interface Names {
    * @see com.xboson.been.Config
    */
   String initialization = "sys.initialization";
+
+  /**
+   * c(null, null) Touch 完成所有子模块初始化后发出
+   */
+  String already_started = "sys.already_started";
 
   /**
    * c(Exception, String classname) 系统内部错误,

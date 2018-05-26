@@ -20,9 +20,9 @@ import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.writer.ConsoleOut;
+import com.xboson.log.writer.LogWriterLoader;
 import com.xboson.log.writer.SavedOut;
 import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -48,6 +48,7 @@ public class LogFactory extends OnExitHandle {
     writer = new SavedOut();
   }
 
+
   public synchronized static LogFactory me() {
     if (instance == null) {
       synchronized (LogFactory.class) {
@@ -63,7 +64,7 @@ public class LogFactory extends OnExitHandle {
   private LogFactory() {
     try {
       Config cfg = SysConfig.me().readConfig();
-      setType(cfg.loggerWriterType);
+      setWriter(LogWriterLoader.getLogWriter(cfg));
       setLevel(Level.find(cfg.logLevel));
 
       filepath = cfg.configPath + "/" + FILE;
@@ -182,22 +183,12 @@ public class LogFactory extends OnExitHandle {
 
   /**
    * 设置全局日志输出器
-   *
-   * @param type_name com.xboson.log.writer.* 下的类名
-   * @return 成功返回 true
    */
-  public synchronized boolean setType(String type_name) {
-    try {
-      Class<?> cl = Class.forName("com.xboson.log.writer." + type_name);
-      ILogWriter older = writer;
-      writer = (ILogWriter) cl.newInstance();
-      older.destroy(writer);
-      nolog("::Log Writer " + cl);
-      return true;
-    } catch(Exception e) {
-      nolog("::Init log fail: " + e.getMessage());
-    }
-    return false;
+  public synchronized void setWriter(ILogWriter new_writer) {
+    ILogWriter older = writer;
+    writer = new_writer;
+    older.destroy(writer);
+    nolog("::Change Log Writer " + new_writer.getClass());
   }
 
 

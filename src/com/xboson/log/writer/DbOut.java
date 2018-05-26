@@ -16,29 +16,145 @@
 
 package com.xboson.log.writer;
 
-import com.xboson.log.ILogWriter;
-import com.xboson.log.Level;
-import com.xboson.log.OutBase;
+import com.xboson.been.Config;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.event.GLHandle;
+import com.xboson.event.GlobalEventBus;
+import com.xboson.event.Names;
+import com.xboson.log.*;
+import com.xboson.log.slow.AbsSlowLog;
+import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
 
+import javax.naming.event.NamingEvent;
+import java.util.Arrays;
 import java.util.Date;
 
 
+/**
+ * 将日志写出到数据库 `sys_pl_log_system` 表中.
+ */
 public class DbOut extends OutBase implements ILogWriter {
+
+  private final static String ALERT       = "alert_log_system.sql";
+  private final static String SQL         = "log_system.sql";
+  private final static int    MAX_LOG_LEN = 2000;
+
+  private ILogWriter log;
+  private final Config cfg;
 
 
   public DbOut() {
-    throw new UnsupportedOperationException();
+    //
+    // 在启动时先将日志数据写入内存缓冲区, 在 jdbc 连接池模块初始化完成后再转存入 db 中.
+    //
+    cfg = SysConfig.me().readConfig();
+    log = new SavedOut();
+
+    GlobalEventBus.me().on(Names.already_started, new GLHandle() {
+      public void objectChanged(NamingEvent namingEvent) {
+        init();
+      }
+    });
+  }
+
+
+  private void init() {
+    try {
+      try (SqlResult _ = SqlReader.query(ALERT, cfg.db)) {
+      }
+
+      ILogWriter sys_log = new SystemLog();
+      log.destroy(sys_log);
+      log = sys_log;
+    } catch(Exception e) {
+      OutBase.nolog(this +"FAIL "+ e.getMessage());
+    }
   }
 
 
   @Override
   public void output(Date d, Level l, String name, Object[] msg) {
-    throw new UnsupportedOperationException();
+    log.output(d, l, name, msg);
   }
 
 
   @Override
   public void destroy(ILogWriter replace) {
-    throw new UnsupportedOperationException();
+    log.destroy(replace);
+  }
+
+
+  private class SystemLog extends AbsSlowLog implements IConstant, ILogWriter {
+
+    private String nodeID;
+
+
+    private SystemLog() {
+      nodeID = cfg.clusterNodeID +"";
+    }
+
+
+    @Override
+    protected String getSql() {
+      return SqlReader.read(SQL);
+    }
+
+
+    public void output(Date d, Level l, String name, Object[] msg) {
+      try {
+        StringBuilder buf = new StringBuilder(2000);
+        for (int i = 0; i < msg.length; ++i) {
+          buf.append(' ');
+          buf.append(msg[i]);
+          if (buf.length() > MAX_LOG_LEN) break;
+        }
+        if (buf.length() > MAX_LOG_LEN) {
+          buf.setLength(2000-3);
+          buf.append("...");
+        }
+
+        insert(
+          /* 1 */ Tool.nextId() +"",
+          /* 2 */ d,
+          /* 3 */ l.toString(),
+          /* 4 */ name,
+          /* 5 */ NULL_STR,
+          /* 6 */ nodeID,
+          /* 7 */ buf.toString(),
+          /* 8 */ new Date()
+        );
+      } catch(Exception e) {
+        OutBase.nolog(this +" FAIL "+ e.getMessage());
+      }
+    }
+
+
+    @Override
+    public void destroy(ILogWriter replace) {
+      destroy();
+    }
+
+
+    @Override
+    protected Log createLog() {
+      return new NoOut();
+    }
+  }
+
+
+  private class NoOut extends NulLog {
+
+    public NoOut() {
+      super("system-log");
+    }
+
+
+    @Override
+    protected void dologs(Level l, Object[] msg) {
+      // OutBase.nolog(Arrays.toString(msg));
+    }
   }
 }

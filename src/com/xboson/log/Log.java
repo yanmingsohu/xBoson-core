@@ -38,7 +38,7 @@ public class Log {
   /**
    * 改变当前实例的日志级别
    */
-  public void setLevel(final Level l) {
+  public final void setLevel(final Level l) {
     l.checknull();
     cl = l;
     LogFactory.changeLevel(this);
@@ -72,7 +72,7 @@ public class Log {
    * 指定的日志级别不需要打印(执行)返回 true;
    * 该方法用于优化复杂的日志参数在无需打印时不再执行初始化操作.
    */
-  public boolean blocking(Level l) {
+  public final boolean blocking(Level l) {
     if (cl == Level.INHERIT) {
       if (LogFactory.blocking(l))
         return true;
@@ -83,27 +83,27 @@ public class Log {
   }
 
 
-  public void log(Level l, Object... msg) {
+  public final void log(Level l, Object... msg) {
     logs(l, msg);
   }
 
-  public void info(Object... msg) {
+  public final void info(Object... msg) {
     logs(Level.INFO, msg);
   }
 
-  public void debug(Object... msg) {
+  public final void debug(Object... msg) {
     logs(Level.DEBUG, msg);
   }
 
-  public void error(Object... msg) {
+  public final void error(Object... msg) {
     logs(Level.ERR, msg);
   }
 
-  public void warn(Object... msg) {
+  public final void warn(Object... msg) {
     logs(Level.WARN, msg);
   }
 
-  public void fatal(Object... msg) {
+  public final void fatal(Object... msg) {
     logs(Level.FATAL, msg);
   }
 }

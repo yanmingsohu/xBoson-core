@@ -42,7 +42,8 @@ public class ReplaceOrgQueryImpl extends QueryImpl
                              String replaceOrg) {
     super(sc, runtime);
     this.replaceSchemaPrefix = replaceOrg + ".";
-    this.sysTables = JavaConverter.arr2set(SysConfig.me().readConfig().sysTableList);
+    this.sysTables = JavaConverter.arr2set(
+            SysConfig.me().readConfig().sysTableList);
   }
 
 

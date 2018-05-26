@@ -5,7 +5,7 @@ clusterNodeID: 本机在集群中的节点 ID, 保证生成不冲突的主键 ID
 
 
 logLevel: 全局默认日志过滤级别: ALL | OFF | DEBUG | INFO | WARN | ERROR | FATAL
-loggerWriterType: 日志输出类型, 可选的: ConsoleOut | FileOut | FileAndConsoleOut
+loggerWriterType: 日志输出类型, 可用逗号分隔多个输出类型, 可选的: ConsoleOut | FileOut | DbOut
 sessionPassword: session 密钥, 集群中所有节点必须相同
 sessionTimeout: session 超时时间, 分钟
 debugService: HTTP 服务接口, 是否输出错误堆栈

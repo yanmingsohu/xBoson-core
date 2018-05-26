@@ -16,19 +16,21 @@
 
 package com.xboson.test;
 
-import java.io.*;
-import java.util.*;
-
-import com.xboson.been.*;
+import com.xboson.been.Config;
+import com.xboson.been.JsonHelper;
 import com.xboson.init.Touch;
-import com.xboson.j2ee.emu.*;
+import com.xboson.j2ee.emu.EmuJeeContext;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
+import com.xboson.log.writer.TestOut;
 import com.xboson.sleep.ISleepwalker;
-import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
+
+import java.io.*;
+import java.util.*;
 
 
 /**
@@ -107,7 +109,7 @@ public class Test implements IConstant {
 	@SuppressWarnings("rawtypes")
 	private final void _test(Test[] cl) {
     Touch.me();
-    LogFactory.me().setType("TestOut");
+    LogFactory.me().setWriter(new TestOut());
     LogFactory.setLevel(Level.ALL);
 
 		StringBufferOutputStream strerr = new StringBufferOutputStream();

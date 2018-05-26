@@ -19,6 +19,9 @@ package com.xboson.test;
 import com.xboson.log.Level;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.log.writer.FileAndConsoleOut;
+import com.xboson.log.writer.TestOut;
+
 
 public class TestLog extends Test {
 
@@ -34,7 +37,7 @@ public class TestLog extends Test {
 		log.warn("display", "warn", 4);
 		log.fatal("display", "fatal", 5);
 
-		lf.setType("FileAndConsoleOut");
+		lf.setWriter(new FileAndConsoleOut());
 
     log.setLevel(Level.INHERIT);
 		LogFactory.setLevel(Level.ERR);
@@ -47,7 +50,7 @@ public class TestLog extends Test {
 		
 		LogFactory.setLevel(Level.ALL);
 
-		lf.setType("TestOut");
+		lf.setWriter(new TestOut());
 	}
 
 

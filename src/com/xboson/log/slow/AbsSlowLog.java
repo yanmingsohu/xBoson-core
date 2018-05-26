@@ -17,6 +17,7 @@
 package com.xboson.log.slow;
 
 import com.xboson.been.XBosonException;
+import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.event.EventLoop;
 import com.xboson.event.OnExitHandle;
@@ -50,6 +51,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
   private Runnable insert;
   private boolean hasWorker;
   private SimpleDateFormat format;
+  private boolean isDestroy;
 
   /** 可以在子类中直接用, 记录异常 */
   protected final Log log;
@@ -58,7 +60,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
 
   protected AbsSlowLog() {
     try {
-      this.log        = LogFactory.create(this.getClass());
+      this.log        = createLog();
       this.queue      = new LinkedList<>();
       this.insert     = new Insert();
       this.hasWorker  = false;
@@ -70,11 +72,21 @@ public abstract class AbsSlowLog extends OnExitHandle {
   }
 
 
+  /**
+   * 该方法在初始化时调用, 创建一个日志对象用于记录日志的日志;
+   * 这个日志如果写入数据库会导致自调用.
+   */
+  protected Log createLog() {
+    return LogFactory.create(this.getClass());
+  }
+
+
   private static Connection openConnection() throws SQLException {
     if (__conn == null) {
       synchronized (AbsSlowLog.class) {
         if (__conn == null) {
-          __conn = DbmsFactory.me().open(SysConfig.me().readConfig().db);
+          __conn = DbmsFactory.me().openWithoutPool(
+                  SysConfig.me().readConfig().db);
         }
       }
     }
@@ -83,6 +95,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
 
 
   private void checkConnect() {
+    if (isDestroy) return;
     synchronized (AbsSlowLog.class) {
       try {
         if (__conn == null)
@@ -131,6 +144,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
    * 线程安全.
    */
   protected void insert(Object... param) {
+    if (isDestroy) return;
     synchronized (queue) {
       queue.add(param);
       if (!hasWorker) {
@@ -178,9 +192,14 @@ public abstract class AbsSlowLog extends OnExitHandle {
   @Override
   protected void exit() {
     Tool.close(ps);
-    Tool.close(__conn);
     ps = null;
-    __conn = null;
+  }
+
+
+  public void destroy() {
+    isDestroy = true;
+    removeExitListener();
+    exit();
   }
 
 

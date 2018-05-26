@@ -24,6 +24,7 @@ import com.xboson.init.install.IStep;
 import com.xboson.init.install.step.*;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.log.writer.ConsoleOut;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.SysConfig;
 
@@ -76,7 +77,7 @@ public class Install extends HttpServlet {
     this.steps  = new ArrayList<>();
     this.log    = LogFactory.create();
 
-    LogFactory.me().setType("ConsoleOut");
+    LogFactory.me().setWriter(new ConsoleOut());
     DbmsFactory.me().registeringDefaultDriver();
 
     try {

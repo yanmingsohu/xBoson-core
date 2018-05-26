@@ -81,6 +81,7 @@ public final class Touch {
 
     GlobalEventBus.me().emit(Names.initialization, Touch.class);
     __init__process();
+    GlobalEventBus.me().emit(Names.already_started, Touch.class);
     state = S_INITED;
   }
 
