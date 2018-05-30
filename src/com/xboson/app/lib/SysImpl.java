@@ -892,11 +892,15 @@ public class SysImpl extends DateImpl {
 
 
   public String subString(String str, int begin) {
+    if (Tool.isNulStr(str)) return NULSTR;
+    if (begin >= str.length()) return NULSTR;
     return str.substring(begin);
   }
 
 
   public String subStringTo(String str, int begin, int end) {
+    if (Tool.isNulStr(str)) return NULSTR;
+    if (begin >= str.length()) return NULSTR;
     return str.substring(begin, end);
   }
 

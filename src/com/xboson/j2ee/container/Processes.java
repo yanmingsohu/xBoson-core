@@ -170,9 +170,9 @@ public class Processes extends HttpFilter {
                        WatchEvent.Kind kind) throws IOException
     {
       log.info(s[6], basename, filename);
-      String publicKeyFile = license.publicKeyFile;
-      license = License.readLicense();
-      license.publicKeyFile = publicKeyFile;
+      License new_license = License.readLicense();
+      new_license.publicKeyFile = license.publicKeyFile;
+      license = new_license;
       run();
     }
 
@@ -192,6 +192,7 @@ public class Processes extends HttpFilter {
     }
 
     if (! license.zz().equals(License.singleline(license.z))) {
+      license.writeRequest();
       return s[0];
     }
 

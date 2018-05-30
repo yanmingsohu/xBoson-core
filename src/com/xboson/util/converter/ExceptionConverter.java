@@ -16,8 +16,6 @@
 
 package com.xboson.util.converter;
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.XBosonException;
@@ -26,41 +24,35 @@ import com.xboson.util.Tool;
 import java.io.IOException;
 
 
-public class ExceptionConverter {
+public class ExceptionConverter extends AbsJsonConverterHelper<Exception> {
 
-  public static final ExceptionAdapter ea = new ExceptionAdapter();
-
-
-  public static void registerAdapter(Moshi.Builder builder) {
-    builder.add(ClassCastException.class, ea);
-    builder.add(Exception.class, ea);
-    builder.add(XBosonException.class, ea);
-    builder.add(NullPointerException.class, ea);
-    builder.add(IllegalArgumentException.class, ea);
-    builder.add(NoSuchMethodException.class, ea);
+  public void register(Moshi.Builder builder) {
+    builder.add(ClassCastException.class, this);
+    builder.add(Exception.class, this);
+    builder.add(XBosonException.class, this);
+    builder.add(NullPointerException.class, this);
+    builder.add(IllegalArgumentException.class, this);
+    builder.add(NoSuchMethodException.class, this);
   }
 
 
-  static public class ExceptionAdapter extends JsonAdapter<Exception> {
+  @Override
+  Class<Exception> classType() {
+    return Exception.class;
+  }
 
-    @Override
-    public Exception fromJson(JsonReader jsonReader) throws IOException {
-      throw new UnsupportedOperationException("fromJson Exception");
+
+  @Override
+  public void toJson(JsonWriter jsonWriter, Exception e) throws IOException {
+    jsonWriter.beginObject();
+    jsonWriter.name("message");
+    jsonWriter.value(e.getMessage());
+    jsonWriter.name("stack");
+    jsonWriter.value(Tool.xbosonStack(e));
+    if (e.getCause() != null) {
+      jsonWriter.name("cause");
+      jsonWriter.value(e.getCause().toString());
     }
-
-
-    @Override
-    public void toJson(JsonWriter jsonWriter, Exception e) throws IOException {
-      jsonWriter.beginObject();
-      jsonWriter.name("message");
-      jsonWriter.value(e.getMessage());
-      jsonWriter.name("stack");
-      jsonWriter.value(Tool.xbosonStack(e));
-      if (e.getCause() != null) {
-        jsonWriter.name("cause");
-        jsonWriter.value(e.getCause().toString());
-      }
-      jsonWriter.endObject();
-    }
+    jsonWriter.endObject();
   }
 }

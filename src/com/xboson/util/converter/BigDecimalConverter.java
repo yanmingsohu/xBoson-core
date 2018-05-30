@@ -16,34 +16,14 @@
 
 package com.xboson.util.converter;
 
-import com.squareup.moshi.JsonAdapter;
-import com.squareup.moshi.JsonReader;
-import com.squareup.moshi.JsonWriter;
-import com.squareup.moshi.Moshi;
-
-import java.io.IOException;
 import java.math.BigDecimal;
 
 
-public class BigDecimalConverter {
+public class BigDecimalConverter extends AbsJsonConverterHelper<BigDecimal> {
 
-  public static void registerAdapter(Moshi.Builder builder) {
-    builder.add(BigDecimal.class, new BigDecimalAdapter());
+  @Override
+  Class<BigDecimal> classType() {
+    return BigDecimal.class;
   }
 
-
-  static public class BigDecimalAdapter extends JsonAdapter<BigDecimal> {
-
-    @Override
-    public BigDecimal fromJson(JsonReader jsonReader) throws IOException {
-      return new BigDecimal(jsonReader.nextString());
-    }
-
-
-    @Override
-    public void toJson(JsonWriter jsonWriter, BigDecimal bigDecimal)
-            throws IOException {
-      jsonWriter.value(bigDecimal.toString());
-    }
-  }
 }

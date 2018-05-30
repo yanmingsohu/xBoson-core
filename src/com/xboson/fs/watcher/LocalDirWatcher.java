@@ -148,7 +148,7 @@ public class LocalDirWatcher extends OnExitHandle implements Runnable {
             Object context = event.context();
             d.n.nofify(d.w.toString(), context.toString(), event, kind);
           } catch(Exception e) {
-            log.error(e);
+            log.error(e, Tool.allStack(e));
           }
         }
 

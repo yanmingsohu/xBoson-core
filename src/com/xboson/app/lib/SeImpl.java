@@ -42,7 +42,8 @@ import java.util.Arrays;
 
 
 /**
- * 有部分扩展函数原平台没有.
+ * 有部分扩展函数原平台没有. <br/>
+ * TODO: 脚本将平台上的很多敏感数据(如数据库密码) 推送到缓存中, 这些数据应该加密
  */
 public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 

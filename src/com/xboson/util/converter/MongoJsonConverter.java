@@ -26,34 +26,29 @@ import com.xboson.util.Tool;
 import java.io.IOException;
 
 
-public class MongoJsonConverter {
+public class MongoJsonConverter extends AbsJsonConverterHelper<MongoIterable> {
 
-  public static final IterableAdapter iterableAdapter = new IterableAdapter();
-
-
-  public static void registerAdapter(Moshi.Builder builder) {
-    builder.add(MongoIterable.class, iterableAdapter);
+  @Override
+  Class<MongoIterable> classType() {
+    return MongoIterable.class;
   }
 
 
-  static public class IterableAdapter extends JsonAdapter<MongoIterable> {
+  @Override
+  public MongoIterable fromJson(JsonReader jsonReader) throws IOException {
+    throw new UnsupportedOperationException("fromJson");
+  }
 
-    @Override
-    public MongoIterable fromJson(JsonReader jsonReader) throws IOException {
-      throw new UnsupportedOperationException("fromJson");
+
+  @Override
+  public void toJson(JsonWriter jsonWriter, MongoIterable mongoIterable)
+          throws IOException {
+
+    jsonWriter.beginArray();
+    for (Object val : mongoIterable) {
+      JsonAdapter ja = Tool.getAdapter(val.getClass());
+      ja.toJson(jsonWriter, val);
     }
-
-
-    @Override
-    public void toJson(JsonWriter jsonWriter, MongoIterable mongoIterable)
-            throws IOException {
-
-      jsonWriter.beginArray();
-      for (Object val : mongoIterable) {
-        JsonAdapter ja = Tool.getAdapter(val.getClass());
-        ja.toJson(jsonWriter, val);
-      }
-      jsonWriter.endArray();
-    }
+    jsonWriter.endArray();
   }
 }

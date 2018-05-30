@@ -17,12 +17,8 @@
 package com.xboson.rpc;
 
 /**
+ * <b>[java 1.8 不再需要, 实现 IPing 接口即可]</b><br/>
  * 默认 RPC 注册表中有一个该对象的实例, 可以用来测试网络情况.
- * [不再需要]
  */
 public class Ping implements IPing {
-
-  public Ping() {
-  }
-
 }

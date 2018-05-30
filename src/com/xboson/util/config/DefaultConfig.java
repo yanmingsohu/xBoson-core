@@ -65,7 +65,7 @@ public final class DefaultConfig {
     c.configVersion     = Config.VERSION;
     c.loggerWriterType  = "ConsoleOut";
     c.logLevel          = "info";
-    c.sessionTimeout    = 24 * 60;
+    c.sessionTimeout    = IConstant.DEFAULT_TIMEOUT / 60;
     c.sessionPassword   = Test.randomString(20);
     c.debugService      = true;
     c.rootUserName      = "admin-pl";

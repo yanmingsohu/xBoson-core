@@ -67,9 +67,10 @@ public final class ConverterInitialization {
   public static void initJSON(com.squareup.moshi.Moshi.Builder jsbuilded) {
     ScriptObjectMirrorJsonConverter.registerAdapter(jsbuilded);
     TimestampJsonConverter.registerAdapter(jsbuilded);
-    BigDecimalConverter.registerAdapter(jsbuilded);
-    ExceptionConverter.registerAdapter(jsbuilded);
-    MongoJsonConverter.registerAdapter(jsbuilded);
+    new ExceptionConverter().register(jsbuilded);
+    new MongoJsonConverter().register(jsbuilded);
+    new BigDecimalConverter().register(jsbuilded);
+    new BigIntegerConverter().register(jsbuilded);
   }
 
 

@@ -21,6 +21,7 @@ import com.xboson.util.c0nst.IConstant;
 
 public interface IApiConstant {
 
+  /** 所有通过 se 对象操作 redis 都会添加这个前缀 */
   String _R_KEY_PREFIX_                 = "/sys";
 
   String _CACHE_REGION_API_             = "/api";

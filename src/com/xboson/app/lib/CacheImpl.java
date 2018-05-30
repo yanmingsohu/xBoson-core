@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class CacheImpl extends RuntimeUnitImpl {
 
 
   public void set(String region, String key, Object value) {
-    set(region, key, value, 7200);
+    set(region, key, value, IConstant.DEFAULT_TIMEOUT);
   }
 
 
