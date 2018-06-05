@@ -266,16 +266,16 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
   }
 
 
+  public Object nullObj() {
+    return jdk.nashorn.internal.runtime.Undefined.getUndefined();
+  }
+
+
   /**
    * 创建 js 数组迭代器, 类型必须正确.
    */
   public static <E> Iterable<E> arrayIterator(ScriptObjectMirror arr, Class<E> c) {
-    return new Iterable<E>() {
-      @Override
-      public Iterator<E> iterator() {
-        return new ArrayIterator<E>(arr);
-      }
-    };
+    return () -> new ArrayIterator<>(arr);
   }
 
 

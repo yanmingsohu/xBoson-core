@@ -6,6 +6,8 @@ Test/**
 .gradle/**
 gradle/**
 build/**
+.classpath
+.project
 
 *.class
 *.zip

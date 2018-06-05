@@ -33,7 +33,8 @@ import java.util.TimerTask;
 
 
 /**
- * 生成数据库连接代理, 在关闭时并不关闭连接而是返回连接池
+ * 生成数据库连接代理, 在关闭时并不关闭连接而是返回连接池.
+ * 在回收连接时, 所有在 Connection 上打开的资源都会被关闭.
  */
 public class ConnectionProxy extends AutoCloseableProxy<Connection> {
 

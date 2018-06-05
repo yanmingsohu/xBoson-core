@@ -72,6 +72,8 @@ public class EnvironmentFactory {
             Vm.class);
     sysmod.regClass("sys/process",
             com.xboson.script.lib.Process.class);
+    sysmod.regClass("streamutil",
+            StreamUtil.class);
 
     sysmod.loadLib("process",
             "lib/process.js");

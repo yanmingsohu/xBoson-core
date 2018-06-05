@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.been.Page;
+import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDialect;
@@ -30,8 +31,11 @@ import com.xboson.log.LogFactory;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Iterator;
 
 
 /**
@@ -40,6 +44,7 @@ import java.util.Arrays;
  */
 public class QueryImpl {
 
+  public static final int FETCH_SIZE = 100;
   private Log log;
 
 
@@ -83,16 +88,7 @@ public class QueryImpl {
 
     try (PreparedStatement ps = sc.open().prepareStatement(sql)) {
       if (param != null) {
-        Object p = null;
-        for (int i = 1; i <= param.length; ++i) {
-          try {
-            p = param[i - 1];
-            ps.setObject(i, runtime.getSafeObjectForQuery(p));
-          } catch(SQLException e) {
-            log.error("PreparedStatement bind", p, e);
-            ps.setObject(i, null);
-          }
-        }
+        setParamter(ps, param);
       }
 
       ResultSet rs = ps.executeQuery();
@@ -101,6 +97,17 @@ public class QueryImpl {
       rs.close();
       return row_count;
     }
+  }
+
+
+  /**
+   * 用流的方式, 一行一行读取查询结果
+   */
+  public ResultReader queryStream(String sql, Object[] param) throws Exception {
+    if (! log.blocking(Level.DEBUG)) {
+      log(sql, param);
+    }
+    return new ResultReader(sql, param);
   }
 
 
@@ -195,5 +202,106 @@ public class QueryImpl {
             "; API:", ac.getCurrentApiPath(),
             "; SQL:", sql,
             "; BIND:", Arrays.toString(param));
+  }
+
+
+  private void setParamter(PreparedStatement ps, Object[] param) {
+    Object p = null;
+    for (int i = 1; i <= param.length; ++i) {
+      try {
+        p = param[i - 1];
+        ps.setObject(i, runtime.getSafeObjectForQuery(p));
+      } catch(SQLException e) {
+        log.error("PreparedStatement bind", p, e);
+        try {
+          ps.setObject(i, null);
+        } catch (SQLException e1) {
+          log.error("PreparedStatement setNull:", p, e1);
+        }
+      }
+    }
+  }
+
+
+  /**
+   * 用来遍历 sql 查询结果集
+   */
+  public class ResultReader implements
+          AutoCloseable, Iterable<Object>, Iterator<Object> {
+
+    private PreparedStatement ps;
+    private ResultSetMetaData meta;
+    private ResultSet rs;
+    private final int columnc;
+    private boolean next;
+    private Object currLine;
+
+
+    private ResultReader(String sql, Object[] param) throws Exception {
+      this.ps = sc.open().prepareStatement(sql);
+      this.ps.setFetchSize(FETCH_SIZE);
+      if (param != null) {
+        setParamter(ps, param);
+      }
+      this.rs = ps.executeQuery();
+      this.meta = rs.getMetaData();
+      this.columnc = meta.getColumnCount();
+      this.next = false;
+    }
+
+
+    /**
+     * 关闭可以节省内存, 或等待系统自动关闭
+     */
+    @Override
+    public void close() throws Exception {
+      ps.close();
+      rs.close();
+    }
+
+
+    @Override
+    public Iterator<Object> iterator() {
+      return this;
+    }
+
+
+    /**
+     * 调用该方法将把游标移动到下一行, 初始化时游标在第一行数据之前.
+     */
+    @Override
+    public boolean hasNext() {
+      try {
+        next = true;
+        return rs.next();
+      } catch (SQLException e) {
+        throw new XBosonException.XSqlException(e);
+      }
+    }
+
+
+    /**
+     * 获取当前游标指向的数据行, 返回该行数据的 map 对象.
+     */
+    @Override
+    public Object next() {
+      if (!next) {
+        return currLine;
+      }
+      next = false;
+
+      try {
+        ScriptObjectMirror ret = runtime.createJSObject();
+        for (int i=1; i<=columnc; ++i) {
+          String name = meta.getColumnName(i);
+          Object val  = rs.getObject(i);
+          ret.setMember(name, val == null ? runtime.nullObj() : val);
+        }
+        currLine = ret;
+        return ret;
+      } catch(SQLException e) {
+        throw new XBosonException.XSqlException(e);
+      }
+    }
   }
 }
