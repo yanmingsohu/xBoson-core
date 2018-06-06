@@ -39,5 +39,7 @@ require("./check-querystring.js");
 require("./check-punycode.js");
 require("./check-url.js");
 require("./check-uuid.js");
+require("./check-stream.js");
+
 require("./node-module-loader.js");
 require("./bug.js");

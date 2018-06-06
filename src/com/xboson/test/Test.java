@@ -427,7 +427,7 @@ public class Test implements IConstant {
       } catch(Throwable t) {
         if (_throws.isAssignableFrom(t.getClass())
                 || t.getClass() == _throws) {
-          msg("OK, cache", t);
+          msg("OK, Catch Error:", t);
           return;
         }
       }

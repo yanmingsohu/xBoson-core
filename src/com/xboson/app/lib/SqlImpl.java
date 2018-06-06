@@ -122,6 +122,18 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   }
 
 
+  public QueryImpl.ResultReader queryStream(String sql, Object[] param)
+          throws Exception {
+    return query_impl.queryStream(sql, param);
+  }
+
+
+  public QueryImpl.ResultReader queryStream(String sql)
+          throws Exception {
+    return query_impl.queryStream(sql, null);
+  }
+
+
   public int update(String sql, Object[] param, String manualCommit) throws Exception {
     return update(sql, param, isManualCommit(manualCommit));
   }
