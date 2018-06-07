@@ -12,6 +12,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * SqlServer 2012 之后的版本支持分页查询.
 * 使用 `gradle` 构建/发布混淆后的 war 包.
 * 配置文件中 `rootUserName: admin-pl`, `rootPid: 1f33f752805443e59bfe5f8f77481443` 方可启用超级用户
+* mysql 配置加入 `max_allowed_packet=20M`, 否则上传大文件会出错.
 
 
 # 需要做:
