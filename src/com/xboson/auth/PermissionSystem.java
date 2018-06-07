@@ -37,7 +37,7 @@ public class PermissionSystem {
    *
    * @throws PermissionException 如果禁止操作会抛出异常, 否则立即返回
    *
-   * @see #apply(Class, IAResource) 更简单的调用方法
+   * @see #applyWithApp(Class, IAResource) 更简单的调用方法
    */
   public static void apply(IAWho who, IAWhere where, IAResource res) {
     if (who == null)
@@ -72,6 +72,7 @@ public class PermissionSystem {
 
   /**
    * 在应用上下文中检查权限
+   * @see #apply(IAWho, IAWhere, IAResource)
    */
   public static void applyWithApp(Class<? extends IAWhere> where,
                                 IAResource res) {

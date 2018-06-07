@@ -28,6 +28,8 @@ import com.xboson.been.ResponseRoot;
 import com.xboson.been.XmlDataMap;
 import com.xboson.j2ee.container.IXResponse;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IHttp;
+import com.xboson.util.c0nst.IXML;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -45,11 +47,7 @@ import java.util.Map;
  * @see com.thoughtworks.xstream.annotations.XStreamAsAttribute 转换为标签属性
  * @see com.thoughtworks.xstream.annotations.XStreamImplicit 集合类型展开
  */
-public class XmlResponse implements IXResponse {
-
-  public static final String MIME_XML = "application/xml; charset=utf-8";
-  public static final String XML_HEAD =
-          "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
+public class XmlResponse implements IXResponse, IHttp, IXML {
 
   private final XStream xs;
 
@@ -63,7 +61,7 @@ public class XmlResponse implements IXResponse {
   public void response(HttpServletRequest request, HttpServletResponse response,
                        Map<String, Object> ret_root) throws IOException {
 
-    response.setHeader("content-type", MIME_XML);
+    response.setHeader(CONTENT_TYPE, CONTENT_APP_XML);
     Writer out = response.getWriter();
     out.write(XML_HEAD);
 

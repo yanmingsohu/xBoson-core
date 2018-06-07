@@ -18,21 +18,23 @@ package com.xboson.util.c0nst;
 
 public interface IXML {
 
-  String PF_SOAP_TAG = "soap:";
+  String PF_SOAP_TAG    = "soap:";
 
-  String NS = "xmlns";
+  String NS             = "xmlns";
 
-  String NS_XSI = "xmlns:xsi";
-  String NS_XSI_URI = "http://www.w3.org/2001/XMLSchema-instance";
+  String NS_XSI         = "xmlns:xsi";
+  String NS_XSI_URI     = "http://www.w3.org/2001/XMLSchema-instance";
 
-  String NS_XSD = "xmlns:xsd";
-  String NS_XSD_URI = "http://www.w3.org/2001/XMLSchema";
+  String NS_XSD         = "xmlns:xsd";
+  String NS_XSD_URI     = "http://www.w3.org/2001/XMLSchema";
 
-  String NS_SOAP = "xmlns:soap";
-  String NS_SOAP_URI = "http://schemas.xmlsoap.org/soap/envelope/";
-  String NS_SOAP12_URI = "http://www.w3.org/2003/05/soap-envelope";
+  String NS_SOAP        = "xmlns:soap";
+  String NS_SOAP_URI    = "http://schemas.xmlsoap.org/soap/envelope/";
+  String NS_SOAP12_URI  = "http://www.w3.org/2003/05/soap-envelope";
 
-  String TAG_ENVELOPE = PF_SOAP_TAG +"Envelope";
-  String TAG_BODY = PF_SOAP_TAG +"Body";
+  String TAG_ENVELOPE   = PF_SOAP_TAG +"Envelope";
+  String TAG_BODY       = PF_SOAP_TAG +"Body";
+
+  String XML_HEAD       = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 
 }

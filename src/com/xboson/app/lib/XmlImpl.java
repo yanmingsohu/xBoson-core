@@ -16,15 +16,26 @@
 
 package com.xboson.app.lib;
 
-import com.xboson.j2ee.resp.XmlResponse;
+import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
 import com.xboson.util.c0nst.IConstant;
+import com.xboson.util.c0nst.IXML;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
-public class XmlImpl {
+public class XmlImpl implements IXML {
 
   public static final String BEG_TN      = "<";
   public static final String END_TN      = ">";
@@ -52,10 +63,21 @@ public class XmlImpl {
   }
 
 
+  public Object parse(JsInputStream in) throws Exception {
+    InputSource src = new InputSource(in);
+    src.setEncoding(IConstant.CHARSET_NAME);
+    TagConvert tc = new TagConvert();
+    XMLReader xmlReader = XMLReaderFactory.createXMLReader();
+    xmlReader.setContentHandler(tc);
+    xmlReader.parse(src);
+    return tc.root != null ? tc.root.childrenNode : null;
+  }
+
+
   public class XmlRoot {
 
     private JsOutputStream out;
-    private XmlTag last;
+    private XmlTagWriter last;
     private boolean pretty;
 
 
@@ -69,13 +91,13 @@ public class XmlImpl {
       if (last != null)
         throw new IllegalStateException();
 
-      out.write(XmlResponse.XML_HEAD);
+      out.write(XML_HEAD);
     }
 
 
-    public XmlTag tag(String name) throws IOException {
+    public XmlTagWriter tag(String name) throws IOException {
       if (last != null) last.end();
-      XmlTag x = new XmlTag(name, out, pretty);
+      XmlTagWriter x = new XmlTagWriter(name, out, pretty);
       x.begin();
       last = x;
       return x;
@@ -95,19 +117,22 @@ public class XmlImpl {
   }
 
 
-  public class XmlTag {
+  /**
+   * 对象转换为 xml 字符串时使用该类
+   */
+  public class XmlTagWriter {
 
     private JsOutputStream out;
 
     /** 记录最后一个子节点 */
-    private XmlTag lastSub;
+    private XmlTagWriter lastSub;
     private String name;
     private int state;
     private boolean pretty;
     private int deep;
 
 
-    private XmlTag(String name, JsOutputStream out, boolean pretty)
+    private XmlTagWriter(String name, JsOutputStream out, boolean pretty)
             throws IOException {
       this.name   = name;
       this.state  = ST_BEGIN;
@@ -123,12 +148,12 @@ public class XmlImpl {
     }
 
 
-    public XmlTag attr(String name, Object val) throws IOException {
+    public XmlTagWriter attr(String name, Object val) throws IOException {
       return attr(name, String.valueOf(val));
     }
 
 
-    public XmlTag attr(String name, String value) throws IOException {
+    public XmlTagWriter attr(String name, String value) throws IOException {
       if (state > ST_BEG_ATTR)
         throw new IllegalStateException();
 
@@ -151,7 +176,7 @@ public class XmlImpl {
     }
 
 
-    public XmlTag tag(String name) throws IOException {
+    public XmlTagWriter tag(String name) throws IOException {
       if (state > ST_SUB_TAG) {
         throw new IllegalStateException();
       }
@@ -161,7 +186,7 @@ public class XmlImpl {
       state = ST_SUB_TAG;
 
       if (lastSub != null) lastSub.end();
-      XmlTag x = new XmlTag(name, out, pretty);
+      XmlTagWriter x = new XmlTagWriter(name, out, pretty);
       x.deep = deep + 2;
       x.begin();
       lastSub = x;
@@ -169,12 +194,12 @@ public class XmlImpl {
     }
 
 
-    public XmlTag text(Object body) throws IOException {
+    public XmlTagWriter text(Object body) throws IOException {
       return text(String.valueOf(body));
     }
 
 
-    public XmlTag text(String body) throws IOException {
+    public XmlTagWriter text(String body) throws IOException {
       if (state > ST_BET_BODY) {
         throw new IllegalStateException();
       } else if (state < ST_BET_BODY) {
@@ -214,12 +239,12 @@ public class XmlImpl {
     }
 
 
-    public XmlTag xml(Object body) throws IOException {
+    public XmlTagWriter xml(Object body) throws IOException {
       return xml(String.valueOf(body));
     }
 
 
-    public XmlTag xml(String body) throws IOException {
+    public XmlTagWriter xml(String body) throws IOException {
       if (state > ST_BET_BODY) {
         throw new IllegalStateException();
       } else if (state < ST_BET_BODY) {
@@ -252,6 +277,70 @@ public class XmlImpl {
       out.write(END_END_TN);
       out.write(name);
       out.write(END_TN);
+    }
+  }
+
+
+  /**
+   * 将 xml 字符串换换为 对象时, 使用该类
+   */
+  public static class TagStruct {
+    public String name;
+    public String qName;
+    public String uri;
+    public transient TagStruct  parent;
+    public Map<String, String>  attributes;
+    public List<TagStruct>      childrenNode;
+    public StringBuilder        text;
+
+    TagStruct(TagStruct parent) {
+      this.attributes   = new HashMap<>();
+      this.childrenNode = new ArrayList<>();
+      this.parent       = parent;
+      this.text         = new StringBuilder();
+    }
+  }
+
+
+  private class TagConvert extends DefaultHandler {
+
+    private TagStruct root;
+    private TagStruct current;
+
+
+    @Override
+    public void startDocument() throws SAXException {
+      root = new TagStruct(null);
+      current = root;
+    }
+
+
+    @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+      current.text.append(ch, start, length);
+    }
+
+
+    @Override
+    public void startElement(String uri, String localName, String qName,
+                             Attributes attr) throws SAXException
+    {
+      TagStruct t   = new TagStruct(current);
+      t.name  = localName;
+      t.qName = qName;
+      t.uri   = uri;
+
+      for (int i = attr.getLength()-1; i>=0; --i) {
+        t.attributes.put(attr.getLocalName(i), attr.getValue(i));
+      }
+      current.childrenNode.add(t);
+      current = t;
+    }
+
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+      current = current.parent;
     }
   }
 }

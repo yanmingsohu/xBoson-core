@@ -19,6 +19,8 @@ package com.xboson.app.lib;
 import com.xboson.app.AppContext;
 import com.xboson.app.ErrorCodeMessage;
 import com.xboson.app.XjApp;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.been.XBosonException.BadParameter;
@@ -1198,5 +1200,15 @@ public class SysImpl extends DateImpl {
 
   public Object httpGet(Object... params) {
     throw new UnsupportedOperationException("Use http.platformGet(..)");
+  }
+
+
+  /**
+   * 检查授权证书中是否有 authName 的使用授权, 未授权抛出异常.
+   *
+   * ! 隐藏函数不做文档, 让谁都看不懂 !
+   */
+  public void authorization(String authName) {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, ()-> authName);
   }
 }

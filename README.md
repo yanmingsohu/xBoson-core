@@ -20,6 +20,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
+* js 字典模块
 
 
 # 2.0 新特性
@@ -226,8 +227,8 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 `app.module.apipm.functions()`      API 进程管理
 `app.module.sql.switch.org()`       连接外部数据源(停用)
 `app.module.webservice.functions()` WebService 服务
+`api.ide.code.modify.functions()`   JS-IDE / UI-IDE 授权
 
-  
   
 # 参考
 

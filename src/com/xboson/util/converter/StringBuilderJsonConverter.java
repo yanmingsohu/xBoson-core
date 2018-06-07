@@ -6,36 +6,21 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-6-7 下午3:41
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/c0nst/IHttp.java
+// 文件创建日期: 18-6-7 下午5:28
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/converter/StringBuilder.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.util.c0nst;
+package com.xboson.util.converter;
 
-public interface IHttp {
+public class StringBuilderJsonConverter extends AbsJsonConverterHelper<StringBuilder> {
 
-  String GET = "GET";
-  String POST = "POST";
+  @Override
+  Class<StringBuilder> classType() {
+    return StringBuilder.class;
+  }
 
-  String HEAD_CACHE = "Cache-Control";
-
-  String VAL_CACHE_NO = "no-cache";
-
-  String CONTENT_TYPE = "Content-Type";
-
-  String CONTENT_UTF8 = "; charset=utf-8";
-
-  String CONTENT_TYPE_HTML = "text/html";
-
-  String CONTENT_TYPE_SOAP = "application/soap+xml"+ CONTENT_UTF8;
-
-  String CONTENT_XML = "text/xml";
-
-  String CONTENT_APP_XML = "application/xml"+ CONTENT_UTF8;
-
-  String HEAD_SOAP = "SOAPAction";
 }

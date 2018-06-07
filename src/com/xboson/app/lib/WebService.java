@@ -16,14 +16,11 @@
 
 package com.xboson.app.lib;
 
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.ApiAuthorizationRating;
 import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
-import com.xboson.script.lib.Path;
-import com.xboson.util.StringBufferOutputStream;
-import com.xboson.util.Tool;
-import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.c0nst.IHttp;
 import com.xboson.util.c0nst.IXML;
 import org.w3c.dom.Element;
@@ -41,6 +38,7 @@ import javax.wsdl.factory.WSDLFactory;
 import javax.wsdl.xml.WSDLReader;
 import javax.xml.namespace.QName;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -56,18 +54,32 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
   public WebService() throws WSDLException {
-    //PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     fact = WSDLFactory.newInstance();
   }
 
 
-  public WSConnection connection(String key) throws Exception {
-    return new WSConnection(null, null, null);
+  public WSConnection connection(Map setting) throws Exception {
+    return new WSConnection(
+            setting.get("curl").toString(),
+            setting.get("name").toString(),
+            setting.get("ns").toString() );
   }
 
 
-  public WSConnection $test(String url, String func, String ns) throws Exception {
+  public WSConnection connection(String url, String func, String ns) throws Exception {
     return new WSConnection(url, func, ns);
+  }
+
+
+  public WSConnection connection(String key) {
+    return null;
+  }
+
+
+  @Override
+  public String description() {
+    return "app.module.webservice.functions()";
   }
 
 
@@ -96,7 +108,7 @@ public class WebService implements IAResource, IHttp, IXML {
      * 设置 soap 版本, 10, 11, 12 可用, 如果已经连接抛出异常.
      */
     public void setVersion(int v) {
-      if (root != null)
+      if (conn != null)
         throw new IllegalStateException("Is connecting");
 
       this.ver = v;
@@ -104,7 +116,7 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
     public JsOutputStream connect() throws Exception {
-      if (root != null)
+      if (conn != null)
         throw new IllegalStateException("Is connecting");
 
       conn = (HttpURLConnection) new URL(url).openConnection();
@@ -113,7 +125,7 @@ public class WebService implements IAResource, IHttp, IXML {
       conn.setDoOutput(true);
 
       if (ver < 12) {
-        conn.setRequestProperty(CONTENT_TYPE, CONTENT_XML+CONTENT_UTF8);
+        conn.setRequestProperty(CONTENT_TYPE, CONTENT_XML + CONTENT_UTF8);
         conn.setRequestProperty(HEAD_SOAP, joinUrl(ns, func));
       } else {
         conn.setRequestProperty(CONTENT_TYPE, CONTENT_TYPE_SOAP);
@@ -121,24 +133,27 @@ public class WebService implements IAResource, IHttp, IXML {
       conn.connect();
 
       output = new JsOutputStream(conn.getOutputStream());
-      root = new XmlImpl().build(output, DEBUG);
-      root.writeHead();
       return output;
     }
 
 
 
-    public XmlImpl.XmlTag buildFunctionCall() throws IOException {
-      if (root == null)
+    public XmlImpl.XmlTagWriter buildFunctionCall() throws IOException {
+      if (conn == null)
         throw new IllegalStateException("Not connect");
+      if (root != null)
+        throw new IllegalStateException("Xml Building");
 
-      XmlImpl.XmlTag env = root.tag(TAG_ENVELOPE)
-              .attr(NS_XSD, NS_XSD_URI)
-              .attr(NS_XSI, NS_XSI_URI)
-              .attr(NS_SOAP, ver == 12 ? NS_SOAP12_URI : NS_SOAP_URI);
+      root = new XmlImpl().build(output, DEBUG);
+      root.writeHead();
 
-      XmlImpl.XmlTag body = env.tag(TAG_BODY);
-      XmlImpl.XmlTag funcCall = body.tag(func).attr(NS, ns);
+      XmlImpl.XmlTagWriter env = root.tag(TAG_ENVELOPE)
+              .attr(NS_XSD,  NS_XSD_URI)
+              .attr(NS_XSI,  NS_XSI_URI)
+              .attr(NS_SOAP, ver < 12 ? NS_SOAP_URI : NS_SOAP12_URI);
+
+      XmlImpl.XmlTagWriter body = env.tag(TAG_BODY);
+      XmlImpl.XmlTagWriter funcCall = body.tag(func).attr(NS, ns);
       return funcCall;
     }
 
@@ -155,12 +170,6 @@ public class WebService implements IAResource, IHttp, IXML {
   }
 
 
-  @Override
-  public String description() {
-    return "app.module.webservice.functions()";
-  }
-
-
   public Object wsdl(String url) throws WSDLException {
     WSDLReader reader = fact.newWSDLReader();
     Definition def = reader.readWSDL(url);
@@ -170,9 +179,7 @@ public class WebService implements IAResource, IHttp, IXML {
 
   public Object wsdl(String url, String txt) throws WSDLException {
     WSDLReader reader = fact.newWSDLReader();
-    byte[] bytes = txt.getBytes(IConstant.CHARSET);
-    ByteInputStream buf = new ByteInputStream(bytes, bytes.length);
-    InputSource input = new InputSource(buf);
+    InputSource input = new InputSource(new StringReader(txt));
     Definition def = reader.readWSDL(url, input);
     return wsdl(def);
   }
@@ -182,11 +189,11 @@ public class WebService implements IAResource, IHttp, IXML {
     Map<Object, Object> ret = new HashMap<>();
     Map parsedTypes = types(def);
 
-    ret.put("ns",     def.getNamespaces());
-    ret.put("uri",    def.getDocumentBaseURI());
-    ret.put("doc",    getDoc(def));
-    ret.put("module", modules(def, parsedTypes));
-    ret.put("types",  parsedTypes);
+    ret.put("ns",      def.getNamespaces());
+    ret.put("uri",     def.getDocumentBaseURI());
+    ret.put("doc",     getDoc(def));
+    ret.put("modules", modules(def, parsedTypes));
+    ret.put("types",   parsedTypes);
     return ret;
   }
 
@@ -201,27 +208,30 @@ public class WebService implements IAResource, IHttp, IXML {
       Map<String, Object> moduleCfg = new HashMap<>();
       ret.add(moduleCfg);
 
+      String ctype = null, curi = null;
       ExtensibilityElement e = findInvokeInfo(mod, def);
       if (e != null) {
         if (e instanceof HTTPAddress) {
-          moduleCfg.put("uri",   ((HTTPAddress) e).getLocationURI());
-          moduleCfg.put("ctype", "http");
+          curi  = ((HTTPAddress) e).getLocationURI();
+          ctype = "http";
         }
         else if (e instanceof SOAPAddress) {
-          moduleCfg.put("uri",   ((SOAPAddress) e).getLocationURI());
-          moduleCfg.put("ctype", "soap");
+          curi  = ((SOAPAddress) e).getLocationURI();
+          ctype = "soap";
         }
       }
 
-      moduleCfg.put("name",     name.getLocalPart());
-      moduleCfg.put("doc",      getDoc(mod));
-      moduleCfg.put("function", functions(mod, parsedTypes));
+      moduleCfg.put("uri",       curi);
+      moduleCfg.put("ctype",     ctype);
+      moduleCfg.put("name",      name.getLocalPart());
+      moduleCfg.put("doc",       getDoc(mod));
+      moduleCfg.put("functions", functions(mod, parsedTypes, curi));
     }
     return ret;
   }
 
 
-  private Object functions(PortType mod, Map parsedTypes) {
+  private Object functions(PortType mod, Map parsedTypes, String curl) {
     String NS = mod.getQName().getNamespaceURI();
     List<Operation> oplist = mod.getOperations();
     Map<String, Object> ret = new HashMap<>(oplist.size());
@@ -233,6 +243,7 @@ public class WebService implements IAResource, IHttp, IXML {
       funcCfg.put("name", func.getName());
       funcCfg.put("ns",   NS);
       funcCfg.put("doc",  getDoc(func));
+      funcCfg.put("curl", curl);
       funcCfg.put("input",
           parseParameter(func.getInput().getMessage(), parsedTypes));
       funcCfg.put("output",
@@ -265,9 +276,7 @@ public class WebService implements IAResource, IHttp, IXML {
   private Object parseParameter(Message msg, Map types) {
     Map<String, Part> params = msg.getParts();
     Map<String, Object> ret = new HashMap<>(params.size());
-    //
-    // Part 是参数
-    //
+
     for (Part parm : params.values()) {
       QName type = parm.getTypeName();
       if (type == null) {

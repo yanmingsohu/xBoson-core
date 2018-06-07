@@ -71,6 +71,7 @@ public final class ConverterInitialization {
     new MongoJsonConverter().register(jsbuilded);
     new BigDecimalConverter().register(jsbuilded);
     new BigIntegerConverter().register(jsbuilded);
+    new StringBuilderJsonConverter().register(jsbuilded);
   }
 
 

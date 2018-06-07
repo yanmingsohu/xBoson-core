@@ -39,9 +39,9 @@ public class TestXmlBuilder extends Test {
     JsOutputStream jo = new JsOutputStream(buf);
 
     XmlImpl.XmlRoot root = xml.build(jo);
-    XmlImpl.XmlTag a = root.tag("a");
-    XmlImpl.XmlTag b = a.tag("b");
-    XmlImpl.XmlTag c = b.tag("c");
+    XmlImpl.XmlTagWriter a = root.tag("a");
+    XmlImpl.XmlTagWriter b = a.tag("b");
+    XmlImpl.XmlTagWriter c = b.tag("c");
     b.tag("d").attr("type", "string");
     root.end();
 
