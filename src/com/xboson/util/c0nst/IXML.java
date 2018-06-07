@@ -6,20 +6,33 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-5-23 上午12:38
-// 原始文件路径: E:/xboson/xBoson/src/com/xboson/j2ee/container/IHttpHeader.java
+// 文件创建日期: 18-6-7 下午3:48
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/c0nst/IXML.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.j2ee.container;
+package com.xboson.util.c0nst;
 
-import com.xboson.util.c0nst.IHttp;
+public interface IXML {
 
+  String PF_SOAP_TAG = "soap:";
 
-public interface IHttpHeader extends IHttp {
+  String NS = "xmlns";
 
+  String NS_XSI = "xmlns:xsi";
+  String NS_XSI_URI = "http://www.w3.org/2001/XMLSchema-instance";
+
+  String NS_XSD = "xmlns:xsd";
+  String NS_XSD_URI = "http://www.w3.org/2001/XMLSchema";
+
+  String NS_SOAP = "xmlns:soap";
+  String NS_SOAP_URI = "http://schemas.xmlsoap.org/soap/envelope/";
+  String NS_SOAP12_URI = "http://www.w3.org/2003/05/soap-envelope";
+
+  String TAG_ENVELOPE = PF_SOAP_TAG +"Envelope";
+  String TAG_BODY = PF_SOAP_TAG +"Body";
 
 }

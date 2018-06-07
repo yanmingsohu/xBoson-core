@@ -87,8 +87,10 @@ public class XmlImpl {
         last.end();
         last = null;
       }
-      out.flush();
-      out = null;
+      if (out != null) {
+        out.flush();
+        out = null;
+      }
     }
   }
 
@@ -127,7 +129,7 @@ public class XmlImpl {
 
 
     public XmlTag attr(String name, String value) throws IOException {
-      if (state >= ST_BEG_ATTR)
+      if (state > ST_BEG_ATTR)
         throw new IllegalStateException();
 
       this.state = ST_BEG_ATTR;

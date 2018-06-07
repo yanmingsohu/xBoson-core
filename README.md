@@ -16,10 +16,10 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 # 需要做:
 
+* ide 授权, 未授权的平台接口返回未注册信息
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
-* 架设 git 服务器.
 
 
 # 2.0 新特性
@@ -42,6 +42,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * ui 目录 / node 模块目录 / 临时文件目录, 映射到虚拟文件系统中 (支持集群).
 * 虚拟文件系统通过 api 开放给脚本, 直接在脚本中操作文件.
 * 第三方使用 OAuth 2.0 接入平台.
+* 架设 git 服务器.
 
 
 # JAR 依赖
@@ -98,6 +99,10 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
     
 * (文件上传解析)
     -- (commons-fileupload-1.3.3.jar)[http://commons.apache.org/proper/commons-fileupload/]
+    
+* (WebService 组件)
+    -- (wsdl4j.jar)
+    -- (qname.jar)
     
 		
 # URL 映射约定
@@ -219,7 +224,9 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 `app.module.fabric.functions()`     区块链驱动
 `app.module.cluster.functions()`    集群管理
 `app.module.apipm.functions()`      API 进程管理
-`app.module.sql.switch.org()`       连接外部数据源
+`app.module.sql.switch.org()`       连接外部数据源(停用)
+`app.module.webservice.functions()` WebService 服务
+
   
   
 # 参考

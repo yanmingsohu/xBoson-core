@@ -106,6 +106,7 @@ public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     mod.regClass("fabric",    FabricImpl.class);
     mod.regClass("image",     ImageImpl.class);
     mod.regClass("xml",       XmlImpl.class);
+    mod.regClass("ws",        WebService.class);
   }
 
 

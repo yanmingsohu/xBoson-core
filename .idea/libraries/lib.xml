@@ -4,11 +4,14 @@
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
       <root url="jar://$PROJECT_DIR$/../.tomcat9/lib/catalina.jar!/" />
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
+      <root url="file://$PROJECT_DIR$/libs" />
     </CLASSES>
     <JAVADOC>
       <root url="https://docs.oracle.com/javaee/7/api/" />
+      <root url="file://$PROJECT_DIR$/../[opensource-lib-other]/wsdl4j-1_6_3/docs/api" />
     </JAVADOC>
     <SOURCES />
+    <jarDirectory url="file://$PROJECT_DIR$/libs" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
   </library>
