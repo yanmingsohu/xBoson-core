@@ -72,7 +72,7 @@ public class WebService implements IAResource, IHttp, IXML {
   }
 
 
-  public WSConnection connection(String key) {
+  public WSConnection connection(String key) { //!!!!
     return null;
   }
 
@@ -159,12 +159,22 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
     public JsInputStream openInput() throws IOException {
+      if (conn == null)
+        throw new IllegalStateException("Not connect");
+      if (root == null)
+        throw new IllegalStateException("Not build function");
+
       root.end();
       return new JsInputStream(conn.getInputStream());
     }
 
 
     public void end() throws IOException {
+      if (conn == null)
+        throw new IllegalStateException("Not connect");
+      if (root == null)
+        throw new IllegalStateException("Not build function");
+
       root.end();
     }
   }
@@ -314,6 +324,7 @@ public class WebService implements IAResource, IHttp, IXML {
    */
   private void types(NodeList list, Map map, List valueTypes) {
     final int len = list.getLength();
+
     for (int i=0; i<len; ++i) {
       Node node = list.item(i);
       if ("#text".equals(node.getNodeName()))
@@ -353,7 +364,7 @@ public class WebService implements IAResource, IHttp, IXML {
         }
       }
       else {
-        throw new NullPointerException("not both null");
+        throw new NullPointerException("Map/Types both null");
       }
     }
   }
@@ -379,7 +390,8 @@ public class WebService implements IAResource, IHttp, IXML {
 
     NodeList l = d.getChildNodes();
     StringBuilder buf = new StringBuilder();
-    int len = l.getLength();
+    final int len = l.getLength();
+
     for (int i=0; i<len; ++i) {
       buf.append(l.item(i).getNodeValue());
     }

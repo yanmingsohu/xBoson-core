@@ -80,8 +80,9 @@ public class TestWSDL extends Test {
     XmlImpl.XmlTagWriter func = conn.buildFunctionCall();
     func.tag("theIpAddress").text("182.201.178.62");
 
-    Object ret = new XmlImpl().parse(conn.openInput());
+    XmlImpl.TagStruct ret = new XmlImpl().parse(conn.openInput());
     msg("Return Message:", Tool.beautifyJson(Object.class, ret));
+    msg("XML:", new XmlImpl().stringify(ret));
   }
 
 }

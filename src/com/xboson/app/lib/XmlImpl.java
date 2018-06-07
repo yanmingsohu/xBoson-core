@@ -18,6 +18,8 @@ package com.xboson.app.lib;
 
 import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
+import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.c0nst.IXML;
 import org.xml.sax.Attributes;
@@ -52,6 +54,8 @@ public class XmlImpl implements IXML {
   public static final int ST_SUB_TAG     = 10;
   public static final int ST_END_TAG     = 99;
 
+  public static boolean DEBUG = false;
+
 
   public XmlRoot build(JsOutputStream out, boolean pretty) throws IOException {
     return new XmlRoot(out, pretty);
@@ -59,18 +63,39 @@ public class XmlImpl implements IXML {
 
 
   public XmlRoot build(JsOutputStream out) throws IOException {
-    return build(out, false);
+    return build(out, DEBUG);
   }
 
 
-  public Object parse(JsInputStream in) throws Exception {
+  public TagStruct parse(JsInputStream in) throws Exception {
     InputSource src = new InputSource(in);
     src.setEncoding(IConstant.CHARSET_NAME);
     TagConvert tc = new TagConvert();
     XMLReader xmlReader = XMLReaderFactory.createXMLReader();
     xmlReader.setContentHandler(tc);
     xmlReader.parse(src);
-    return tc.root != null ? tc.root.childrenNode : null;
+
+    if (tc.root != null && tc.root.childrenNode != null) {
+      if (tc.root.childrenNode.size() == 1) {
+        return tc.root.childrenNode.get(0);
+      }
+    }
+    return tc.root;
+  }
+
+
+  public void stringify(TagStruct root, JsOutputStream out) throws Exception {
+    TagConvert tc = new TagConvert();
+    XmlRoot xroot = tc.initStringify(root, out);
+    xroot.end();
+  }
+
+
+  public String stringify(TagStruct root) throws Exception {
+    StringBufferOutputStream buf = new StringBufferOutputStream();
+    JsOutputStream out = new JsOutputStream(buf);
+    stringify(root, out);
+    return buf.toString();
   }
 
 
@@ -306,6 +331,45 @@ public class XmlImpl implements IXML {
 
     private TagStruct root;
     private TagStruct current;
+    private Map<String, String> nsMap;
+    private int id;
+
+
+    void write(TagStruct s, XmlTagWriter t) throws IOException {
+      for (Map.Entry<String, String> attr : s.attributes.entrySet()) {
+        t.attr(attr.getKey(), attr.getValue());
+      }
+      if (s.text.length() > 0) {
+        t.text(s.text);
+      }
+      for (TagStruct ch : s.childrenNode) {
+        XmlTagWriter chw = t.tag(getTagName(ch));
+        write(ch, chw);
+      }
+    }
+
+
+    XmlRoot initStringify(TagStruct root, JsOutputStream out) throws IOException {
+      nsMap = new HashMap<>();
+      XmlRoot xroot = new XmlRoot(out, DEBUG);
+      xroot.writeHead();
+      write(root, xroot.tag(getTagName(root)) );
+      return xroot;
+    }
+
+
+    String getTagName(TagStruct t) {
+      if (! Tool.isNulStr(t.uri)) {
+        String prefix = nsMap.get(t.uri);
+        if (prefix == null) {
+          prefix = "XnS"+ Integer.toString(id++, 16);
+          nsMap.put(t.uri, prefix);
+          t.attributes.put(NS_PF + prefix, t.uri);
+        }
+        return prefix +':'+ t.name;
+      }
+      return t.name;
+    }
 
 
     @Override

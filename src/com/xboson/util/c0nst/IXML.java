@@ -21,6 +21,7 @@ public interface IXML {
   String PF_SOAP_TAG    = "soap:";
 
   String NS             = "xmlns";
+  String NS_PF          = NS +":";
 
   String NS_XSI         = "xmlns:xsi";
   String NS_XSI_URI     = "http://www.w3.org/2001/XMLSchema-instance";
