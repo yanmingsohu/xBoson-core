@@ -33,9 +33,11 @@ public interface IXML {
   String NS_SOAP_URI    = "http://schemas.xmlsoap.org/soap/envelope/";
   String NS_SOAP12_URI  = "http://www.w3.org/2003/05/soap-envelope";
 
-  String TAG_ENVELOPE   = PF_SOAP_TAG +"Envelope";
-  String TAG_BODY       = PF_SOAP_TAG +"Body";
+  String TAG_S_ENVELOPE = PF_SOAP_TAG +"Envelope";
+  String TAG_S_BODY     = PF_SOAP_TAG +"Body";
+  String TAG_S_HEADER   = PF_SOAP_TAG +"Header";
+  String TAG_S_FAULT    = PF_SOAP_TAG +"Fault";
 
-  String XML_HEAD       = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
+  String XML_HEAD       = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
 
 }

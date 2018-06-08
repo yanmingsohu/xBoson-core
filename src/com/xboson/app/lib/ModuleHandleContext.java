@@ -81,7 +81,8 @@ public class ModuleHandleContext implements IJSObject {
     Object modimpl = getMap().get(name);
     if (modimpl == null) {
       throw new XBosonException.NotExist("Cannot get '" + name
-              +"' Module, Maybe current user not enough authority.");
+              +"' Module, Maybe current user not enough authority,"
+              +" or not in Application context.");
     }
     return modimpl;
   }

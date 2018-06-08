@@ -18,10 +18,14 @@ package com.xboson.test;
 
 import com.xboson.app.lib.WebService;
 import com.xboson.app.lib.XmlImpl;
+import com.xboson.db.DbmsFactory;
 import com.xboson.script.lib.JsOutputStream;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
-import javax.wsdl.WSDLException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.Map;
 
 
 public class TestWSDL extends Test {
@@ -41,6 +45,8 @@ public class TestWSDL extends Test {
    */
   static String url3 = "http://www.webxml.com.cn/WebServices/IpAddressSearchWebService.asmx?wsdl";
 
+  static final String key = "0000";
+
   /**
    * WSDL 文档参考:
    *   https://www.ibm.com/developerworks/cn/java/j-jws20/index.html
@@ -56,14 +62,60 @@ public class TestWSDL extends Test {
   public void test() throws Throwable {
     wsdl(url3);
     call2();
+    callkey();
   }
 
 
-  public void wsdl(String url) throws WSDLException {
+  public void wsdl(String url) throws Exception {
     sub("Parse WSDL from URL", url);
     WebService ws = new WebService();
-    Object o = ws.wsdl(url);
+    Map o = ws.wsdl(url);
     msg(Tool.beautifyJson(Object.class, o));
+    save(o);
+  }
+
+
+  public void save(Map o) throws Exception {
+    sub("Save WSDL function setting");
+
+    Map mod  = (Map) ((Map) o.get("modules")).get("IpAddressSearchWebServiceSoap");
+    Map func = (Map) ((Map) mod.get("functions")).get("getCountryCityByIp");
+
+    String funcSetting = Tool.beautifyJson(Object.class, func);
+    msg(funcSetting);
+
+    String sql = "Insert Into sys_webservice (" +
+            " wsid, wsname, wsnote, ws_mod_name, ws_func_name, " +
+            " ws_uri, ws_config_json, createdt, updatedt) " +
+            " values (?,?,?,?,?,?,?, now(), now())" +
+            " ON DUPLICATE KEY UPdate updatedt = values(updatedt)";
+
+    try (Connection conn =
+      DbmsFactory.me().open(SysConfig.me().readConfig().db)) {
+      PreparedStatement ps = conn.prepareStatement(sql);
+      ps.setString(1, key);
+      ps.setString(2, "测试");
+      ps.setString(3, func.get("doc").toString());
+      ps.setString(4, mod.get("name").toString());
+      ps.setString(5, func.get("name").toString());
+      ps.setString(6, func.get("curl").toString());
+      ps.setString(7, funcSetting);
+      ps.execute();
+    }
+  }
+
+
+  public void callkey() throws Exception {
+    sub("Call SOAP Function from KEY");
+    WebService ws = new WebService();
+    WebService.WSConnection conn = ws.connection(key);
+    conn.connect();
+
+    XmlImpl.XmlTagWriter func = conn.buildFunctionCall();
+    func.tag("theIpAddress").text("182.201.178.62");
+
+    XmlImpl.TagStruct ret = new XmlImpl().parse(conn.openInput());
+    msg("XML:", new XmlImpl().stringify(ret));
   }
 
 

@@ -140,7 +140,7 @@ public class RequestImpl extends JSObject.Helper implements IJson {
    * @param max 值必须 <= max
    * @return 参数值
    */
-  public long getInteger(String name, boolean allowNull, long min, long max) {
+  public long getInteger(String name, boolean allowNull, double min, double max) {
     String val = (String) getMember(name);
     if (Tool.isNulStr(val)) {
       if (allowNull) return 0;
@@ -162,16 +162,16 @@ public class RequestImpl extends JSObject.Helper implements IJson {
 
   /**
    * 不限制最大值
-   * @see #getInteger(String, boolean, long, long)
+   * @see #getInteger(String, boolean, double, double)
    */
-  public long getInteger(String name, boolean allowNull, long min) {
+  public long getInteger(String name, boolean allowNull, double min) {
     return getInteger(name, allowNull, min, Long.MAX_VALUE);
   }
 
 
   /**
    * 不限制最大值和最小值
-   * @see #getInteger(String, boolean, long, long)
+   * @see #getInteger(String, boolean, double, double)
    */
   public long getInteger(String name, boolean allowNull) {
     return getInteger(name, allowNull, Long.MIN_VALUE, Long.MAX_VALUE);
@@ -180,10 +180,20 @@ public class RequestImpl extends JSObject.Helper implements IJson {
 
   /**
    * 不允许空值
-   * @see #getInteger(String, boolean, long, long)
+   * @see #getInteger(String, boolean, double, double)
    */
   public long getInteger(String name) {
     return getInteger(name, false);
+  }
+
+
+  public long getInteger(String name, boolean allowNull, int min, int max) {
+    return getInteger(name, allowNull, (double)min, (double)max);
+  }
+
+
+  public long getInteger(String name, boolean allowNull, int min) {
+    return getInteger(name, allowNull, (double)min, Double.MAX_VALUE);
   }
 
 

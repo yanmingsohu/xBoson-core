@@ -19,8 +19,16 @@ package com.xboson.app.lib;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.been.XBosonException;
+import com.xboson.db.ConnectConfig;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
+import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IHttp;
 import com.xboson.util.c0nst.IXML;
 import org.w3c.dom.Element;
@@ -41,6 +49,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,12 +59,17 @@ import java.util.Map;
 public class WebService implements IAResource, IHttp, IXML {
 
   public static boolean DEBUG = false;
+
   private final WSDLFactory fact;
+  private final ConnectConfig db;
+  private final Log log;
 
 
   public WebService() throws WSDLException {
     PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     fact = WSDLFactory.newInstance();
+    db   = SysConfig.me().readConfig().db;
+    log  = LogFactory.create("jsWebService");
   }
 
 
@@ -72,8 +86,21 @@ public class WebService implements IAResource, IHttp, IXML {
   }
 
 
-  public WSConnection connection(String key) { //!!!!
-    return null;
+  public WSConnection connection(String key) throws Exception {
+    Object[] parm = { key };
+    try (SqlResult sr = SqlReader.query("ws_open", db, parm)) {
+      ResultSet rs = sr.getResult();
+
+      if (rs.next()) {
+        String json = rs.getString(1);
+        Map setting = Tool.getAdapter(Map.class).fromJson(json);
+        log.debug("open ws", setting);
+        return connection(setting);
+      } else {
+        throw new XBosonException.NotFound(
+                "Web Service Setting: "+ key);
+      }
+    }
   }
 
 
@@ -120,6 +147,7 @@ public class WebService implements IAResource, IHttp, IXML {
         throw new IllegalStateException("Is connecting");
 
       conn = (HttpURLConnection) new URL(url).openConnection();
+      ModuleHandleContext.autoClose(()-> conn.disconnect());
       conn.setRequestMethod(POST);
       conn.setDoInput(true);
       conn.setDoOutput(true);
@@ -147,12 +175,12 @@ public class WebService implements IAResource, IHttp, IXML {
       root = new XmlImpl().build(output, DEBUG);
       root.writeHead();
 
-      XmlImpl.XmlTagWriter env = root.tag(TAG_ENVELOPE)
+      XmlImpl.XmlTagWriter env = root.tag(TAG_S_ENVELOPE)
               .attr(NS_XSD,  NS_XSD_URI)
               .attr(NS_XSI,  NS_XSI_URI)
               .attr(NS_SOAP, ver < 12 ? NS_SOAP_URI : NS_SOAP12_URI);
 
-      XmlImpl.XmlTagWriter body = env.tag(TAG_BODY);
+      XmlImpl.XmlTagWriter body = env.tag(TAG_S_BODY);
       XmlImpl.XmlTagWriter funcCall = body.tag(func).attr(NS, ns);
       return funcCall;
     }
@@ -180,14 +208,14 @@ public class WebService implements IAResource, IHttp, IXML {
   }
 
 
-  public Object wsdl(String url) throws WSDLException {
+  public Map wsdl(String url) throws WSDLException {
     WSDLReader reader = fact.newWSDLReader();
     Definition def = reader.readWSDL(url);
     return wsdl(def);
   }
 
 
-  public Object wsdl(String url, String txt) throws WSDLException {
+  public Map wsdl(String url, String txt) throws WSDLException {
     WSDLReader reader = fact.newWSDLReader();
     InputSource input = new InputSource(new StringReader(txt));
     Definition def = reader.readWSDL(url, input);
@@ -195,7 +223,7 @@ public class WebService implements IAResource, IHttp, IXML {
   }
 
 
-  private Object wsdl(Definition def) {
+  private Map wsdl(Definition def) {
     Map<Object, Object> ret = new HashMap<>();
     Map parsedTypes = types(def);
 
@@ -210,13 +238,14 @@ public class WebService implements IAResource, IHttp, IXML {
 
   private Object modules(Definition def, Map parsedTypes) {
     Map<QName, PortType> modules = def.getPortTypes();
-    List<Object> ret = new ArrayList<>(modules.size());
+    Map<Object, Object> ret = new HashMap<>(modules.size());
 
     for (QName name : modules.keySet()) {
-      PortType mod =  modules.get(name);
+      PortType mod = modules.get(name);
+      String modnm = name.getLocalPart();
 
       Map<String, Object> moduleCfg = new HashMap<>();
-      ret.add(moduleCfg);
+      ret.put(modnm, moduleCfg);
 
       String ctype = null, curi = null;
       ExtensibilityElement e = findInvokeInfo(mod, def);
@@ -233,7 +262,7 @@ public class WebService implements IAResource, IHttp, IXML {
 
       moduleCfg.put("uri",       curi);
       moduleCfg.put("ctype",     ctype);
-      moduleCfg.put("name",      name.getLocalPart());
+      moduleCfg.put("name",      modnm);
       moduleCfg.put("doc",       getDoc(mod));
       moduleCfg.put("functions", functions(mod, parsedTypes, curi));
     }

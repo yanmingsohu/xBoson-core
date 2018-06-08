@@ -12,7 +12,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * SqlServer 2012 之后的版本支持分页查询.
 * 使用 `gradle` 构建/发布混淆后的 war 包.
 * 配置文件中 `rootUserName: admin-pl`, `rootPid: 1f33f752805443e59bfe5f8f77481443` 方可启用超级用户
-* mysql 配置加入 `max_allowed_packet=20M`, 否则上传大文件会出错.
 
 
 # 需要做:
@@ -44,7 +43,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * ui 目录 / node 模块目录 / 临时文件目录, 映射到虚拟文件系统中 (支持集群).
 * 虚拟文件系统通过 api 开放给脚本, 直接在脚本中操作文件.
 * 第三方使用 OAuth 2.0 接入平台.
-* 架设 git 服务器.
 
 
 # JAR 依赖
@@ -229,6 +227,22 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 `app.module.sql.switch.org()`       连接外部数据源(停用)
 `app.module.webservice.functions()` WebService 服务
 `api.ide.code.modify.functions()`   JS-IDE / UI-IDE 授权
+
+
+# Mysql 默认配置文件
+
+```ini
+[mysqld]
+character-set-server = utf8mb4 
+join_buffer_size = 512M
+sort_buffer_size = 20M
+read_rnd_buffer_size = 20M 
+sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+max_connect_errors=1000
+
+# 若上传大文件报错, 则增大这个设置 
+max_allowed_packet=100M
+```
 
   
 # 参考
