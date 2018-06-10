@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
+import com.xboson.script.lib.StreamUtil;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
@@ -151,6 +152,8 @@ public class XmlImpl implements IXML {
 
     /** 记录最后一个子节点 */
     private XmlTagWriter lastSub;
+    /** 文本输出器, 可能为 null */
+    private JsOutputStream textWriter;
     private String name;
     private int state;
     private boolean pretty;
@@ -225,12 +228,7 @@ public class XmlImpl implements IXML {
 
 
     public XmlTagWriter text(String body) throws IOException {
-      if (state > ST_BET_BODY) {
-        throw new IllegalStateException();
-      } else if (state < ST_BET_BODY) {
-        out.write(END_TN);
-      }
-      this.state = ST_BET_BODY;
+      beginBodyWithoutEnd();
 
       OutputStreamWriter w = new OutputStreamWriter(out, IConstant.CHARSET);
       int len = body.length();
@@ -238,24 +236,12 @@ public class XmlImpl implements IXML {
       for (int i=0; i<len; ++i) {
         char c = body.charAt(i);
         switch (c) {
-          case '<':
-            w.write("&lt;");
-            break;
-          case '>':
-            w.write("&gt;");
-            break;
-          case '&':
-            w.write("&amp;");
-            break;
-          case '\'':
-            w.write("&apos;");
-            break;
-          case '"':
-            w.write("&quot;");
-            break;
-          default:
-            w.append(c);
-            break;
+          case '<' : w.write("&lt;"); break;
+          case '>' : w.write("&gt;"); break;
+          case '&' : w.write("&amp;"); break;
+          case '\'': w.write("&apos;"); break;
+          case '"' : w.write("&quot;"); break;
+          default  : w.append(c); break;
         }
       }
       // dont close
@@ -270,15 +256,29 @@ public class XmlImpl implements IXML {
 
 
     public XmlTagWriter xml(String body) throws IOException {
+      beginBodyWithoutEnd();
+      out.write(body);
+      return this;
+    }
+
+
+    public JsOutputStream textWriter() throws IOException {
+      beginBodyWithoutEnd();
+      if (textWriter != null) {
+        textWriter.flush();
+      }
+      textWriter = new JsOutputStream(new StreamUtil.XmlContentWriter(out));
+      return textWriter;
+    }
+
+
+    private void beginBodyWithoutEnd() throws IOException {
       if (state > ST_BET_BODY) {
         throw new IllegalStateException();
       } else if (state < ST_BET_BODY) {
         out.write(END_TN);
       }
-
       this.state = ST_BET_BODY;
-      out.write(body);
-      return this;
     }
 
 
@@ -294,6 +294,9 @@ public class XmlImpl implements IXML {
       if (lastSub != null) {
         lastSub.end();
         lastSub = null;
+      }
+      if (textWriter != null) {
+        textWriter.flush();
       }
 
       if (pretty && state >= ST_SUB_TAG) indentation();

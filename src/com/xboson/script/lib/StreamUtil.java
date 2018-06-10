@@ -16,17 +16,26 @@
 
 package com.xboson.script.lib;
 
-import com.sun.xml.internal.messaging.saaj.packaging.mime.util.BASE64DecoderStream;
-import com.sun.xml.internal.messaging.saaj.packaging.mime.util.BASE64EncoderStream;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.c0nst.IConstant;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.*;
+import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 
 public class StreamUtil {
+
+  private Base64.Encoder bec;
+  private Base64.Decoder bdc;
+
+
+  public StreamUtil() {
+    bec = Base64.getEncoder();
+    bdc = Base64.getDecoder();
+  }
 
   public JsOutputStream openGzipOutputStream(JsOutputStream out) throws IOException {
     GZIPOutputStream gzip = new GZIPOutputStream(out, true);
@@ -41,14 +50,12 @@ public class StreamUtil {
 
 
   public JsOutputStream openBase64OutputStream(JsOutputStream out) {
-    BASE64EncoderStream wrap = new BASE64EncoderStream(out);
-    return new JsOutputStream(wrap);
+    return new JsOutputStream(bec.wrap(out));
   }
 
 
   public JsInputStream openBase64InputStream(JsInputStream in) {
-    BASE64DecoderStream wrap = new BASE64DecoderStream(in);
-    return new JsInputStream(wrap);
+    return new JsInputStream(bdc.wrap(in));
   }
 
 
@@ -69,4 +76,36 @@ public class StreamUtil {
     return new LineNumberReader(new InputStreamReader(in, IConstant.CHARSET));
   }
 
+
+  public JsOutputStream openXMLOutputStream(JsOutputStream out) throws XMLStreamException {
+    return new JsOutputStream(new XmlContentWriter(out));
+  }
+
+
+  /**
+   * 在写出 xml 文本时, 对特殊字符做转义.
+   */
+  public static class XmlContentWriter extends OutputStream {
+    private JsOutputStream ori;
+
+    public XmlContentWriter(JsOutputStream ori) {
+      this.ori = ori;
+    }
+
+    @Override
+    public void write(int i) throws IOException {
+      if (i >= 0x80) {
+        ori.write(i);
+      } else {
+        switch (i) {
+          case '<' : ori.write("&lt;"); break;
+          case '>' : ori.write("&gt;"); break;
+          case '&' : ori.write("&amp;"); break;
+          case '"' : ori.write("&quot;"); break;
+          case '\'': ori.write("&apos;"); break;
+          default  : ori.write(i);
+        }
+      }
+    }
+  }
 }

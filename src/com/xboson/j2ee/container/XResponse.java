@@ -49,6 +49,8 @@ public class XResponse implements IHttpHeader {
 	private boolean is_responsed = false;
 	private boolean is_set_msg = false;
 
+	static String licenseState;
+
 	
 	public XResponse(HttpServletRequest request, HttpServletResponse response)
           throws ServletException {
@@ -88,6 +90,10 @@ public class XResponse implements IHttpHeader {
     }
     this.ret_root = root;
     ret_root.put("code", 0);
+
+    if (licenseState != null) {
+      ret_root.put(Processes.s[5], Processes.s[9]);
+    }
   }
 	
 	

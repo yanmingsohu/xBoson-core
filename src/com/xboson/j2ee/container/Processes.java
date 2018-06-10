@@ -56,15 +56,27 @@ public class Processes extends HttpFilter {
    * @see com.xboson.test.TestSign
    */
   public static final String s[] = new String[] {
-      /* 0 */ "QmFkIExpY2Vuc2UsIENvcHkgcHJvdGVjdGlvbg==",
-      /* 1 */ "QmFkIExpY2Vuc2UsIFdyb25nIGFwcGxpY2F0aW9u",
-      /* 2 */ "QmFkIExpY2Vuc2UsIFNpZ25hdHVyZSBmYWls",
-      /* 3 */ "QmFkIExpY2Vuc2UsIEhhcyBub3QgeWV0IHN0YXJ0ZWQ=",
-      /* 4 */ "QmFkIExpY2Vuc2UsIE92ZXIgdGhlIHVzZSBvZiB0aW1l",
-      /* 5 */ "TGljZW5zZQ==",
-      /* 6 */ "VXBkYXRl",
-      /* 7 */ "YmFkIHB1YmxpYyBrZXk=",
-      /* 8 */ "Tm8gbGljZW5zZSB0byBydW4gdGhlIGZ1bmN0aW9uLCA=",
+      /* 0 > Bad License, Copy protection */
+          "QmFkIExpY2Vuc2UsIENvcHkgcHJvdGVjdGlvbg==",
+      /* 1 > Bad License, Wrong application */
+          "QmFkIExpY2Vuc2UsIFdyb25nIGFwcGxpY2F0aW9u",
+      /* 2 > Bad License, Signature fail */
+          "QmFkIExpY2Vuc2UsIFNpZ25hdHVyZSBmYWls",
+      /* 3 > Bad License, Has not yet started */
+          "QmFkIExpY2Vuc2UsIEhhcyBub3QgeWV0IHN0YXJ0ZWQ=",
+      /* 4 > Bad License, Over the use of time */
+          "QmFkIExpY2Vuc2UsIE92ZXIgdGhlIHVzZSBvZiB0aW1l",
+      /* 5 > License */
+          "TGljZW5zZQ==",
+      /* 6 > Update */
+          "VXBkYXRl",
+      /* 7 > bad public key */
+          "YmFkIHB1YmxpYyBrZXk=",
+      /* 8 > No license to run the function,  */
+          "Tm8gbGljZW5zZSB0byBydW4gdGhlIGZ1bmN0aW9uLCA=",
+      /* 9 > 未授权的产品, 由[上海竹呗信息技术有限公司]提供技术支持 */
+          "5pyq5o6I5p2D55qE5Lqn5ZOBLCDnlLFb5LiK5rW356u55ZGX5L+" +
+                  "h5oGv5oqA5pyv5pyJ6ZmQ5YWs5Y+4XeaPkOS+m+aKgOacr+aUr+aMgQ==",
   };
 
   static {
@@ -159,6 +171,7 @@ public class Processes extends HttpFilter {
       } catch (Exception e) {
         msg = e.getMessage();
       }
+      XResponse.licenseState = msg;
       if (msg != null) log.warn(msg);
     }
 

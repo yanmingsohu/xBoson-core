@@ -47,12 +47,14 @@ public class TestSign extends Test {
 //            "Update",
 //            "bad public key",
 //            "No license to run the function, ",
+//            "未授权的产品, 由[上海竹呗信息技术有限公司]提供技术支持",
     };
 
-    msg("private static final String s[] = new String[] {");
+    msg("public static final String s[] = new String[] {");
     for (int i=0; i<s.length; ++i) {
+      msg("  /*", i, '>', s[i], "*/");
       s[i] = Base64.getEncoder().encodeToString(s[i].getBytes("UTF8"));
-      msg("  /*", i, "*/ \""+s[i]+"\",");
+      msg("        \""+ s[i] +"\",");
     }
     msg("};");
   }

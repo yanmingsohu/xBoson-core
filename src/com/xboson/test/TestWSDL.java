@@ -16,15 +16,20 @@
 
 package com.xboson.test;
 
+import com.xboson.app.lib.ModuleHandleContext;
 import com.xboson.app.lib.WebService;
 import com.xboson.app.lib.XmlImpl;
 import com.xboson.db.DbmsFactory;
 import com.xboson.script.lib.JsOutputStream;
+import com.xboson.script.lib.StreamUtil;
+import com.xboson.util.CloseableSet;
+import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -60,6 +65,9 @@ public class TestWSDL extends Test {
 
   @Override
   public void test() throws Throwable {
+    new ModuleHandleContext().init();
+    ModuleHandleContext.register(ModuleHandleContext.CLOSE, new CloseableSet());
+
     wsdl(url3);
     call2();
     callkey();

@@ -42,8 +42,15 @@ public class TestXmlBuilder extends Test {
     XmlImpl.XmlTagWriter a = root.tag("a");
     XmlImpl.XmlTagWriter b = a.tag("b");
     XmlImpl.XmlTagWriter c = b.tag("c");
+
     b.tag("d").attr("type", "string");
+
+    XmlImpl.XmlTagWriter txt = a.tag("txt");
+    JsOutputStream text = txt.textWriter();
+    text.write("<br/>");
+
     root.end();
+
 
     new Throws(IllegalStateException.class) {
       public void run() throws Throwable {
@@ -58,7 +65,7 @@ public class TestXmlBuilder extends Test {
     };
 
     String xmlstr = buf.toString();
-    eq(xmlstr, "<a><b><c/><d type=\"string\"/></b></a>", "xml");
+    eq(xmlstr, "<a><b><c/><d type=\"string\"/></b><txt>&lt;br/&gt;</txt></a>", "xml");
     msg("ok", xmlstr);
   }
 
