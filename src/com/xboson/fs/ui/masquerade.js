@@ -19,6 +19,7 @@
 // init
 // 若需要同步 nodejs 代码, 直接将对应文件的内容复制到 __install 的实现函数中
 ///////////////////////////////////////////////////////////////////////////////
+var Path            = require('path');
 var helper          = require("helper");
 var Event           = require("events");
 var fileChangeEvent = new Event(); // 该对象没有被绑定事件, 文件修改消息也没有实现.
@@ -153,8 +154,18 @@ module.exports = {
 //
 //
 function watch(fs, _path, rcb) {
-  // console.warn("watch()", fs, _path);
-  // rcb(null, fileChangeEvent);
+  _path = Path.normalize(_path);
+  console.debug("hfs.watch() >>>", _path);
+  var watcher = new Event();
+
+  fileChangeEvent.on('[*]', function(page, type) {
+    if (page.startsWith(_path)) {
+      console.debug("hfs.dir", type, ">>>", page, ":", _path);
+      watcher.emit(type, page);
+    }
+  });
+
+  rcb(null, watcher);
 }
 
 //
@@ -640,25 +651,38 @@ function html_builder() {
   //  add : function(renderFn)
   // }
   //
+  // for xBoson: 修改渲染器队列, 由异步变为同步
+  //
   function saver() {
-    var first = null;
+    var queue = [];
 
     var ret = function(next, buf, context) {
-      first(next, buf, context);
+      var len = queue.length;
+      var i = -1;
+      nextfn();
+
+      function nextfn() {
+        if (++i < len) {
+          return queue[i](nextfn, buf, context);
+        } else {
+          return next();
+        }
+      }
     };
 
     // 插入渲染器
     ret.add = function(renderFn) {
-      if (!first) {
-        first = renderFn;
-      } else {
-        var prv = first;
-        first = function(next, buf, context) {
-          prv(function() {
-            renderFn(next, buf, context);
-          }, buf, context);
-        }
-      }
+      queue.push(renderFn);
+//      if (!first) {
+//        first = renderFn;
+//      } else {
+//        var prv = first;
+//        first = function(next, buf, context) {
+//          prv(function() {
+//            renderFn(next, buf, context);
+//          }, buf, context);
+//        }
+//      }
     }
     return ret;
   }
@@ -994,10 +1018,11 @@ module.exports = function(taginfo) {
 
   return function(next, buf, context, tag_over) {
     if (!tool.isSystemVar(to)) {
-      if (context[to])
+      if (context[to]) {
         delete context[to];
-      else
-        tool.comment(buf, "delete var `", to, '` buf not exists');
+      } else {
+        tool.comment(buf, "delete var `", to, '` but not exists');
+      }
     } else {
       tool.comment(buf, "cannot delete system var `", to, '`');
     }
@@ -1446,7 +1471,7 @@ function do_script(script, next, buf, context, errorHandle) {
   // --------------------------------------------- End
 
   try {
-    var _module = script.module;
+    var _module = script.module || { exports: {} };
     var sandbox = context.getVmContext();
     var fn      = script.runInContext(sandbox, { timeout: scriptTimeout });
 
@@ -1460,6 +1485,7 @@ function do_script(script, next, buf, context, errorHandle) {
         throw new Error('from_callback_argv NOT EQ callback_argv');
 
     fn.apply(_module, callback_argv);
+    end();
     return _module.exports;
 
   } catch(err) {
@@ -1835,6 +1861,41 @@ module.exports = function(taginfo) {
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
+__install('./systag/tag-once.js', function(module, require) {
+
+var tool = require('../tool.js');
+
+//
+// <once id=''></once>
+//
+module.exports = function(taginfo) {
+
+  if (taginfo.selfend)
+       throw new Error('must have BODY');
+
+  var KEY = '--_onee_save';
+  var id = taginfo.attr.id;
+  if (!id) throw new Error("Must have 'id' attribute");
+
+  return function(next, buf, context, tag_over) {
+    var save = context[KEY];
+    if (!save) {
+      save = context[KEY] = {};
+    }
+
+    if (! save[id]) {
+      save[id] = true;
+    } else {
+      context.tag_scope.controler.disable_sub();
+    }
+    next();
+  };
+};
+
+}); // systag/tag-once.js END
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
 __install('./install-systag.js', function(module, require) {
 
 //
@@ -1859,6 +1920,7 @@ module.exports = function(tagFactory) {
 	load('pit');
   load('never');
 	load('stop');
+	load('once');
 
 	// 迁移到单独的项目中
 	// load('sql');
@@ -1913,11 +1975,12 @@ module.exports = function(pool, tagFactory, EXT, fs) {
     }
   });
 
+  //
   // 读取目录构建标签文件代理渲染函数
   // 当代理被调用的时候, 加载渲染器
   // 与系统标签的冲突
   // 与 HTML 客户端标签的冲突
-
+  //
   function findfile(_dir, namespace) {
     hfs.eachDir(fs, _dir, false, function(fname, state) {
       if (state.isDirectory()) {
@@ -2993,8 +3056,8 @@ function getScript(code, id, filename, lineOffset,
 //
 function getWatcher(filename, _change_listener) {
 //  fileChangeEvent.on(filename, _change_listener);
-//  console.warn("getWatcher()", filename);
-  fileChangeEvent.on('reload', _change_listener);
+  console.debug("getWatcher() >>>", filename);
+  fileChangeEvent.on(filename, _change_listener);
 }
 
 
@@ -3248,10 +3311,21 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
   return ret;
 
 
+  function _reload_tags(path, typename) {
+    if (!path) {
+      return _reload_all_tags();
+    }
+    path = Path.normalize(path);
+    typename = typename || 'change';
+    console.debug("Reloading >>>", path, ':', typename);
+    fileChangeEvent.emit(path, typename);
+    fileChangeEvent.emit('[*]', path, typename);
+  }
+
   //
   // xBoson 增加: 重新读取标签库
   //
-  function _reload_tags() {
+  function _reload_all_tags() {
     console.warn("Reload TAG Library...");
 
     var old = tag_factory;
@@ -3264,7 +3338,7 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
         tag_factory[name] = old[name];
       }
     }
-    fileChangeEvent.emit('reload');
+    fileChangeEvent.emit('[reload]');
   }
 
 
@@ -3620,21 +3694,13 @@ process.on('uncaughtException', function(err) {
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
-function masquerade(baseurl, debug, uifs) {
+function masquerade(baseurl, config, debug, uifs) {
   var mid = _require('./mid.js');
 
   //
   // fs 兼容层
   //
   var fs = uifs_to_nodefs(uifs);
-
-  var config = {
-    public   : "/",
-    private  : "/t/paas/0function",
-    extname  : 'htm',
-    encoding : "utf8",
-  };
-
   var mid_process = mid(baseurl, config, debug, fs);
   service.reload_tags = mid_process.reload_tags;
   service.add_plugin = mid_process.add_plugin;
@@ -3672,7 +3738,7 @@ function runEventLoop() {
 
 function uifs_to_nodefs(uifs) {
   var fs = {
-    watch             : null,
+    watch             : watch,
     readFile          : readFile,
     stat              : stat,
     open              : unsupport,
@@ -3681,6 +3747,7 @@ function uifs_to_nodefs(uifs) {
     readDir           : readDir,
   };
   return fs;
+
 
   function readFile(path, opt, cb) {
     if (cb == null && typeof opt == 'function')
@@ -3739,7 +3806,9 @@ function uifs_to_nodefs(uifs) {
   }
 
   function watch(path, cb) {
-    console.warn("not implement watch:", path);
+    path = Path.normalize(path);
+    console.debug("Watch file change >>>", path);
+    fileChangeEvent.on(path, cb);
   }
 
   function unsupport() {
@@ -3793,7 +3862,7 @@ function servlet_response_to_node(servletResp) {
     try {
       writer.write(str);
     } catch(err) {
-      console.err("write()", err);
+      console.error("write()", err);
     }
   }
 

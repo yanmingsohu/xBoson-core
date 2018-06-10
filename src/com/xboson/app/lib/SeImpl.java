@@ -29,6 +29,7 @@ import com.xboson.db.sql.SqlReader;
 import com.xboson.event.OnFileChangeHandle;
 import com.xboson.j2ee.ui.TemplateEngine;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
@@ -313,7 +314,22 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    * [原平台无该函数]
    */
   public void sendUITemplateReloadTag() {
-    TemplateEngine.reloadTags();
+    TemplateEngine.reloadAllTags();
+  }
+
+
+  /**
+   * 当 html 文件修改后, 调用该方法使模板引擎重新加载指定的文件.
+   * @param pagePath
+   * @param type 'addfile', 'change', 'removefile'
+   */
+  public void sendUIFileReload(String pagePath, String type) {
+    TemplateEngine.fileChange(pagePath, type);
+  }
+
+
+  public void sendUIFileReload(String pagePath) {
+    sendUIFileReload(pagePath, "change");
   }
 
 
