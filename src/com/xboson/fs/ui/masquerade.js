@@ -24,7 +24,8 @@ var helper          = require("helper");
 var Event           = require("events");
 var fileChangeEvent = new Event(); // 该对象没有被绑定事件, 文件修改消息也没有实现.
 var console         = console.create("masquerade");
-var eventLoop       = [];
+var eventLoop       = {};
+var __id            = 0;
 
 var innerModule = {
 };
@@ -54,12 +55,32 @@ function __alias(name, aname) {
 
 
 function setInterval(fn) {
-  eventLoop.push(fn);
+  setImmediate(fn);
 }
 
 function setTimeout(fn) {
-  eventLoop.push(fn);
-};
+  setImmediate(fn);
+}
+
+function setImmediate(fn) {
+  var curr = {
+    fn   : fn,
+    next : null,
+  };
+  if (eventLoop.top) {
+    eventLoop.top.next = curr;
+  } else {
+    eventLoop.top = curr;
+  }
+}
+
+function runEventLoop() {
+  while (eventLoop.top) {
+    var fn = eventLoop.top.fn;
+    eventLoop.top = eventLoop.top.next;
+    fn();
+  }
+}
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -249,7 +270,7 @@ var SyntaxError = require('./error.js').SyntaxError;
 
 var SYSTEM_VAR = {};
 var express_timeout = 1000;
-var __id = 1;
+//var __id = 1;
 
 module.exports.string_buf          = string_buf;
 module.exports.rendering           = rendering;
@@ -484,7 +505,7 @@ function comment(buf, msg) {
 
 
 function nextId() {
-  return __id++;
+  return ++__id;
 }
 
 
@@ -663,7 +684,12 @@ function html_builder() {
 
       function nextfn() {
         if (++i < len) {
-          return queue[i](nextfn, buf, context);
+          //
+          // 借助 setImmediate 退出函数堆栈
+          //
+          setImmediate(function() {
+            return queue[i](nextfn, buf, context);
+          });
         } else {
           return next();
         }
@@ -673,16 +699,6 @@ function html_builder() {
     // 插入渲染器
     ret.add = function(renderFn) {
       queue.push(renderFn);
-//      if (!first) {
-//        first = renderFn;
-//      } else {
-//        var prv = first;
-//        first = function(next, buf, context) {
-//          prv(function() {
-//            renderFn(next, buf, context);
-//          }, buf, context);
-//        }
-//      }
     }
     return ret;
   }
@@ -1477,15 +1493,18 @@ function do_script(script, next, buf, context, errorHandle) {
 
     // 要与 from_callback_argv 一致
     var callback_argv = [
-      _module, end, write, context.query, context.session,
+      _module, nul, write, context.query, context.session,
       _require, val
     ];
 
     if (from_callback_argv.length != callback_argv.length)
         throw new Error('from_callback_argv NOT EQ callback_argv');
 
-    fn.apply(_module, callback_argv);
-    end();
+    try {
+      fn.apply(_module, callback_argv);
+    } finally {
+      end();
+    }
     return _module.exports;
 
   } catch(err) {
@@ -1493,7 +1512,7 @@ function do_script(script, next, buf, context, errorHandle) {
       errorHandle(err);
       next = null;
     } else {
-      log.error(err);
+      throw err;
     }
   }
 }
@@ -2017,6 +2036,17 @@ module.exports = function(pool, tagFactory, EXT, fs) {
   }
 
 
+  function copyFrom(target, obj, checkName) {
+    for (var n in obj) {
+      if (checkName && tool.isSystemVar(n)) {
+        throw new Error('cannot modify system var "' + n + '"');
+      }
+      target[n] = obj[n];
+    }
+    return target;
+  }
+
+
   //
   // 延时渲染模板
   //
@@ -2027,14 +2057,11 @@ module.exports = function(pool, tagFactory, EXT, fs) {
 
       // 这是渲染器
       return function(next, buf, context, tag_over) {
-        for (var n in taginfo.attr) {
-          if (tool.isSystemVar(n)) {
-            throw new Error('cannot modify system var "' + n + '"');
-          }
-          context[n] = taginfo.attr[n];
-        }
-
+        var tag_context = {};
         var pit_call = null;
+        copyFrom(tag_context, context);
+        copyFrom(tag_context, taginfo.attr, true);
+        tag_context.parent_context = context;
 
         //
         // pit 渲染顺序:
@@ -2045,9 +2072,9 @@ module.exports = function(pool, tagFactory, EXT, fs) {
         // 5. renderTag 的回调函数被调用
         //
         if (tag_over) {
-          var tag_scope = context.tag_scope;
+          var tag_scope = tag_context.tag_scope;
           // tag_scope.controler.disable_sub();
-          context[SAVE_KEY] = renderPit;
+          tag_context[SAVE_KEY] = renderPit;
 
           tag_over(function() {
             tag_scope.controler.disable_sub();
@@ -2059,7 +2086,7 @@ module.exports = function(pool, tagFactory, EXT, fs) {
           });
 
           renderTag(function() {
-            delete context[SAVE_KEY];
+            delete tag_context[SAVE_KEY];
             next();
           });
         } else {
@@ -2077,7 +2104,7 @@ module.exports = function(pool, tagFactory, EXT, fs) {
 
         function renderTag(_render_over) {
           pool.getRender(tagfile, userTagFactory, errorHandle, function(render) {
-            render(_render_over, buf, context);
+            render(_render_over, buf, tag_context);
           });
         }
       };
@@ -3248,7 +3275,7 @@ var util   = require('util') ;
 var qs     = require('querystring');
 
 
-var __id = 0;
+//var __id = 0;
 
 
 //
@@ -3443,9 +3470,9 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
       // is_dev=false;
       if (!rep.finished) {
         try {
-          rep.statusCode = 404;
+          rep.statusCode = 500;
           rep.write('<pre>');
-          rep.write('cannot get ');
+          rep.write('Cannot Get ');
           rep.write(res.url);
           rep.write("\n\n");
 
@@ -3531,6 +3558,7 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
       setInterval   : setInterval,
       log           : log,
       console       : log,
+      global        : {},
     };
 
     return context;
@@ -3727,15 +3755,6 @@ function masquerade(baseurl, config, debug, uifs) {
 }
 
 
-function runEventLoop() {
-  while (eventLoop.length > 0) {
-    var fn = eventLoop[0];
-    eventLoop.splice(0, 1);
-    fn();
-  }
-}
-
-
 function uifs_to_nodefs(uifs) {
   var fs = {
     watch             : watch,
@@ -3856,13 +3875,14 @@ function servlet_response_to_node(servletResp) {
   });
 
   function write(str) {
+    if (!str) return;
     if (Buffer.isBuffer(str)) {
       str = str.toString("utf8");
     }
     try {
       writer.write(str);
     } catch(err) {
-      console.error("write()", err);
+      console.error("write() fail", err);
     }
   }
 

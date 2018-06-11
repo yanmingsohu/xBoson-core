@@ -108,7 +108,7 @@ public class TemplateEngine extends GLHandle
   private Map<String, Object> makeConfig() {
     Map<String, Object> cfg = new HashMap<>();
     cfg.put("public",   "/");
-    cfg.put("private",  "/t/paas/0function");
+    cfg.put("private",  "/masquerade");
     cfg.put("extname",  "htm");
     cfg.put("encoding", "utf8");
 
