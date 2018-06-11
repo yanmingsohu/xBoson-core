@@ -78,7 +78,11 @@ function runEventLoop() {
   while (eventLoop.top) {
     var fn = eventLoop.top.fn;
     eventLoop.top = eventLoop.top.next;
-    fn();
+    try {
+      fn()
+    } catch(e) {
+      console.error("Event Loop Fail:", e.stack || e.message || e);
+    }
   }
 }
 ///////////////////////////////////////////////////////////////////////////////
@@ -1476,11 +1480,12 @@ function do_script(script, next, buf, context, errorHandle) {
   };
 
   function val(n, v) {
-    if (tool.isSystemVar(n))
-        throw new Error("cannot modify system var:" + n);
-
     var ret = context[n];
-    if (v) context[n] = v;
+    if (v) {
+      if (tool.isSystemVar(n))
+        throw new Error("cannot modify system var:" + n);
+      context[n] = v;
+    }
     return ret;
   }
 
@@ -1897,9 +1902,9 @@ module.exports = function(taginfo) {
   if (!id) throw new Error("Must have 'id' attribute");
 
   return function(next, buf, context, tag_over) {
-    var save = context[KEY];
+    var save = context.global[KEY];
     if (!save) {
-      save = context[KEY] = {};
+      save = context.global[KEY] = {};
     }
 
     if (! save[id]) {
@@ -3745,12 +3750,14 @@ function masquerade(baseurl, config, debug, uifs) {
     //
     var resp = servlet_response_to_node(servletResp);
 
-    mid_process(req, resp, function(err) {
-      if (err) console.error(err, new Error().stack);
-    });
-
-    runEventLoop();
-    resp.finished = true;
+    try {
+      mid_process(req, resp, function(err) {
+        if (err) console.error(err, new Error().stack);
+      });
+    } finally {
+      runEventLoop();
+      resp.finished = true;
+    }
   }
 }
 
