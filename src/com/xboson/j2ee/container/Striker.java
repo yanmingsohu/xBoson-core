@@ -160,7 +160,11 @@ public class Striker extends HttpFilter {
 
     findCode(e, jr);
 
+
     try {
+      //
+      // 如果抛出 IllegalStateException, 这是编程错误, 必须找出原因而不是抓住异常 !
+      //
       jr.response();
     } catch (IOException e1) {
       //

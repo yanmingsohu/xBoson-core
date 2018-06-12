@@ -24,8 +24,9 @@ var helper          = require("helper");
 var Event           = require("events");
 var fileChangeEvent = new Event(); // 该对象没有被绑定事件, 文件修改消息也没有实现.
 var console         = console.create("masquerade");
-var eventLoop       = {};
+var __eventLoop     = helper.createEventLoop(process);
 var __id            = 0;
+var __last_modify   = 0;
 
 var innerModule = {
 };
@@ -53,38 +54,33 @@ function __alias(name, aname) {
   innerModule[aname] = innerModule[name];
 }
 
-
 function setInterval(fn) {
-  setImmediate(fn);
+  __eventLoop.push(fn);
 }
 
 function setTimeout(fn) {
-  setImmediate(fn);
+  __eventLoop.push(fn);
 }
 
 function setImmediate(fn) {
-  var curr = {
-    fn   : fn,
-    next : null,
-  };
-  if (eventLoop.top) {
-    eventLoop.top.next = curr;
-  } else {
-    eventLoop.top = curr;
-  }
+  __eventLoop.push(fn);
 }
 
 function runEventLoop() {
-  while (eventLoop.top) {
-    var fn = eventLoop.top.fn;
-    eventLoop.top = eventLoop.top.next;
-    try {
-      fn()
-    } catch(e) {
-      console.error("Event Loop Fail:", e.stack || e.message || e);
-    }
-  }
+  __eventLoop.runUntilEmpty();
 }
+
+function updateGlobalTime(last) {
+  __last_modify = Math.max(last, __last_modify) || Date.now();
+}
+
+function globalLastTime() {
+  return __last_modify;
+}
+
+process.on('error', function(e) {
+  console.error("Uncaught process message", e.stack);
+});
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3031,6 +3027,7 @@ function getScript(code, id, filename, lineOffset,
         cb(null, code_success(buf));
       });
     }
+    updateGlobalTime(Date.now());
   } catch(err) {
     cb(err);
   }
@@ -3136,6 +3133,18 @@ function getRender(filename, tag_factory, _err_cb, _over_cb) {
   if (render_cache[filename]) {
     return _over_cb(render_cache[filename]);
   }
+  return helper.lockCall(getRenderImpl, getRenderImpl,
+          filename, tag_factory, _err_cb, _over_cb);
+}
+
+
+//
+// 在该函数的调用上加锁, 防止多线程重入, 重复编译模板.
+//
+function getRenderImpl(filename, tag_factory, _err_cb, _over_cb) {
+  if (render_cache[filename]) {
+    return _over_cb(render_cache[filename]);
+  }
 
   var isTemplateFile = (path.extname(filename) == EXT_NAME);
   var _encoding = isTemplateFile && cnf.encoding;
@@ -3150,16 +3159,16 @@ function getRender(filename, tag_factory, _err_cb, _over_cb) {
         part = tpl.html_complier(fileBuffer.buf,
             tag_factory, _err_cb, filename, DEPTH_MAX);
         part.file_type = COMPLIER;
-        part.last_modify = -1;
+        part.last_modify = 0;
       } else {
         part = bse.html_builder().txt(fileBuffer.buf);
         part.file_type = STATIC_TXT;
         part.last_modify = fileBuffer.last_modify;
       }
 
+      updateGlobalTime(fileBuffer.last_modify);
       render_cache[filename] = part;
       _over_cb(part);
-
     } catch(e) {
       _err_cb(e);
     }
@@ -3247,13 +3256,10 @@ function getBigStaticFileRender(filename, _err_cb, _over_cb, filesize) {
 }
 
 
-// 毫秒部分为 0
 function lastModTime(err, st) {
   // console.log('-------------))))))))))))))))', err, st)
   if (err) return -1;
-  var r = st.mtime.getTime();
-  r = parseInt(r / 1000);
-  return r * 1000;
+  return st.mtime.getTime();
 }
 
 // createPool --END--
@@ -3352,6 +3358,7 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
     console.debug("Reloading >>>", path, ':', typename);
     fileChangeEvent.emit(path, typename);
     fileChangeEvent.emit('[*]', path, typename);
+    updateGlobalTime(Date.now());
   }
 
   //
@@ -3379,9 +3386,6 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
     var query   = url.parse(res.url, true);
     res.query   = query.query;
     res.path    = query.pathname;
-    res.header  = function(n) {
-      if (n) return res.headers[n.toLowerCase()];
-    }
 
     if (!next) {
       next = log.debug;
@@ -3448,24 +3452,25 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
       if (res.header('cache-control') == 'no-cache')
         return false;
 
+      var ltime = render.last_modify || globalLastTime();
       var if_mod_sin = res.header('If-Modified-Since');
-      if (if_mod_sin && render.last_modify > 0) {
+      if (if_mod_sin) {
         if_mod_sin = new Date( if_mod_sin ).getTime();
-
-        if (render.last_modify <= if_mod_sin) {
+        //
+        // 999 毫秒修正, 修改时间忽略毫秒部分
+        //
+        if (ltime - if_mod_sin < 1000) {
           rep.statusCode = 304;
+          rep.setHeader("Masquerade", "not-modify");
           overRender('[304] Not modify');
           return true;
         }
       }
 
-      try {
-        rep.setHeader('Last-Modified',
-            new Date(render.last_modify).toGMTString() );
-      } catch(e) {
-        log.error(e);
-      }
-
+      rep.setHeader("Masquerade",    "render");
+      rep.setHeader("Cache-Control", "must-revalidate");
+      rep.setHeader("Pragma",        "no-cache");
+      rep.setHeader('Last-Modified', new Date(ltime).toGMTString() );
       return false;
     }
 
@@ -3737,7 +3742,7 @@ function masquerade(baseurl, config, debug, uifs) {
   var mid_process = mid(baseurl, config, debug, fs);
   service.reload_tags = mid_process.reload_tags;
   service.add_plugin = mid_process.add_plugin;
-  runEventLoop();
+//  runEventLoop();
   return service;
 
   function service(servletReq, servletResp) {
@@ -3754,6 +3759,8 @@ function masquerade(baseurl, config, debug, uifs) {
       mid_process(req, resp, function(err) {
         if (err) console.error(err, new Error().stack);
       });
+    } catch(error) {
+      resp.write(error.stack || error.message || e);
     } finally {
       runEventLoop();
       resp.finished = true;
@@ -3848,13 +3855,27 @@ function servlet_request_to_node(servletReq) {
   var rq  = servletReq.getRequestURI();
   var qr  = servletReq.getQueryString();
   var url = rq.substring(cp.length, rq.length);
+  var cache_headers = null;
   if (qr != null) {
     url += '?' + qr;
   }
 
   var req = {
     url     : url,
-    headers : servletReq.getHeaderNames(),
+    headers : function() {
+      if (!cache_headers) {
+        cache_headers = {};
+        var names = servletReq.getHeaderNames();
+        while (names.hasMoreElements()) {
+          var name = names.nextElement();
+          cache_headers[name] = servletReq.getHeader(name);
+        }
+      }
+      return cache_headers;
+    },
+    header : function(name) {
+      return servletReq.getHeader(name);
+    },
   };
   return req;
 }

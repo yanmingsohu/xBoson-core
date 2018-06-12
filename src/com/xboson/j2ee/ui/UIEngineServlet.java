@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.NoSuchFileException;
+import java.util.Enumeration;
 import java.util.Set;
 
 
@@ -201,6 +202,8 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
     try {
       String path = getReqFile(req);
       if (path == null)
+        return -1;
+      if (path.endsWith(TemplateEngine.EXT))
         return -1;
 
       log.debug("Last Modified", path);

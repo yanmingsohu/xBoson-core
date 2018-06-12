@@ -21,6 +21,7 @@ import com.xboson.auth.impl.RoleBaseAccessControl;
 import com.xboson.been.LoginUser;
 import com.xboson.been.SessionData;
 import com.xboson.j2ee.container.SessionCluster;
+import com.xboson.script.EventLoop;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import okhttp3.*;
@@ -98,5 +99,21 @@ public class HelperModule {
       hc = new OkHttpClient();
     }
     return hc;
+  }
+
+
+  public EventLoop createEventLoop(ScriptObjectMirror process) {
+    return new EventLoop(process);
+  }
+
+
+  /**
+   * 调用函数, 在函数返回前在 locker 对象上应用锁, 直到函数返回.
+   */
+  public Object lockCall(Object locker, ScriptObjectMirror func, Object... args) {
+    if (locker == null) locker = this;
+    synchronized (locker) {
+      return func.call(null, args);
+    }
   }
 }
