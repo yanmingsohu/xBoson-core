@@ -3012,7 +3012,7 @@ function getScript(code, id, filename, lineOffset,
   var scid = code ? (filename +':'+ id) : filename;
 
   if (script_cache[scid]) {
-    log.debug('is cache script', scid);
+    // log.debug('is cache script', scid);
     return cb(null, script_cache[scid]);
   }
 
