@@ -25,18 +25,24 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 /**
  * 模拟 nodejs 消息队列.
  * 该对象线程安全.
+ *
+ *  [ 队列0, 队列1, 队列2, ...... 队列N ]
+ *     |     |       |            |
+ *    top.next  => task         last.next => null
  */
 public class EventLoop {
 
   private final ScriptObjectMirror process;
   private final Log log;
   private Task top;
+  private Task last;
 
 
   public EventLoop(ScriptObjectMirror process) {
     this.process = process;
     this.log = LogFactory.create("js:EventLoop");
-    this.top = null;
+    this.top = new Task(null);
+    this.last = top;
 
     if (process == null) {
       log.warn("Not set 'process' object");
@@ -53,11 +59,8 @@ public class EventLoop {
 
     synchronized(this) {
       Task task = new Task(func);
-      if (top == null) {
-        top = task;
-      } else {
-        top.setNext(task);
-      }
+      last.next = task;
+      last = task;
     }
   }
 
@@ -67,18 +70,35 @@ public class EventLoop {
    * 如果队列中任务抛出异常不会停止队列而是将错误发送到处理器
    */
   public void runUntilEmpty() {
-    if (top == null) return;
+    if (top == last) return;
 
+    //
+    // 这里是否需要完全锁住线程有待测试
+    //
     synchronized (this) {
-      while (top != null) {
+      Task task = pullFirst();
+      while (task != null) {
         try {
-          top.func.call(this);
+          task.func.call(this);
         } catch (Exception e) {
           sendError(e);
         }
-        top = top.next;
+        task = pullFirst();
       }
     }
+  }
+
+
+  private Task pullFirst() {
+    Task ret = null;
+    if (top.next != null) {
+      ret = top.next;
+      top.next = ret.next;
+      if (top.next == null) {
+        last = top;
+      }
+    }
+    return ret;
   }
 
 
@@ -92,15 +112,11 @@ public class EventLoop {
 
 
   public class Task {
-    private ScriptObjectMirror func;
+    private final ScriptObjectMirror func;
     private Task next;
 
     private Task(ScriptObjectMirror func) {
       this.func = func;
-    }
-
-    private void setNext(Task next) {
-      this.next = next;
     }
   }
 }

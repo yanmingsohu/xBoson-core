@@ -20,6 +20,7 @@ package com.xboson.util;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -35,7 +36,14 @@ public class ChineseInital {
           "f", "g", "h", "j", "k", "l", "m", "n", "o", "p", "q", "r",
           "s", "t", "w", "x", "y", "z"};
 
-  private final static Map<String, String> cache = new HashMap<>();
+  private final static Map<String, String> cache = new ConcurrentHashMap<>();
+
+
+  static {
+    cache.put("佝", "g");
+    cache.put("偻", "l");
+    cache.put("囟", "x");
+  }
 
 
   /**
