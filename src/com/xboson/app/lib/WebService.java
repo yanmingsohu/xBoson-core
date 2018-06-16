@@ -46,6 +46,7 @@ import javax.wsdl.factory.WSDLFactory;
 import javax.wsdl.xml.WSDLReader;
 import javax.xml.namespace.QName;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -58,6 +59,7 @@ import java.util.Map;
 
 public class WebService implements IAResource, IHttp, IXML {
 
+  public static final int CHUNK_SIZE = 64 * 1024;
   public static boolean DEBUG = false;
 
   private final WSDLFactory fact;
@@ -147,6 +149,7 @@ public class WebService implements IAResource, IHttp, IXML {
         throw new IllegalStateException("Is connecting");
 
       conn = (HttpURLConnection) new URL(url).openConnection();
+      conn.setChunkedStreamingMode(CHUNK_SIZE);
       ModuleHandleContext.autoClose(()-> conn.disconnect());
       conn.setRequestMethod(POST);
       conn.setDoInput(true);
@@ -159,7 +162,6 @@ public class WebService implements IAResource, IHttp, IXML {
         conn.setRequestProperty(CONTENT_TYPE, CONTENT_TYPE_SOAP);
       }
       conn.connect();
-
       output = new JsOutputStream(conn.getOutputStream());
       return output;
     }
