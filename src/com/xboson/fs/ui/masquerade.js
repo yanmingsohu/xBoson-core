@@ -3742,7 +3742,7 @@ function masquerade(baseurl, config, debug, uifs) {
   var mid_process = mid(baseurl, config, debug, fs);
   service.reload_tags = mid_process.reload_tags;
   service.add_plugin = mid_process.add_plugin;
-//  runEventLoop();
+  //  runEventLoop(); // 可能不需要了
   return service;
 
   function service(servletReq, servletResp) {
