@@ -173,6 +173,7 @@ public class TestTool extends Test {
     check("中华人民共和国", "zhrmghg");
     check("山高似水深", "sgsss");
     check("窗前明月光", "cqmyg");
+    check("酰孢苷酯喹呋喃瘾痫癫祛厥", "xbgzkfnyxdqj");
 
 //    //
 //    // 使用缓存: to First Letter 1000000  Used Time 389 ms

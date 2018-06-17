@@ -40,9 +40,22 @@ public class ChineseInital {
 
 
   static {
+    // 算法部不认识的字
     cache.put("佝", "g");
     cache.put("偻", "l");
     cache.put("囟", "x");
+    cache.put("酰", "x");
+    cache.put("孢", "b");
+    cache.put("苷", "g");
+    cache.put("酯", "z");
+    cache.put("喹", "k");
+    cache.put("呋", "f");
+    cache.put("喃", "n");
+    cache.put("瘾", "y");
+    cache.put("痫", "x");
+    cache.put("癫", "d");
+    cache.put("祛", "q");
+    cache.put("厥", "j");
   }
 
 
