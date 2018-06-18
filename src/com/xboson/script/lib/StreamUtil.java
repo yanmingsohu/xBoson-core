@@ -39,7 +39,11 @@ public class StreamUtil {
 
   public JsOutputStream openGzipOutputStream(JsOutputStream out) throws IOException {
     GZIPOutputStream gzip = new GZIPOutputStream(out, true);
-    return new JsOutputStream(gzip);
+    return new JsOutputStream(gzip) {
+      public void finish() throws IOException {
+        gzip.finish();
+      }
+    };
   }
 
 

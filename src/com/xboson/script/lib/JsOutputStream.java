@@ -74,6 +74,14 @@ public class JsOutputStream extends OutputStream {
 
 
   /**
+   * 有一些流不希望关闭时关闭底层流, 但是又需要完成最后的输出, 则实现该方法.
+   * 默认什么都不做.
+   */
+  public void finish() throws IOException {
+  }
+
+
+  /**
    * 读取 from 中的数据写入输出流
    * @param from 数据来源
    * @param begin from 开始的字节
