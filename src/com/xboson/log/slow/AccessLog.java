@@ -18,6 +18,8 @@ package com.xboson.log.slow;
 
 import com.xboson.been.LoginUser;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 
 
 /**
@@ -57,4 +59,9 @@ public class AccessLog extends AbsSlowLog {
             Integer.toString(state) );
   }
 
+
+  @Override
+  protected Log createLog() {
+    return LogFactory.create("access");
+  }
 }

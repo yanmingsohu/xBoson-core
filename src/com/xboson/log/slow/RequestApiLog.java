@@ -19,6 +19,8 @@ package com.xboson.log.slow;
 import com.xboson.been.ApiCall;
 import com.xboson.db.IDict;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.util.c0nst.IConstant;
 
 
@@ -72,4 +74,9 @@ public class RequestApiLog extends AbsSlowLog {
     return buf.toString();
   }
 
+
+  @Override
+  protected Log createLog() {
+    return LogFactory.create("RequestApi");
+  }
 }

@@ -43,15 +43,12 @@ import java.util.Queue;
  */
 public abstract class AbsSlowLog extends OnExitHandle {
 
-  /** 永久占用一个 DB 连接 */
-  private static Connection __conn;
-
-  private PreparedStatement ps;
   private Queue<Object[]> queue;
   private Runnable insert;
   private boolean hasWorker;
   private SimpleDateFormat format;
   private boolean isDestroy;
+  private ConnectConfig db;
 
   /** 可以在子类中直接用, 记录异常 */
   protected final Log log;
@@ -65,7 +62,7 @@ public abstract class AbsSlowLog extends OnExitHandle {
       this.insert     = new Insert();
       this.hasWorker  = false;
       this.format     = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.999Z");
-      buildSql();
+      this.db         = SysConfig.me().readConfig().db;
     } catch (Exception e) {
       throw new XBosonException(e);
     }
@@ -78,58 +75,6 @@ public abstract class AbsSlowLog extends OnExitHandle {
    */
   protected Log createLog() {
     return LogFactory.create(this.getClass());
-  }
-
-
-  private static Connection openConnection() throws SQLException {
-    if (__conn == null) {
-      synchronized (AbsSlowLog.class) {
-        if (__conn == null) {
-          __conn = DbmsFactory.me().openWithoutPool(
-                  SysConfig.me().readConfig().db);
-        }
-      }
-    }
-    return __conn;
-  }
-
-
-  private void checkConnect() {
-    if (isDestroy) return;
-    synchronized (AbsSlowLog.class) {
-      try {
-        if (__conn == null)
-          return;
-        if (__conn.isClosed()) {
-          __conn = null;
-        }
-        if (!__conn.isValid(1000)) {
-          Tool.close(__conn);
-          __conn = null;
-        }
-        if (ps == null || ps.isClosed()) {
-          __conn = null;
-        }
-      } catch (Exception e) {
-        log.warn("Check connect fail", e);
-        __conn = null;
-      } finally {
-        try {
-          if (__conn == null) {
-            buildSql();
-          }
-        } catch (SQLException e) {
-          log.error("Reconnect fail", e);
-        }
-      }
-    }
-  }
-
-
-  private void buildSql() throws SQLException {
-    log.debug("Build Prepare Statement");
-    Connection conn = openConnection();
-    ps = conn.prepareStatement(getSql());
   }
 
 
@@ -160,28 +105,32 @@ public abstract class AbsSlowLog extends OnExitHandle {
     public void run() {
       Object[] param;
       int count = 0;
-      checkConnect();
 
-      for (;;) {
-        synchronized (queue) {
-          param = queue.poll();
-          hasWorker = param != null;
-        }
+      try (Connection conn = DbmsFactory.me().open(db)) {
+        PreparedStatement ps = conn.prepareStatement(getSql());
 
-        if (param == null)
-          break;
-
-        try {
-          for (int i = 0; i < param.length; ++i) {
-            ps.setObject(i + 1, param[i]);
+        for (;;) {
+          synchronized (queue) {
+            param = queue.poll();
+            hasWorker = param != null;
           }
-          ps.executeUpdate();
-          ++count;
-          log.debug(Arrays.toString(param));
-        } catch (Exception e) {
-          log.error("Insert log fail", e, Arrays.toString(param));
-          checkConnect();
+
+          if (param == null)
+            break;
+
+          try {
+            for (int i = 0; i < param.length; ++i) {
+              ps.setObject(i + 1, param[i]);
+            }
+            ps.executeUpdate();
+            ++count;
+            log.debug(Arrays.toString(param));
+          } catch (Exception e) {
+            log.error("Insert log fail", e, Arrays.toString(param));
+          }
         }
+      } catch (SQLException e) {
+        log.error("Insert log fail", Tool.allStack(e));
       }
 
       log.debug("Save", count, "logs");
@@ -189,17 +138,15 @@ public abstract class AbsSlowLog extends OnExitHandle {
   }
 
 
-  @Override
-  protected void exit() {
-    Tool.close(ps);
-    ps = null;
-  }
-
-
   public void destroy() {
     isDestroy = true;
     removeExitListener();
     exit();
+  }
+
+
+  @Override
+  protected void exit() {
   }
 
 
