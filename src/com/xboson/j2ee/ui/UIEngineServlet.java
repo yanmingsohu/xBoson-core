@@ -70,7 +70,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
   @Override
   public void init(ServletConfig config) throws ServletException {
     super.init(config);
-    this.log = LogFactory.create();
+    this.log = LogFactory.create("ui-engine");
     this.mime = MimeTypeFactory.getFileTypeMap();
     this.baseurl = config.getServletContext().getContextPath() + MY_URL;
 

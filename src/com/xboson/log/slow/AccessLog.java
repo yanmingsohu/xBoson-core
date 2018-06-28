@@ -62,6 +62,6 @@ public class AccessLog extends AbsSlowLog {
 
   @Override
   protected Log createLog() {
-    return LogFactory.create("access");
+    return LogFactory.create("log-access");
   }
 }

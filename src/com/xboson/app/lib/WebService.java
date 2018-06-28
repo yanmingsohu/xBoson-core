@@ -46,7 +46,6 @@ import javax.wsdl.factory.WSDLFactory;
 import javax.wsdl.xml.WSDLReader;
 import javax.xml.namespace.QName;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -59,7 +58,9 @@ import java.util.Map;
 
 public class WebService implements IAResource, IHttp, IXML {
 
-  public static final int CHUNK_SIZE = 64 * 1024;
+  public static final int CONN_TIMEOUT = 15 * 1000;
+  public static final int READ_TIMEOUT = 60 * 1000;
+  public static final int CHUNK_SIZE   = 64 * 1024;
   public static boolean DEBUG = false;
 
   private final WSDLFactory fact;
@@ -71,7 +72,7 @@ public class WebService implements IAResource, IHttp, IXML {
     PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     fact = WSDLFactory.newInstance();
     db   = SysConfig.me().readConfig().db;
-    log  = LogFactory.create("jsWebService");
+    log  = LogFactory.create("js-web-service");
   }
 
 
@@ -149,6 +150,8 @@ public class WebService implements IAResource, IHttp, IXML {
         throw new IllegalStateException("Is connecting");
 
       conn = (HttpURLConnection) new URL(url).openConnection();
+      conn.setReadTimeout(READ_TIMEOUT);
+      conn.setConnectTimeout(CONN_TIMEOUT);
       conn.setChunkedStreamingMode(CHUNK_SIZE);
       ModuleHandleContext.autoClose(()-> conn.disconnect());
       conn.setRequestMethod(POST);

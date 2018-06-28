@@ -16,7 +16,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 # 需要做:
 
-* ide 授权, 未授权的平台接口返回未注册信息
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言

@@ -77,7 +77,7 @@ public class Striker extends HttpFilter {
     super.init(filterConfig);
     Config cf = SysConfig.me().readConfig();
 
-    this.log          = LogFactory.create();
+    this.log          = LogFactory.create("striker");
     this.debug        = cf.debugService;
     this.context_path = filterConfig.getServletContext().getContextPath();
     this.check1hash   = context_path.hashCode();

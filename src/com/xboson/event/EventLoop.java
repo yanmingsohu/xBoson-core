@@ -42,7 +42,7 @@ public class EventLoop implements ThreadFactory, IConstant {
 
   private EventLoop() {
     this.worker = Executors.newSingleThreadExecutor(this);
-    this.log = LogFactory.create();
+    this.log = LogFactory.create("event-loop");
     log.info(INITIALIZATION);
   }
 

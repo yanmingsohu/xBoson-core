@@ -63,7 +63,7 @@ public class DbmsFactory extends OnExitHandle {
   private DbmsFactory() {
     idmap = new ConcurrentHashMap<>();
     namemap = new ConcurrentHashMap<>();
-    log = LogFactory.create();
+    log = LogFactory.create("dbms-factory");
 
     DBPoolConfig pc = SysConfig.me().readConfig().dbpool;
     ConnectPoolFactory pf = new ConnectPoolFactory(this);

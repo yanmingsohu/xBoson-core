@@ -50,7 +50,7 @@ public class SessionCluster extends HttpFilter {
   private static byte[] sessionPassword = null;
   private static int sessionTimeout = 0; // 分钟
 
-  private final Log log = LogFactory.create();
+  private final Log log = LogFactory.create("session");
   private String contextPath;
   private ConnectConfig db;
 
@@ -162,7 +162,7 @@ public class SessionCluster extends HttpFilter {
     if (sd == null) {
       sd = new SessionData(ck, sessionTimeout);
     }
-    log.debug("Session ID:", ck.getValue());
+    log.debug("ID:", ck.getValue());
     return sd;
   }
 

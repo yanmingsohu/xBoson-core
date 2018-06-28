@@ -42,7 +42,7 @@ public class ConnectPoolFactory implements
 
   public ConnectPoolFactory(DbmsFactory dbms) {
     this.dbms = dbms;
-    this.log = LogFactory.create();
+    this.log = LogFactory.create("conn-pool-fact");
   }
 
 
