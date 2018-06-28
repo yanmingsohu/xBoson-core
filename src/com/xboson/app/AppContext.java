@@ -21,6 +21,8 @@ import com.xboson.app.reader.ForDevelopment;
 import com.xboson.app.reader.ForProduction;
 import com.xboson.auth.IAWho;
 import com.xboson.been.*;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
 import com.xboson.event.timer.TimeFactory;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -34,6 +36,8 @@ import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
@@ -65,13 +69,12 @@ public final class AppContext implements
     log         = LogFactory.create("sc-core-context");
     production  = new AppPool(new ForProduction());
     development = new AppPool(new ForDevelopment());
-    shareApp    = JavaConverter.arr2setLower(
-                  SysConfig.me().readConfig().shareAppList);
     apilog      = new RequestApiLog();
     pm          = new ProcessManager();
     nodeID      = ClusterManager.me().localNodeID();
     seflag      = EventFlag.me;
     crossThread = new ConcurrentHashMap();
+    rebuildShareAppConfig();
   }
 
 
@@ -193,6 +196,28 @@ public final class AppContext implements
     ex.put("app", tld.ac.app);
     ex.put("mod", tld.ac.mod);
     ex.put(REQUEST_ID, Tool.uuid.ds());
+  }
+
+
+  /**
+   * 重新读取共享 app 列表, 这些应用由平台共享给其他机构
+   */
+  public synchronized void rebuildShareAppConfig() {
+    shareApp = JavaConverter.arr2setLower(
+            SysConfig.me().readConfig().shareAppList);
+
+    try (SqlResult sr = SqlReader.query("share_app_list",
+            SysConfig.me().readConfig().db))
+    {
+      ResultSet rs = sr.getResult();
+      while (rs.next()) {
+        shareApp.add(rs.getString(1));
+      }
+
+      log.debug("share app:", shareApp);
+    } catch (SQLException e) {
+      log.error("rebuildShareAppConfig", e);
+    }
   }
 
 

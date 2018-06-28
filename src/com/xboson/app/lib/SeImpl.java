@@ -26,8 +26,10 @@ import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDriver;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.event.EventLoop;
 import com.xboson.event.OnFileChangeHandle;
 import com.xboson.j2ee.ui.TemplateEngine;
+import com.xboson.service.App;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
@@ -330,6 +332,14 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   public void sendUIFileReload(String pagePath) {
     sendUIFileReload(pagePath, "change");
+  }
+
+
+  /**
+   * 重新读取已经发布的应用程序列表
+   */
+  public void sendAppReleased() {
+    EventLoop.me().add(() -> AppContext.me().rebuildShareAppConfig());
   }
 
 

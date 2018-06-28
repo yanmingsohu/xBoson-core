@@ -45,7 +45,7 @@ public class SqlKeyWords {
           "HAVING",
 
           "IDENTIFIED", "IF", "IGNORE", "IN", "INDEX", "INNER", "INOUT", "INSERT",
-          "INT", "INTEGER", "INTO",
+          "INT", "INTEGER", "INTO", "EXISTS",
 
           "JOIN",
 
