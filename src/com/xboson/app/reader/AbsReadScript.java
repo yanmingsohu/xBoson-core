@@ -21,6 +21,7 @@ import com.xboson.app.XjOrg;
 import com.xboson.app.fix.SourceFix;
 import com.xboson.app.lib.IApiConstant;
 import com.xboson.fs.script.ScriptAttr;
+import com.xboson.log.ILogName;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.c0nst.IConstant;
@@ -29,13 +30,14 @@ import com.xboson.util.c0nst.IConstant;
 /**
  * 读取脚本文件, 该对象是多线程可重入的.
  */
-public abstract class AbsReadScript implements IConstant, IApiConstant {
+public abstract class AbsReadScript
+        implements IConstant, IApiConstant, ILogName {
 
   protected final Log log;
 
 
   public AbsReadScript() {
-    log = LogFactory.create();
+    log = LogFactory.create(this);
   }
 
 

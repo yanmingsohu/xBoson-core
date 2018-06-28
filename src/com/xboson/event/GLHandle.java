@@ -16,6 +16,7 @@
 
 package com.xboson.event;
 
+import com.xboson.log.ILogName;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
@@ -24,13 +25,13 @@ import javax.naming.event.NamingExceptionEvent;
 /**
  * 默认实现
  */
-public abstract class GLHandle implements GlobalListener {
+public abstract class GLHandle implements GlobalListener, ILogName {
   private Log log = null;
 
 
-  protected synchronized Log getLog() {
+  protected final synchronized Log getLog() {
     if (log == null) {
-      log = LogFactory.create(this.getClass());
+      log = LogFactory.create(this);
     }
     return log;
   }

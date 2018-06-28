@@ -54,7 +54,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
     super(true);
     this.listeners = Collections.synchronizedSet(new LinkedHashSet<>());
     this.name      = name;
-    this.log       = LogFactory.create(GlobalEventContext.class +"$"+ name);
+    this.log       = LogFactory.create("global-event."+ name);
     this.myselfid  = myselfid;
     this.isLiLo    = true;
 

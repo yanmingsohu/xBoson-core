@@ -246,4 +246,10 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
   public AbsReadScript getScriptReader() {
     return script_reader;
   }
+
+
+  @Override
+  public String logName() {
+    return "sc-core-org";
+  }
 }

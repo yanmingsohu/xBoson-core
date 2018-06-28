@@ -19,6 +19,7 @@ package com.xboson.j2ee.container;
 import com.xboson.been.CallData;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
+import com.xboson.log.ILogName;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
@@ -31,14 +32,14 @@ import java.lang.reflect.Method;
  *
  * @see #subService 方便制作子服务
  */
-public abstract class XService {
+public abstract class XService implements ILogName {
 
   private static final Class[] PARMS_TYPE = new Class[] { CallData.class };
 
   /**
    * 输出日志
    */
-  protected final Log log = LogFactory.create(XService.this.getClass());
+  protected final Log log = LogFactory.create(this);
 
   /**
    * 子类实现该方法, 当服务被调用, 进入该方法中

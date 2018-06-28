@@ -42,7 +42,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * 作为全局脚本的入口, 维护所有运行着的沙箱/应用池
  */
-public class AppContext implements
+public final class AppContext implements
         IConstant, IScriptEventListener, IVisitByScript {
 
   /** 在线程超过这个运行时间后, 降低运行优先级, 毫秒 */
@@ -62,7 +62,7 @@ public class AppContext implements
 
 
   private AppContext() {
-    log         = LogFactory.create();
+    log         = LogFactory.create("sc-core-context");
     production  = new AppPool(new ForProduction());
     development = new AppPool(new ForDevelopment());
     shareApp    = JavaConverter.arr2setLower(
@@ -149,15 +149,13 @@ public class AppContext implements
   }
 
 
-  /**
-   * 's' 调试状态标记
-   *    d：执行最新代码并返回调试信息，
-   *    r：执行已发布代码并返回调试信息
-   */
   private AppPool chooseAppPool(ThreadLocalData tld) {
-    ApiTypes type = ApiTypes.of( tld.ac.call.req.getParameter("s") );
+    ApiTypes type = ApiTypes.of(tld.ac);
     tld.__dev_mode = type;
 
+    //
+    // ApiTypes 中不适合存放 AppPool 的实例.
+    //
     switch (type) {
       case Development:
         return development;

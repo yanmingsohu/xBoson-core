@@ -44,7 +44,7 @@ public class SystemStartupScript implements IConstant, Runnable {
 
 
   private SystemStartupScript() {
-    log = LogFactory.create();
+    log = LogFactory.create("sc-startup");
   }
 
 

@@ -54,7 +54,7 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
     this.app = app;
     this.mod = mod;
     this.id  = id;
-    this.log = LogFactory.create();
+    this.log = LogFactory.create("sc-core-api");
     this.res = (app.getID() + mod.id() + id).toLowerCase();
 
     readApiContent();

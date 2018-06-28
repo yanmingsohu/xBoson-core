@@ -59,4 +59,9 @@ public class ForDevelopment extends AbsReadScript {
     throw new XBosonException.NotFound("API:" + api);
   }
 
+
+  @Override
+  public String logName() {
+    return "read-dev-api";
+  }
 }

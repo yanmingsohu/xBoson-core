@@ -66,4 +66,10 @@ public class ForProduction extends AbsReadScript {
     }
     throw new XBosonException.NotFound("API:" + api);
   }
+
+
+  @Override
+  public String logName() {
+    return "read-product-api";
+  }
 }

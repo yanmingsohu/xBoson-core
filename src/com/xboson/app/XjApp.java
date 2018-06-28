@@ -170,4 +170,11 @@ public class XjApp extends XjPool<XjModule> implements IDict, IScriptFileSystem 
   public Map<String, Object> getCacheData() {
     return cacheData;
   }
+
+
+  @Override
+  public String logName() {
+    return "sc-core-app";
+  }
+
 }

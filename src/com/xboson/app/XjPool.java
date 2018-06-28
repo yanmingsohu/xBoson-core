@@ -17,6 +17,7 @@
 package com.xboson.app;
 
 import com.xboson.been.XBosonException;
+import com.xboson.log.ILogName;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 方便创建层级式的对象池
  */
-public abstract class XjPool<E> {
+public abstract class XjPool<E> implements ILogName {
 
   private Map<String, E> pool;
   protected Log log;
@@ -37,7 +38,7 @@ public abstract class XjPool<E> {
 
   protected XjPool() {
     pool = new ConcurrentHashMap<>();
-    log = LogFactory.create(this.getClass());
+    log = LogFactory.create(this);
   }
 
 

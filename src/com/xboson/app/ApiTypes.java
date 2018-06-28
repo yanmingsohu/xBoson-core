@@ -17,8 +17,7 @@
 package com.xboson.app;
 
 
-import java.util.HashMap;
-import java.util.Map;
+import com.xboson.been.ApiCall;
 
 
 public enum ApiTypes {
@@ -34,18 +33,18 @@ public enum ApiTypes {
   ApiTypes(String eventPrifix, String flag) {
     this.eventPrifix = eventPrifix;
     this.flag = flag;
-    MAP.flagMapping.put(flag, this);
   }
 
 
-  public static ApiTypes of(String flag) {
-    ApiTypes type = MAP.flagMapping.get(flag);
-    if (type == null) type = Production;
-    return type;
-  }
-
-
-  private static class MAP {
-    static final Map<String, ApiTypes> flagMapping = new HashMap<>();
+  /**
+   * 's' 调试状态标记
+   *    d：执行最新代码并返回调试信息，
+   *    r：执行已发布代码
+   */
+  public static ApiTypes of(ApiCall ac) {
+    if (Development.flag.equalsIgnoreCase(ac.call.req.getParameter("s"))) {
+      return Development;
+    }
+    return Production;
   }
 }

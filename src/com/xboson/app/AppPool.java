@@ -54,4 +54,10 @@ public class AppPool extends XjPool<XjOrg> {
   public XjOrg getOrg(String id) {
     return super.getWithCreate(id);
   }
+
+
+  @Override
+  public String logName() {
+    return "sc-core-pool";
+  }
 }

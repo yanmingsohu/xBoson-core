@@ -138,23 +138,13 @@ public class DbOut extends OutBase implements ILogWriter {
     }
 
 
+    /**
+     * 重写默认行为, 防止自身的日志输出嵌套自身死循环.
+     */
     @Override
     protected Log createLog() {
-      return new NoOut();
+      return new NulLog("system-log");
     }
   }
 
-
-  private class NoOut extends NulLog {
-
-    public NoOut() {
-      super("system-log");
-    }
-
-
-    @Override
-    protected void dologs(Level l, Object[] msg) {
-      // OutBase.nolog(Arrays.toString(msg));
-    }
-  }
 }

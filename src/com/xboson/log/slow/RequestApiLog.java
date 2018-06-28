@@ -76,7 +76,7 @@ public class RequestApiLog extends AbsSlowLog {
 
 
   @Override
-  protected Log createLog() {
-    return LogFactory.create("log-req-api");
+  public String logName() {
+    return "log-req-api";
   }
 }

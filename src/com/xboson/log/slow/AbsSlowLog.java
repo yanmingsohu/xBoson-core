@@ -21,6 +21,7 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.event.EventLoop;
 import com.xboson.event.OnExitHandle;
+import com.xboson.log.ILogName;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Uuid;
@@ -41,7 +42,7 @@ import java.util.Queue;
  * 慢日志父类, 可以创建多个实例, 所有实例都是用同一个数据库连接.
  * 插入的日志并不是立即进入 DB 而是在一个低优先级的单线程中执行 DB 写入.
  */
-public abstract class AbsSlowLog extends OnExitHandle {
+public abstract class AbsSlowLog extends OnExitHandle implements ILogName {
 
   private Queue<Object[]> queue;
   private Runnable insert;
@@ -50,7 +51,9 @@ public abstract class AbsSlowLog extends OnExitHandle {
   private boolean isDestroy;
   private ConnectConfig db;
 
-  /** 可以在子类中直接用, 记录异常 */
+  /**
+   * 可以在子类中直接用, 记录异常;
+   */
   protected final Log log;
   protected final static Uuid uuid = new Uuid();
 
@@ -71,10 +74,10 @@ public abstract class AbsSlowLog extends OnExitHandle {
 
   /**
    * 该方法在初始化时调用, 创建一个日志对象用于记录日志的日志;
-   * 这个日志如果写入数据库会导致自调用.
+   * 默认这个日志如果写入数据库会导致自调用, 必要时需要重写该方法.
    */
   protected Log createLog() {
-    return LogFactory.create(this.getClass());
+    return LogFactory.create(this);
   }
 
 

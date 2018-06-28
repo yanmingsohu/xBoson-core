@@ -158,6 +158,11 @@ public class LogFactory extends OnExitHandle {
   }
 
 
+  public static Log create(ILogName ln) {
+    return create(ln.logName());
+  }
+
+
   /**
    * 设置当前日志级别
    */

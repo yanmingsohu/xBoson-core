@@ -72,4 +72,11 @@ public class XjModule extends XjPool<XjApi> implements IDict {
   public String id() {
     return id;
   }
+
+
+  @Override
+  public String logName() {
+    return "sc-core-module";
+  }
+
 }
