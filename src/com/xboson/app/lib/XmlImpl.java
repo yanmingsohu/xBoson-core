@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
 import com.xboson.script.lib.StreamUtil;
@@ -38,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class XmlImpl implements IXML {
+public class XmlImpl implements IXML, IVisitByScript {
 
   public static final String BEG_TN      = "<";
   public static final String END_TN      = ">";
@@ -100,7 +101,7 @@ public class XmlImpl implements IXML {
   }
 
 
-  public class XmlRoot {
+  public class XmlRoot implements IVisitByScript {
 
     private JsOutputStream out;
     private XmlTagWriter last;
@@ -146,7 +147,7 @@ public class XmlImpl implements IXML {
   /**
    * 对象转换为 xml 字符串时使用该类
    */
-  public class XmlTagWriter {
+  public class XmlTagWriter implements IVisitByScript {
 
     private JsOutputStream out;
 
@@ -312,7 +313,7 @@ public class XmlImpl implements IXML {
   /**
    * 将 xml 字符串换换为 对象时, 使用该类
    */
-  public static class TagStruct {
+  public static class TagStruct implements IVisitByScript {
     public String name;
     public String qName;
     public String uri;

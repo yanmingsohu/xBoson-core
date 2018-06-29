@@ -25,6 +25,7 @@ import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
 import com.xboson.util.SysConfig;
@@ -56,7 +57,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class WebService implements IAResource, IHttp, IXML {
+public class WebService implements IAResource, IHttp, IXML, IVisitByScript {
 
   public static final int CONN_TIMEOUT = 15 * 1000;
   public static final int READ_TIMEOUT = 60 * 1000;
@@ -69,7 +70,6 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
   public WebService() throws WSDLException {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     fact = WSDLFactory.newInstance();
     db   = SysConfig.me().readConfig().db;
     log  = LogFactory.create("js-web-service");
@@ -77,6 +77,7 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
   public WSConnection connection(Map setting) throws Exception {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     return new WSConnection(
             setting.get("curl").toString(),
             setting.get("name").toString(),
@@ -85,11 +86,13 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
   public WSConnection connection(String url, String func, String ns) throws Exception {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     return new WSConnection(url, func, ns);
   }
 
 
   public WSConnection connection(String key) throws Exception {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     Object[] parm = { key };
     try (SqlResult sr = SqlReader.query("ws_open", db, parm)) {
       ResultSet rs = sr.getResult();
@@ -214,6 +217,7 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
   public Map wsdl(String url) throws WSDLException {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     WSDLReader reader = fact.newWSDLReader();
     Definition def = reader.readWSDL(url);
     return wsdl(def);
@@ -221,6 +225,7 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
   public Map wsdl(String url, String txt) throws WSDLException {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     WSDLReader reader = fact.newWSDLReader();
     InputSource input = new InputSource(new StringReader(txt));
     Definition def = reader.readWSDL(url, input);
@@ -229,6 +234,7 @@ public class WebService implements IAResource, IHttp, IXML {
 
 
   private Map wsdl(Definition def) {
+    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     Map<Object, Object> ret = new HashMap<>();
     Map parsedTypes = types(def);
 

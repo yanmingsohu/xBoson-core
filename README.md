@@ -20,6 +20,8 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * 云盘系统(api已经完成)
 * 多语言
 * js 字典模块
+* org 参数只作为 mysql schema 选择条件, 并从 api 加载流程中分离; app 直接作为根选择条件,
+  因为 app 是不会重复的 (XjOrg 和 XjApp 解绑, 表 sys_apps 没有和机构做关联).
 
 
 # 2.0 新特性
@@ -42,6 +44,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * ui 目录 / node 模块目录 / 临时文件目录, 映射到虚拟文件系统中 (支持集群).
 * 虚拟文件系统通过 api 开放给脚本, 直接在脚本中操作文件.
 * 第三方使用 OAuth 2.0 接入平台.
+* 当内存不足, 内核会卸载已经编译的 api 来释放紧张的内存.
 
 
 # JAR 依赖

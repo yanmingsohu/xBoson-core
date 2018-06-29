@@ -30,7 +30,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
  *     |     |       |            |
  *    top.next  => task         last.next => null
  */
-public class EventLoop {
+public class EventLoop implements IVisitByScript {
 
   private final ScriptObjectMirror process;
   private final Log log;

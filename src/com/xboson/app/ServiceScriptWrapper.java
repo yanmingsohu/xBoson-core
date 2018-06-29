@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class ServiceScriptWrapper implements IConstant, IConfigSandbox {
+public final class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
   private static final byte[] warp0 =
           "module.exports = (function(sys, sql, cache, http, se) {"

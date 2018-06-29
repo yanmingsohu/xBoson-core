@@ -204,7 +204,7 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
       }
       name = rs.getString("de0810013j");
     } else {
-      throw new XBosonException("找不到机构 " + orgid);
+      throw new XBosonException("找不到机构: " + orgid);
     }
   }
 

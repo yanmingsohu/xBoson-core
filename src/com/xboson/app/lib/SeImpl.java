@@ -339,7 +339,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    * 重新读取已经发布的应用程序列表
    */
   public void sendAppReleased() {
-    EventLoop.me().add(() -> AppContext.me().rebuildShareAppConfig());
+    EventLoop.me().add(() -> AppContext.me().rebuildAppOrgMapping());
   }
 
 

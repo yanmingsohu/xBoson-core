@@ -22,6 +22,7 @@ import com.xboson.been.LoginUser;
 import com.xboson.been.SessionData;
 import com.xboson.j2ee.container.SessionCluster;
 import com.xboson.script.EventLoop;
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import okhttp3.*;
@@ -34,7 +35,7 @@ import java.util.Map;
 /**
  * 专门为 masquerade 提供辅助函数
  */
-public class HelperModule {
+public class HelperModule implements IVisitByScript {
 
   private ThreadLocal<SessionData> sessions = new ThreadLocal<>();
   private OkHttpClient hc;

@@ -17,7 +17,7 @@
 package com.xboson.script;
 
 /**
- * 凡是集成该接口的对象都可能被脚本环境访问.
+ * 凡是继承该接口的对象都可能被脚本环境访问.
  * [混淆时, 该接口的对象公共成员被原样保留]
  */
 public interface IVisitByScript {

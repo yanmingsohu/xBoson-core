@@ -56,7 +56,7 @@ public final class AppContext implements
   private static AppContext instance;
   private AppPool production;
   private AppPool development;
-  private Set<String> shareApp;
+  private Map<String, String> app2org;
   private RequestApiLog apilog;
   private ProcessManager pm;
   private String nodeID;
@@ -74,7 +74,7 @@ public final class AppContext implements
     nodeID      = ClusterManager.me().localNodeID();
     seflag      = EventFlag.me;
     crossThread = new ConcurrentHashMap();
-    rebuildShareAppConfig();
+    rebuildAppOrgMapping();
   }
 
 
@@ -93,16 +93,17 @@ public final class AppContext implements
       make_extend_parameter(tld);
 
       //
-      // 跨机构调用共享 APP 中的 api, 此时 org 可以是另一个机构, 这种跨机构
-      // 调用 api 的行为只支持平台机构; 此时 api 以 root 的数据库权限启动, 而参数中
-      // 的 org 仍然是原先机构的 id.
+      // 跨机构调用共享 APP 中的 api, 此时 org 可以是另一个机构.
+      // 此时 api 以 root 的数据库权限启动, 而参数中的 org 仍然是原先机构的 id.
+      // (实现不完整: 当其他机构共享 app 会出现权限不够的问题)
       //
       // 即使 org 是其他机构, 运行的仍然是平台机构中的 api, 所以不会有代码越权访问资源,
       // 必须保证平台机构 api 逻辑安全.
       //
-      if (shareApp.contains(ac.app)
-              && (! SYS_ORG.equals(ac.org)) ) {
-        ac.org = SYS_ORG;
+      String orgWithApp = app2org.get(ac.app);
+      if (Tool.isNulStr(orgWithApp)) orgWithApp = SYS_ORG;
+      if (! orgWithApp.equals(ac.org)) {
+        ac.org = orgWithApp;
         tld.replaceOrg = true;
       }
 
@@ -199,24 +200,38 @@ public final class AppContext implements
   }
 
 
-  /**
-   * 重新读取共享 app 列表, 这些应用由平台共享给其他机构
-   */
-  public synchronized void rebuildShareAppConfig() {
-    shareApp = JavaConverter.arr2setLower(
-            SysConfig.me().readConfig().shareAppList);
+  public synchronized void rebuildAppOrgMapping() {
+    Config cf = SysConfig.me().readConfig();
+    Map<String, String> mapping = new HashMap<>();
 
-    try (SqlResult sr = SqlReader.query("share_app_list",
-            SysConfig.me().readConfig().db))
-    {
-      ResultSet rs = sr.getResult();
-      while (rs.next()) {
-        shareApp.add(rs.getString(1));
+    for (int i=0; i<cf.shareAppList.length; ++i) {
+      mapping.put(cf.shareAppList[i], SYS_ORG);
+    }
+
+    try (SqlResult sr = SqlReader.query("mdm_org", cf.db)) {
+      ResultSet orgs = sr.getResult();
+
+      while (orgs.next()) {
+        String orgid = orgs.getString(1);
+        String selectApp = "SELECT appid FROM `"+ orgid +"`.sys_apps;";
+        ResultSet apps = sr.query(selectApp).getResult();
+
+        while (apps.next()) {
+          String appid = apps.getString(1);
+          //
+          // 兼容: 画面中使用小写, 数据库中使用大写
+          //
+          mapping.put(appid.toLowerCase(), orgid);
+          mapping.put(appid.toUpperCase(), orgid);
+          mapping.put(appid, orgid);
+        }
       }
 
-      log.debug("share app:", shareApp);
+      log.debug("App to Org:", mapping);
     } catch (SQLException e) {
-      log.error("rebuildShareAppConfig", e);
+      log.error("rebuildAppOrgMapping", e);
+    } finally {
+      app2org = mapping;
     }
   }
 
