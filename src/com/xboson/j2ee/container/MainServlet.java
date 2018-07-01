@@ -17,6 +17,7 @@
 package com.xboson.j2ee.container;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -37,7 +38,16 @@ import com.xboson.log.LogFactory;
 public class MainServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 5854315900895352428L;
-	private final Log log = LogFactory.create("service-route");
+	private final Log log;
+	private final ReentrantLock lockThread;
+
+	static boolean protected_thread;
+
+
+	public MainServlet() {
+    log = LogFactory.create("service-route");
+    lockThread = new ReentrantLock();
+  }
 
 
   /**
@@ -46,6 +56,7 @@ public class MainServlet extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
+	  if (protected_thread) lockThread.lock();
 		
 		CallData cd = new CallData(req, resp);
 		XService sv = UrlMapping.getService(cd.url);
@@ -72,8 +83,10 @@ public class MainServlet extends HttpServlet {
 			throw r;
     } catch(Exception e) {
 		  throw new XBosonException(e);
+    } finally {
+      if (lockThread.getHoldCount() > 0) lockThread.unlock();
     }
-	}
+  }
 
 
 	@Override

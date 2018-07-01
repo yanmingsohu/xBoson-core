@@ -20,13 +20,9 @@ import com.xboson.been.Config;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
 
-import javax.management.MBeanServer;
 import javax.servlet.*;
 import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -99,6 +95,7 @@ public class Startup implements ServletContextListener {
     //        sc.addFilter("Processes",
     //                com.xboson.j2ee.container.Processes.class);
     //processes.addMappingForUrlPatterns(null, false, "/*");
+    com.xboson.j2ee.container.Processes.me().init(sc);
 
     ServletRegistration.Dynamic main =
             sc.addServlet("main",

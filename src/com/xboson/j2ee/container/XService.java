@@ -36,10 +36,12 @@ public abstract class XService implements ILogName {
 
   private static final Class[] PARMS_TYPE = new Class[] { CallData.class };
 
+
   /**
    * 输出日志
    */
   protected final Log log = LogFactory.create(this);
+
 
   /**
    * 子类实现该方法, 当服务被调用, 进入该方法中

@@ -51,6 +51,8 @@ import static com.xboson.been.License.PUB_FILE;
 
 public class Processes extends HttpFilter {
 
+  private static Processes instance;
+
   /**
    * 在 TestSign 中生成
    * @see com.xboson.test.TestSign
@@ -90,6 +92,21 @@ public class Processes extends HttpFilter {
   private String msg;
   private License license;
   private Log log;
+
+
+  public static Processes me() {
+    if (instance == null) {
+      synchronized (Processes.class) {
+        if (instance == null) {
+          instance = new Processes();
+        }
+      }
+    }
+    return instance;
+  }
+
+
+  private Processes() {}
 
 
   @Override
@@ -172,6 +189,7 @@ public class Processes extends HttpFilter {
         msg = e.getMessage();
       }
       XResponse.licenseState = msg;
+      MainServlet.protected_thread = msg != null;
       if (msg != null) log.warn(msg);
     }
 

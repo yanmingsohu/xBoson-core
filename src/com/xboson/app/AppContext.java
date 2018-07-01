@@ -227,7 +227,7 @@ public final class AppContext implements
         }
       }
 
-      log.debug("App to Org:", mapping);
+      log.debug("Rebuild App to Org Mapping.");
     } catch (SQLException e) {
       log.error("rebuildAppOrgMapping", e);
     } finally {

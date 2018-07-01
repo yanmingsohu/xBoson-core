@@ -34,8 +34,7 @@ public class ApiAuthorizationRating implements IAWhere {
 
 
   public ApiAuthorizationRating() {
-    plc = new Processes();
-    plc.init(Striker.jee().servletContext);
+    plc = Processes.me();
   }
 
 
