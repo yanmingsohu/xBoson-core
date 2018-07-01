@@ -18,6 +18,7 @@ package com.xboson.script.lib;
 
 import com.xboson.script.SandboxFactory;
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 
 public class Process {
@@ -38,4 +39,16 @@ public class Process {
     return ef.getLanguageVersion();
   }
 
+
+  /**
+   * 多线程同步, 在 lockTatget 对象上枷锁, 并执行 callback 方法, callback 返回后解锁.
+   * @param lockTatget
+   * @param callback
+   * @return 返回 callback 返回的对象.
+   */
+  public Object lock(Object lockTatget, ScriptObjectMirror callback) {
+    synchronized (lockTatget) {
+      return callback.call(lockTatget);
+    }
+  }
 }

@@ -34,6 +34,7 @@ public interface IModuleProvider extends IVisitByScript {
   /**
    * 从模块路径返回模块, 并且应该将模块缓存给 Application,
    * 在必要时从 applyMod 模块中提取加载路径, 并尝试从这些路径中加载模块.
+   * 必要时该方法必须同步.
    *
    * @param name 模块路径
    * @param applyMod 加载模块的模块

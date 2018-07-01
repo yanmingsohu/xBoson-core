@@ -56,6 +56,7 @@ public class ChineseInital {
     cache.put("癫", "d");
     cache.put("祛", "q");
     cache.put("厥", "j");
+    cache.put("、", "");
   }
 
 

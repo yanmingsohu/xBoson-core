@@ -83,6 +83,17 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
+  /**
+   * 计算最终用户密码, 该方法隐藏文档
+   * <br/><code>
+   * var ps = se.encodePlatformPassword("jym", "2017-01-11 10:47:00", "ps012345");
+   * </code>
+   *
+   * @param uid 用户名字符串
+   * @param date 最后修改时间字符串, 用于加密密码的盐
+   * @param ps 密码明文
+   * @return 返回加密后的密码字符串
+   */
   public String encodePlatformPassword(String uid, String date, String ps) {
     String md5ps = Password.md5lowstr(ps);
     return Password.v1(uid, md5ps, date);
@@ -246,7 +257,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   /**
    * 返回解密后的脚本, 去掉了前后 "<%..%>" 符号.
-   * [原平台无该函数]
+   * [原平台无该函数, 该方法隐藏文档]
    */
   public String decodeApiScript(String code) {
     byte[] c = ApiEncryption.decryptApi(code);
@@ -263,7 +274,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   /**
    * 返回加密后的脚本, 将 "<%..%>" 重新加上.
-   * [原平台无该函数]
+   * [原平台无该函数, 该方法隐藏文档]
    */
   public String encodeApiScript(String code) {
     byte[] c = code.getBytes(IConstant.CHARSET);

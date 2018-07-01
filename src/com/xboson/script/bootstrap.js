@@ -18,7 +18,8 @@
 // 通用库/初始化脚本
 //
 this.global = {};
-this.process = { versions: {} };
+// process 中的占位属性在 process 初始化后将被替换.
+this.process = { versions: {}, lock: function(lt, cb) {return cb()} };
 this.Buffer;
 
 
@@ -27,8 +28,8 @@ this.Buffer;
 var sys_module_provider;
 var pathlib;
 var safe_context = {};
-var nativeJSON = JSON;
-var MODULE_NAME = '/node_modules';
+var nativeJSON   = JSON;
+var MODULE_NAME  = '/node_modules';
 
 
 // 删除所有全局危险对象, 并绑定到内部对象上.
@@ -63,6 +64,7 @@ function __env_ready() {
   process.init(sys_module_provider);
   pathlib = sys_module_provider.getModule('path').exports;
   context.JSON = process.binding('json').warp(nativeJSON);
+  process.lock('', function() {})
 }
 
 
@@ -92,7 +94,7 @@ function __warp_main(fn) { // 主函数包装器
     module.children = {};
     currmodule = module;
 
-    var console = require('console').create(module.filename);
+    var console = requireUnsync('console').create(module.filename);
     var dirname = get_dirname(module.filename);
 
     if (!module.paths) {
@@ -100,7 +102,7 @@ function __warp_main(fn) { // 主函数包装器
     }
     try {
       app.sendScriptEvent(eflag.SCRIPT_RUN, currmodule);
-      return fn.call(fncontext, require, module,
+      return fn.call(fncontext, requireSync, module,
            dirname, module.filename, module.exports, console);
     } finally {
       app.sendScriptEvent(eflag.SCRIPT_OUT, currmodule);
@@ -126,10 +128,17 @@ function __warp_main(fn) { // 主函数包装器
   }
 
 
+  function requireSync(path) {
+    return process.lock(null, function() {
+      return requireUnsync(path);
+    });
+  }
+
+
   //
   // 所有的缓存都在 java 上处理.
   //
-  function require(path) {
+  function requireUnsync(path) {
     var mod;
     app.sendScriptEvent(eflag.IN_REQUIRE, currmodule);
     //

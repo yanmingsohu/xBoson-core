@@ -36,6 +36,14 @@ process.init = function(_sys_module_provider) {
 };
 
 
+process.lock = function(locker, cb) {
+  if (!locker) {
+    locker = sys_process;
+  }
+  return sys_process.lock(locker, cb);
+};
+
+
 process.hrtime = function(stime) {
   var ret = sys_process.hrtime();
   if (stime) {
