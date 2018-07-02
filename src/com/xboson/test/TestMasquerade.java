@@ -25,6 +25,9 @@ import com.xboson.j2ee.emu.EmuServletResponse;
 
 public class TestMasquerade extends Test {
 
+  //
+  // 这个测试会抛出异常, 因为初始化时 Startup 没有 ServletContext
+  //
   @Override
   public void test() throws Throwable {
     page();

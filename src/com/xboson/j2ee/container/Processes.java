@@ -44,14 +44,19 @@ import java.nio.file.WatchEvent;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.CRC32;
 
 import static com.xboson.been.License.PUB_FILE;
 
 
-public class Processes extends HttpFilter {
+public final class Processes {
 
   private static Processes instance;
+  private static long DAY = 24 * 60 * 60 * 1000;
 
   /**
    * 在 TestSign 中生成
@@ -89,9 +94,10 @@ public class Processes extends HttpFilter {
   }
 
 
+  private final ReentrantLock threadLock;
+  private final Log log;
   private String msg;
   private License license;
-  private Log log;
 
 
   public static Processes me() {
@@ -106,34 +112,18 @@ public class Processes extends HttpFilter {
   }
 
 
-  private Processes() {}
-
-
-  @Override
-  protected void doFilter(HttpServletRequest request,
-                          HttpServletResponse response,
-                          FilterChain chain)
-          throws IOException, ServletException {
-
-    if (msg != null) {
-      response.getWriter().write(msg);
-      return;
-    }
-    chain.doFilter(request, response);
-  }
-
-
-  @Override
-  public void init(FilterConfig filterConfig) throws ServletException {
-    super.init(filterConfig);
-    init(filterConfig.getServletContext());
+  private Processes() {
+    log = LogFactory.create(s[5]);
+    threadLock = new ReentrantLock();
   }
 
 
   public void init(ServletContext sc) {
     try {
-      final long PERIOD = 12 * 60 * 60 * 1000;
-      log = LogFactory.create(s[5]);
+      if (sc == null || license != null)
+        return;
+
+      final long PERIOD = DAY / 2;
       license = License.readLicense();
       license.setPublicKeyFile(sc);
 
@@ -159,7 +149,7 @@ public class Processes extends HttpFilter {
     lic.dns       = "unknow.com";
     lic.email     = "unknow@unknow.com";
     lic.beginTime = System.currentTimeMillis();
-    lic.endTime   = System.currentTimeMillis() + 24*60*60*1000;
+    lic.endTime   = System.currentTimeMillis() + DAY;
     lic.api       = new HashSet<>();
     lic.zz();
 
@@ -189,13 +179,12 @@ public class Processes extends HttpFilter {
         msg = e.getMessage();
       }
       XResponse.licenseState = msg;
-      MainServlet.protected_thread = msg != null;
       if (msg != null) log.warn(msg);
     }
 
 
     @Override
-    public void nofify(String basename,
+    public void notify(String basename,
                        String filename,
                        WatchEvent event,
                        WatchEvent.Kind kind) throws IOException
@@ -248,6 +237,43 @@ public class Processes extends HttpFilter {
 
 
   /**
+   * 给运行时加授权限制会用到
+   */
+  public class Filter extends HttpFilter {
+
+    @Override
+    protected void doFilter(HttpServletRequest request,
+                            HttpServletResponse response,
+                            FilterChain chain)
+            throws IOException, ServletException {
+
+      if (msg != null) {
+        response.getWriter().write(msg);
+        return;
+      }
+      chain.doFilter(request, response);
+    }
+  }
+
+
+  /**
+   * 线程锁, 在未授权时限制为单线程
+   */
+  public class Happy {
+
+    public void lock() {
+      if (msg != null)
+        threadLock.lock();
+    }
+
+    public void unlock() {
+      if (threadLock.getHoldCount() > 0)
+        threadLock.unlock();
+    }
+  }
+
+
+  /**
    * 返回错误消息, 当返回 null 说明授权基础验证通过.
    */
   public String message() {
@@ -261,4 +287,5 @@ public class Processes extends HttpFilter {
   public License message2() {
     return license;
   }
+
 }

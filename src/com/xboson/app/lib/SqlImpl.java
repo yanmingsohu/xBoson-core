@@ -316,7 +316,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
    * 没有建立连接池
    */
   public void connection(String url, String user, String ps) throws Exception {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    //PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
     Connection newconn = DriverManager.getConnection(url, user, ps);
     if (!newconn.isValid(1000)) {
       throw new XBosonException("Cannot connect to url");

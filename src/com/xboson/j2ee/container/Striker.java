@@ -18,6 +18,7 @@ package com.xboson.j2ee.container;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -44,8 +45,9 @@ import jdk.nashorn.internal.runtime.ECMAErrors;
  *
  * @see com.xboson.init.Startup 配置到容器
  */
-public class Striker extends HttpFilter {
+public final class Striker extends HttpFilter {
 
+  private Processes.Happy birth;
   private Log log;
   private boolean debug;
   private String context_path;
@@ -77,6 +79,7 @@ public class Striker extends HttpFilter {
     super.init(filterConfig);
     Config cf = SysConfig.me().readConfig();
 
+    this.birth        = Processes.me().new Happy();
     this.log          = LogFactory.create("striker");
     this.debug        = cf.debugService;
     this.context_path = filterConfig.getServletContext().getContextPath();
@@ -118,6 +121,7 @@ public class Striker extends HttpFilter {
     }
 
     try {
+      birth.lock();
       tl.set(new JeeContext(request, response));
       jr = new XResponse(request, response);
       chain.doFilter(request, response);
@@ -126,6 +130,7 @@ public class Striker extends HttpFilter {
       responseError(e, jr, response);
     } finally {
       tl.remove();
+      birth.unlock();
     }
   }
 

@@ -278,7 +278,7 @@ public class TestTool extends Test {
     final boolean[] sw = new boolean[1];
 
     IWatcher w = lfw.watchAll(p, new INotify() {
-      public void nofify(String basename, String filename, WatchEvent event,
+      public void notify(String basename, String filename, WatchEvent event,
                          WatchEvent.Kind kind) throws IOException {
         msg(kind, basename, filename, event.count());
         sw[0] = true;

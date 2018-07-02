@@ -17,6 +17,7 @@
 package com.xboson.init;
 
 import com.xboson.been.Config;
+import com.xboson.j2ee.container.Processes;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
@@ -92,10 +93,8 @@ public class Startup implements ServletContextListener {
     // 运行时不再有授权限制
     //
     //FilterRegistration.Dynamic processes =
-    //        sc.addFilter("Processes",
-    //                com.xboson.j2ee.container.Processes.class);
+    //        sc.addFilter("Processes", Processes.me().new Filter());
     //processes.addMappingForUrlPatterns(null, false, "/*");
-    com.xboson.j2ee.container.Processes.me().init(sc);
 
     ServletRegistration.Dynamic main =
             sc.addServlet("main",

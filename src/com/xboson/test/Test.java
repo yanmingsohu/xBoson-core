@@ -19,7 +19,10 @@ package com.xboson.test;
 import com.xboson.been.Config;
 import com.xboson.been.JsonHelper;
 import com.xboson.init.Touch;
+import com.xboson.j2ee.container.Processes;
 import com.xboson.j2ee.emu.EmuJeeContext;
+import com.xboson.j2ee.emu.EmuServletContext;
+import com.xboson.j2ee.emu.EmuServletContextEvent;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
 import com.xboson.log.writer.TestOut;
@@ -108,6 +111,7 @@ public class Test implements IConstant {
 
 	@SuppressWarnings("rawtypes")
 	private final void _test(Test[] cl) {
+    Processes.me().init(new EmuServletContext());
     Touch.me();
     LogFactory.me().setWriter(new TestOut());
     LogFactory.setLevel(Level.ALL);

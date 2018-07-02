@@ -33,7 +33,7 @@ public interface INotify {
    * @param kind 变动类型
    * @throws IOException
    */
-  void nofify(String basename, String filename,
+  void notify(String basename, String filename,
               WatchEvent event, WatchEvent.Kind kind) throws IOException;
 
 

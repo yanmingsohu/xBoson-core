@@ -56,7 +56,7 @@ public class SingleFile implements INotify, Closeable {
 
 
   @Override
-  public void nofify(String basename,
+  public void notify(String basename,
                      String filename,
                      WatchEvent event,
                      WatchEvent.Kind kind)
@@ -69,7 +69,7 @@ public class SingleFile implements INotify, Closeable {
     last = now;
 
     if (filename.equals(this.fileName)) {
-      recv.nofify(basename, filename, event, kind);
+      recv.notify(basename, filename, event, kind);
     }
   }
 

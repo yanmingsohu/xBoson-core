@@ -23,6 +23,7 @@ import com.xboson.db.sql.SqlReader;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.fs.script.FileSystemFactory;
+import com.xboson.j2ee.container.Processes;
 import com.xboson.j2ee.container.UrlMapping;
 import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
@@ -50,6 +51,7 @@ public final class Touch {
     SysConfig.me();
     LogFactory.me();
     DbmsFactory.me().registeringDefaultDriver();
+    Processes.me().init(Startup.getServletContext());
     UrlMapping.me();
     RedisMesmerizer.me();
     SandboxFactory.version();

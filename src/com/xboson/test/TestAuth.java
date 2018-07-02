@@ -45,12 +45,7 @@ public class TestAuth extends Test {
 
     PermissionSystem.applyWithApp(
             ApiAuthorizationRating.class,
-            new IAResource() {
-      @Override
-      public String description() {
-        return "app.module.sql.switch.org()";
-      }
-    });
+            ()-> "api.ide.code.modify.functions()");
 
     sub("Not pass");
 
@@ -58,12 +53,7 @@ public class TestAuth extends Test {
       public void run() {
         PermissionSystem.applyWithApp(
                 ApiAuthorizationRating.class,
-                new IAResource() {
-          @Override
-          public String description() {
-            return "app.nopass()";
-          }
-        });
+                ()-> "app.nopass()");
       }
     };
   }
