@@ -310,17 +310,10 @@ public class SysImpl extends DateImpl {
 
 
   public Object getUserOrgList(String userid) throws Exception {
-    String cacheKey = "CACHE_ORG:" + userid;
-    ScriptObjectMirror retList = (ScriptObjectMirror) appCache.get(cacheKey);
-    if (retList != null) {
-      return unwrap(retList);
-    }
-
-    retList = createJSList();
+    ScriptObjectMirror retList = super.createJSList();
     try (SqlResult sr = SqlReader.query(ORG_SQL_NAME, orgdb, userid)) {
       ResultSet rs = sr.getResult();
       copyToList(retList, rs);
-      appCache.put(cacheKey, retList);
     }
     return unwrap(retList);
   }

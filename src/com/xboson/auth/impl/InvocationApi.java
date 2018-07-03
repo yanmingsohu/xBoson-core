@@ -46,6 +46,11 @@ public class InvocationApi implements IAWhere {
   }
 
 
+  public String toString() {
+    return "执行接口";
+  }
+
+
   private Set<String> createSkip() {
     return JavaConverter.arr2set(new String[]{
             "zyapp_loginzymodule_logingetuserorg",

@@ -63,6 +63,11 @@ public class ApiAuthorizationRating implements IAWhere {
   }
 
 
+  public String toString() {
+    return "接口授权检查";
+  }
+
+
   public class NoLicense extends PermissionException {
     private NoLicense(String msg) {
       super(Processes.s[8] + msg);

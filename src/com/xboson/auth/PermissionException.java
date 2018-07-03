@@ -51,9 +51,10 @@ public class PermissionException extends XBosonException {
 
   public PermissionException(IAWho who, IAWhere where, IAResource res, int code)
   {
-    super("Who:" + who.identification()
-            + ";\n Where: " + where
-            + ";\n Resource: " + res.description()
+    super("权限错误"
+            + ";\n 目的: "   + where
+            + ";\n 操作者: " + who.identification()
+            + ";\n 资源: "   + res.description()
             , code);
   }
 

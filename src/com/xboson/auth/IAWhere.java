@@ -19,6 +19,7 @@ package com.xboson.auth;
 /**
  * 该接口实现需要切实的实施权限检查;
  * 必须有默认构造函数.
+ * toString 方法可以改变默认输出
  */
 public interface IAWhere {
 
