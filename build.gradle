@@ -82,8 +82,8 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'public class com.xboson.script.JSObject { public *; }'
     keepclassmembers 'public class com.xboson.script.lib.* { public *; }'
     keepclassmembers 'public class com.xboson.app.lib.* { public *; }'
-    // keep 'interface com.xboson.script.IVisitByScript' // 测试: 不需要保持类名
-    keepclassmembers 'class * implements com.xboson.script.IVisitByScript {*;}'
+    keep 'interface com.xboson.script.IVisitByScript' // 必须保留
+    keepclassmembers 'class * implements com.xboson.script.IVisitByScript { public *; }'
     keeppackagenames 'com.xboson.app.lib'
     keeppackagenames 'com.xboson.script.lib'
 

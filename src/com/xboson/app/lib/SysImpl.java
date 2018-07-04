@@ -219,25 +219,27 @@ public class SysImpl extends DateImpl {
 
 
   public Object getUserPID(String userid) throws Exception {
-    Map<String, Object> ret = getUserPID(new String[] { userid });
-    if (ret.isEmpty()) return null;
-    return ret.get(userid);
+    String ckey = "P1:"+ userid;
+    Object pid = appCache.get(ckey);
+    if (pid != null) return pid;
+
+    try (SqlResult sr = SqlReader.query(USER_ID_TO_PID_SQL, orgdb, userid)) {
+      ResultSet rs = sr.getResult();
+      if (rs.next()) {
+        pid = rs.getString(1);
+        appCache.put(ckey, pid);
+        return pid;
+      }
+    }
+    return null;
   }
 
 
-  public Map<String, Object> getUserPID(String ...users) throws Exception {
+  public Map<String, Object> getUserPID(String[] users) throws Exception {
     Map<String, Object> ret = new HashMap<>(users.length);
-
-    try (SqlCachedResult scr = new SqlCachedResult(orgdb)) {
-      String sql = SqlReader.read(USER_ID_TO_PID_SQL);
-
-      for (int i=0; i<users.length; ++i) {
-        List<Map<String, Object>> rows = scr.query(sql, users[i]);
-        if (rows.size() > 0) {
-          Map<String, Object> o = rows.get(0);
-          ret.put(users[i], o.get("pid"));
-        }
-      }
+    for (int i=0; i<users.length; ++i) {
+      String uid = users[i];
+      ret.put(uid, getUserPID(uid));
     }
     return ret;
   }
@@ -288,24 +290,31 @@ public class SysImpl extends DateImpl {
     ScriptObjectMirror ret = createJSObject();
     for (int i=0; i<pids.length; ++i) {
       String pid  = pids[i];
-      String ckey = "ACPU:"+ pid;
-      String uid  = (String) appCache.get(ckey);
-
-      if (uid != null) {
-        ret.setMember(pid, uid);
-        continue;
-      }
-
-      try (SqlResult sr = SqlReader.query(PID_TO_UID_SQL, orgdb, pid)) {
-        ResultSet rs = sr.getResult();
-        if (rs.next()) {
-          uid = rs.getString(1);
-          ret.setMember(pid, uid);
-          appCache.put(ckey, uid);
-        }
-      }
+      ret.setMember(pid, getUserIdByPID(pid));
     }
     return ret;
+  }
+
+
+  public Object getUserIdByPID(String pid) throws SQLException {
+    String ckey = "P0:"+ pid;
+    String uid  = (String) appCache.get(ckey);
+    if (uid != null) return uid;
+
+    try (SqlResult sr = SqlReader.query(PID_TO_UID_SQL, orgdb, pid)) {
+      ResultSet rs = sr.getResult();
+      if (rs.next()) {
+        uid = rs.getString(1);
+        appCache.put(ckey, uid);
+        return uid;
+      }
+    }
+    return null;
+  }
+
+
+  public Object getUserIdByPID() throws Exception {
+    return cd.sess.login_user.userid;
   }
 
 
@@ -334,7 +343,7 @@ public class SysImpl extends DateImpl {
   }
 
 
-  public synchronized long nextId() {
+  public long nextId() {
     return Tool.nextId();
   }
 
