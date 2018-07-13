@@ -28,7 +28,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 public class Config implements IBean {
 
-  public static final String VERSION = "1.3.5";
+  public static final String VERSION = "1.3.6";
 
   public String configVersion     = VERSION;
 

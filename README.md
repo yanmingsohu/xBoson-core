@@ -16,6 +16,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 # 需要做:
 
+* 区块链底层/api接口
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
@@ -97,7 +98,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
     
 * (Hyperledger-Fabric 区块链)[http://hyperledger-fabric.readthedocs.io/en/release/]
     -- (fabric-sdk-java-*-with-dependencies.jar) sdk 及若干依赖库集合
-    -- (shim-client-*-with-dependencies.jar) java chaincode 支持及依赖库
     
 * (文件上传解析)
     -- (commons-fileupload-1.3.3.jar)[http://commons.apache.org/proper/commons-fileupload/]
@@ -105,6 +105,10 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * (WebService 组件)
     -- (wsdl4j.jar)
     -- (qname.jar)
+    
+* (MapDB 存储区块的数据库)[https://github.com/jankotek/mapdb]
+    -- (mapdb-3.0.8-SNAPSHOT-jar-with-dependencies.jar) 依赖库集合
+    
     
 		
 # URL 映射约定
