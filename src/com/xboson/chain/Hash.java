@@ -49,7 +49,11 @@ public class Hash {
 
 
   public void update(Date d) {
-    long l = d.getTime();
+    update(d.getTime());
+  }
+
+
+  public void update(long l) {
     md.update((byte) (l & 0xFF));
     md.update((byte) ((l>>8 ) & 0xFF));
     md.update((byte) ((l>>16) & 0xFF));
@@ -72,5 +76,20 @@ public class Hash {
 
   public byte[] digest() {
     return md.digest();
+  }
+
+
+  public static byte[] sha256(byte[] i) {
+    Hash h = new Hash();
+    h.update(i);
+    return h.digest();
+  }
+
+
+  public static byte[] add(byte[] a, byte[] b) {
+    byte[] c = new byte[a.length + b.length];
+    System.arraycopy(a, 0, c, 0, a.length);
+    System.arraycopy(b, 0, c, a.length, b.length);
+    return c;
   }
 }

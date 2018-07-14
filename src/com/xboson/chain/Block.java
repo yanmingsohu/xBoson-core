@@ -16,65 +16,25 @@
 
 package com.xboson.chain;
 
-import com.xboson.util.Tool;
-
 import java.io.Serializable;
 import java.util.Date;
 
 
-public class Block implements ITypes, Serializable {
+public class Block extends BlockBasic implements ITypes, Serializable {
 
   /** 当前块主键 */
   public byte[] key;
-  /** 当前块数据 */
-  public byte[] data;
   /** 当前块 hash */
   public byte[] hash;
   /** 前导块 hash */
   public byte[] previousHash;
   /** 前导块主键 */
   public byte[] previousKey;
-  /** 生成块的用户 id */
-  public String userid;
-  /** 块类型 */
-  public int type;
-  /** api 完整路径, org/app/mod/api */
-  public String apiPath;
-  /** api 脚本 hash */
-  public String apiHash;
   /** 块生成时间 */
   public Date create;
 
 
   public Block() {
-  }
-
-
-  public void setData(byte[] d) {
-    if (d == null || d.length < 1)
-      throw new NullPointerException();
-    this.data = d;
-  }
-
-
-  public void setUserid(String uid) {
-    if (Tool.isNulStr(uid))
-      throw new NullPointerException();
-    this.userid = uid;
-  }
-
-
-  public void setApiPath(String path) {
-    if (Tool.isNulStr(path))
-      throw new NullPointerException();
-    this.apiPath = path;
-  }
-
-
-  public void setApiHash(String hash) {
-    if (Tool.isNulStr(hash))
-      throw new NullPointerException();
-    this.apiHash = hash;
   }
 
 

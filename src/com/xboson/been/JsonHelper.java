@@ -45,7 +45,12 @@ public abstract class JsonHelper implements IBean, IJson {
    */
   @Override
   public String toJSON() {
-    return Tool.getAdapter((Class) this.getClass()).toJson(this);
+    return toJSON(this);
+  }
+
+
+  public static String toJSON(Object o) {
+    return Tool.getAdapter((Class) o.getClass()).toJson(o);
   }
 
 
@@ -53,9 +58,14 @@ public abstract class JsonHelper implements IBean, IJson {
    * 输出所有属性, 方便调试
    */
   public String toString() {
+    return toString(this);
+  }
+
+
+  public static String toString(Object o) {
     StringBuilder out = new StringBuilder();
-    Field[] fs = this.getClass().getDeclaredFields();
-    out.append(this.getClass());
+    Field[] fs = o.getClass().getDeclaredFields();
+    out.append(o.getClass());
 
     for (int i=0; i<fs.length; ++i) {
       Field f = fs[i];
@@ -64,7 +74,7 @@ public abstract class JsonHelper implements IBean, IJson {
       out.append(f.getName());
       out.append(" - ");
       try {
-        out.append(f.get(this));
+        out.append(f.get(o));
       } catch (IllegalAccessException e) {
         out.append(e.getMessage());
       }

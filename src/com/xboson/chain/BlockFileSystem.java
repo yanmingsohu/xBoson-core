@@ -29,17 +29,20 @@ import org.mapdb.Serializer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 
 public class BlockFileSystem implements ITypes {
 
   private static final String PATH = "/chain";
-  private static final long START_SIZE = 10 * 1024*1024;
+  private static final long START_SIZE = 1 * 1024*1024;
   private static final long INCREMENT_SIZE = 1 * 1024*1024;
   private static BlockFileSystem instance;
 
+  private Map<String, InnerChain> chain_cache;
   private final String rootDir;
   private final Log log;
 
@@ -59,6 +62,7 @@ public class BlockFileSystem implements ITypes {
   private BlockFileSystem() {
     rootDir = SysConfig.me().readConfig().configPath + PATH;
     log     = LogFactory.create("chain-block-fs");
+    chain_cache = new HashMap<>();
     try {
       Files.createDirectories(Paths.get(rootDir));
     } catch (IOException e) {
@@ -67,14 +71,21 @@ public class BlockFileSystem implements ITypes {
   }
 
 
-  public InnerChain createChain(String name) {
+  public synchronized InnerChain createChain(String name) {
     if (Tool.isNulStr(name))
       throw new NullPointerException("name");
-    return new InnerChain(name);
+
+    InnerChain chain = chain_cache.get(name);
+    if (chain == null) {
+      chain = new InnerChain(name);
+      chain_cache.put(name, chain);
+    }
+    return chain;
   }
 
 
-  public class InnerChain {
+  public class InnerChain implements AutoCloseable {
+    private final String name;
     private HTreeMap genesisMap;
     private DB db;
 
@@ -85,37 +96,60 @@ public class BlockFileSystem implements ITypes {
               .transactionEnable()
               .make();
 
+      this.name = name;
       this.genesisMap = metaTemplate("genesis");
     }
 
+
+    /**
+     * 递交所有操作到文件
+     */
     public void commit() {
       db.commit();
     }
 
+
+    /**
+     * 回滚操作
+     */
     public void rollback() {
       db.rollback();
     }
 
+
+    /**
+     * 关闭底层文件系统, 未递交的操作被丢弃
+     */
     public void close() {
+      chain_cache.remove(name);
       db.close();
       db = null;
       genesisMap = null;
     }
 
+
+    /**
+     * 如果通道已经存在抛出异常
+     */
     public InnerChannel createChannel(String name) {
       HTreeMap<byte[], Block> map = channelTemplate(name).create();
-      GenesisBlock gb = new GenesisBlock(name);
+      MetaBlock gb = new MetaBlock(name);
       genesisMap.put(name, gb);
       InnerChannel ch = new InnerChannel(map, gb, this);
       ch.push(gb.createGenesis());
       return ch;
     }
 
+
+    /**
+     * 如果通道不存在会抛出异常
+     */
     public InnerChannel openChannel(String name) {
       HTreeMap<byte[], Block> map = channelTemplate(name).open();
-      GenesisBlock gb = (GenesisBlock) genesisMap.get(name);
+      MetaBlock gb = (MetaBlock) genesisMap.get(name);
       return new InnerChannel(map, gb, this);
     }
+
 
     private DB.HashMapMaker channelTemplate(String name) {
       if (name.charAt(0) == '_')
@@ -128,6 +162,7 @@ public class BlockFileSystem implements ITypes {
               .counterEnable();
     }
 
+
     private HTreeMap metaTemplate(String name) {
       return db.hashMap("_"+ name)
               .keySerializer(Serializer.STRING)
@@ -139,10 +174,10 @@ public class BlockFileSystem implements ITypes {
 
   public class InnerChannel {
     private Map<byte[], Block> map;
-    private GenesisBlock gb;
+    private MetaBlock gb;
     private InnerChain chain;
 
-    private InnerChannel(Map<byte[], Block> map, GenesisBlock gb, InnerChain ic) {
+    private InnerChannel(Map<byte[], Block> map, MetaBlock gb, InnerChain ic) {
       this.map    = map;
       this.gb     = gb;
       this.chain  = ic;
@@ -151,17 +186,11 @@ public class BlockFileSystem implements ITypes {
     /**
      * 推入新块, 返回 key
      */
-    public byte[] push(byte[] data, String userid, String apiPath, String apiHash) {
-      Block b = new Block();
-      b.setData(data);
-      b.setUserid(userid);
-      b.setApiPath(apiPath);
-      b.setApiHash(apiHash);
-      b.type = NORM_DATA;
-      return push(b);
+    public byte[] push(BlockBasic b) {
+      return push(b.createBlock());
     }
 
-    public byte[] push(Block b) {
+    protected byte[] push(Block b) {
       do {
         b.key = Tool.uuid.getBytes(Tool.uuid.v4obj());
       } while(map.containsKey(b.key));
@@ -178,6 +207,22 @@ public class BlockFileSystem implements ITypes {
       chain.genesisMap.put(gb.channelName, gb);
       return b.key;
     }
+
+
+    public Block search(byte[] key) {
+      return map.get(key);
+    }
+
+
+    public byte[] worldState() {
+      return Arrays.copyOf(gb.worldStateHash, gb.worldStateHash.length);
+    }
+
+
+    public byte[] lastBlockKey() {
+      return Arrays.copyOf(gb.lastBlockKey, gb.lastBlockKey.length);
+    }
+
 
     public int size() {
       return map.size();

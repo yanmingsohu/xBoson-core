@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 18-7-13 下午12:37
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/GenesisBlock.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/MetaBlock.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -22,7 +22,7 @@ import com.xboson.util.c0nst.IConstant;
 import java.io.Serializable;
 
 
-public class GenesisBlock implements Serializable, ITypes {
+public class MetaBlock implements Serializable, ITypes {
 
   /** 最后块的主键 */
   public byte[] lastBlockKey;
@@ -32,23 +32,35 @@ public class GenesisBlock implements Serializable, ITypes {
   public String channelName;
 
 
-  public GenesisBlock() {
+  public MetaBlock() {
   }
 
 
-  public GenesisBlock(String channelName) {
+  public MetaBlock(String channelName) {
     this.channelName = channelName;
   }
 
 
+  /**
+   * 用随机数据生成创世区块, 安全性较低
+   */
   public Block createGenesis() {
-    // TODO: 初始化区块使用用户证书签名
+    return createGenesis(Tool.randomBytes(99));
+  }
+
+
+  /**
+   * 创建创世块
+   * @param data 生成一段随机数据并使用证书签名, 可保证创世区块不被串改.
+   * @return
+   */
+  public Block createGenesis(byte[] data) {
     Block b = new Block();
-    b.setData(Tool.randomBytes(99));
-    b.userid = IConstant.NULL_STR;
+    b.setData(data);
+    b.userid  = IConstant.NULL_STR;
     b.apiHash = IConstant.NULL_STR;
     b.apiPath = IConstant.NULL_STR;
-    b.type = GENESIS;
+    b.type    = GENESIS;
     return b;
   }
 

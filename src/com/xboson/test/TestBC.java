@@ -16,29 +16,76 @@
 
 package com.xboson.test;
 
+import com.xboson.been.JsonHelper;
+import com.xboson.chain.Block;
+import com.xboson.chain.BlockBasic;
 import com.xboson.chain.BlockFileSystem;
+import com.xboson.chain.Btc;
 import com.xboson.util.Tool;
+import org.apache.commons.codec.binary.Hex;
 
 import java.util.Arrays;
 
 
-public class TestBC {
+public class TestBC extends Test {
 
   public static void main(String[] av) {
+    new TestBC();
+  }
+
+
+  public void test() throws Exception {
+    bfs();
+    btcWall();
+  }
+
+
+  public void btcWall() throws Exception {
+    sub("BTC wallet");
+
+    Btc btc = new Btc();
+
+    byte[] publicKey  = btc.publicKey();
+    byte[] privateKey = btc.privateKey();
+
+    msg("public key", Hex.encodeHexString(publicKey), publicKey.length);
+    msg("private key", Hex.encodeHexString(privateKey), privateKey.length);
+    msg("bitcoinAddress", btc.wallet());
+  }
+
+
+  public void bfs() {
+    sub("block file system");
+
     BlockFileSystem bc = BlockFileSystem.me();
     BlockFileSystem.InnerChain chain = bc.createChain("test");
 
     try {
       chain.createChannel("ch0");
     } catch (Exception e) {
-      Tool.pl(e.getMessage());
+      msg(e.getMessage());
     }
-
     BlockFileSystem.InnerChannel ch = chain.openChannel("ch0");
-    byte[] key = ch.push(Tool.randomBytes(10),
+    byte[] oldworld = ch.worldState();
+    Block pre = ch.search(ch.lastBlockKey());
+    BlockBasic bb = new BlockBasic(Tool.randomBytes(10),
             "user", "/api", "0");
-    Tool.pl("ok", Arrays.toString(key), ch.size());
+    byte[] key = ch.push(bb);
+    msg("push", Arrays.toString(key), ch.size());
     chain.commit();
+
+    Block b = ch.search(key);
+    ok(Arrays.equals(bb.getData(), b.getData()), "data field");
+    byte[] world = ch.lastBlockKey();
+    ok(Arrays.equals(b.key, world), "world 1");
+    ok(Arrays.equals(b.previousHash, oldworld), "world 2");
+    ok(Arrays.equals(b.previousKey, pre.key), "previous key");
+    ok(Arrays.equals(b.previousHash, pre.hash), "previous hash");
+
+    msg("search", JsonHelper.toJSON(b));
+    msg("world", JsonHelper.toJSON(ch.worldState()));
+    msg("last-block", JsonHelper.toJSON(world));
+
     chain.close();
   }
 }
