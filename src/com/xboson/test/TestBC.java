@@ -17,10 +17,8 @@
 package com.xboson.test;
 
 import com.xboson.been.JsonHelper;
-import com.xboson.chain.Block;
-import com.xboson.chain.BlockBasic;
-import com.xboson.chain.BlockFileSystem;
-import com.xboson.chain.Btc;
+import com.xboson.chain.*;
+import com.xboson.rpc.ClusterManager;
 import com.xboson.util.Tool;
 import org.apache.commons.codec.binary.Hex;
 
@@ -35,8 +33,41 @@ public class TestBC extends Test {
 
 
   public void test() throws Exception {
-    bfs();
     btcWall();
+    bfs();
+    testPeer();
+  }
+
+
+  public void testPeer() throws Exception {
+    sub("Test Peer / Order");
+    final String chain0 = "t2";
+    final String ch0 = "c0";
+
+    String nodeid = ClusterManager.me().localNodeID();
+    Order o = new Order();
+    Peer p  = new Peer(nodeid);
+
+    try {
+      p.createChannel(chain0, ch0);
+    } catch (Exception e) {
+      msg(e.getMessage());
+    }
+
+    BlockBasic b0 = new BlockBasic(Tool.randomBytes(10),
+            "u1", "api", "0");
+    byte[] k0 = p.sendBlock(chain0, ch0, b0);
+
+    BlockBasic bc0 = o.search(chain0, ch0, k0);
+    ok(Arrays.equals(bc0.getData(), b0.getData()), "data");
+
+    String[] chains = o.allChainNames();
+    for (String chain : chains) {
+      String[] channels = o.allChannelNames(chain);
+      for (String channel : channels) {
+        msg("Channel:", channel, ", Chain:", chain);
+      }
+    }
   }
 
 
@@ -57,15 +88,21 @@ public class TestBC extends Test {
   public void bfs() {
     sub("block file system");
 
+    ISigner signer = new AbsPeer.NoneSigner();
     BlockFileSystem bc = BlockFileSystem.me();
-    BlockFileSystem.InnerChain chain = bc.createChain("test");
+    BlockFileSystem.InnerChain chain = bc.getChain("test");
 
     try {
-      chain.createChannel("ch0");
+      chain.createChannel("ch0", signer);
     } catch (Exception e) {
       msg(e.getMessage());
     }
+
     BlockFileSystem.InnerChannel ch = chain.openChannel("ch0");
+    BlockBasic b0 = new BlockBasic(Tool.randomBytes(10),
+            "first", "/api", "0");
+    ch.push(b0);
+
     byte[] oldworld = ch.worldState();
     Block pre = ch.search(ch.lastBlockKey());
     BlockBasic bb = new BlockBasic(Tool.randomBytes(10),
@@ -88,4 +125,5 @@ public class TestBC extends Test {
 
     chain.close();
   }
+
 }

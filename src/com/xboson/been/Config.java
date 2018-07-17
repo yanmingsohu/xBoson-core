@@ -57,6 +57,9 @@ public class Config implements IBean {
   public String nodeUrl           = null;
   public String shellUrl          = null;
 
+  public String chainPath         = null;
+  public int    chainIncrement    = 1024;
+
   public String[] sysTableList;
   public String[] shareAppList;
 

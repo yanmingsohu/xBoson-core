@@ -16,11 +16,11 @@
 
 package com.xboson.chain;
 
+import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
-import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import org.apache.commons.codec.binary.Hex;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
@@ -29,22 +29,25 @@ import org.mapdb.Serializer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 public class BlockFileSystem implements ITypes {
 
-  private static final String PATH = "/chain";
-  private static final long START_SIZE = 1 * 1024*1024;
-  private static final long INCREMENT_SIZE = 1 * 1024*1024;
+  private static final char META_PREFIX     = '_';
+  private static final char CHANNEL_PREFIX  = '~';
+  private static final String PATH          = "/chain";
+  private static final String CHAIN_EXT     = ".chain";
+  private static final String SYS_FILE      = "/system.db";
+  private static final int INIT_SIZE        = 16 * 1024;
+  private static final int INCREMENT_SIZE   = 1  * 1024*1024;
   private static BlockFileSystem instance;
 
   private Map<String, InnerChain> chain_cache;
   private final String rootDir;
-  private final Log log;
+  private final int increment;
+  private final DB sysdb;
+  private final HTreeMap.KeySet chainNames;
 
 
   public static BlockFileSystem me() {
@@ -60,9 +63,16 @@ public class BlockFileSystem implements ITypes {
 
 
   private BlockFileSystem() {
-    rootDir = SysConfig.me().readConfig().configPath + PATH;
-    log     = LogFactory.create("chain-block-fs");
+    Config cf   = SysConfig.me().readConfig();
+    rootDir     = Tool.isNulStr(cf.chainPath)
+                ? cf.configPath+PATH : cf.chainPath;
+    increment   = cf.chainIncrement > 0
+                ? cf.chainIncrement : INCREMENT_SIZE;
     chain_cache = new HashMap<>();
+
+    sysdb       = makeDB(SYS_FILE);
+    chainNames  = sysdb.hashSet("chains").createOrOpen();
+
     try {
       Files.createDirectories(Paths.get(rootDir));
     } catch (IOException e) {
@@ -71,7 +81,10 @@ public class BlockFileSystem implements ITypes {
   }
 
 
-  public synchronized InnerChain createChain(String name) {
+  /**
+   * 创建/获取链, 该方法已经同步
+   */
+  public synchronized InnerChain getChain(String name) {
     if (Tool.isNulStr(name))
       throw new NullPointerException("name");
 
@@ -79,25 +92,49 @@ public class BlockFileSystem implements ITypes {
     if (chain == null) {
       chain = new InnerChain(name);
       chain_cache.put(name, chain);
+      chainNames.add(name);
+      sysdb.commit();
     }
     return chain;
+  }
+
+
+  public boolean chainExists(String name) {
+    return chainNames.contains(name);
+  }
+
+
+  public Set<String> allChainNames() {
+    return Collections.unmodifiableSet(chainNames);
+  }
+
+
+  private synchronized void closeCache(InnerChain chain) {
+    chain_cache.remove(chain.name);
+  }
+
+
+  private DB makeDB(String fileName) {
+    return DBMaker.fileDB(rootDir +'/'+ fileName)
+            .allocateStartSize(INIT_SIZE)
+            .allocateIncrement(increment)
+            .transactionEnable()
+            .make();
   }
 
 
   public class InnerChain implements AutoCloseable {
     private final String name;
     private HTreeMap genesisMap;
+    private HTreeMap signerMap;
     private DB db;
 
-    private InnerChain(String name) {
-      this.db = DBMaker.fileDB(rootDir +'/'+ name)
-              .allocateStartSize(START_SIZE)
-              .allocateIncrement(INCREMENT_SIZE)
-              .transactionEnable()
-              .make();
 
-      this.name = name;
+    private InnerChain(String name) {
+      this.db         = makeDB(name + CHAIN_EXT);
+      this.name       = name;
       this.genesisMap = metaTemplate("genesis");
+      this.signerMap  = metaTemplate("signer");
     }
 
 
@@ -121,22 +158,35 @@ public class BlockFileSystem implements ITypes {
      * 关闭底层文件系统, 未递交的操作被丢弃
      */
     public void close() {
-      chain_cache.remove(name);
+      closeCache(this);
       db.close();
       db = null;
       genesisMap = null;
+      signerMap = null;
     }
 
 
     /**
      * 如果通道已经存在抛出异常
      */
-    public InnerChannel createChannel(String name) {
+    public InnerChannel createChannel(String name, ISigner si) {
+      return createChannel(name, si, MetaBlock.createGenesis());
+    }
+
+
+    /**
+     * 使用完整的创世区块创建通道.
+     * [为多节点同步而设计]
+     */
+    InnerChannel createChannel(String name, ISigner si, Block genesis) {
       HTreeMap<byte[], Block> map = channelTemplate(name).create();
       MetaBlock gb = new MetaBlock(name);
       genesisMap.put(name, gb);
-      InnerChannel ch = new InnerChannel(map, gb, this);
-      ch.push(gb.createGenesis());
+      signerMap.put(name, si);
+
+      InnerChannel ch = new InnerChannel(map, gb, this, si);
+      gb.genesisKey = ch.pushOriginal(genesis);
+      genesisMap.put(name, gb);
       return ch;
     }
 
@@ -147,16 +197,23 @@ public class BlockFileSystem implements ITypes {
     public InnerChannel openChannel(String name) {
       HTreeMap<byte[], Block> map = channelTemplate(name).open();
       MetaBlock gb = (MetaBlock) genesisMap.get(name);
-      return new InnerChannel(map, gb, this);
+      ISigner signer = (ISigner) signerMap.get(name);
+      return new InnerChannel(map, gb, this, signer);
+    }
+
+
+    public Set<String> allChannelNames() {
+      return Collections.unmodifiableSet(genesisMap.keySet());
+    }
+
+
+    public boolean channelExists(String name) {
+      return db.exists(CHANNEL_PREFIX + name);
     }
 
 
     private DB.HashMapMaker channelTemplate(String name) {
-      if (name.charAt(0) == '_')
-        throw new XBosonException.BadParameter(
-                "channel name", "cannot start with '_'");
-
-      return db.hashMap(name)
+      return db.hashMap(CHANNEL_PREFIX + name)
               .keySerializer(Serializer.BYTE_ARRAY)
               .valueSerializer(SerializerBlock.me)
               .counterEnable();
@@ -164,7 +221,7 @@ public class BlockFileSystem implements ITypes {
 
 
     private HTreeMap metaTemplate(String name) {
-      return db.hashMap("_"+ name)
+      return db.hashMap(META_PREFIX + name)
               .keySerializer(Serializer.STRING)
               .valueSerializer(Serializer.JAVA)
               .createOrOpen();
@@ -176,12 +233,17 @@ public class BlockFileSystem implements ITypes {
     private Map<byte[], Block> map;
     private MetaBlock gb;
     private InnerChain chain;
+    private ISigner signer;
 
-    private InnerChannel(Map<byte[], Block> map, MetaBlock gb, InnerChain ic) {
+
+    private InnerChannel(Map<byte[], Block> map, MetaBlock gb,
+                         InnerChain ic, ISigner si) {
       this.map    = map;
       this.gb     = gb;
       this.chain  = ic;
+      this.signer = si;
     }
+
 
     /**
      * 推入新块, 返回 key
@@ -190,6 +252,10 @@ public class BlockFileSystem implements ITypes {
       return push(b.createBlock());
     }
 
+
+    /**
+     * 块必须经由该方法上链
+     */
     protected byte[] push(Block b) {
       do {
         b.key = Tool.uuid.getBytes(Tool.uuid.v4obj());
@@ -199,7 +265,17 @@ public class BlockFileSystem implements ITypes {
       b.previousHash = gb.worldStateHash;
       b.previousKey  = gb.lastBlockKey;
 
+      signer.sign(b);
       b.computeHash();
+      return pushOriginal(b);
+    }
+
+
+    /**
+     * 不执行验证/生成步骤, 直接将区块上链.
+     * [为多节点同步而设计]
+     */
+    byte[] pushOriginal(Block b) {
       map.put(b.key, b);
 
       gb.worldStateHash = b.hash;
@@ -210,7 +286,11 @@ public class BlockFileSystem implements ITypes {
 
 
     public Block search(byte[] key) {
-      return map.get(key);
+      Block b = map.get(key);
+      if (b != null && (! signer.verify(b)) ) {
+        throw new VerifyException("Key-Hex: "+ Hex.encodeHexString(key));
+      }
+      return b;
     }
 
 
@@ -221,6 +301,11 @@ public class BlockFileSystem implements ITypes {
 
     public byte[] lastBlockKey() {
       return Arrays.copyOf(gb.lastBlockKey, gb.lastBlockKey.length);
+    }
+
+
+    public byte[] genesisKey() {
+      return Arrays.copyOf(gb.genesisKey, gb.genesisKey.length);
     }
 
 

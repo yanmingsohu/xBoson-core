@@ -26,6 +26,7 @@ import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.script.lib.Path;
 import com.xboson.util.config.DefaultConfig;
 import com.xboson.util.config.IConfigSerialization;
 import com.xboson.util.config.SerialFactory;
@@ -36,6 +37,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 public class SysConfig {
 
+  private static final String UPDATE = "update-config.yaml";
 	private static SysConfig instance;
 
 	private Log log = LogFactory.create("SysConfig");
@@ -128,6 +130,12 @@ public class SysConfig {
 		if (config.configVersion.compareTo(run.configVersion) > 0) {
 		  log.warn("Configuration files need to be upgraded",
               run.configVersion, "<", config.configVersion);
+
+		  String configFile = run.configFile;
+		  run.configFile    = Path.me.join(run.configPath, UPDATE);
+		  run.configVersion = Config.VERSION;
+		  generateDefaultConfigFile(run);
+		  run.configFile    = configFile;
     }
 
 		run.setHome(config.home);

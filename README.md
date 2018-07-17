@@ -16,6 +16,8 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 # 需要做:
 
+* 创世区块使用私钥加密公钥认证, 私钥在生成创世区块时被用户下载并离线保存.
+* [Paxos 的共识算法](https://www.zhihu.com/question/19787937)
 * 区块链底层/api接口
 * 接管 Tomcat.
 * 云盘系统(api已经完成)

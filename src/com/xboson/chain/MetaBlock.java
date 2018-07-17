@@ -30,31 +30,40 @@ public class MetaBlock implements Serializable, ITypes {
   public byte[] worldStateHash;
   /** 通道名称 */
   public String channelName;
+  /** 创世区块主键 */
+  public byte[] genesisKey;
 
 
+  /**
+   * 该构造被 Map 对象调用, 用于还原 MetaBlock
+   */
   public MetaBlock() {
   }
 
 
+  /**
+   * 该构造函数用于在程序中创建新的 MetaBlock
+   */
   public MetaBlock(String channelName) {
-    this.channelName = channelName;
+    this.channelName    = channelName;
+    this.lastBlockKey   = new byte[] {};
+    this.worldStateHash = new byte[] {};
+    this.genesisKey     = new byte[] {};
   }
 
 
   /**
-   * 用随机数据生成创世区块, 安全性较低
+   * 用随机数据生成创世区块
    */
-  public Block createGenesis() {
+  public static Block createGenesis() {
     return createGenesis(Tool.randomBytes(99));
   }
 
 
   /**
    * 创建创世块
-   * @param data 生成一段随机数据并使用证书签名, 可保证创世区块不被串改.
-   * @return
    */
-  public Block createGenesis(byte[] data) {
+  public static Block createGenesis(byte[] data) {
     Block b = new Block();
     b.setData(data);
     b.userid  = IConstant.NULL_STR;

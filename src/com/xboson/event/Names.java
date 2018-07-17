@@ -74,4 +74,9 @@ public interface Names {
    */
   String CHANNEL_PREFIX = "/com.xboson.event.GlobalEventBus/";
 
+  /**
+   * 区块链消息
+   */
+  String chain_sync = "sys.chain.sync";
+
 }

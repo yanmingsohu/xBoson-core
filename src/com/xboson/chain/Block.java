@@ -32,6 +32,8 @@ public class Block extends BlockBasic implements ITypes, Serializable {
   public byte[] previousKey;
   /** 块生成时间 */
   public Date create;
+  /** 数据块签名, 可以为空 */
+  public byte[] sign;
 
 
   public Block() {
@@ -47,6 +49,11 @@ public class Block extends BlockBasic implements ITypes, Serializable {
     h.update(apiPath);
     h.update(apiHash);
     h.update(create);
+
+    if (sign != null) {
+      h.update(sign);
+    }
+
     if (type != GENESIS) {
       h.update(previousHash);
       h.update(previousKey);

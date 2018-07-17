@@ -58,8 +58,11 @@ testWhileIdle: 设置为 true 时, 当回收策略返回 false, \
                则调用 activateObject() 和 validateObject()
 testOnCreate: 创建对象后立即进行检验
 
-timeBetweenEvictionRunsMillis:  回收资源线程的执行周期,单位毫秒.默认值 -1 ,-1 表示不启用线程回收资源
-evictionPolicyClassName: 设置的逐出策略类名, 默认DefaultEvictionPolicy(当连接超过最大空闲时间,或连接数超过最大空闲连接数)
+timeBetweenEvictionRunsMillis:  回收资源线程的执行周期,单位毫秒.默认值 -1 ,\
+                                -1 表示不启用线程回收资源
+evictionPolicyClassName: 设置的逐出策略类名, \
+                         默认DefaultEvictionPolicy(当连接超过最大空闲时间, \
+                         或连接数超过最大空闲连接数)
 minEvictableIdleTimeMillis: 逐出连接的最小空闲时间 默认1800000毫秒(30分钟)
 jmxEnabled: 是否启用pool的jmx管理功能, 默认true
 lifo: 是否启用后进先出, 默认true
@@ -72,3 +75,6 @@ maxTotal: 允许创建资源的最大数量,默认值 8,-1 代表无数量限制
 
 # rootPassword: MD5 of Password
 # rootUserName: 配置为 root 用户的用户名
+
+chainPath: 区块链数据保存目录, 绝对路径
+chainIncrement: 区块链文件增长单位, KB
