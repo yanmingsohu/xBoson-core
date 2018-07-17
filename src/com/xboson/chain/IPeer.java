@@ -99,5 +99,4 @@ public interface IPeer extends Serializable, IXRemote {
    */
   boolean channelExists(String chain, String channel) throws RemoteException;
 
-
 }

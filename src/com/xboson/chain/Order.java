@@ -33,11 +33,9 @@ public class Order extends AbsPeer implements IXRemote, IPeer {
 
 
   public byte[] sendBlock(String chainName, String channelName, BlockBasic b) {
-    try {
-      return sendBlockLocal(chainName, channelName, b);
-    } finally {
-      sendNewBlock(chainName, channelName);
-    }
+    byte[] key = sendBlockLocal(chainName, channelName, b);
+    sendNewBlock(chainName, channelName);
+    return key;
   }
 
 

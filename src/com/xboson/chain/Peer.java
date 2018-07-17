@@ -69,7 +69,7 @@ public class Peer extends AbsPeer {
 
   private void syncAllChannels() {
     try {
-      log.info("start sync all chain/channel");
+      log.info("start synchronized all chain/channel");
       String[] chains = order.allChainNames();
 
       for (String chain : chains) {
@@ -83,7 +83,7 @@ public class Peer extends AbsPeer {
         }
       }
     } catch(Exception e) {
-      log.error("sync all channels", e);
+      log.error("synchronized all channels", e);
     }
   }
 
@@ -93,7 +93,7 @@ public class Peer extends AbsPeer {
    */
   private void syncBlock(String chain, String channel) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      log.debug("sync");
+      log.debug("synchronized block", chain, "/", channel);
 
       byte[] lkey = order.lastBlockKey(chain, channel);
       Deque<Block> syncBlockStack = new LinkedList<>();
@@ -105,7 +105,7 @@ public class Peer extends AbsPeer {
       while (ch.search(lkey) == null) {
         Block b = order.search(chain, channel, lkey);
         if (b == null && !si.verify(b)) {
-          log.error("sync block", JsonHelper.toJSON(b));
+          log.error("synchronized block", JsonHelper.toJSON(b));
           break;
         }
         syncBlockStack.push(b);
@@ -113,7 +113,7 @@ public class Peer extends AbsPeer {
       }
 
       if (! Arrays.equals(ch.lastBlockKey(), lkey)) {
-        log.error("sync block, key not find in last block:",
+        log.error("synchronized block, key not find in last block:",
                 Hex.upperHex(lkey));
         return;
       }
@@ -124,19 +124,21 @@ public class Peer extends AbsPeer {
       }
       ca.commit();
     } catch (Exception e) {
-      log.error("sync block", e);
+      log.error("synchronized block", e);
     }
   }
 
 
   private void syncChannel(String chain, String channel) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
+      log.debug("synchronized channel setting", chain, "/", channel);
       byte[] gkey = order.genesisKey(chain, channel);
       Block gb = order.search(chain, channel, gkey);
 
       ISigner si = getSigner(chain, channel);
       if (! si.verify(gb)) {
-        log.error("sync channel verify fail", JsonHelper.toJSON(gb));
+        log.error("synchronized genesis block verify fail",
+                JsonHelper.toJSON(gb));
         return;
       }
 
@@ -144,7 +146,7 @@ public class Peer extends AbsPeer {
       ca.createChannel(channel, getSigner(chain, channel), gb);
       ca.commit();
     } catch (RemoteException e) {
-      log.error("sync channel", e);
+      log.error("synchronized channel", e);
     }
   }
 
@@ -170,7 +172,7 @@ public class Peer extends AbsPeer {
           break;
 
         default:
-          log.error("bad chain sync type");
+          log.error("bad chain synchronized type");
           break;
       }
     }

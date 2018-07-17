@@ -36,6 +36,7 @@ public class TestBC extends Test {
     btcWall();
     bfs();
     testPeer();
+    TestFace.waitEventLoopEmpty();
   }
 
 
