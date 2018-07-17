@@ -18,7 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.ComputeNodeInfo;
 import com.xboson.been.XBosonException;
 import com.xboson.rpc.ClusterManager;
@@ -30,7 +30,7 @@ public class Cluster implements IAResource {
 
 
   public Object open() {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
 
     boolean runOnSysOrg = (boolean)
             ModuleHandleContext._get("runOnSysOrg");

@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
-public abstract class AbsPeer implements ISignerProvider, IPeer {
+public abstract class AbsPeer implements IPeer {
 
   private ISignerProvider sp;
   /** 对于读写操作的锁对象 */
@@ -128,10 +128,7 @@ public abstract class AbsPeer implements ISignerProvider, IPeer {
   }
 
 
-  /**
-   * 返回通道的签名对象
-   */
-  public ISigner getSigner(String chainName, String channelName) {
+  protected ISigner getSigner(String chainName, String channelName) {
     return sp.getSigner(chainName, channelName);
   }
 

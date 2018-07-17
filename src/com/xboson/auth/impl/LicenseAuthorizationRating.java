@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 18-4-3 上午7:23
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/auth/impl/ApiAuthorizationRating.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/auth/impl/LicenseAuthorizationRating.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -26,14 +26,14 @@ import com.xboson.j2ee.container.Striker;
 
 
 /**
- * 应用授权中 api 的检查.
+ * 检查 License 并决定资源是否能访问
  */
-public class ApiAuthorizationRating implements IAWhere {
+public class LicenseAuthorizationRating implements IAWhere {
 
   private Processes plc;
 
 
-  public ApiAuthorizationRating() {
+  public LicenseAuthorizationRating() {
     plc = Processes.me();
   }
 

@@ -18,6 +18,9 @@ package com.xboson.chain;
 
 public interface ISignerProvider {
 
+  /**
+   * 返回通道的签名器
+   */
   ISigner getSigner(String chainName, String channelName);
 
 }

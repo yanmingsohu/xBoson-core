@@ -17,14 +17,12 @@
 package com.xboson.test;
 
 import com.xboson.auth.*;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.db.SqlResult;
 import com.xboson.util.Password;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.ResultSet;
 
 
@@ -41,18 +39,18 @@ public class TestAuth extends Test {
 
 
   public void licenseAuth() {
-    sub("ApiAuthorizationRating.class");
+    sub("LicenseAuthorizationRating.class");
 
     PermissionSystem.applyWithApp(
-            ApiAuthorizationRating.class,
+            LicenseAuthorizationRating.class,
             ()-> "api.ide.code.modify.functions()");
 
     sub("Not pass");
 
-    new Throws(ApiAuthorizationRating.NoLicense.class) {
+    new Throws(LicenseAuthorizationRating.NoLicense.class) {
       public void run() {
         PermissionSystem.applyWithApp(
-                ApiAuthorizationRating.class,
+                LicenseAuthorizationRating.class,
                 ()-> "app.nopass()");
       }
     };

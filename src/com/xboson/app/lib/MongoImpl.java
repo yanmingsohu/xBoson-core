@@ -23,7 +23,7 @@ import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.util.MongoDBPool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
@@ -48,7 +48,7 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
 
   public Client connect(String url) {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     MongoDBPool.VirtualMongoClient client = MongoDBPool.me().get(url);
     return new Client(client);
   }

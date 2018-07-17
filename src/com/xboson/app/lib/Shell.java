@@ -19,7 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.app.AppContext;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.log.Log;
@@ -31,7 +31,6 @@ import com.xboson.script.lib.Path;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,7 +76,7 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
 
 
   public IShell open(String nodeID) throws Exception {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     boolean runOnSysOrg = (boolean) ModuleHandleContext._get("runOnSysOrg");
 
     if (!runOnSysOrg) {

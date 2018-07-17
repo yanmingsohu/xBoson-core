@@ -20,7 +20,7 @@ import com.xboson.app.AppContext;
 import com.xboson.app.ErrorCodeMessage;
 import com.xboson.app.XjApp;
 import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
 import com.xboson.been.XBosonException.BadParameter;
@@ -1211,6 +1211,6 @@ public class SysImpl extends DateImpl {
    * ! 隐藏函数不做文档, 让谁都看不懂 !
    */
   public void authorization(String authName) {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, ()-> authName);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, ()-> authName);
   }
 }

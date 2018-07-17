@@ -16,10 +16,13 @@
 
 package com.xboson.chain;
 
+import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.rpc.ClusterManager;
 
 
-public class PeerFactory {
+public class PeerFactory implements IAResource {
 
   private static PeerFactory instance;
 
@@ -37,6 +40,7 @@ public class PeerFactory {
 
 
   public IPeer peer() {
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     return peer;
   }
 
@@ -50,5 +54,11 @@ public class PeerFactory {
       }
     }
     return instance;
+  }
+
+
+  @Override
+  public String description() {
+    return "app.module.chain.peer.platform()";
   }
 }

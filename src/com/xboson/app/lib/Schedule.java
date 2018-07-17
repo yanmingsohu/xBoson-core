@@ -19,7 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.app.AppContext;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
@@ -70,7 +70,7 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
 
 
   public void start(String id, Map<String, Object> config) throws Exception {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
 
     ITask exist = findTask(id);
     if (exist != null) {
@@ -85,7 +85,7 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
 
 
   public boolean stop(String id) throws RemoteException {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     try {
       ITask task = findTask(id);
       if (task != null) {
@@ -100,7 +100,7 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
 
 
   public Object info(String id) {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     return findTask(id);
   }
 

@@ -20,7 +20,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Descriptors;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.script.lib.Buffer;
 import com.xboson.util.ECDSA;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -73,7 +73,7 @@ public class FabricImpl extends RuntimeUnitImpl implements IAResource {
    * }
    */
   public Channel0 newChannel(Object conf) throws Exception {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     return new Channel0(new Mirror(conf));
   }
 

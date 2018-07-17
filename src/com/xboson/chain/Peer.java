@@ -42,12 +42,14 @@ public class Peer extends AbsPeer {
   private IPeer order;
 
 
+  /**
+   * 使用工厂来创建该类的实例, 而不是使用构造函数
+   * @see PeerFactory#peer() 创建该类的实例
+   */
   public Peer(String orderClusterNodeID) {
+    this.log   = LogFactory.create("chain-peer");
     this.order = (IPeer) RpcFactory.me().lookup(orderClusterNodeID, RPC_NAME);
     this.csl   = new ChainSyncListener();
-    this.log   = LogFactory.create("chain.peer");
-
-    EventLoop.me().add(() -> syncAllChannels());
   }
 
 
@@ -151,10 +153,14 @@ public class Peer extends AbsPeer {
   }
 
 
+  /**
+   * 接受 Order 发送的同步消息并同步本地数据
+   */
   public class ChainSyncListener extends GLHandle {
 
     private ChainSyncListener() {
       GlobalEventBus.me().on(Names.chain_sync, this);
+      EventLoop.me().add(() -> syncAllChannels());
     }
 
     @Override

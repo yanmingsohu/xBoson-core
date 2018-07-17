@@ -20,13 +20,12 @@ import com.xboson.app.AppContext;
 import com.xboson.app.IProcessState;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.ApiAuthorizationRating;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.PublicProcessData;
 import com.xboson.been.XBosonException;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.IXRemote;
 import com.xboson.rpc.RpcFactory;
-import com.xboson.util.Tool;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -54,7 +53,7 @@ public class PmImpl implements IAResource {
 
 
   public Object open() {
-    PermissionSystem.applyWithApp(ApiAuthorizationRating.class, this);
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
 
     boolean runOnSysOrg = (boolean)
             ModuleHandleContext._get("runOnSysOrg");

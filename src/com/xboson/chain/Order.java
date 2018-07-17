@@ -27,6 +27,10 @@ import com.xboson.rpc.RpcFactory;
  */
 public class Order extends AbsPeer implements IXRemote, IPeer {
 
+  /**
+   * 使用工厂来创建该类的实例, 而不是使用构造函数
+   * @see PeerFactory#peer() 创建该类的实例
+   */
   public Order() {
     RpcFactory.me().bind(this, RPC_NAME);
   }
