@@ -16,6 +16,7 @@
 
 package com.xboson.chain;
 
+import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
@@ -23,7 +24,7 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 
 
-public class PeerFactory implements IConstant {
+public class PeerFactory extends OnExitHandle implements IConstant {
 
   private static PeerFactory instance;
 
@@ -46,6 +47,14 @@ public class PeerFactory implements IConstant {
 
     if (peer instanceof IPeerLocal) {
       installSigner((IPeerLocal) peer);
+    }
+  }
+
+
+  @Override
+  protected void exit() {
+    if (peer instanceof IPeerLocal) {
+      ((IPeerLocal) peer).waitOver();
     }
   }
 

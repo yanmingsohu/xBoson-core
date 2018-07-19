@@ -142,6 +142,12 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
   }
 
 
+  @Override
+  public void waitOver() {
+    try (LocalLock _ = new LocalLock(lock.writeLock())) {}
+  }
+
+
   public static class DefaultSignerProvider implements ISignerProvider {
     @Override
     public ISigner getSigner(String chainName, String channelName) {

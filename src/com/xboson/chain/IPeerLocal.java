@@ -27,4 +27,10 @@ public interface IPeerLocal {
    */
   default void registerSignerProvider(ISignerProvider sp) {}
 
+
+  /**
+   * 等待操作完成
+   */
+  void waitOver();
+
 }

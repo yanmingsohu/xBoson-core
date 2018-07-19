@@ -18,6 +18,7 @@ package com.xboson.init;
 
 import com.xboson.app.SystemStartupScript;
 import com.xboson.auth.AuthFactory;
+import com.xboson.chain.PeerFactory;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.event.GlobalEventBus;
@@ -61,6 +62,7 @@ public final class Touch {
     SystemStartupScript.me();
     ClusterManager.me();
     RpcFactory.me();
+    PeerFactory.me();
   }
 
 
