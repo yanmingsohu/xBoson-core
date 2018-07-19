@@ -17,30 +17,23 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
-import com.xboson.chain.Block;
-import com.xboson.chain.ISigner;
-import com.xboson.chain.ISignerProvider;
-import com.xboson.chain.ITypes;
-import com.xboson.crypto.PublicKeyReader;
+import com.xboson.chain.*;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.security.*;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
 
 /**
  * app 应用区块链签名提供商, 使用平台数据库做签名架构.
+ * @see com.xboson.chain.Btc 公钥/私钥生成算法
  */
 public class ChainSignerProvider implements ISignerProvider {
 
-  private static final String SIGNER_ALGORITHM   = "SHA256withRSA";
-  private static final String PRIVATE_KEY_PREFIX = "pri_";
-  private static final String PUBLIC_KEY_PREFIX  = "pub_";
+  private static final String SIGNER_ALGORITHM = "SHA256withRSA";
   private static final String SQL_FILE = "open_chain_key";
 
 
@@ -51,7 +44,34 @@ public class ChainSignerProvider implements ISignerProvider {
     if (Tool.isNulStr(channelName)) throw new XBosonException.BadParameter(
               "String channelName", "is null");
 
-    return new Signer(chainName, channelName);
+    KeyPair[] kp = openChainKeys(chainName, channelName);
+    return new Signer(chainName, channelName, kp);
+  }
+
+
+  /**
+   * 在脚本环境中调用该方法
+   */
+  private KeyPair[] openChainKeys(String chain, String channel) {
+    KeyPair[] keys = new KeyPair[ ITypes.LENGTH +1 ];
+
+    String sql = SqlReader.read(SQL_FILE);
+    SqlImpl sqlimpl = (SqlImpl) ModuleHandleContext._get("sql");
+    Object[] parm = { chain, channel };
+
+    try (QueryImpl.ResultReader rr = sqlimpl.queryStream(sql, parm)) {
+      Iterator<ScriptObjectMirror> it = rr.iterator();
+      while (it.hasNext()) {
+        ScriptObjectMirror row = it.next();
+        PublicKey  pub = Btc.publicKey(row.get("publickey").toString());
+        PrivateKey pri = Btc.privateKey(row.get("privatekey").toString());
+        int index = (int) row.get("type");
+        keys[index] = new KeyPair(pub, pri);
+      }
+      return keys;
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
   }
 
 
@@ -62,29 +82,11 @@ public class ChainSignerProvider implements ISignerProvider {
     private String channel;
 
 
-    private Signer(String chainName, String channelName) {
+    private Signer(String chainName, String channelName, KeyPair[] keys) {
       this.signer_algorithm = SIGNER_ALGORITHM;
-      this.chain = chainName;
-      this.channel = channelName;
-      installKey();
-    }
-
-
-    private void installKey() {
-      keys = new KeyPair[ITypes.LENGTH];
-
-      String sql = SqlReader.read(SQL_FILE);
-      SqlImpl sqlimpl = (SqlImpl) ModuleHandleContext._get("sql");
-      Object[] parm = new Object[] { chain, channel };
-      try {
-        Iterator<ScriptObjectMirror> it = sqlimpl.queryStream(sql, parm).iterator();
-        while (it.hasNext()) {
-          ScriptObjectMirror row = it.next();
-          //PublicKey pub = PublicKeyReader.class
-        }
-      } catch (Exception e) {
-        throw new XBosonException(e);
-      }
+      this.chain    = chainName;
+      this.channel  = channelName;
+      this.keys     = keys;
     }
 
 
@@ -92,8 +94,13 @@ public class ChainSignerProvider implements ISignerProvider {
     public void sign(Block block) {
       try {
         Signature si = Signature.getInstance(signer_algorithm);
-        si.initSign(keys[block.type].getPrivate());
-        doFields(block, si);
+        KeyPair pair = getKeyPair(block.type);
+        si.initSign(pair.getPrivate());
+        if (block.type == ITypes.GENESIS) {
+          doGenesis(block, si);
+        } else {
+          doFields(block, si);
+        }
         block.sign = si.sign();
       } catch (Exception e) {
         throw new XBosonException(e);
@@ -105,11 +112,37 @@ public class ChainSignerProvider implements ISignerProvider {
     public boolean verify(Block block) {
       try {
         Signature si = Signature.getInstance(signer_algorithm);
-        si.initVerify(keys[block.type].getPublic());
-        doFields(block, si);
+        KeyPair pair = getKeyPair(block.type);
+        si.initVerify(pair.getPublic());
+        if (block.type == ITypes.GENESIS) {
+          doGenesis(block, si);
+        } else {
+          doFields(block, si);
+        }
         return si.verify(block.sign);
       } catch (Exception e) {
         throw new XBosonException(e);
+      }
+    }
+
+
+    private KeyPair getKeyPair(int i) {
+      KeyPair pair = keys[i];
+      if (pair == null) {
+        throw new NullPointerException("cannot found KeyPair index:"+ i);
+      }
+      return pair;
+    }
+
+
+    private void doGenesis(Block b, Signature si) throws SignatureException {
+      doFields(b, si);
+      for (int i=0; i<keys.length; ++i) {
+        KeyPair kp = keys[i];
+        if (kp != null) {
+          si.update(kp.getPrivate().getEncoded());
+          si.update(kp.getPublic().getEncoded());
+        }
       }
     }
 

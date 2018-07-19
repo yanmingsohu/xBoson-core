@@ -32,6 +32,10 @@ public class MetaBlock implements Serializable, ITypes {
   public String channelName;
   /** 创世区块主键 */
   public byte[] genesisKey;
+  /** 最新的链码 hash */
+  public String apiHash;
+  /** 最新的链码路径 */
+  public String apiPath;
 
 
   /**

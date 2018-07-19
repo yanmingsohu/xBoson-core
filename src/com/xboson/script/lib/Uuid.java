@@ -26,9 +26,6 @@ import java.util.UUID;
 
 public class Uuid extends JSObject {
 
-  private static final Base64.Encoder b64e = Base64.getUrlEncoder().withoutPadding();
-  private static final Base64.Decoder b64d = Base64.getUrlDecoder();
-
   public static final long HALF = (long)(Long.MAX_VALUE / 2);
   public static final long v1 = 1l << 12;
   public static final long versionMask = ~(0xF << 12);
@@ -120,7 +117,7 @@ public class Uuid extends JSObject {
    */
   public String zip(UUID id) {
     byte[] b = getBytes(id);
-    return b64e.encodeToString(b);
+    return Hex.encode64(b);
   }
 
 
@@ -128,7 +125,7 @@ public class Uuid extends JSObject {
    * 解压缩使用 zip() 压缩的字符串, 还原为 UUID 对象
    */
   public UUID unzip(String z) {
-    byte[] b = b64d.decode(z);
+    byte[] b = Hex.decode64(z);
     ByteBuffer buf = ByteBuffer.wrap(b);
     return new UUID(buf.getLong(0), buf.getLong(8));
   }

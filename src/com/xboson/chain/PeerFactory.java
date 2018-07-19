@@ -50,7 +50,7 @@ public class PeerFactory implements IConstant {
   }
 
 
-  public PeerFactory me() {
+  public static PeerFactory me() {
     if (instance == null) {
       synchronized (PeerFactory.class) {
         if (instance == null) {

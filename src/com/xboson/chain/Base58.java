@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 18-7-14 上午9:23
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/Base58Codec.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/Base58.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -37,7 +37,7 @@ import java.util.NoSuchElementException;
  * @url https://github.com/Anujraval24/Base58Encoding
  *
  */
-public class Base58Codec {
+public class Base58 {
 
   public static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
   private static final char ENCODED_ZERO = ALPHABET[0];

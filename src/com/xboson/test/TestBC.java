@@ -33,7 +33,7 @@ public class TestBC extends Test {
 
 
   public void test() throws Exception {
-    btcWall();
+    btc();
     bfs();
     testPeer();
     TestFace.waitEventLoopEmpty();
@@ -72,7 +72,7 @@ public class TestBC extends Test {
   }
 
 
-  public void btcWall() throws Exception {
+  public void btc() throws Exception {
     sub("BTC wallet");
 
     Btc btc = new Btc();
@@ -84,8 +84,8 @@ public class TestBC extends Test {
     msg("private key", Hex.encodeHexString(privateKey), privateKey.length);
     msg("bitcoinAddress", btc.wallet());
 
-    String s = Base58Codec.encode(privateKey);
-    byte[] t = Base58Codec.decode(s);
+    String s = Base58.encode(privateKey);
+    byte[] t = Base58.decode(s);
     // msg(Arrays.toString(privateKey), s, Arrays.toString(t));
     ok(Arrays.equals(t, privateKey), "base 58 codec");
 

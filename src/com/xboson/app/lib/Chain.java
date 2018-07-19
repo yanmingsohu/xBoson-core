@@ -19,6 +19,18 @@ package com.xboson.app.lib;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
+import com.xboson.been.IJson;
+import com.xboson.been.JsonHelper;
+import com.xboson.been.XBosonException;
+import com.xboson.chain.Block;
+import com.xboson.chain.Btc;
+import com.xboson.chain.IPeer;
+import com.xboson.chain.PeerFactory;
+import com.xboson.db.sql.SqlReader;
+import com.xboson.util.Hex;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+
+import java.util.Iterator;
 
 
 /**
@@ -26,15 +38,143 @@ import com.xboson.auth.impl.LicenseAuthorizationRating;
  */
 public class Chain implements IAResource {
 
+  private static final String SQL_FILE = "open_chain";
 
-  public Object open() {
+
+  public Object open(String chain_id) {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    return null;//!!!!!!!!!!!!!!
+    String[] names = getChainConfig(chain_id);
+    if (names == null) {
+      throw new XBosonException.NotFound("chain: "+ chain_id);
+    }
+    return new ChainImpl(names[0], names[1], names[2]);
   }
 
 
   @Override
   public String description() {
     return "app.module.chain.peer.platform()";
+  }
+
+
+  private String[] getChainConfig(String chain_id) {
+    String sql = SqlReader.read(SQL_FILE);
+    SqlImpl sqlimpl = (SqlImpl) ModuleHandleContext._get("sql");
+    Object[] parm = { chain_id };
+
+    try (QueryImpl.ResultReader rr = sqlimpl.queryStream(sql, parm)) {
+      Iterator<ScriptObjectMirror> it = rr.iterator();
+      if (it.hasNext()) {
+        ScriptObjectMirror row = it.next();
+        return new String[] {
+                row.get("physical_chain").toString(),
+                row.get("physical_channel").toString(),
+                row.get("apiPath").toString(),
+        };
+      }
+      return null;
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  public class ChainImpl {
+    private String chain;
+    private String channel;
+    private String apiPath;
+    private IPeer peer;
+
+
+    private ChainImpl(String chain, String channel, String apiPath) {
+      this.peer = PeerFactory.me().peer();
+      this.chain = chain;
+      this.channel = channel;
+      this.apiPath = apiPath;
+    }
+
+
+    /**
+     * 生成公钥/私钥对 对象
+     */
+    public KeyPairJs generateKeyPair() {
+      return new KeyPairJs();
+    }
+
+
+    public BlockKey genesisKey() throws Exception {
+      return new BlockKey(peer.genesisKey(chain, channel));
+    }
+
+
+    public BlockKey lastBlockKey() throws Exception {
+      return new BlockKey(peer.lastBlockKey(chain, channel));
+    }
+
+
+    public BlockKey worldState() throws Exception {
+      return new BlockKey(peer.worldState(chain, channel));
+    }
+
+
+    public Block search(BlockKey k) throws Exception {
+      return peer.search(chain, channel, k.bin());
+    }
+
+
+    public Block search(String key) throws Exception {
+      return search(new BlockKey(key));
+    }
+  }
+
+
+  public class BlockKey implements IJson {
+    private byte[] key;
+    private String skey;
+
+
+    public BlockKey(String s) {
+      this.skey = s;
+    }
+
+
+    public BlockKey(byte[] k) {
+      this.key = k;
+    }
+
+
+    @Override
+    public String toString() {
+      if (skey == null) {
+        skey = Hex.encode64(key);
+      }
+      return skey;
+    }
+
+
+    public byte[] bin() {
+      if (key == null) {
+        key = Hex.decode64(skey);
+      }
+      return key;
+    }
+
+
+    @Override
+    public String toJSON() {
+      return JsonHelper.toJSON(toString());
+    }
+  }
+
+
+  public class KeyPairJs {
+    public final String publicKey;
+    public final String privateKey;
+
+    private KeyPairJs() {
+      Btc b       = new Btc();
+      publicKey   = b.publicKeyStr();
+      privateKey  = b.privateKeyStr();
+    }
   }
 }

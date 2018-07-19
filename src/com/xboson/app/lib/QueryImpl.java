@@ -226,8 +226,8 @@ public class QueryImpl {
   /**
    * 用来遍历 sql 查询结果集
    */
-  public class ResultReader implements
-          AutoCloseable, Iterable<ScriptObjectMirror>, Iterator<ScriptObjectMirror> {
+  public class ResultReader implements AutoCloseable,
+          Iterable<ScriptObjectMirror>, Iterator<ScriptObjectMirror> {
 
     private PreparedStatement ps;
     private ResultSetMetaData meta;

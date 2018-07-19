@@ -21,15 +21,17 @@ import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
 import java.security.*;
 import java.security.spec.*;
-import java.util.Arrays;
 
 
 /**
  * 密钥对使用 DER 格式.
+ * 字符串编码使用 base58.
  */
 public class Btc {
 
   private final static byte[] networkID = new byte[] {0, 0};
+  private final static String KEY_GEN_ALGORITHM = "EC";
+
   private KeyPair kp;
   private String wallet;
 
@@ -47,7 +49,7 @@ public class Btc {
    * 返回编码后的公钥
    */
   public String publicKeyStr() {
-    return Base58Codec.encode(publicKey());
+    return Base58.encode(publicKey());
   }
 
 
@@ -64,7 +66,7 @@ public class Btc {
    * 返回编码后的私钥
    */
   public String privateKeyStr() {
-    return Base58Codec.encode(privateKey());
+    return Base58.encode(privateKey());
   }
 
 
@@ -85,9 +87,9 @@ public class Btc {
    */
   public static PublicKey publicKey(String base58str) {
     try {
-      byte[] buf = Base58Codec.decode(base58str);
+      byte[] buf = Base58.decode(base58str);
       X509EncodedKeySpec spec = new X509EncodedKeySpec(buf);
-      KeyFactory kFactory = KeyFactory.getInstance("EC");
+      KeyFactory kFactory = KeyFactory.getInstance(KEY_GEN_ALGORITHM);
       return kFactory.generatePublic(spec);
     } catch (Exception e) {
       throw new XBosonException(e);
@@ -100,9 +102,9 @@ public class Btc {
    */
   public static PrivateKey privateKey(String base58str) {
     try {
-      byte[] buf = Base58Codec.decode(base58str);
+      byte[] buf = Base58.decode(base58str);
       PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(buf);
-      KeyFactory kFactory = KeyFactory.getInstance("EC");
+      KeyFactory kFactory = KeyFactory.getInstance(KEY_GEN_ALGORITHM);
       return kFactory.generatePrivate(spec);
     } catch (Exception e) {
       throw new XBosonException(e);
@@ -121,9 +123,9 @@ public class Btc {
     byte[] twiceSha256Bytes = Hash.sha256(Hash.sha256(extendedRipemd160Bytes));
     byte[] checksum = new byte[4];
     System.arraycopy(twiceSha256Bytes, 0, checksum, 0, 4);
-    byte[] binaryBitcoinAddressBytes = Hash.add(extendedRipemd160Bytes, checksum);
+    byte[] bitcoinAddressBytes = Hash.add(extendedRipemd160Bytes, checksum);
 
-    return Base58Codec.encode(binaryBitcoinAddressBytes);
+    return Base58.encode(bitcoinAddressBytes);
   }
 
 
@@ -132,7 +134,7 @@ public class Btc {
     if (kp == null) {
       synchronized (this) {
         if (kp == null) {
-          KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
+          KeyPairGenerator kpg = KeyPairGenerator.getInstance(KEY_GEN_ALGORITHM);
           ECGenParameterSpec ps = new ECGenParameterSpec("secp256k1");
           kpg.initialize(ps);
           kp = kpg.generateKeyPair();

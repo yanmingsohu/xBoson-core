@@ -17,12 +17,15 @@
 package com.xboson.util;
 
 import javax.xml.bind.DatatypeConverter;
+import java.util.Base64;
 
 
 /**
  * 字节数组 16 进制字符串转换
  */
 public class Hex {
+  private static final Base64.Encoder b64e = Base64.getUrlEncoder().withoutPadding();
+  private static final Base64.Decoder b64d = Base64.getUrlDecoder();
 
   private static final char[] hexUpCode = "0123456789ABCDEF".toCharArray();
   private static final char[] hexLoCode = "0123456789abcdef".toCharArray();
@@ -51,5 +54,21 @@ public class Hex {
 
   public static byte[] parse(String hexstr) {
     return DatatypeConverter.parseHexBinary(hexstr);
+  }
+
+
+  /**
+   * base64 编码
+   */
+  public static String encode64(byte[] bin) {
+    return b64e.encodeToString(bin);
+  }
+
+
+  /**
+   * base64 解码
+   */
+  public static byte[]  decode64(String base64str) {
+    return b64d.decode(base64str);
   }
 }
