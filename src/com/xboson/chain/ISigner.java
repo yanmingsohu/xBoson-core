@@ -22,6 +22,9 @@ import java.io.Serializable;
 /**
  * 签名者对象必须可以序列化, 不能是非静态内部类, 签名对象将被保存在链上.
  * 签名/验证方法应该对称, 不要在验证时超出签名的范围.
+ *
+ * <a href='https://www.ibm.com/developerworks/cn/java/j-lo-serial/index.html'>
+ *   Java 序列化的高级认识</a>
  */
 public interface ISigner extends Serializable {
 

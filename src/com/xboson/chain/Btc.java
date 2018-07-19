@@ -19,11 +19,9 @@ package com.xboson.chain;
 import com.xboson.been.XBosonException;
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.ECGenParameterSpec;
+import java.security.*;
+import java.security.spec.*;
+import java.util.Arrays;
 
 
 /**
@@ -45,12 +43,28 @@ public class Btc {
   }
 
 
+  /**
+   * 返回编码后的公钥
+   */
+  public String publicKeyStr() {
+    return Base58Codec.encode(publicKey());
+  }
+
+
   public byte[] privateKey() {
     try {
       return getKeyPair().getPrivate().getEncoded();
     } catch(Exception e) {
       throw new XBosonException(e);
     }
+  }
+
+
+  /**
+   * 返回编码后的私钥
+   */
+  public String privateKeyStr() {
+    return Base58Codec.encode(privateKey());
   }
 
 
@@ -63,6 +77,36 @@ public class Btc {
       }
     }
     return wallet;
+  }
+
+
+  /**
+   * 将编码公钥还原为公钥对象
+   */
+  public static PublicKey publicKey(String base58str) {
+    try {
+      byte[] buf = Base58Codec.decode(base58str);
+      X509EncodedKeySpec spec = new X509EncodedKeySpec(buf);
+      KeyFactory kFactory = KeyFactory.getInstance("EC");
+      return kFactory.generatePublic(spec);
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  /**
+   * 将编码私钥还原为私钥对象
+   */
+  public static PrivateKey privateKey(String base58str) {
+    try {
+      byte[] buf = Base58Codec.decode(base58str);
+      PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(buf);
+      KeyFactory kFactory = KeyFactory.getInstance("EC");
+      return kFactory.generatePrivate(spec);
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
   }
 
 
@@ -79,7 +123,7 @@ public class Btc {
     System.arraycopy(twiceSha256Bytes, 0, checksum, 0, 4);
     byte[] binaryBitcoinAddressBytes = Hash.add(extendedRipemd160Bytes, checksum);
 
-    return Base58Codec.doEncode(binaryBitcoinAddressBytes);
+    return Base58Codec.encode(binaryBitcoinAddressBytes);
   }
 
 

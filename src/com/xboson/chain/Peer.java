@@ -29,11 +29,13 @@ import com.xboson.util.LocalLock;
 
 import javax.naming.event.NamingEvent;
 import java.rmi.RemoteException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.LinkedList;
 
 
 /**
- * 非 0 号节点都是账本节点
+ * 非 0 号节点都是账本节点, 可以查询, 数据同步依赖排序服务
  */
 public class Peer extends AbsPeer {
 

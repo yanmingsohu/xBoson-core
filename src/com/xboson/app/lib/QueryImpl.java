@@ -227,14 +227,14 @@ public class QueryImpl {
    * 用来遍历 sql 查询结果集
    */
   public class ResultReader implements
-          AutoCloseable, Iterable<Object>, Iterator<Object> {
+          AutoCloseable, Iterable<ScriptObjectMirror>, Iterator<ScriptObjectMirror> {
 
     private PreparedStatement ps;
     private ResultSetMetaData meta;
     private ResultSet rs;
     private final int columnc;
     private boolean next;
-    private Object currLine;
+    private ScriptObjectMirror currLine;
 
 
     private ResultReader(String sql, Object[] param) throws Exception {
@@ -261,7 +261,7 @@ public class QueryImpl {
 
 
     @Override
-    public Iterator<Object> iterator() {
+    public Iterator<ScriptObjectMirror> iterator() {
       return this;
     }
 
@@ -284,7 +284,7 @@ public class QueryImpl {
      * 获取当前游标指向的数据行, 返回该行数据的 map 对象.
      */
     @Override
-    public Object next() {
+    public ScriptObjectMirror next() {
       if (!next) {
         return currLine;
       }

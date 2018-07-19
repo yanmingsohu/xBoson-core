@@ -17,15 +17,19 @@
 package com.xboson.chain;
 
 import com.xboson.been.XBosonException;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
+import com.xboson.util.Hex;
 import com.xboson.util.LocalLock;
 
+import java.io.ObjectInputStream;
 import java.rmi.RemoteException;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
-public abstract class AbsPeer implements IPeer {
+public abstract class AbsPeer implements IPeer, IPeerLocal {
 
   private ISignerProvider sp;
   /** 对于读写操作的锁对象 */
@@ -107,14 +111,12 @@ public abstract class AbsPeer implements IPeer {
 
 
   protected byte[] sendBlockLocal(String chain, String channel, BlockBasic b) {
-    BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
-    synchronized (ca) {
-      try {
-        BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
-        return ch.push(b);
-      } finally {
-        ca.commit();
-      }
+    try (LocalLock _ = new LocalLock(lock.writeLock())) {
+      BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
+      BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
+      byte[] key = ch.push(b);
+      ca.commit();
+      return key;
     }
   }
 
@@ -133,10 +135,7 @@ public abstract class AbsPeer implements IPeer {
   }
 
 
-  /**
-   * 注册一个签名器
-   */
-  public void registerSigner(ISignerProvider sp) {
+  public void registerSignerProvider(ISignerProvider sp) {
     if (sp == null) throw new XBosonException.BadParameter(
         "ISignerProvider sp", "is null");
     this.sp = sp;
@@ -152,16 +151,28 @@ public abstract class AbsPeer implements IPeer {
 
 
   /**
-   * 不执行签名, 总是验证成功
+   * 空签名器, 不执行签名, 总是验证成功
    */
   public static class NoneSigner implements ISigner {
+    private transient Log log;
+
+    public NoneSigner() {
+      log = LogFactory.create("chain-none-signer");
+    }
+
     @Override
     public void sign(Block block) {
+      log.debug("sign block", Hex.lowerHex(block.key));
     }
 
     @Override
     public boolean verify(Block block) {
+      log.debug("verify block", Hex.lowerHex(block.key));
       return true;
+    }
+
+    private void readObject(ObjectInputStream i) {
+      log = LogFactory.create("chain-no-signer");
     }
   }
 

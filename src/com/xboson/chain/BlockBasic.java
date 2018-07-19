@@ -31,9 +31,9 @@ public class BlockBasic implements ITypes, Serializable {
   protected byte[] data;
   /** 生成块的用户 id */
   protected String userid;
-  /** api 完整路径, org/app/mod/api */
+  /** 链码 完整路径, org/app/mod/api */
   protected String apiPath;
-  /** api 脚本 hash */
+  /** 链码 hash */
   protected String apiHash;
   /** 块类型 */
   public int type;
@@ -48,6 +48,21 @@ public class BlockBasic implements ITypes, Serializable {
 
 
   public BlockBasic() {
+  }
+
+
+  public Block createBlock() {
+    Block b = new Block();
+    b.setData(data);
+    b.setUserid(userid);
+    b.setApiHash(apiHash);
+    b.setApiPath(apiHash);
+    if (type > 0) {
+      b.type = type;
+    } else {
+      b.type = NORM_DATA;
+    }
+    return b;
   }
 
 
@@ -79,22 +94,22 @@ public class BlockBasic implements ITypes, Serializable {
   }
 
 
-  public Block createBlock() {
-    Block b = new Block();
-    b.setData(data);
-    b.setUserid(userid);
-    b.setApiHash(apiHash);
-    b.setApiPath(apiHash);
-    if (type > 0) {
-      b.type = type;
-    } else {
-      b.type = NORM_DATA;
-    }
-    return b;
+  public byte[] getData() {
+    return Arrays.copyOf(data, data.length);
   }
 
 
-  public byte[] getData() {
-    return Arrays.copyOf(data, data.length);
+  public String getApiHash() {
+    return apiHash;
+  }
+
+
+  public String getApiPath() {
+    return apiPath;
+  }
+
+
+  public String getUserId() {
+    return userid;
   }
 }

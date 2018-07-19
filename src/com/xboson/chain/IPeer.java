@@ -89,7 +89,7 @@ public interface IPeer extends Serializable, IXRemote {
 
 
   /**
-   * 返回链上的所有通道名词
+   * 返回链上的所有通道名字
    */
   String[] allChannelNames(String chain) throws RemoteException;
 

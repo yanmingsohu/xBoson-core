@@ -16,32 +16,37 @@
 
 package com.xboson.chain;
 
-import com.xboson.auth.IAResource;
-import com.xboson.auth.PermissionSystem;
-import com.xboson.auth.impl.LicenseAuthorizationRating;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
+import com.xboson.util.SysConfig;
+import com.xboson.util.c0nst.IConstant;
 
 
-public class PeerFactory implements IAResource {
+public class PeerFactory implements IConstant {
 
   private static PeerFactory instance;
 
+  private final Log log;
   private IPeer peer;
 
 
   private PeerFactory() {
+    this.log = LogFactory.create("chain-peer-factory");
+
+    if (!SysConfig.me().readConfig().chainEnable)
+      return;
+
     String nodeid = ClusterManager.me().localNodeID();
     if (IPeer.ORDER_NODE.equals(nodeid)) {
       peer = new Order();
     } else {
       peer = new Peer(IPeer.ORDER_NODE);
     }
-  }
 
-
-  public IPeer peer() {
-    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    return peer;
+    if (peer instanceof IPeerLocal) {
+      installSigner((IPeerLocal) peer);
+    }
   }
 
 
@@ -57,8 +62,22 @@ public class PeerFactory implements IAResource {
   }
 
 
-  @Override
-  public String description() {
-    return "app.module.chain.peer.platform()";
+  public IPeer peer() {
+    return peer;
+  }
+
+
+  /**
+   * 安装签名提供商
+   * @see IConstant#CHAIN_SIGNER_PROVIDER 签名提供商来源
+   */
+  private void installSigner(IPeerLocal pl) {
+    try {
+      Class<? extends ISignerProvider> ps = CHAIN_SIGNER_PROVIDER;
+      ISignerProvider sp = ps.newInstance();
+      pl.registerSignerProvider(sp);
+    } catch(Exception e) {
+      log.error("install signer", e);
+    }
   }
 }

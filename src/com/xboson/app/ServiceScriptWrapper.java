@@ -48,30 +48,6 @@ public final class ServiceScriptWrapper implements IConstant, IConfigSandbox {
   private static final byte[] warp1 =
           "\n});".getBytes(CHARSET);
 
-  /**
-   * js 全局变量, 可以直接引用.
-   */
-  private static final Class[] libs = new Class[] {
-          MapImpl.class,
-          DateImpl.class,
-          ListImpl.class,
-          ModuleHandleContext.class,
-  };
-
-
-  /**
-   * 初始化脚本, 在创建沙箱时被调用, 可以绑定全局变量
-   */
-  private static final String[] configuration_script = new String[] {
-          "lib/array_sort_comparator.js",
-          "lib/sys_functions_impl.js",
-          "lib/string_functions.js",
-          "lib/compatible-syntax.js",
-          "lib/strutil.js",
-          "lib/ide.js",
-          "lib/pre-init.js",
-  };
-
 
   /** configuration_script 脚本返回的函数, 名成 : 函数 */
   private Map<String, ScriptObjectMirror> config_return_func;
@@ -84,29 +60,13 @@ public final class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     SysModules sys_mod = EnvironmentFactory.createDefaultSysModules();
     IConfigurableModuleProvider node_mod =
             NodeFileFactory.openNodeModuleProvider(sys_mod);
-    regModules(sys_mod);
 
-    basic.setEnvObjectList(libs);
+    sys_mod.regClasses(ScriptEnvConfiguration.dynamic_library());
+
+    basic.setEnvObjectList(ScriptEnvConfiguration.global_library());
     basic.insertConfiger(node_mod);
     basic.insertConfiger(this);
     this.env = basic;
-  }
-
-
-  /**
-   * 注册 js 模块, 在脚本中通过 require(..) 来引入
-   */
-  private void regModules(SysModules mod) {
-    mod.regClass("fs",        FsImpl.class);
-    mod.regClass("mongodb",   MongoImpl.class);
-    mod.regClass("shell",     Shell.class);
-    mod.regClass("schedule",  Schedule.class);
-    mod.regClass("pm",        PmImpl.class);
-    mod.regClass("cluster",   Cluster.class);
-    mod.regClass("fabric",    FabricImpl.class);
-    mod.regClass("image",     ImageImpl.class);
-    mod.regClass("xml",       XmlImpl.class);
-    mod.regClass("ws",        WebService.class);
   }
 
 
@@ -116,8 +76,7 @@ public final class ServiceScriptWrapper implements IConstant, IConfigSandbox {
 
 
   public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
-    for (int i=0; i<configuration_script.length; ++i) {
-      String filepath = configuration_script[i];
+    for (String filepath : ScriptEnvConfiguration.environment_script()) {
       box.setFilename(filepath);
       Object ret = box.eval(Tool.readFileFromResource(
               getClass(), filepath).openInputStream());

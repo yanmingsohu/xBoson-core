@@ -24,4 +24,7 @@ public interface ITypes {
   int ENCRYPTION_DATA = 3;
   int API_CHANGE      = 4;
   int MESSAGE         = 5;
+
+  /** 可能的最大值, 如果有新的枚举加入需要更新 */
+  int LENGTH = 5;
 }

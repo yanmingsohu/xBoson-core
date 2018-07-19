@@ -78,6 +78,16 @@ public class SysModules extends AbsModules implements IModuleProvider {
 
 
   /**
+   * 注册集合中的模块类, 在需要时创建类的实例
+   */
+  public void regClasses(Map<String, Class> map) {
+    for (Map.Entry<String, Class> en : map.entrySet()) {
+      regClass(en.getKey(), en.getValue());
+    }
+  }
+
+
+  /**
    * 注册 java 模块, 模块已经实例化
    */
   public void regLib(String name, Object lib) {

@@ -19,6 +19,7 @@ package com.xboson.been;
 
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
+import com.xboson.util.Version;
 import com.xboson.util.config.SerialFactory;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -28,7 +29,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 public class Config implements IBean {
 
-  public static final String VERSION = "1.3.6";
+  public static final String VERSION = Version.xBoson +".8";
 
   public String configVersion     = VERSION;
 
@@ -59,6 +60,7 @@ public class Config implements IBean {
 
   public String chainPath         = null;
   public int    chainIncrement    = 1024;
+  public boolean chainEnable      = false;
 
   public String[] sysTableList;
   public String[] shareAppList;

@@ -32,6 +32,9 @@ import java.nio.file.Paths;
 import java.util.*;
 
 
+/**
+ * <a href='https://jankotek.gitbooks.io/mapdb/content/htreemap/'>MapDB</a>
+ */
 public class BlockFileSystem implements ITypes {
 
   private static final char META_PREFIX     = '_';
@@ -167,7 +170,7 @@ public class BlockFileSystem implements ITypes {
 
 
     /**
-     * 如果通道已经存在抛出异常
+     * 如果通道已经存在抛出异常, 签名器将被绑定到区块, 任何对签名器类的修改都会引起异常.
      */
     public InnerChannel createChannel(String name, ISigner si) {
       return createChannel(name, si, MetaBlock.createGenesis());
@@ -216,6 +219,7 @@ public class BlockFileSystem implements ITypes {
       return db.hashMap(CHANNEL_PREFIX + name)
               .keySerializer(Serializer.BYTE_ARRAY)
               .valueSerializer(SerializerBlock.me)
+              .layout(16, 128, 4)
               .counterEnable();
     }
 
@@ -276,6 +280,15 @@ public class BlockFileSystem implements ITypes {
      * [为多节点同步而设计]
      */
     byte[] pushOriginal(Block b) {
+      if (!Arrays.equals(b.previousHash, gb.worldStateHash))
+        throw new VerifyException("bad previous hash", b.previousHash);
+
+      if (!Arrays.equals(b.previousKey, gb.lastBlockKey))
+        throw new VerifyException("bad previous key", b.previousKey);
+
+      if (map.containsKey(b.key))
+        throw new VerifyException("key conflict", b.key);
+
       map.put(b.key, b);
 
       gb.worldStateHash = b.hash;

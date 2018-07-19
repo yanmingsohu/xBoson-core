@@ -27,6 +27,7 @@ import java.util.Map;
 
 /**
  * 在外部模块和服务脚本上下文之间传递对象, 线程级别的.
+ * [不要传递不安全的对象]
  */
 public class ModuleHandleContext implements IJSObject {
 

@@ -16,6 +16,8 @@
 
 package com.xboson.chain;
 
+import com.xboson.been.XBosonException;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -25,230 +27,137 @@ import java.util.NoSuchElementException;
 
 
 /**
- * The operations contained in this class are confined to their methods and are entirely thread-safe. In fact, all of the methods
- * are implemented statically, and the instance-bound {@link #encode(byte[])} and {@link #decode(String)} methods are non-static
+ * The operations contained in this class are confined to their methods and are
+ * entirely thread-safe. In fact, all of the methods
+ * are implemented statically, and the instance-bound {@link #encode(byte[])}
+ * and {@link #decode(String)} methods are non-static
  * simply to accommodate possible future compatibility with Apache Commons-Codec.
  *
  * @author Christopher Smith
+ * @url https://github.com/Anujraval24/Base58Encoding
  *
  */
 public class Base58Codec {
 
-  public static final Charset CHARSET_ASCII = Charset.forName("US-ASCII");
+  public static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
+  private static final char ENCODED_ZERO = ALPHABET[0];
+  private static final int[] INDEXES = new int[128];
 
-  // A whole block in Base58 consists of 7424 bits, the least common multiple
-  // of 58 and 256. This is equivalent to 29 bytes or 128 Base58 digits.
+  static {
+    Arrays.fill(INDEXES, -1);
+    for (int i = 0; i < ALPHABET.length; i++) {
+      INDEXES[ALPHABET[i]] = i;
+    }
+  }
 
-  public static final BigInteger BASE = BigInteger.valueOf(58);
-
-  /**
-   * The number of whole unencoded bytes in a block of 128 Base58 digits.
-   */
-  public static final int BLOCK_LENGTH_BYTES = 29;
-
-  /**
-   * The number of whole encoded Base58 digits resulting
-   * from a block of 29 bytes.
-   */
-  public static final int BLOCK_LENGTH_DIGITS = 128;
 
   /**
-   * Unfortunately, the good folks at Flickr didn't think to make the alphabet
-   * ASCIIbetical, so we can't binary-search the
-   * {@code byte[]}.
-   */
-  public static final char ALPHABET[] =
-          "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
-                  .toCharArray();
-
-  /**
-   * Encode a stream of MSB-ordered bytes into Base58. Automatically pads
-   * negative numbers with a leading zero byte.
+   * Encodes the given bytes as a base58 string (no checksum is appended).
    *
-   * @param source
-   *            the bytes to be encoded
-   * @return the encoded representation
+   * @param input the bytes to encode
+   * @return the base58-encoded string
    */
-  public static String doEncode(byte[] source) {
-    if (source.length == 0)
+  public static String encode(byte[] input) {
+    if (input.length == 0) {
       return "";
-
-    BigInteger dividend;
-
-    if (source[0] >= 0) {
-      dividend = new BigInteger(source);
-    } else {
-      byte paddedSource[] = new byte[source.length + 1];
-      System.arraycopy(source, 0, paddedSource, 1, source.length);
-      dividend = new BigInteger(paddedSource);
     }
-
-    if (dividend.equals(BigInteger.ZERO))
-      return "1";
-
-    BigInteger qr[]; // quotient and remainder
-
-    StringBuilder sb = new StringBuilder();
-
-    while (dividend.compareTo(BigInteger.ZERO) > 0) {
-      qr = dividend.divideAndRemainder(BASE);
-      int base58DigitValue = qr[1].intValue();
-
-      // this tacks each successive digit on at the end, so it's LSD first
-      sb.append(ALPHABET[base58DigitValue]);
-
-      dividend = qr[0];
+    // Count leading zeros.
+    int zeros = 0;
+    while (zeros < input.length && input[zeros] == 0) {
+      ++zeros;
     }
-
-    // so we reverse the string before returning it
-    return sb.reverse().toString();
-  }
-
-  public String encode(byte[] source) {
-    return doEncode(source);
-  }
-
-  /**
-   * Convenience method to encode a {@code long} value. Converts the value
-   * into a byte array and calls {@link #encode(byte[])}.
-   *
-   * @param value
-   *            the number to be encoded
-   * @return the encoded representation
-   */
-  public static String doEncode(final long value) {
-    ByteBuffer bb = ByteBuffer.allocate(8);
-    bb.putLong(value);
-    bb.flip();
-    return doEncode(bb.array());
-  }
-
-  public String encode(final long value) {
-    return doEncode(value);
-  }
-
-  /**
-   * Decode a Base58-encoded value into bytes. Note that this method will return
-   * the fewest number of bytes necessary to completely represent the value;
-   * if the value may be smaller than the size  of the target type, use
-   * {@link #decode(String, int)} to front-pad to a specific length.
-   * If the original value encoded was negative, this
-   * method will return a leading zero byte added as padding.
-   *
-   * @param source
-   *            a Base58-encoded value
-   * @return the bytes represented by the value, unpadded
-   */
-  public static byte[] doDecode(final String source) {
-    BigInteger value = BigInteger.ZERO;
-
-    Iterator<Character> it = stringIterator(source);
-    while (it.hasNext()) {
-      value = value.add(BigInteger.valueOf(
-              Arrays.binarySearch(ALPHABET, it.next())));
-      if (it.hasNext())
-        value = value.multiply(BASE);
-    }
-
-    return value.toByteArray();
-  }
-
-  public byte[] decode(final String source) {
-    return doDecode(source);
-  }
-
-  /**
-   * Decode a Base58-encoded value into the specified number of bytes,
-   * MSB first (with zero-padding at the front).
-   *
-   * @param source
-   *            a Base58-encoded value
-   * @param numBytes
-   *            the size of the byte array to be returned
-   * @return the bytes represented by the value, zero-padded at the front
-   */
-  public static byte[] doDecode(final String source, final int numBytes) {
-    return padToSize(doDecode(source), numBytes);
-  }
-
-  public byte[] decode(final String source, final int numBytes) {
-    return doDecode(source, numBytes);
-  }
-
-  /**
-   * Provides an {@code Iterator} over the characters in a {@code String}.
-   * Cribbed from <a href="http://stackoverflow.com/questions/3925130/
-   * java-how-to-get-iteratorcharacter-from-string">
-   * this Stack Overflow answer</a>.
-   *
-   * @param string
-   *            the string to iterate over
-   * @return an {@code Iterator} over the string's characters
-   */
-  public static Iterator<Character> stringIterator(final String string) {
-    // Ensure the error is found as soon as possible.
-    if (string == null)
-      throw new NullPointerException();
-
-    return new Iterator<Character>() {
-      private int index = 0;
-
-      public boolean hasNext() {
-        return index < string.length();
+    // Convert base-256 digits to base-58 digits (plus conversion to ASCII characters)
+    input = Arrays.copyOf(input, input.length); // since we modify it in-place
+    char[] encoded = new char[input.length * 2]; // upper bound
+    int outputStart = encoded.length;
+    for (int inputStart = zeros; inputStart < input.length; ) {
+      encoded[--outputStart] = ALPHABET[divmod(input, inputStart, 256, 58)];
+      if (input[inputStart] == 0) {
+        ++inputStart; // optimization - skip leading zeros
       }
-
-      public Character next() {
-				/*
-				 * Throw NoSuchElementException as defined by the Iterator contract, not IndexOutOfBoundsException.
-				 */
-        if (!hasNext())
-          throw new NoSuchElementException();
-        return string.charAt(index++);
-      }
-
-      public void remove() {
-        throw new UnsupportedOperationException();
-      }
-    };
+    }
+    // Preserve exactly as many leading encoded zeros in output as there were leading zeros in input.
+    while (outputStart < encoded.length && encoded[outputStart] == ENCODED_ZERO) {
+      ++outputStart;
+    }
+    while (--zeros >= 0) {
+      encoded[--outputStart] = ENCODED_ZERO;
+    }
+    // Return encoded string (including encoded leading zeros).
+    return new String(encoded, outputStart, encoded.length - outputStart);
   }
+
 
   /**
-   * Front-pad a byte array with zeroes or remove leading zero bytes.
-   * Useful when trying to extract a type of a specific width
-   * (such as a {@code long} or 128-bit UUID) from an encoded string,
-   * since the decoder doesn't know how wide the original input was and only
-   * returns the number of bytes necessary to represent the decoded value,
-   * which might include a zero pad to force
-   * the value positive.
+   * Decodes the given base58 string into the original data bytes.
    *
-   * @param array
-   *            the array to be padded
-   * @param size
-   *            the target size of the array
-   * @return a new array, zero-padded in front to the size requested
+   * @param input the base58-encoded string to decode
+   * @return the decoded data bytes
    */
-  public static byte[] padToSize(final byte[] array, final int size) {
-    if (size == array.length) {
-      return array;
+  public static byte[] decode(String input) {
+    if (input.length() == 0) {
+      return new byte[0];
     }
-
-    if (size > array.length) {
-      byte target[] = new byte[size];
-      System.arraycopy(array, 0, target,
-              size - array.length, array.length);
-      return target;
-
+    // Convert the base58-encoded ASCII chars to a base58 byte sequence (base58 digits).
+    byte[] input58 = new byte[input.length()];
+    for (int i = 0; i < input.length(); ++i) {
+      char c = input.charAt(i);
+      int digit = c < 128 ? INDEXES[c] : -1;
+      if (digit < 0) {
+        throw new XBosonException("char: "+ c +" index:"+ i);
+      }
+      input58[i] = (byte) digit;
     }
-
-    // else size < array.length
-    for (int i = 0; i < (array.length - size); i++)
-      if (array[i] != 0)
-        throw new IllegalArgumentException("requested size " + size
-                + " is shorter than existing length " + array.length
-                + " and the leading bytes are not zeroes");
-
-    byte target[] = new byte[size];
-    System.arraycopy(array, array.length - size, target, 0, size);
-    return target;
+    // Count leading zeros.
+    int zeros = 0;
+    while (zeros < input58.length && input58[zeros] == 0) {
+      ++zeros;
+    }
+    // Convert base-58 digits to base-256 digits.
+    byte[] decoded = new byte[input.length()];
+    int outputStart = decoded.length;
+    for (int inputStart = zeros; inputStart < input58.length; ) {
+      decoded[--outputStart] = divmod(input58, inputStart, 58, 256);
+      if (input58[inputStart] == 0) {
+        ++inputStart; // optimization - skip leading zeros
+      }
+    }
+    // Ignore extra leading zeroes that were added during the calculation.
+    while (outputStart < decoded.length && decoded[outputStart] == 0) {
+      ++outputStart;
+    }
+    // Return decoded data (including original number of leading zeros).
+    return Arrays.copyOfRange(decoded, outputStart - zeros, decoded.length);
   }
+
+
+  public static BigInteger decodeToBigInteger(String input) {
+    return new BigInteger(1, decode(input));
+  }
+
+
+  /**
+   * Divides a number, represented as an array of bytes each containing a single digit
+   * in the specified base, by the given divisor. The given number is modified in-place
+   * to contain the quotient, and the return value is the remainder.
+   *
+   * @param number the number to divide
+   * @param firstDigit the index within the array of the first non-zero digit
+   *        (this is used for optimization by skipping the leading zeros)
+   * @param base the base in which the number's digits are represented (up to 256)
+   * @param divisor the number to divide by (up to 256)
+   * @return the remainder of the division operation
+   */
+  private static byte divmod(byte[] number, int firstDigit, int base, int divisor) {
+    // this is just long division which accounts for the base of the input digits
+    int remainder = 0;
+    for (int i = firstDigit; i < number.length; i++) {
+      int digit = (int) number[i] & 0xFF;
+      int temp = remainder * base + digit;
+      number[i] = (byte) (temp / divisor);
+      remainder = temp % divisor;
+    }
+    return (byte) remainder;
+  }
+
 }

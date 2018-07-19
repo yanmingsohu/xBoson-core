@@ -83,6 +83,21 @@ public class TestBC extends Test {
     msg("public key", Hex.encodeHexString(publicKey), publicKey.length);
     msg("private key", Hex.encodeHexString(privateKey), privateKey.length);
     msg("bitcoinAddress", btc.wallet());
+
+    String s = Base58Codec.encode(privateKey);
+    byte[] t = Base58Codec.decode(s);
+    // msg(Arrays.toString(privateKey), s, Arrays.toString(t));
+    ok(Arrays.equals(t, privateKey), "base 58 codec");
+
+    String pubs = btc.publicKeyStr();
+    String pris = btc.privateKeyStr();
+    byte[] pri = Btc.privateKey(pris).getEncoded();
+    byte[] pub = Btc.publicKey(pubs).getEncoded();
+
+    ok(Arrays.equals(pri, privateKey), "private key encode");
+    ok(Arrays.equals(pub, publicKey), "public key encode");
+    msg("Public KEY string:", pubs, '[', pubs.length(), ']');
+    msg("Private KEY string:", pris, '[', pris.length(), ']');
   }
 
 
@@ -127,4 +142,25 @@ public class TestBC extends Test {
     chain.close();
   }
 
+
+  /**
+   * 启动一个独立进程用于集群测试
+   */
+  public static class TestClient extends Test {
+    public static void main(String[] av) {
+      new TestClient();
+    }
+    public void test() throws Exception {
+      sub("start client process");
+      Thread t = new Thread() {
+        public void run() {
+          sub("Process start...");
+          for (;;) {
+            Tool.sleep(1000);
+          }
+        }
+      };
+      t.start();
+    }
+  }
 }

@@ -78,3 +78,4 @@ maxTotal: 允许创建资源的最大数量,默认值 8,-1 代表无数量限制
 
 chainPath: 区块链数据保存目录, 绝对路径
 chainIncrement: 区块链文件增长单位, KB
+chainEnable: 启用区块链服务器

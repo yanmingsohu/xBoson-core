@@ -16,6 +16,8 @@
 
 package com.xboson.util.c0nst;
 
+import com.xboson.app.lib.ChainSignerProvider;
+import com.xboson.chain.ISignerProvider;
 import com.xboson.db.IDict;
 
 import javax.crypto.Cipher;
@@ -99,4 +101,9 @@ public interface IConstant extends IDict {
   String DESTORYED = "Destoryed";
   /** 生成的请求 ID */
   String REQUEST_ID = "requestid";
+
+  /** 区块链签名提供商, 必须有默认构造函数 */
+  Class<? extends ISignerProvider>
+          CHAIN_SIGNER_PROVIDER = ChainSignerProvider.class;
+
 }
