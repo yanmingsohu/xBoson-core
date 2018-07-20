@@ -17,6 +17,7 @@
 package com.xboson.test;
 
 import com.xboson.been.JsonHelper;
+import com.xboson.been.XBosonException;
 import com.xboson.chain.*;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.util.Tool;
@@ -28,6 +29,7 @@ import java.util.Arrays;
 public class TestBC extends Test {
 
   public static void main(String[] av) {
+    CLUSTER_NODE_ID = 0;
     new TestBC();
   }
 
@@ -35,7 +37,11 @@ public class TestBC extends Test {
   public void test() throws Exception {
     btc();
     bfs();
-    testPeer();
+    try {
+      testPeer();
+    } catch (XBosonException.Remote e) {
+      warn("这个测试可能引起 RPC 异常, 因为远程对象在 PeerFactory 中注册过");
+    }
     TestFace.waitEventLoopEmpty();
   }
 
@@ -50,7 +56,7 @@ public class TestBC extends Test {
     Peer p  = new Peer(nodeid);
 
     try {
-      p.createChannel(chain0, ch0);
+      p.createChannel(chain0, ch0, "admin-pl");
     } catch (Exception e) {
       msg(e.getMessage());
     }
@@ -109,7 +115,7 @@ public class TestBC extends Test {
     BlockFileSystem.InnerChain chain = bc.getChain("test");
 
     try {
-      chain.createChannel("ch0", signer);
+      chain.createChannel("ch0", signer, "user");
     } catch (Exception e) {
       msg(e.getMessage());
     }

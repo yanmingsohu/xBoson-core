@@ -16,6 +16,9 @@
 
 package com.xboson.chain;
 
+import com.xboson.util.Hash;
+import com.xboson.util.Tool;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -46,13 +49,12 @@ public class Block extends BlockBasic implements ITypes, Serializable {
     h.update(data);
     h.update(userid);
     h.update(type);
-    h.update(apiPath);
-    h.update(apiHash);
     h.update(create);
 
-    if (sign != null) {
-      h.update(sign);
-    }
+    if (chaincodeKey != null) h.update(getChaincodeKey());
+    if (apiPath      != null) h.update(apiPath);
+    if (apiHash      != null) h.update(apiHash);
+    if (sign         != null) h.update(sign);
 
     if (type != GENESIS) {
       h.update(previousHash);
@@ -66,5 +68,10 @@ public class Block extends BlockBasic implements ITypes, Serializable {
   public boolean equals(Object o) {
     if (this == o) return true;
     return super.equals(o);
+  }
+
+
+  public byte[] generateKey() {
+    return key = Tool.uuid.getBytes(Tool.uuid.v4obj());
   }
 }

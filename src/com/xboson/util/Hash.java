@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.chain;
+package com.xboson.util;
 
 import com.xboson.been.XBosonException;
 import com.xboson.util.c0nst.IConstant;
@@ -24,14 +24,28 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 
+/**
+ * 摘要封装, 支持除了 byte[] 以外的摘要计算
+ */
 public class Hash {
 
+  public static final String DEFAULT_ALGORITHM = "SHA-256";
+
   private final MessageDigest md;
+  private byte[] digest;
 
 
+  /**
+   * 默认使用 SHA-256 计算摘要
+   */
   public Hash() {
+    this(DEFAULT_ALGORITHM);
+  }
+
+
+  public Hash(String algorithm) {
     try {
-      md = MessageDigest.getInstance("SHA-256");
+      md = MessageDigest.getInstance(algorithm);
     } catch (NoSuchAlgorithmException e) {
       throw new XBosonException(e);
     }
@@ -75,7 +89,18 @@ public class Hash {
 
 
   public byte[] digest() {
-    return md.digest();
+    if (digest == null) {
+      digest = md.digest();
+    }
+    return digest;
+  }
+
+
+  /**
+   * 返回摘要的 16 进制字符串.
+   */
+  public String digestStr() {
+    return Hex.lowerHex(md.digest());
   }
 
 
@@ -86,10 +111,7 @@ public class Hash {
   }
 
 
-  public static byte[] add(byte[] a, byte[] b) {
-    byte[] c = new byte[a.length + b.length];
-    System.arraycopy(a, 0, c, 0, a.length);
-    System.arraycopy(b, 0, c, a.length, b.length);
-    return c;
+  public static byte[] join(byte[] a, byte[] b) {
+    return Hex.join(a, b);
   }
 }

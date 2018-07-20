@@ -110,6 +110,27 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
   }
 
 
+  @Override
+  public byte[] getChaincodeKey(String chain, String channel, String path, String hash)
+          throws RemoteException {
+    try (LocalLock _ = new LocalLock(lock.readLock())) {
+      BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
+      BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
+      return ch.getChaincodeKey(path, hash);
+    }
+  }
+
+
+  @Override
+  public int size(String chain, String channel) throws RemoteException {
+    try (LocalLock _ = new LocalLock(lock.readLock())) {
+      BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
+      BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
+      return ch.size();
+    }
+  }
+
+
   protected byte[] sendBlockLocal(String chain, String channel, BlockBasic b) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
       BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
@@ -121,10 +142,10 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
   }
 
 
-  protected void createChannelLocal(String chainName, String channelName) {
+  protected void createChannelLocal(String chainName, String channelName, String userid) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
       BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chainName);
-      ca.createChannel(channelName, getSigner(chainName, channelName));
+      ca.createChannel(channelName, getSigner(chainName, channelName), userid);
       ca.commit();
     }
   }

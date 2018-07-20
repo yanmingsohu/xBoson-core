@@ -20,6 +20,7 @@ import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 
 import java.io.Serializable;
+import java.util.Date;
 
 
 public class MetaBlock implements Serializable, ITypes {
@@ -32,17 +33,6 @@ public class MetaBlock implements Serializable, ITypes {
   public String channelName;
   /** 创世区块主键 */
   public byte[] genesisKey;
-  /** 最新的链码 hash */
-  public String apiHash;
-  /** 最新的链码路径 */
-  public String apiPath;
-
-
-  /**
-   * 该构造被 Map 对象调用, 用于还原 MetaBlock
-   */
-  public MetaBlock() {
-  }
 
 
   /**
@@ -59,21 +49,22 @@ public class MetaBlock implements Serializable, ITypes {
   /**
    * 用随机数据生成创世区块
    */
-  public static Block createGenesis() {
-    return createGenesis(Tool.randomBytes(99));
+  public static BlockBasic createGenesis() {
+    return createGenesis(Tool.randomBytes(2048));
   }
 
 
   /**
    * 创建创世块
    */
-  public static Block createGenesis(byte[] data) {
-    Block b = new Block();
+  public static BlockBasic createGenesis(byte[] data) {
+    BlockBasic b = new BlockBasic();
     b.setData(data);
     b.userid  = IConstant.NULL_STR;
     b.apiHash = IConstant.NULL_STR;
     b.apiPath = IConstant.NULL_STR;
     b.type    = GENESIS;
+    b.chaincodeKey = new byte[0];
     return b;
   }
 

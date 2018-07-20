@@ -17,6 +17,7 @@
 package com.xboson.app.reader;
 
 import com.xboson.fs.script.ScriptAttr;
+import com.xboson.util.Hash;
 
 
 public class ScriptFile {
@@ -33,15 +34,25 @@ public class ScriptFile {
 
 
   /**
-   * 未打补丁的原始文件
+   * 未打补丁未解密的原始文件
    */
   public final String original_code;
+
+
+  /**
+   * original_code 的 hash 值
+   */
+  public final String original_hash;
 
 
   public ScriptFile(byte[] content, String orgi, ScriptAttr attr) {
     this.content = content;
     this.attr = attr;
     this.original_code = orgi;
+
+    Hash h = new Hash();
+    h.update(original_code);
+    this.original_hash = h.digestStr();
   }
 
 }

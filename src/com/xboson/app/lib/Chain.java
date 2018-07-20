@@ -16,29 +16,37 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.app.AppContext;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
-import com.xboson.been.IJson;
-import com.xboson.been.JsonHelper;
+import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
-import com.xboson.chain.Block;
-import com.xboson.chain.Btc;
-import com.xboson.chain.IPeer;
-import com.xboson.chain.PeerFactory;
+import com.xboson.chain.*;
+import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.util.Hex;
+import com.xboson.util.SysConfig;
+import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
-import java.util.Iterator;
+import java.sql.ResultSet;
 
 
 /**
  * 区块链 api
  */
-public class Chain implements IAResource {
+public class Chain extends RuntimeUnitImpl implements IAResource {
 
   private static final String SQL_FILE = "open_chain";
+
+  public final int TYPE_LENGTH = ITypes.LENGTH;
+  public final int GENESIS     = ITypes.GENESIS;
+
+
+  public Chain() {
+    super(null);
+  }
 
 
   public Object open(String chain_id) {
@@ -47,7 +55,25 @@ public class Chain implements IAResource {
     if (names == null) {
       throw new XBosonException.NotFound("chain: "+ chain_id);
     }
-    return new ChainImpl(names[0], names[1], names[2]);
+    return new ChainImpl(names[0], names[1]);
+  }
+
+
+  public void create(String chain, String channel) throws Exception {
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
+    IPeer peer = PeerFactory.me().peer();
+    if (peer.channelExists(chain, channel)) {
+      throw new XBosonException("channel/chain exists: "+ channel +'/'+ chain);
+    }
+    peer.createChannel(chain, channel, AppContext.me().who().identification());
+  }
+
+
+  /**
+   * 生成公钥/私钥对 对象
+   */
+  public KeyPairJs generateKeyPair() {
+    return new KeyPairJs();
   }
 
 
@@ -58,18 +84,15 @@ public class Chain implements IAResource {
 
 
   private String[] getChainConfig(String chain_id) {
-    String sql = SqlReader.read(SQL_FILE);
-    SqlImpl sqlimpl = (SqlImpl) ModuleHandleContext._get("sql");
     Object[] parm = { chain_id };
 
-    try (QueryImpl.ResultReader rr = sqlimpl.queryStream(sql, parm)) {
-      Iterator<ScriptObjectMirror> it = rr.iterator();
-      if (it.hasNext()) {
-        ScriptObjectMirror row = it.next();
+    Config cf = SysConfig.me().readConfig();
+    try (SqlResult sr = SqlReader.query(SQL_FILE, cf.db, parm)) {
+      ResultSet rs = sr.getResult();
+      if (rs.next()) {
         return new String[] {
-                row.get("physical_chain").toString(),
-                row.get("physical_channel").toString(),
-                row.get("apiPath").toString(),
+                rs.getString("physical_chain"),
+                rs.getString("physical_channel"),
         };
       }
       return null;
@@ -82,87 +105,94 @@ public class Chain implements IAResource {
   public class ChainImpl {
     private String chain;
     private String channel;
-    private String apiPath;
     private IPeer peer;
 
 
-    private ChainImpl(String chain, String channel, String apiPath) {
+    private ChainImpl(String chain, String channel) {
       this.peer = PeerFactory.me().peer();
       this.chain = chain;
       this.channel = channel;
-      this.apiPath = apiPath;
     }
 
 
-    /**
-     * 生成公钥/私钥对 对象
-     */
-    public KeyPairJs generateKeyPair() {
-      return new KeyPairJs();
+    public Bytes genesisKey() throws Exception {
+      return new Bytes(peer.genesisKey(chain, channel));
     }
 
 
-    public BlockKey genesisKey() throws Exception {
-      return new BlockKey(peer.genesisKey(chain, channel));
+    public Bytes lastBlockKey() throws Exception {
+      return new Bytes(peer.lastBlockKey(chain, channel));
     }
 
 
-    public BlockKey lastBlockKey() throws Exception {
-      return new BlockKey(peer.lastBlockKey(chain, channel));
+    public Bytes worldState() throws Exception {
+      return new Bytes(peer.worldState(chain, channel));
     }
 
 
-    public BlockKey worldState() throws Exception {
-      return new BlockKey(peer.worldState(chain, channel));
+    public int size() throws Exception {
+      return peer.size(chain, channel);
     }
 
 
-    public Block search(BlockKey k) throws Exception {
-      return peer.search(chain, channel, k.bin());
-    }
+    public Object search(Bytes k) throws Exception {
+      Block b = peer.search(chain, channel, k.bin());
+      ScriptObjectMirror ret = createJSObject();
+      ret.put("key",          k);
+      ret.put("hash",         new Bytes(b.hash));
+      ret.put("previousHash", new Bytes(b.previousHash));
+      ret.put("previousKey",  new Bytes(b.previousKey));
+      ret.put("sign",         new Bytes(b.sign));
+      ret.put("data",         new Bytes(b.getData()));
+      ret.put("create",       b.create);
+      ret.put("userid",       b.getUserId());
+      ret.put("type",         b.type);
 
-
-    public Block search(String key) throws Exception {
-      return search(new BlockKey(key));
-    }
-  }
-
-
-  public class BlockKey implements IJson {
-    private byte[] key;
-    private String skey;
-
-
-    public BlockKey(String s) {
-      this.skey = s;
-    }
-
-
-    public BlockKey(byte[] k) {
-      this.key = k;
-    }
-
-
-    @Override
-    public String toString() {
-      if (skey == null) {
-        skey = Hex.encode64(key);
+      if (b.type == ITypes.CHAINCODE_CONTENT) {
+        ret.put("apiPath", b.getApiPath());
+        ret.put("apiHash", b.getApiHash());
+      } else {
+        ret.put("chaincodeKey", new Bytes(b.getChaincodeKey()));
       }
-      return skey;
+      return ret;
     }
 
 
-    public byte[] bin() {
-      if (key == null) {
-        key = Hex.decode64(skey);
+    public Object search(String key) throws Exception {
+      return search(new Bytes(key));
+    }
+
+
+    public Object push(String data) throws Exception {
+      AppContext app  = AppContext.me();
+      String aPath    = app.getCurrentApiPath();
+      String aHash    = app.getOriginalApiHash();
+      String userid   = app.who().identification();
+      byte[] cckey    = peer.getChaincodeKey(chain, channel, aPath, aHash);
+
+      if (cckey == null) {
+        String codeContent = app.getOriginalApiCode();
+        byte[] codeBuf = Hex.parse(codeContent);
+        BlockBasic code = new BlockBasic(codeBuf, userid, aPath, aHash);
+        code.type = ITypes.CHAINCODE_CONTENT;
+        cckey = peer.sendBlock(chain, channel, code);
       }
-      return key;
+
+      BlockBasic block = new BlockBasic(
+              data.getBytes(IConstant.CHARSET), userid, cckey);
+
+      byte[] key = peer.sendBlock(chain, channel, block);
+      return new Bytes(key);
     }
 
 
-    @Override
-    public String toJSON() {
-      return JsonHelper.toJSON(toString());
+    public boolean verify(String key) {
+      return verify(new Bytes(key));
+    }
+
+
+    public boolean verify(Bytes b) {
+      throw new UnsupportedOperationException("待实现..");
     }
   }
 

@@ -63,10 +63,10 @@ public class Peer extends AbsPeer {
   }
 
 
-  public void createChannel(String chainName, String channelName)
+  public void createChannel(String chainName, String channelName, String uid)
           throws RemoteException {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      order.createChannel(chainName, channelName);
+      order.createChannel(chainName, channelName, uid);
     }
   }
 
@@ -147,7 +147,7 @@ public class Peer extends AbsPeer {
       }
 
       BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
-      ca.createChannel(channel, getSigner(chain, channel), gb);
+      ca.createChannel(channel, getSigner(chain, channel), gb, null);
       ca.commit();
     } catch (RemoteException e) {
       log.error("synchronized channel", e);

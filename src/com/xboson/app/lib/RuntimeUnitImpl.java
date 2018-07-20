@@ -17,7 +17,10 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.been.IJson;
+import com.xboson.been.JsonHelper;
 import com.xboson.been.XBosonException;
+import com.xboson.util.Hex;
 import com.xboson.util.Tool;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -288,6 +291,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     private int size;
     private int p;
 
+
     /**
      * 如果 list 不是数组会抛出异常
      */
@@ -301,10 +305,12 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       this.p    = 0;
     }
 
+
     @Override
     public boolean hasNext() {
       return p < size;
     }
+
 
     @Override
     public E next() {
@@ -317,40 +323,49 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
    * ScriptObjectMirror 的包装, 用来结构化获取数据
    */
   public class Mirror {
+
     public final ScriptObjectMirror original;
+
 
     public Mirror(ScriptObjectMirror original) {
       this.original = original;
     }
 
+
     public Mirror(Object obj) {
       this.original = wrap(obj);
     }
+
 
     /** name 属性必须是非空字符串, 否则抛出异常 */
     public String string(String name) {
       return (String) original.getMember(name);
     }
 
+
     /** name 属性必须是 int, 否则抛出异常 */
     public int integer(String name) {
       return (int) original.getMember(name);
     }
+
 
     /** name 属性必须是 long, 否则抛出异常 */
     public long longint(String name) {
       return (long) original.getMember(name);
     }
 
+
     /** name 属性必须是 double, 否则抛出异常 */
     public double doublen(String name) {
       return (double) original.getMember(name);
     }
 
+
     /** name 属性必须是 float, 否则抛出异常 */
     public float floatn(String name) {
       return (float) original.getMember(name);
     }
+
 
     /** name 属性必须是数组, 否则抛出异常 */
     public Mirror list(String name) {
@@ -360,24 +375,29 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       return new Mirror(check);
     }
 
+
     /** name 属性必须是 js-object, 否则抛出异常 */
     public Mirror jsobj(String name) {
       return new Mirror((ScriptObjectMirror) original.getMember(name));
     }
+
 
     /** name 属性必须是非空对象, 否则抛出异常 */
     public Object get(String name) {
       return original.getMember(name);
     }
 
+
     public int size() {
       return original.size();
     }
+
 
     /** 当前对象必须是数组, 用于创建迭代器 */
     public <E> Iterable<E> each(Class<E> clazz) {
       return arrayIterator(original, clazz);
     }
+
 
     /** 转换为 clazz 类型数组, 类型错误会抛出异常 */
     public <E> E[] toArray(Class<E[]> clazz) {
@@ -390,4 +410,48 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       return arr;
     }
   }
+
+
+
+  /**
+   * 字节数组对象, 可以将字节数组和字符串互相转换
+   */
+  public static class Bytes implements IJson {
+    private byte[] key;
+    private String s_key;
+
+
+    public Bytes(String s) {
+      this.s_key = s;
+    }
+
+
+    public Bytes(byte[] k) {
+      this.key = k;
+    }
+
+
+    @Override
+    public String toString() {
+      if (s_key == null) {
+        s_key = Hex.encode64(key);
+      }
+      return s_key;
+    }
+
+
+    public byte[] bin() {
+      if (key == null) {
+        key = Hex.decode64(s_key);
+      }
+      return key;
+    }
+
+
+    @Override
+    public String toJSON() {
+      return JsonHelper.toJSON(toString());
+    }
+  }
+
 }

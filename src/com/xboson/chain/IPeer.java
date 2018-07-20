@@ -50,7 +50,7 @@ public interface IPeer extends Serializable, IXRemote {
    * @param chainName 链名, 链会自动创建
    * @param channelName 通道名, 如果通道已经存在会抛出异常
    */
-  void createChannel(String chainName, String channelName)
+  void createChannel(String chainName, String channelName, String userid)
           throws RemoteException;
 
 
@@ -98,5 +98,18 @@ public interface IPeer extends Serializable, IXRemote {
    * 链/通道已经存在返回 true
    */
   boolean channelExists(String chain, String channel) throws RemoteException;
+
+
+  /**
+   * 返回链码块的 key, 如果不存在返回 null
+   */
+  byte[] getChaincodeKey(String chain, String channel, String path, String hash)
+          throws RemoteException;
+
+
+  /**
+   * 返回区块链长度
+   */
+  int size(String chain, String channel) throws RemoteException;
 
 }

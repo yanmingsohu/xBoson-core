@@ -154,4 +154,10 @@ public class XjApi extends OnFileChangeHandle implements IDict, IAResource {
   boolean isRequired() {
     return isRequired;
   }
+
+
+  public void fillOriginalApiCode(AppContext.ThreadLocalData tld) {
+    ScriptFile sf = getFile();
+    tld.setOriginalApiCode(sf.original_code, sf.original_hash);
+  }
 }

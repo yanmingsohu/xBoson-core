@@ -109,7 +109,7 @@ public final class AppContext implements
 
       XjOrg org = chooseAppPool(tld).getOrg(ac.org);
       XjApp app = org.getApp(ac.app);
-      app.run(ac.call, ac.mod, ac.api);
+      app.run(ac.call, ac.mod, ac.api, tld);
 
     } catch (XBosonException x) {
       fail = x;
@@ -274,6 +274,22 @@ public final class AppContext implements
    */
   public boolean isInContext() {
     return pm.getMaybeNull() != null;
+  }
+
+
+  /**
+   * 返回当前运行脚本已经加密的代码
+   */
+  public String getOriginalApiCode() {
+    return pm.get().originalCode;
+  }
+
+
+  /**
+   * 返回当前运行脚本已经加密的代码的 hash
+   */
+  public String getOriginalApiHash() {
+    return pm.get().originalHash;
   }
 
 
@@ -455,6 +471,9 @@ public final class AppContext implements
     /** 关联多个线程的句柄列表 */
     private ContextHandle __cross_handle;
 
+    private String originalCode;
+    private String originalHash;
+
     private String __cache_path;
     private ApiTypes __dev_mode;
     private boolean __is_low_priority;
@@ -472,6 +491,12 @@ public final class AppContext implements
     }
 
     private ThreadLocalData() {}
+
+
+    void setOriginalApiCode(String code, String hash) {
+      this.originalCode = code;
+      this.originalHash = hash;
+    }
 
 
     /**

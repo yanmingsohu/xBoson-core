@@ -43,8 +43,8 @@ public class Order extends AbsPeer implements IXRemote, IPeer {
   }
 
 
-  public void createChannel(String chainName, String channelName) {
-    createChannelLocal(chainName, channelName);
+  public void createChannel(String chainName, String channelName, String uid) {
+    createChannelLocal(chainName, channelName, uid);
     sendNewChannel(chainName, channelName);
   }
 

@@ -16,24 +16,26 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.chain.*;
+import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.security.*;
-import java.util.Iterator;
+import java.sql.ResultSet;
 
 
 /**
- * app 应用区块链签名提供商, 使用平台数据库做签名架构.
+ * 区块链签名提供商, 使用平台数据库做签名架构.
  * @see com.xboson.chain.Btc 公钥/私钥生成算法
  */
 public class ChainSignerProvider implements ISignerProvider {
 
-  private static final String SIGNER_ALGORITHM = "SHA256withRSA";
+  private static final String SIGNER_ALGORITHM = "SHA256withECDSA";
   private static final String SQL_FILE = "open_chain_key";
 
 
@@ -54,19 +56,16 @@ public class ChainSignerProvider implements ISignerProvider {
    */
   private KeyPair[] openChainKeys(String chain, String channel) {
     KeyPair[] keys = new KeyPair[ ITypes.LENGTH +1 ];
-
-    String sql = SqlReader.read(SQL_FILE);
-    SqlImpl sqlimpl = (SqlImpl) ModuleHandleContext._get("sql");
     Object[] parm = { chain, channel };
 
-    try (QueryImpl.ResultReader rr = sqlimpl.queryStream(sql, parm)) {
-      Iterator<ScriptObjectMirror> it = rr.iterator();
-      while (it.hasNext()) {
-        ScriptObjectMirror row = it.next();
-        PublicKey  pub = Btc.publicKey(row.get("publickey").toString());
-        PrivateKey pri = Btc.privateKey(row.get("privatekey").toString());
-        int index = (int) row.get("type");
-        keys[index] = new KeyPair(pub, pri);
+    Config cf = SysConfig.me().readConfig();
+    try (SqlResult sr = SqlReader.query(SQL_FILE, cf.db, parm)) {
+      ResultSet rs = sr.getResult();
+      while (rs.next()) {
+        PublicKey  pub = Btc.publicKey(rs.getString("publickey"));
+        PrivateKey pri = Btc.privateKey(rs.getString("privatekey"));
+        int index      = rs.getInt("type");
+        keys[index]    = new KeyPair(pub, pri);
       }
       return keys;
     } catch (Exception e) {
@@ -96,11 +95,7 @@ public class ChainSignerProvider implements ISignerProvider {
         Signature si = Signature.getInstance(signer_algorithm);
         KeyPair pair = getKeyPair(block.type);
         si.initSign(pair.getPrivate());
-        if (block.type == ITypes.GENESIS) {
-          doGenesis(block, si);
-        } else {
-          doFields(block, si);
-        }
+        doFields(block, si);
         block.sign = si.sign();
       } catch (Exception e) {
         throw new XBosonException(e);
@@ -114,11 +109,7 @@ public class ChainSignerProvider implements ISignerProvider {
         Signature si = Signature.getInstance(signer_algorithm);
         KeyPair pair = getKeyPair(block.type);
         si.initVerify(pair.getPublic());
-        if (block.type == ITypes.GENESIS) {
-          doGenesis(block, si);
-        } else {
-          doFields(block, si);
-        }
+        doFields(block, si);
         return si.verify(block.sign);
       } catch (Exception e) {
         throw new XBosonException(e);
@@ -135,24 +126,32 @@ public class ChainSignerProvider implements ISignerProvider {
     }
 
 
-    private void doGenesis(Block b, Signature si) throws SignatureException {
-      doFields(b, si);
-      for (int i=0; i<keys.length; ++i) {
-        KeyPair kp = keys[i];
-        if (kp != null) {
-          si.update(kp.getPrivate().getEncoded());
-          si.update(kp.getPublic().getEncoded());
-        }
-      }
-    }
-
-
     private void doFields(Block block, Signature si) throws SignatureException {
       si.update(block.key);
       si.update(block.getData());
-      si.update(block.getApiPath().getBytes(IConstant.CHARSET));
-      si.update(block.getApiHash().getBytes(IConstant.CHARSET));
       si.update(block.getUserId().getBytes(IConstant.CHARSET));
+
+      switch (block.type) {
+        case ITypes.CHAINCODE_CONTENT:
+          si.update(block.getApiPath().getBytes(IConstant.CHARSET));
+          si.update(block.getApiHash().getBytes(IConstant.CHARSET));
+          break;
+
+        case ITypes.GENESIS:
+          for (int i=0; i<keys.length; ++i) {
+            KeyPair kp = keys[i];
+            if (kp != null) {
+              si.update(kp.getPrivate().getEncoded());
+              si.update(kp.getPublic().getEncoded());
+            }
+          }
+          break;
+
+        case ITypes.NORM_DATA:
+        case ITypes.ENCRYPTION_DATA:
+          si.update(block.getChaincodeKey());
+          break;
+      }
     }
   }
 }

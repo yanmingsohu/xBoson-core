@@ -16,6 +16,7 @@
 
 package com.xboson.chain;
 
+import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -56,6 +57,7 @@ public class PeerFactory extends OnExitHandle implements IConstant {
     if (peer instanceof IPeerLocal) {
       ((IPeerLocal) peer).waitOver();
     }
+    peer = null;
   }
 
 
@@ -72,6 +74,9 @@ public class PeerFactory extends OnExitHandle implements IConstant {
 
 
   public IPeer peer() {
+    if (peer == null) {
+      throw new XBosonException.Closed("Blockchain server");
+    }
     return peer;
   }
 

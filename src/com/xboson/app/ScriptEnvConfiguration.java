@@ -70,6 +70,7 @@ public final class ScriptEnvConfiguration {
     mod.put("xml",       XmlImpl.class);
     mod.put("ws",        WebService.class);
     mod.put("chain",     Chain.class);
+    mod.put("digest",    Digest.class);
     return mod;
   }
 }

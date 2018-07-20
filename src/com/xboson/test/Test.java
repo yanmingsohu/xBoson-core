@@ -49,7 +49,7 @@ public class Test implements IConstant {
 	public static final String line =
 ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>";
 
-	public static final short CLUSTER_NODE_ID = 18;
+	public static short CLUSTER_NODE_ID = 18;
 
 	private static int failcount = 0;
   private static int unitCount = 0;

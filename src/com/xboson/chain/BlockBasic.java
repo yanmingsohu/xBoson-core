@@ -31,19 +31,34 @@ public class BlockBasic implements ITypes, Serializable {
   protected byte[] data;
   /** 生成块的用户 id */
   protected String userid;
-  /** 链码 完整路径, org/app/mod/api */
+  /** 指向链码区块 key; 当 type = CHAINCODE_CONTENT 无效. */
+  protected byte[] chaincodeKey;
+  /** 链码 完整路径, org/app/mod/api; 当 type = CHAINCODE_CONTENT 有效. */
   protected String apiPath;
-  /** 链码 hash */
+  /** 链码 hash; 当 type = CHAINCODE_CONTENT 有效. */
   protected String apiHash;
   /** 块类型 */
   public int type;
 
 
+  /**
+   * 用于链码块的构建
+   */
   public BlockBasic(byte[] data, String userid, String apiPath, String apiHash) {
     setData(data);
     setUserid(userid);
     setApiHash(apiHash);
     setApiPath(apiPath);
+  }
+
+
+  /**
+   * 用于普通数据块的构建
+   */
+  public BlockBasic(byte[] data, String userid, byte[] chaincodeKey) {
+    setData(data);
+    setUserid(userid);
+    setChaincodeKey(chaincodeKey);
   }
 
 
@@ -56,7 +71,8 @@ public class BlockBasic implements ITypes, Serializable {
     b.setData(data);
     b.setUserid(userid);
     b.setApiHash(apiHash);
-    b.setApiPath(apiHash);
+    b.setApiPath(apiPath);
+    b.setChaincodeKey(chaincodeKey);
     if (type > 0) {
       b.type = type;
     } else {
@@ -81,16 +97,17 @@ public class BlockBasic implements ITypes, Serializable {
 
 
   public void setApiPath(String path) {
-    if (Tool.isNulStr(path))
-      throw new NullPointerException();
     this.apiPath = path;
   }
 
 
   public void setApiHash(String hash) {
-    if (Tool.isNulStr(hash))
-      throw new NullPointerException();
     this.apiHash = hash;
+  }
+
+
+  public void setChaincodeKey(byte[] c) {
+    this.chaincodeKey = c;
   }
 
 
@@ -112,4 +129,7 @@ public class BlockBasic implements ITypes, Serializable {
   public String getUserId() {
     return userid;
   }
+
+
+  public byte[] getChaincodeKey() { return chaincodeKey; }
 }

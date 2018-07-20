@@ -42,6 +42,7 @@ public class BlockFileSystem implements ITypes {
   private static final String PATH          = "/chain";
   private static final String CHAIN_EXT     = ".chain";
   private static final String SYS_FILE      = "/system.db";
+  private static final String CHAIN_CODE    = "@";
   private static final int INIT_SIZE        = 16 * 1024;
   private static final int INCREMENT_SIZE   = 1  * 1024*1024;
   private static BlockFileSystem instance;
@@ -128,7 +129,7 @@ public class BlockFileSystem implements ITypes {
 
   public class InnerChain implements AutoCloseable {
     private final String name;
-    private HTreeMap genesisMap;
+    private HTreeMap metaMap;
     private HTreeMap signerMap;
     private DB db;
 
@@ -136,7 +137,7 @@ public class BlockFileSystem implements ITypes {
     private InnerChain(String name) {
       this.db         = makeDB(name + CHAIN_EXT);
       this.name       = name;
-      this.genesisMap = metaTemplate("genesis");
+      this.metaMap    = metaTemplate("meta");
       this.signerMap  = metaTemplate("signer");
     }
 
@@ -164,7 +165,7 @@ public class BlockFileSystem implements ITypes {
       closeCache(this);
       db.close();
       db = null;
-      genesisMap = null;
+      metaMap = null;
       signerMap = null;
     }
 
@@ -172,24 +173,30 @@ public class BlockFileSystem implements ITypes {
     /**
      * 如果通道已经存在抛出异常, 签名器将被绑定到区块, 任何对签名器类的修改都会引起异常.
      */
-    public InnerChannel createChannel(String name, ISigner si) {
-      return createChannel(name, si, MetaBlock.createGenesis());
+    public InnerChannel createChannel(String name, ISigner si, String userid) {
+      return createChannel(name, si, null, userid);
     }
 
 
     /**
      * 使用完整的创世区块创建通道.
+     * genesis 参数为 null 时 userid 生效
      * [为多节点同步而设计]
      */
-    InnerChannel createChannel(String name, ISigner si, Block genesis) {
+    InnerChannel createChannel(String name, ISigner si, Block genesis, String userid) {
       HTreeMap<byte[], Block> map = channelTemplate(name).create();
       MetaBlock gb = new MetaBlock(name);
-      genesisMap.put(name, gb);
-      signerMap.put(name, si);
-
       InnerChannel ch = new InnerChannel(map, gb, this, si);
-      gb.genesisKey = ch.pushOriginal(genesis);
-      genesisMap.put(name, gb);
+
+      if (genesis != null) {
+        gb.genesisKey = ch.pushOriginal(genesis);
+      } else {
+        BlockBasic genesis_b = MetaBlock.createGenesis();
+        genesis_b.setUserid(userid);
+        gb.genesisKey = ch.push(genesis_b);
+      }
+      signerMap.put(name, si);
+      metaMap.put(name, gb);
       return ch;
     }
 
@@ -199,14 +206,14 @@ public class BlockFileSystem implements ITypes {
      */
     public InnerChannel openChannel(String name) {
       HTreeMap<byte[], Block> map = channelTemplate(name).open();
-      MetaBlock gb = (MetaBlock) genesisMap.get(name);
+      MetaBlock gb = (MetaBlock) metaMap.get(name);
       ISigner signer = (ISigner) signerMap.get(name);
       return new InnerChannel(map, gb, this, signer);
     }
 
 
     public Set<String> allChannelNames() {
-      return Collections.unmodifiableSet(genesisMap.keySet());
+      return Collections.unmodifiableSet(metaMap.keySet());
     }
 
 
@@ -235,6 +242,7 @@ public class BlockFileSystem implements ITypes {
 
   public class InnerChannel {
     private Map<byte[], Block> map;
+    private Map<String, byte[]> chaincode;
     private MetaBlock gb;
     private InnerChain chain;
     private ISigner signer;
@@ -242,10 +250,11 @@ public class BlockFileSystem implements ITypes {
 
     private InnerChannel(Map<byte[], Block> map, MetaBlock gb,
                          InnerChain ic, ISigner si) {
-      this.map    = map;
-      this.gb     = gb;
-      this.chain  = ic;
-      this.signer = si;
+      this.map       = map;
+      this.gb        = gb;
+      this.chain     = ic;
+      this.signer    = si;
+      this.chaincode = ic.metaTemplate(CHAIN_CODE + gb.channelName);
     }
 
 
@@ -262,16 +271,22 @@ public class BlockFileSystem implements ITypes {
      */
     protected byte[] push(Block b) {
       do {
-        b.key = Tool.uuid.getBytes(Tool.uuid.v4obj());
+        b.generateKey();
       } while(map.containsKey(b.key));
 
+      String codeName = b.type == CHAINCODE_CONTENT ? checkChaincode(b) : null;
       b.create       = new Date();
       b.previousHash = gb.worldStateHash;
       b.previousKey  = gb.lastBlockKey;
 
       signer.sign(b);
       b.computeHash();
-      return pushOriginal(b);
+      pushOriginal(b);
+
+      if (b.type == CHAINCODE_CONTENT) {
+        chaincode.put(codeName, b.key);
+      }
+      return b.key;
     }
 
 
@@ -286,14 +301,14 @@ public class BlockFileSystem implements ITypes {
       if (!Arrays.equals(b.previousKey, gb.lastBlockKey))
         throw new VerifyException("bad previous key", b.previousKey);
 
-      if (map.containsKey(b.key))
+      if (b.key == null || map.containsKey(b.key))
         throw new VerifyException("key conflict", b.key);
 
       map.put(b.key, b);
 
       gb.worldStateHash = b.hash;
       gb.lastBlockKey   = b.key;
-      chain.genesisMap.put(gb.channelName, gb);
+      chain.metaMap.put(gb.channelName, gb);
       return b.key;
     }
 
@@ -319,6 +334,36 @@ public class BlockFileSystem implements ITypes {
 
     public byte[] genesisKey() {
       return Arrays.copyOf(gb.genesisKey, gb.genesisKey.length);
+    }
+
+
+    public byte[] getChaincodeKey(String path, String hash) {
+      return chaincode.get(path + CHAIN_CODE + hash);
+    }
+
+
+    /**
+     * 检查链码块有效性, 并返回链码 key 缓存的名字
+     */
+    public String checkChaincode(BlockBasic b) {
+      if (b.type != CHAINCODE_CONTENT)
+        throw new VerifyException("Bad type");
+
+      if (Tool.isNulStr(b.apiPath))
+        throw new VerifyException("Block.apiPath is null");
+
+      if (Tool.isNulStr(b.apiHash))
+        throw new VerifyException("Block.apiHash is null");
+
+      if (b.data == null || b.data.length < 1)
+        throw new VerifyException("Chain code context is empty");
+
+      String codeName = b.apiPath + CHAIN_CODE + b.apiHash;
+
+      if (chaincode.containsKey(codeName))
+        throw new VerifyException("is exists "+ codeName);
+
+      return codeName;
     }
 
 

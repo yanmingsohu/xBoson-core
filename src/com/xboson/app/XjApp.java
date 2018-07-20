@@ -77,10 +77,12 @@ public class XjApp extends XjPool<XjModule> implements IDict, IScriptFileSystem 
   }
 
 
-  public void run(CallData cd, String module_id, String api_id)
+  public void run(CallData cd, String module_id, String api_id,
+                  AppContext.ThreadLocalData tld)
           throws IOException, ScriptException {
     XjModule mod = getWithCreate(module_id);
     XjApi api = mod.getApi(api_id);
+    api.fillOriginalApiCode(tld);
     api.run(cd, ApiPath.toFile(module_id, api_id));
   }
 

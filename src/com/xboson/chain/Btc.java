@@ -17,6 +17,7 @@
 package com.xboson.chain;
 
 import com.xboson.been.XBosonException;
+import com.xboson.util.Hash;
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
 import java.security.*;
@@ -119,11 +120,11 @@ public class Btc {
     byte[] ripemd160Bytes = new byte[digest.getDigestSize()];
     digest.doFinal(ripemd160Bytes, 0);
 
-    byte[] extendedRipemd160Bytes = Hash.add(networkID, ripemd160Bytes);
+    byte[] extendedRipemd160Bytes = Hash.join(networkID, ripemd160Bytes);
     byte[] twiceSha256Bytes = Hash.sha256(Hash.sha256(extendedRipemd160Bytes));
     byte[] checksum = new byte[4];
     System.arraycopy(twiceSha256Bytes, 0, checksum, 0, 4);
-    byte[] bitcoinAddressBytes = Hash.add(extendedRipemd160Bytes, checksum);
+    byte[] bitcoinAddressBytes = Hash.join(extendedRipemd160Bytes, checksum);
 
     return Base58.encode(bitcoinAddressBytes);
   }

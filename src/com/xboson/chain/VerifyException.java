@@ -30,7 +30,7 @@ public class VerifyException extends XBosonException {
 
 
   public VerifyException(String msg, byte[] key) {
-    super(msg + IConstant.SP + Hex.lowerHex(key));
+    super(msg + IConstant.SP + (key == null ? "null" : Hex.lowerHex(key)));
   }
 
 }
