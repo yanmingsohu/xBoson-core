@@ -23,7 +23,7 @@ package com.xboson.chain;
 public interface IPeerLocal {
 
   /**
-   * 注册签名机提供商
+   * 注册签名机提供商, 默认什么都不做
    */
   default void registerSignerProvider(ISignerProvider sp) {}
 
@@ -32,5 +32,11 @@ public interface IPeerLocal {
    * 等待操作完成
    */
   void waitOver();
+
+
+  /**
+   * 同步所有链到最新状态, 默认什么都不做.
+   */
+  default void startSynchronizeThread() {}
 
 }

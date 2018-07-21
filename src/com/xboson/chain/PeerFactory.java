@@ -30,24 +30,30 @@ public class PeerFactory extends OnExitHandle implements IConstant {
   private static PeerFactory instance;
 
   private final Log log;
+  private final boolean is_order;
+  private final boolean enable;
   private IPeer peer;
 
 
   private PeerFactory() {
     this.log = LogFactory.create("chain-peer-factory");
+    String nodeid = ClusterManager.me().localNodeID();
+    this.is_order = IPeer.ORDER_NODE.equals(nodeid);
+    this.enable = SysConfig.me().readConfig().chainEnable;
 
-    if (!SysConfig.me().readConfig().chainEnable)
+    if (!enable)
       return;
 
-    String nodeid = ClusterManager.me().localNodeID();
-    if (IPeer.ORDER_NODE.equals(nodeid)) {
+    if (is_order) {
       peer = new Order();
     } else {
       peer = new Peer(IPeer.ORDER_NODE);
     }
 
     if (peer instanceof IPeerLocal) {
-      installSigner((IPeerLocal) peer);
+      IPeerLocal pl = (IPeerLocal) peer;
+      installSigner(pl);
+      pl.startSynchronizeThread();
     }
   }
 

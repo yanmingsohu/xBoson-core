@@ -39,9 +39,8 @@ import java.util.LinkedList;
  */
 public class Peer extends AbsPeer {
 
+  private String orderClusterNodeID;
   private final Log log;
-  private ChainSyncListener csl;
-  private IPeer order;
 
 
   /**
@@ -49,16 +48,26 @@ public class Peer extends AbsPeer {
    * @see PeerFactory#peer() 创建该类的实例
    */
   public Peer(String orderClusterNodeID) {
-    this.log   = LogFactory.create("chain-peer");
-    this.order = (IPeer) RpcFactory.me().lookup(orderClusterNodeID, RPC_NAME);
-    this.csl   = new ChainSyncListener();
+    this.log = LogFactory.create("chain-peer");
+    this.orderClusterNodeID = orderClusterNodeID;
+  }
+
+
+  @Override
+  public void startSynchronizeThread() {
+    new ChainSyncListener();
+  }
+
+
+  private IPeer getOrder() {
+    return (IPeer) RpcFactory.me().lookup(orderClusterNodeID, RPC_NAME);
   }
 
 
   public byte[] sendBlock(String chainName, String channelName, BlockBasic b)
           throws RemoteException {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      return order.sendBlock(chainName, channelName, b);
+      return getOrder().sendBlock(chainName, channelName, b);
     }
   }
 
@@ -66,7 +75,7 @@ public class Peer extends AbsPeer {
   public void createChannel(String chainName, String channelName, String uid)
           throws RemoteException {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      order.createChannel(chainName, channelName, uid);
+      getOrder().createChannel(chainName, channelName, uid);
     }
   }
 
@@ -74,10 +83,10 @@ public class Peer extends AbsPeer {
   private void syncAllChannels() {
     try {
       log.info("start synchronized all chain/channel");
-      String[] chains = order.allChainNames();
+      String[] chains = getOrder().allChainNames();
 
       for (String chain : chains) {
-        String[] channels = order.allChannelNames(chain);
+        String[] channels = getOrder().allChannelNames(chain);
 
         for (String channel : channels) {
           if (! channelExists(chain, channel)) {
@@ -99,7 +108,7 @@ public class Peer extends AbsPeer {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
       log.debug("synchronized block", chain, "/", channel);
 
-      byte[] lkey = order.lastBlockKey(chain, channel);
+      byte[] lkey = getOrder().lastBlockKey(chain, channel);
       Deque<Block> syncBlockStack = new LinkedList<>();
 
       BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
@@ -107,7 +116,7 @@ public class Peer extends AbsPeer {
       ISigner si = getSigner(chain, channel);
 
       while (ch.search(lkey) == null) {
-        Block b = order.search(chain, channel, lkey);
+        Block b = getOrder().search(chain, channel, lkey);
         if (b == null && !si.verify(b)) {
           log.error("synchronized block", JsonHelper.toJSON(b));
           break;
@@ -136,8 +145,8 @@ public class Peer extends AbsPeer {
   private void syncChannel(String chain, String channel) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
       log.debug("synchronized channel setting", chain, "/", channel);
-      byte[] gkey = order.genesisKey(chain, channel);
-      Block gb = order.search(chain, channel, gkey);
+      byte[] gkey = getOrder().genesisKey(chain, channel);
+      Block gb = getOrder().search(chain, channel, gkey);
 
       ISigner si = getSigner(chain, channel);
       if (! si.verify(gb)) {
