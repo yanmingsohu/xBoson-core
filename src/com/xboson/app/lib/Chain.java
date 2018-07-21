@@ -137,13 +137,16 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
 
     public Object search(Bytes k) throws Exception {
       Block b = peer.search(chain, channel, k.bin());
+      if (b == null) return null;
+
       ScriptObjectMirror ret = createJSObject();
       ret.put("key",          k);
       ret.put("hash",         new Bytes(b.hash));
       ret.put("previousHash", new Bytes(b.previousHash));
       ret.put("previousKey",  new Bytes(b.previousKey));
       ret.put("sign",         new Bytes(b.sign));
-      ret.put("data",         new Bytes(b.getData()));
+      ret.put("chaincodeKey", new Bytes(b.getChaincodeKey()));
+      ret.put("data",         new String(b.getData()));
       ret.put("create",       b.create);
       ret.put("userid",       b.getUserId());
       ret.put("type",         b.type);

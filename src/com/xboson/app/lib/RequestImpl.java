@@ -226,11 +226,21 @@ public class RequestImpl extends JSObject.Helper implements IJson {
   }
 
 
+  public double getFloat(String name, boolean allowNull, int min, int max) {
+    return getFloat(name, allowNull, (double) min, (double) max);
+  }
+
+
   /**
    * 不限制最大值
    * @see #getFloat(String, boolean, double, double)
    */
   public double getFloat(String name, boolean allowNull, double min) {
+    return getFloat(name, allowNull, min, Double.MAX_VALUE);
+  }
+
+
+  public double getFloat(String name, boolean allowNull, int min) {
     return getFloat(name, allowNull, min, Double.MAX_VALUE);
   }
 

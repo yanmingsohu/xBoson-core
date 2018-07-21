@@ -189,12 +189,14 @@ public class BlockFileSystem implements ITypes {
       InnerChannel ch = new InnerChannel(map, gb, this, si);
 
       if (genesis != null) {
+        si.verify(genesis);
         gb.genesisKey = ch.pushOriginal(genesis);
       } else {
         BlockBasic genesis_b = MetaBlock.createGenesis();
         genesis_b.setUserid(userid);
         gb.genesisKey = ch.push(genesis_b);
       }
+      si.removeGenesisPrivateKey();
       signerMap.put(name, si);
       metaMap.put(name, gb);
       return ch;

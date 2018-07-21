@@ -72,6 +72,7 @@ public final class ConverterInitialization {
     new BigDecimalConverter().register(jsbuilded);
     new BigIntegerConverter().register(jsbuilded);
     new StringBuilderJsonConverter().register(jsbuilded);
+    new BytesConverter().register(jsbuilded);
   }
 
 

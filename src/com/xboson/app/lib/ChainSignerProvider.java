@@ -25,6 +25,7 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 
+import java.nio.charset.Charset;
 import java.security.*;
 import java.sql.ResultSet;
 
@@ -37,6 +38,7 @@ public class ChainSignerProvider implements ISignerProvider {
 
   private static final String SIGNER_ALGORITHM = "SHA256withECDSA";
   private static final String SQL_FILE = "open_chain_key";
+  private static final Charset CS = IConstant.CHARSET;
 
 
   @Override
@@ -117,6 +119,13 @@ public class ChainSignerProvider implements ISignerProvider {
     }
 
 
+    public void removeGenesisPrivateKey() {
+      KeyPair g = keys[ITypes.GENESIS];
+      KeyPair newg = new KeyPair(g.getPublic(), null);
+      keys[ITypes.GENESIS] = newg;
+    }
+
+
     private KeyPair getKeyPair(int i) {
       KeyPair pair = keys[i];
       if (pair == null) {
@@ -129,21 +138,25 @@ public class ChainSignerProvider implements ISignerProvider {
     private void doFields(Block block, Signature si) throws SignatureException {
       si.update(block.key);
       si.update(block.getData());
-      si.update(block.getUserId().getBytes(IConstant.CHARSET));
+      si.update(block.getUserId().getBytes(CS));
+      si.update(Long.toString(block.create.getTime()).getBytes(CS));
 
       switch (block.type) {
         case ITypes.CHAINCODE_CONTENT:
-          si.update(block.getApiPath().getBytes(IConstant.CHARSET));
-          si.update(block.getApiHash().getBytes(IConstant.CHARSET));
+          si.update(block.getApiPath().getBytes(CS));
+          si.update(block.getApiHash().getBytes(CS));
           break;
 
         case ITypes.GENESIS:
-          for (int i=0; i<keys.length; ++i) {
+          for (int i=1; i<keys.length; ++i) {
             KeyPair kp = keys[i];
-            if (kp != null) {
+            //
+            // 创世区块私钥离线后无法验证
+            //
+            if (i != ITypes.GENESIS) {
               si.update(kp.getPrivate().getEncoded());
-              si.update(kp.getPublic().getEncoded());
             }
+            si.update(kp.getPublic().getEncoded());
           }
           break;
 

@@ -41,4 +41,11 @@ public interface ISigner extends Serializable {
    */
   boolean verify(Block block);
 
+
+  /**
+   * 创世区块私钥仅在初始化区块链时用到一次,
+   * 删除创世区块私钥可保证安全, 防止重构链数据.
+   */
+  default void removeGenesisPrivateKey() {}
+
 }
