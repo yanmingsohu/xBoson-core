@@ -145,17 +145,25 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
       ret.put("previousHash", new Bytes(b.previousHash));
       ret.put("previousKey",  new Bytes(b.previousKey));
       ret.put("sign",         new Bytes(b.sign));
-      ret.put("chaincodeKey", new Bytes(b.getChaincodeKey()));
       ret.put("data",         new String(b.getData()));
       ret.put("create",       b.create);
       ret.put("userid",       b.getUserId());
       ret.put("type",         b.type);
 
-      if (b.type == ITypes.CHAINCODE_CONTENT) {
-        ret.put("apiPath", b.getApiPath());
-        ret.put("apiHash", b.getApiHash());
-      } else {
-        ret.put("chaincodeKey", new Bytes(b.getChaincodeKey()));
+      switch (b.type) {
+        case ITypes.CHAINCODE_CONTENT:
+          ret.put("apiPath", b.getApiPath());
+          ret.put("apiHash", b.getApiHash());
+          // no break;
+
+        case ITypes.GENESIS:
+          ret.put("data", new Bytes(b.getData()));
+          break;
+
+        default:
+          ret.put("data", new String(b.getData()));
+          ret.put("chaincodeKey", new Bytes(b.getChaincodeKey()));
+          break;
       }
       return ret;
     }
