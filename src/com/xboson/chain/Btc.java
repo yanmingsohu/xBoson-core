@@ -18,10 +18,12 @@ package com.xboson.chain;
 
 import com.xboson.been.XBosonException;
 import com.xboson.util.Hash;
+import com.xboson.util.Hex;
 import org.bouncycastle.crypto.digests.RIPEMD160Digest;
 
 import java.security.*;
 import java.security.spec.*;
+import java.util.Base64;
 
 
 /**
@@ -87,8 +89,17 @@ public class Btc {
    * 将编码公钥还原为公钥对象
    */
   public static PublicKey publicKey(String base58str) {
+    return publicKey(Hex.Names.BASE58, base58str);
+  }
+
+
+  /**
+   * 使用指定的编码方式解码 str 并编译为公钥
+   * @see Hex.Names 可用编码名称
+   */
+  public static PublicKey publicKey(String coding, String str) {
     try {
-      byte[] buf = Base58.decode(base58str);
+      byte[] buf = Hex.decode(coding, str);
       X509EncodedKeySpec spec = new X509EncodedKeySpec(buf);
       KeyFactory kFactory = KeyFactory.getInstance(KEY_GEN_ALGORITHM);
       return kFactory.generatePublic(spec);
@@ -102,8 +113,17 @@ public class Btc {
    * 将编码私钥还原为私钥对象
    */
   public static PrivateKey privateKey(String base58str) {
+    return privateKey(Hex.Names.BASE58, base58str);
+  }
+
+
+  /**
+   * 使用指定的编码方式解码 str 并编译为私钥
+   * @see Hex.Names 可用编码名称
+   */
+  public static PrivateKey privateKey(String coding, String str) {
     try {
-      byte[] buf = Base58.decode(base58str);
+      byte[] buf = Hex.decode(coding, str);
       PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(buf);
       KeyFactory kFactory = KeyFactory.getInstance(KEY_GEN_ALGORITHM);
       return kFactory.generatePrivate(spec);
@@ -111,6 +131,7 @@ public class Btc {
       throw new XBosonException(e);
     }
   }
+
 
 
   private String walletImpl(byte[] publicKey) {

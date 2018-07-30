@@ -90,13 +90,36 @@ public class CallData implements IBean {
     final int len = v.length();
     if (len < min) {
       throw new XBosonException.BadParameter(
-              name,"length is greater than " + min);
+              name,"最小长度 " + min);
     }
-    if (len >= max) {
+    if (len > max) {
       throw new XBosonException.BadParameter(
-              name,"length is less than " + max);
+              name,"最大长度 " + max);
     }
     return v;
+  }
+
+
+  public Integer getInt(String name, int min, int max) {
+    String v = req.getParameter(name);
+    if (v == null) {
+      if (min == 0)
+        return null;
+
+      throw new XBosonException.BadParameter(
+              name, "Can not be null");
+    }
+
+    Integer i = Integer.parseInt(v);
+    if (i < min) {
+      throw new XBosonException.BadParameter(
+              name,"最小值 " + min);
+    }
+    if (i > max) {
+      throw new XBosonException.BadParameter(
+              name,"最大值 " + max);
+    }
+    return i;
   }
 
 }

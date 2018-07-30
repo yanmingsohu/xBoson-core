@@ -312,15 +312,16 @@ public class HttpImpl extends RuntimeUnitImpl {
       addHeader(build, header);
     }
 
-    Response resp = openClient().newCall(build.build()).execute();
-    ResponseBody body = resp.body();
+    try (Response resp = openClient().newCall(build.build()).execute()) {
+      ResponseBody body = resp.body();
 
-    ScriptObjectMirror ret = createJSObject();
-    ret.setMember("code",   resp.code());
-    ret.setMember("cookie", parseCookies(urlobj, resp));
-    ret.setMember("data",   parseData(body, type));
-    ret.setMember("header", parseRespHeader(resp));
-    return ret;
+      ScriptObjectMirror ret = createJSObject();
+      ret.setMember("code",   resp.code());
+      ret.setMember("cookie", parseCookies(urlobj, resp));
+      ret.setMember("data",   parseData(body, type));
+      ret.setMember("header", parseRespHeader(resp));
+      return ret;
+    }
   }
 
 

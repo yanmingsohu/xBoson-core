@@ -16,6 +16,10 @@
 
 package com.xboson.util;
 
+import com.xboson.been.XBosonException;
+import com.xboson.chain.Base58;
+import com.xboson.event.Names;
+
 import javax.xml.bind.DatatypeConverter;
 import java.util.Base64;
 
@@ -73,10 +77,48 @@ public class Hex {
   }
 
 
+  /**
+   * 按照指定的编码将 data 解密为字节数组
+   * @param coding 编码名: base58/base64/base64url/hex
+   * @param data 已编码字符串
+   * @see Names
+   */
+  public static byte[] decode(String coding, String data) {
+    switch (coding.toLowerCase()) {
+      case Names.BASE58:
+        return Base58.decode(data);
+
+      case Names.BASE64:
+        return Base64.getDecoder().decode(data);
+
+      case Names.BASE64URL:
+        return b64d.decode(data);
+
+      case Names.HEX:
+        return parse(data);
+
+      default:
+        throw new XBosonException.BadParameter(
+                "String coding", "unknow coding: "+ coding);
+    }
+  }
+
+
   public static byte[] join(byte[] a, byte[] b) {
     byte[] c = new byte[a.length + b.length];
     System.arraycopy(a, 0, c, 0, a.length);
     System.arraycopy(b, 0, c, a.length, b.length);
     return c;
+  }
+
+
+  /**
+   * 可使用的二进制编码集名称
+   */
+  public interface Names {
+    String HEX    = "hex";
+    String BASE58 = "base58";
+    String BASE64 = "base64";
+    String BASE64URL = "base64url";
   }
 }

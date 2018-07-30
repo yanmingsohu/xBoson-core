@@ -53,7 +53,8 @@ public class UserService extends XService implements IDict, IConstant {
    * 跳过登录检查的服务名称列表
    */
   private static final Set<String> skipCheckLogin = JavaConverter.param2set(
-          "get_havinguser"
+          "get_havinguser",
+          "register"
   );
 
 
