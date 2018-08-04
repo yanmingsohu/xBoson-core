@@ -52,6 +52,7 @@ public class SignerProxy implements ISigner {
     throw new UnsupportedOperationException();
   }
 
+
   /**
    *
    * 使用远程节点(私钥)签名数据

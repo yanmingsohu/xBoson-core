@@ -151,6 +151,9 @@ public class Btc {
   }
 
 
+  /**
+   * 随机生成密钥对
+   */
   private KeyPair getKeyPair() throws NoSuchAlgorithmException,
           InvalidAlgorithmParameterException {
     if (kp == null) {

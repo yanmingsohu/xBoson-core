@@ -22,12 +22,13 @@ public interface ServiceClassList {
   /**
    * 所有服务列表, 服务的路径使用注解设定
    */
-  static Class<?>[] list = new Class<?>[] {
+  Class<?>[] list = new Class<?>[] {
 					App.class,
 					UserService.class,
           Captcha.class,
           OAuth2.class,
           OlderApi.class,
+          Witness.class,
   };
 
 }

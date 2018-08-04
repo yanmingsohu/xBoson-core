@@ -16,44 +16,58 @@
 
 package com.xboson.service;
 
+import com.xboson.auth.IAResource;
+import com.xboson.auth.IAWho;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.CallData;
+import com.xboson.been.LoginUser;
 import com.xboson.been.XBosonException;
 import com.xboson.chain.Btc;
 import com.xboson.chain.witness.SignerProxy;
 import com.xboson.chain.witness.WitnessConnect;
+import com.xboson.db.ConnectConfig;
+import com.xboson.db.SqlResult;
+import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.util.Hex;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
-import okhttp3.*;
 
 import java.io.IOException;
 import java.security.PublicKey;
-import java.security.Signature;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 
 @XPath("/witness")
-public class Witness extends XService implements IConstant {
+public class Witness extends XService implements IConstant, IAResource {
 
-  private static final String ERRMSG = "cannot found service";
-  private static final String ALGORITHM = "SHA256withECDSA";
+  private static final String ERRMSG         = "Cannot found service";
+  private static final String ALGORITHM      = SignerProxy.SIGNER_ALGORITHM;
   private static final int GEN_RAND_DATA_LEN = 256;
 
-  private static final MediaType BINARY
-          = MediaType.parse("application/octet-stream");
+  private final ConnectConfig db;
+  private final IAWho anonymous;
 
-  private OkHttpClient hc;
+
+  public Witness() {
+    db = SysConfig.me().readConfig().db;
+    anonymous = new LoginUser();
+  }
 
 
   @Override
   public void service(CallData data) throws Exception {
+    PermissionSystem.apply(anonymous, LicenseAuthorizationRating.class, this);
     subService(data, ERRMSG);
   }
 
 
   public void register(CallData data) throws Exception {
-    String algorithm = data.getString("algorithm", 1, ALGORITHM.length());
+    String algorithm = data.getString("algorithm", 1, 45);
     if (!ALGORITHM.equals(algorithm)) {
       data.xres.responseMsg("bad algorithm value", 2);
       return;
@@ -64,32 +78,97 @@ public class Witness extends XService implements IConstant {
     int port      = data.getInt("port", 1, 65535);
     String prefix = data.getString("urlperfix", 0, 128);
 
-    byte[] rand = Tool.randomBytes(GEN_RAND_DATA_LEN);
     WitnessConnect wc = new WitnessConnect(host, port, prefix);
     PublicKey pk = Btc.publicKey(Hex.Names.BASE64, pubkey);
     SignerProxy sp = new SignerProxy(pk, wc);
 
-    try {
-      byte[] sign = sp.sign(rand);
-      if (! sp.verify(rand, sign)) {
-        data.xres.responseMsg("Signature verification failed", 3);
-        return;
-      }
-
-      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 插入数据库
-      // 设计一个 见证者块, 并将块插入区块链, 非创世区块和见证者块 使用见证者签名
-
-    } catch (IOException e) {
-      data.xres.responseMsg("Network unreachable: "+ host+ ':' +port, 4);
-
-    } catch (XBosonException e) {
-      data.xres.responseMsg("Error: "+ e.getMessage(), 5);
+    if (verifyRemote(data, sp)) {
+      String id = insertDB(host, port, pubkey, prefix);
+      data.xres.bindResponse("id", id);
+      data.xres.responseMsg("ok", 0);
     }
   }
 
 
-  public void change(CallData data) throws Exception {}
+  public void change(CallData data) throws Exception {
+    String id     = data.getString("id", 1, 45);
+    String host   = data.getString("host", 1, 128);
+    int port      = data.getInt("port", 1, 65535);
+    String prefix = data.getString("urlperfix", 0, 128);
 
+    WitnessConnect wc = new WitnessConnect(host, port, prefix);
+    PublicKey pk = getPubKey(id);
+    if (pk == null) {
+      data.xres.responseMsg("Cannot found witness: "+ id, 11);
+      return;
+    }
+
+    SignerProxy sp = new SignerProxy(pk, wc);
+    if (verifyRemote(data, sp)) {
+      if (updateDB(id, host, port, prefix)) {
+        data.xres.responseMsg("ok", 0);
+      } else {
+        data.xres.responseMsg("Cannot found witness: "+ id, 11);
+      }
+    }
+  }
+
+
+  private boolean verifyRemote(CallData data, SignerProxy sp) throws IOException {
+    try {
+      byte[] rand = Tool.randomBytes(GEN_RAND_DATA_LEN);
+      byte[] sign = sp.sign(rand);
+      if (! sp.verify(rand, sign)) {
+        data.xres.responseMsg("Signature verification failed", 3);
+        return false;
+      }
+      return true;
+    } catch (IOException e) {
+      data.xres.responseMsg("Network unreachable,"+ e.getMessage(), 4);
+
+    } catch (XBosonException e) {
+      data.xres.responseMsg("Error: "+ e.getMessage(), 5);
+    }
+    return false;
+  }
+
+
+  private PublicKey getPubKey(String id) {
+    String sql = "open_witness_pk.sql";
+    Object[] parm = { id };
+
+    try (SqlResult sr = SqlReader.query(sql, db, parm)) {
+      ResultSet rs = sr.getResult();
+      if (rs.next()) {
+        String key = rs.getString(1);
+        return Btc.publicKey(Hex.Names.BASE64, key);
+      }
+      return null;
+    } catch (SQLException e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  private String insertDB(String host, int port, String pubkey, String prefix) {
+    String wnid = Tool.uuid.ds();
+    Object[] parm = { wnid, host, port, pubkey, prefix, ALGORITHM };
+    String sql = "create_witness.sql";
+
+    try (SqlResult sr = SqlReader.query(sql, db, parm)) {
+      return wnid;
+    }
+  }
+
+
+  private boolean updateDB(String id, String host, int port, String prefix) {
+    Object[] parm = { host, port, prefix, id };
+    String sql = "change_witness.sql";
+
+    try (SqlResult sr = SqlReader.query(sql, db, parm)) {
+      return sr.getUpdateCount() > 0;
+    }
+  }
 
 
   @Override
@@ -102,4 +181,11 @@ public class Witness extends XService implements IConstant {
   public String logName() {
     return "bc-witness-service";
   }
+
+
+  @Override
+  public String description() {
+    return "app.module.chain.peer.platform()";
+  }
+
 }

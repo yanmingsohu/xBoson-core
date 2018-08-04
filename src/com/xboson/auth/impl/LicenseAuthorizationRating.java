@@ -26,7 +26,7 @@ import com.xboson.j2ee.container.Striker;
 
 
 /**
- * 检查 License 并决定资源是否能访问
+ * 检查 License 并决定资源是否能访问, 一定不会检查 IAWho 参数.
  */
 public class LicenseAuthorizationRating implements IAWhere {
 
