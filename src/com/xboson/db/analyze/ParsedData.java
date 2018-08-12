@@ -114,9 +114,12 @@ public class ParsedData {
       out.append(un.getClass());
       out.append(" = ");
       out.append(un.getData());
-      out.append("  (");
-      if (pt != null) out.append(pt.getClass().getSimpleName());
-      out.append(")\n");
+      if (pt != null) {
+        out.append("  (");
+        out.append(pt.getClass().getSimpleName());
+        out.append(")");
+      }
+      out.append("\n");
     }
     return out.toString();
   }

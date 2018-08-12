@@ -19,6 +19,10 @@ package com.xboson.test;
 import com.xboson.been.JsonHelper;
 import com.xboson.been.XBosonException;
 import com.xboson.chain.*;
+import com.xboson.chain.witness.ConsensusParser;
+import com.xboson.chain.witness.IConsensusDo;
+import com.xboson.chain.witness.IConsensusUnit;
+import com.xboson.db.analyze.ParseException;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.util.Tool;
 import org.apache.commons.codec.binary.Hex;
@@ -37,12 +41,67 @@ public class TestBC extends Test {
   public void test() throws Exception {
     btc();
     bfs();
+    testConsensus();
     try {
       testPeer();
     } catch (XBosonException.Remote e) {
       warn("这个测试可能引起 RPC 异常, 因为远程对象在 PeerFactory 中注册过");
     }
     TestFace.waitEventLoopEmpty();
+  }
+
+
+  public void testConsensus() throws Exception {
+    sub("Test Consensus");
+    badConsensus("x");
+    badConsensus("one('d')");
+    badConsensus("and 'd')");
+    badConsensus("and('d'");
+    badConsensus("and(('d')");
+
+    goodConsensus(" and(\"d\", or(a, 'b', 'c'))",
+            "da", true);
+    goodConsensus(" and(\"f1\", or('a', 'b', 'c'))",
+            "f1", false);
+    goodConsensus(" and(\"t1\", or('f2', 'f3', 't4'))",
+            "t1f2f3t4", true);
+    goodConsensus(" or(\"f1\", or('f2', 'f3', 'f4'), and('t5', or('f6', 'f7')))",
+            "f1f2f3f4t5f6f7", false);
+    goodConsensus(" or(\"f1\", or('f2', 'f3', 't4'), and('t5', or('f6', 'f7')))",
+            "f1f2f3t4", true);
+  }
+
+
+  /**
+   * 测试表达式
+   * @param exp 共识表达式, 其中 id 的第一个字母, 'f' 返回 false 其他返回 true.
+   * @param result 结果集列表, 将经过的 id 按顺序连接在一起
+   */
+  private void goodConsensus(String exp, String result, boolean r) {
+    msg("check", exp, "=>", result);
+    IConsensusUnit cu = ConsensusParser.parse(exp);
+    StringBuilder ret = new StringBuilder();
+
+    boolean ar = cu.doAction((String id) -> {
+        ret.append(id);
+        return id.charAt(0) != 'f';
+    });
+
+    eq(r, ar, "result");
+    eq(result, ret.toString(), "bad");
+  }
+
+
+  /**
+   * 一定会抛出解析错误的表达式
+   */
+  private void badConsensus(String s) {
+    try {
+      ConsensusParser.parse(s);
+      fail("Cannot get exception:", s);
+    } catch (ParseException e) {
+      success(e.getMessage());
+    }
   }
 
 
