@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.xboson.been.XBosonException;
+import com.xboson.chain.SignNode;
 import com.xboson.util.c0nst.IConstant;
 
 import java.security.MessageDigest;
@@ -85,6 +86,19 @@ public class Hash {
     md.update((byte) ((l>>8 ) & 0xFF));
     md.update((byte) ((l>>16) & 0xFF));
     md.update((byte) ((l>>24) & 0xFF));
+  }
+
+
+  /**
+   * sn 不能为空
+   */
+  public void update(SignNode sn) {
+    SignNode n = sn;
+    do {
+      update(n.id);
+      update(n.sign);
+      n = n.next;
+    } while (n != null);
   }
 
 

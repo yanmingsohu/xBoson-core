@@ -35,11 +35,25 @@ public class Block extends BlockBasic implements ITypes, Serializable {
   public byte[] previousKey;
   /** 块生成时间 */
   public Date create;
-  /** 数据块签名, 可以为空 */
-  public byte[] sign;
+  /** 数据块签名反向链表, 可以为空, 链表头是系统签名, 后面共识者签名顺序反向 */
+  public SignNode sign;
 
 
   public Block() {
+  }
+
+
+  /**
+   * 最后压入的节点是 sign 属性本身
+   */
+  public void pushSign(SignNode node) {
+    if (sign == null) {
+      sign = node;
+    } else {
+      SignNode tmp = sign;
+      sign = node;
+      sign.next = tmp;
+    }
   }
 
 

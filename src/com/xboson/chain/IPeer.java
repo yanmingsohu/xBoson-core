@@ -16,6 +16,7 @@
 
 package com.xboson.chain;
 
+import com.xboson.been.ChainEvent;
 import com.xboson.rpc.IXRemote;
 
 import java.io.Serializable;
@@ -46,11 +47,16 @@ public interface IPeer extends Serializable, IXRemote {
 
 
   /**
+   *
    * 创建新通道
    * @param chainName 链名, 链会自动创建
    * @param channelName 通道名, 如果通道已经存在会抛出异常
+   * @param userid 用户id
+   * @param consensusExp 共识表达式
+   * @throws RemoteException
    */
-  void createChannel(String chainName, String channelName, String userid)
+  void createChannel(String chainName, String channelName,
+                     String userid, String consensusExp)
           throws RemoteException;
 
 
@@ -92,6 +98,12 @@ public interface IPeer extends Serializable, IXRemote {
    * 返回链上的所有通道名字
    */
   String[] allChannelNames(String chain) throws RemoteException;
+
+
+  /**
+   * 返回所有区块链上的配置
+   */
+  ChainEvent[] allChainSetting() throws RemoteException;
 
 
   /**

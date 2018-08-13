@@ -16,6 +16,7 @@
 
 package com.xboson.chain.witness;
 
+import com.xboson.been.Witness;
 import com.xboson.been.XBosonException;
 import okhttp3.*;
 
@@ -27,8 +28,8 @@ import java.io.IOException;
  */
 public class WitnessConnect {
 
-  private static final String SIGN_METHOD = "sign";
-  private static final MediaType BINARY
+  public static final String SIGN_METHOD = "sign";
+  public static final MediaType BINARY
           = MediaType.parse("application/octet-stream");
 
 
@@ -46,9 +47,16 @@ public class WitnessConnect {
    * @param prefix url 前缀, 可以空
    */
   public WitnessConnect(String host, int port, String prefix) {
-    this.host = host;
-    this.port = port;
+    this.host   = host;
+    this.port   = port;
     this.prefix = prefix;
+  }
+
+
+  public WitnessConnect(Witness w) {
+    this.host   = w.host;
+    this.port   = w.port;
+    this.prefix = w.urlPerfix;
   }
 
 
@@ -57,6 +65,15 @@ public class WitnessConnect {
    * @return 返回签名后生成的数据
    */
   public byte[] doSign(byte[] data) throws IOException {
+    RequestBody body = RequestBody.create(BINARY, data);
+    return doSign(body);
+  }
+
+
+  /**
+   * @see com.xboson.util.StreamRequestBody
+   */
+  public byte[] doSign(RequestBody body) throws IOException {
     HttpUrl.Builder url_build = new HttpUrl.Builder();
     url_build.scheme("http");
     url_build.host(host);
@@ -71,12 +88,9 @@ public class WitnessConnect {
     HttpUrl urlobj = url_build.build();
     Request.Builder build = new Request.Builder();
     build.url(urlobj);
-
-    RequestBody body = RequestBody.create(BINARY, data);
     build.post(body);
 
     try (Response resp = openClient().newCall(build.build()).execute()) {
-
       if (resp.code() == 500) {
         throw new XBosonException(resp.body().string());
       }
@@ -84,7 +98,6 @@ public class WitnessConnect {
       if (resp.code() != 200) {
         throw new XBosonException(resp.message());
       }
-
       return resp.body().bytes();
     }
   }

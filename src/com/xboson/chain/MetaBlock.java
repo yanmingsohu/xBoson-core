@@ -16,6 +16,7 @@
 
 package com.xboson.chain;
 
+import com.xboson.util.Hex;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 
@@ -33,13 +34,16 @@ public class MetaBlock implements Serializable, ITypes {
   public String channelName;
   /** 创世区块主键 */
   public byte[] genesisKey;
+  /** 共识表达式 */
+  public String consensusExp;
 
 
   /**
    * 该构造函数用于在程序中创建新的 MetaBlock
    */
-  public MetaBlock(String channelName) {
+  public MetaBlock(String channelName, String consensusExp) {
     this.channelName    = channelName;
+    this.consensusExp   = consensusExp;
     this.lastBlockKey   = new byte[] {};
     this.worldStateHash = new byte[] {};
     this.genesisKey     = new byte[] {};
@@ -51,6 +55,14 @@ public class MetaBlock implements Serializable, ITypes {
    */
   public static BlockBasic createGenesis() {
     return createGenesis(Tool.randomBytes(2048));
+  }
+
+
+  /**
+   * 将 obj 序列化后作为创世区块数据
+   */
+  public static BlockBasic createGenesis(Object obj) {
+    return createGenesis(Hex.toBytesWithoutErr(obj));
   }
 
 

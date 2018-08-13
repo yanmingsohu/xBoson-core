@@ -16,13 +16,20 @@
 
 package com.xboson.chain.witness;
 
+import com.xboson.chain.Block;
+
+import java.security.PublicKey;
+
+
 public class ParmUnit implements IConsensusUnit {
 
   private String id;
+  private PublicKey key;
 
 
-  public ParmUnit(String id) {
-    this.id = id;
+  public ParmUnit(String id, PublicKey pubkey) {
+    this.id  = id;
+    this.key = pubkey;
   }
 
 
@@ -33,7 +40,8 @@ public class ParmUnit implements IConsensusUnit {
 
 
   @Override
-  public boolean doAction(IConsensusDo d) {
-    return d.doAction(id);
+  public boolean doAction(IConsensusDo d, Block b) {
+    return d.doAction(id, key, b);
   }
+
 }

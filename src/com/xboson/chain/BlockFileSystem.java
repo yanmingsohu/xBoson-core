@@ -18,9 +18,9 @@ package com.xboson.chain;
 
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
+import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
-import org.apache.commons.codec.binary.Hex;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
@@ -173,26 +173,38 @@ public class BlockFileSystem implements ITypes {
     /**
      * 如果通道已经存在抛出异常, 签名器将被绑定到区块, 任何对签名器类的修改都会引起异常.
      */
-    public InnerChannel createChannel(String name, ISigner si, String userid) {
-      return createChannel(name, si, null, userid);
+    public InnerChannel createChannel(String name, ISigner si, String userid,
+                                      String consensusExp) {
+      return createChannel(name, si, null, userid, consensusExp);
     }
 
 
     /**
      * 使用完整的创世区块创建通道.
-     * genesis 参数为 null 时 userid 生效
      * [为多节点同步而设计]
      */
-    InnerChannel createChannel(String name, ISigner si, Block genesis, String userid) {
+    InnerChannel createChannel(String name, ISigner si, Block genesis,
+                                      String consensusExp) {
+      return createChannel(name, si, genesis, null, consensusExp);
+    }
+
+
+    /**
+     * 该方法有两种行为:
+     * 1. genesis 参数为 null 时 userid 生效, 创建一个创世区块.
+     * 2. 否则使用创世区块生产通道.
+     */
+    private InnerChannel createChannel(String name, ISigner si, Block genesis,
+                               String userid, String consensusExp) {
       HTreeMap<byte[], Block> map = channelTemplate(name).create();
-      MetaBlock gb = new MetaBlock(name);
+      MetaBlock gb = new MetaBlock(name, consensusExp);
       InnerChannel ch = new InnerChannel(map, gb, this, si);
 
       if (genesis != null) {
         si.verify(genesis);
         gb.genesisKey = ch.pushOriginal(genesis);
       } else {
-        BlockBasic genesis_b = MetaBlock.createGenesis();
+        BlockBasic genesis_b = MetaBlock.createGenesis(si);
         genesis_b.setUserid(userid);
         gb.genesisKey = ch.push(genesis_b);
       }
@@ -315,12 +327,30 @@ public class BlockFileSystem implements ITypes {
     }
 
 
+    /**
+     * 使用 key 查询并返回一个数据块, 查询前该块将被验证
+     * 验证失败将抛出异常.
+     */
     public Block search(byte[] key) {
       Block b = map.get(key);
       if (b != null && (! signer.verify(b)) ) {
-        throw new VerifyException("Key-Hex: "+ Hex.encodeHexString(key));
+        throw new VerifyException("Key-Hex: "+ Hex.lowerHex(key));
       }
       return b;
+    }
+
+
+    public String getConsensusExp() {
+      return gb.consensusExp;
+    }
+
+
+    /**
+     * 验证数据块
+     * @return 成功返回 true
+     */
+    public boolean verify(Block b) {
+      return signer.verify(b);
     }
 
 

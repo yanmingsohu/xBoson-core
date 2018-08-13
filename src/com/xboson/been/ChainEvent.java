@@ -6,43 +6,29 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-8-12 上午10:12
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/witness/IConsensusUnit.java
+// 文件创建日期: 18-8-13 下午1:52
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/ChainEvent.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.chain.witness;
-
-import com.xboson.chain.Block;
-import com.xboson.db.analyze.ParseException;
+package com.xboson.been;
 
 import java.io.Serializable;
 
 
-/**
- * 共识表达式解析后的单元
- */
-public interface IConsensusUnit extends Serializable {
+public class ChainEvent implements Serializable {
+
+  public String chain;
+  public String channel;
+  public String exp;
 
 
-  /**
-   * 添加子表达式
-   */
-  void addAction(IConsensusUnit subAct);
-
-
-  /**
-   * 执行当前单元, 如果返回 false 或抛出异常说明执行失败
-   */
-  boolean doAction(IConsensusDo d, Block b) throws ParseException;
-
-
-  /**
-   * 检查当前单元是否有效, 无效的单元配置将抛出异常, 默认什么都不做
-   */
-  default void check() throws ParseException {}
-
+  public ChainEvent(String chain, String channel, String exp) {
+    this.chain    = chain;
+    this.channel  = channel;
+    this.exp      = exp;
+  }
 }

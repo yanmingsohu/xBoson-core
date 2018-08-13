@@ -16,6 +16,7 @@
 
 package com.xboson.chain;
 
+import com.xboson.been.ChainEvent;
 import com.xboson.been.JsonHelper;
 import com.xboson.event.EventLoop;
 import com.xboson.event.GLHandle;
@@ -72,10 +73,11 @@ public class Peer extends AbsPeer {
   }
 
 
-  public void createChannel(String chainName, String channelName, String uid)
+  public void createChannel(String chainName, String channelName,
+                            String uid, String exp)
           throws RemoteException {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      getOrder().createChannel(chainName, channelName, uid);
+      getOrder().createChannel(chainName, channelName, uid, exp);
     }
   }
 
@@ -83,17 +85,12 @@ public class Peer extends AbsPeer {
   private void syncAllChannels() {
     try {
       log.info("start synchronized all chain/channel");
-      String[] chains = getOrder().allChainNames();
 
-      for (String chain : chains) {
-        String[] channels = getOrder().allChannelNames(chain);
-
-        for (String channel : channels) {
-          if (! channelExists(chain, channel)) {
-            syncChannel(chain, channel);
-          }
-          syncBlock(chain, channel);
+      for (ChainEvent ce : getOrder().allChainSetting()) {
+        if (! channelExists(ce.chain, ce.channel)) {
+          syncChannel(ce.chain, ce.channel, ce.exp);
         }
+        syncBlock(ce.chain, ce.channel);
       }
     } catch(Exception e) {
       log.error("synchronized all channels", e);
@@ -113,11 +110,10 @@ public class Peer extends AbsPeer {
 
       BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
       BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
-      ISigner si = getSigner(chain, channel);
 
       while (ch.search(lkey) == null) {
         Block b = getOrder().search(chain, channel, lkey);
-        if (b == null && !si.verify(b)) {
+        if (b == null && !ch.verify(b)) {
           log.error("synchronized block", JsonHelper.toJSON(b));
           break;
         }
@@ -142,13 +138,13 @@ public class Peer extends AbsPeer {
   }
 
 
-  private void syncChannel(String chain, String channel) {
+  private void syncChannel(String chain, String channel, String exp) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
       log.debug("synchronized channel setting", chain, "/", channel);
       byte[] gkey = getOrder().genesisKey(chain, channel);
       Block gb = getOrder().search(chain, channel, gkey);
 
-      ISigner si = getSigner(chain, channel);
+      ISigner si = getSigner(chain, channel, exp);
       if (! si.verify(gb)) {
         log.error("synchronized genesis block verify fail",
                 JsonHelper.toJSON(gb));
@@ -156,7 +152,7 @@ public class Peer extends AbsPeer {
       }
 
       BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
-      ca.createChannel(channel, getSigner(chain, channel), gb, null);
+      ca.createChannel(channel, si, gb, exp);
       ca.commit();
     } catch (RemoteException e) {
       log.error("synchronized channel", e);
@@ -176,16 +172,15 @@ public class Peer extends AbsPeer {
 
     @Override
     public void objectChanged(NamingEvent e) {
-      String chain   = (String) e.getChangeInfo();
-      String channel = (String) e.getNewBinding().getObject();
+      ChainEvent ce = (ChainEvent) e.getNewBinding().getObject();
 
       switch (e.getType()) {
         case NEW_CHANNEL:
-          syncChannel(chain, channel);
+          syncChannel(ce.chain, ce.channel, ce.exp);
           break;
 
         case NEW_BLOCK:
-          syncBlock(chain, channel);
+          syncBlock(ce.chain, ce.channel);
           break;
 
         default:

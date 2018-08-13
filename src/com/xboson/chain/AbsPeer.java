@@ -16,6 +16,7 @@
 
 package com.xboson.chain;
 
+import com.xboson.been.ChainEvent;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -24,6 +25,8 @@ import com.xboson.util.LocalLock;
 
 import java.io.ObjectInputStream;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -97,6 +100,24 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
   }
 
 
+  public ChainEvent[] allChainSetting() {
+    try (LocalLock _ = new LocalLock(lock.readLock())) {
+      List<ChainEvent> ret = new ArrayList<>();
+      BlockFileSystem bfs = BlockFileSystem.me();
+
+      for (String chain: bfs.allChainNames()) {
+        BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
+
+        for (String channel : ca.allChannelNames()) {
+          BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
+          ret.add( new ChainEvent(chain, channel, ch.getConsensusExp()) );
+        }
+      }
+      return ret.toArray(new ChainEvent[ret.size()]);
+    }
+  }
+
+
   @Override
   public boolean channelExists(String chain, String channel) {
     try (LocalLock _ = new LocalLock(lock.readLock())) {
@@ -142,17 +163,38 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
   }
 
 
-  protected void createChannelLocal(String chainName, String channelName, String userid) {
+  protected void createChannelLocal(String chainName, String channelName,
+                                    String userid, String exp) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
       BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chainName);
-      ca.createChannel(channelName, getSigner(chainName, channelName), userid);
+      ca.createChannel(channelName,
+              getSigner(chainName, channelName, exp), userid, exp);
       ca.commit();
     }
   }
 
 
-  protected ISigner getSigner(String chainName, String channelName) {
-    return sp.getSigner(chainName, channelName);
+  /**
+   * 验证块的有效性, 成功返回 true
+   */
+  protected boolean verify(String chain, String channel, Block b) {
+    try (LocalLock _ = new LocalLock(lock.readLock())) {
+      BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
+      BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
+      return ch.verify(b);
+    }
+  }
+
+
+  /**
+   * 使用注册的签名提供商创建一个签名器
+   * @param chain 链
+   * @param channel 通道
+   * @param exp 共识表达式
+   * @return
+   */
+  protected ISigner getSigner(String chain, String channel, String exp) {
+    return sp.getSigner(chain, channel, exp);
   }
 
 
@@ -171,7 +213,7 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
 
   public static class DefaultSignerProvider implements ISignerProvider {
     @Override
-    public ISigner getSigner(String chainName, String channelName) {
+    public ISigner getSigner(String chain, String channel, String exp) {
       return new NoneSigner();
     }
   }

@@ -6,43 +6,33 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-8-12 上午10:12
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/witness/IConsensusUnit.java
+// 文件创建日期: 18-8-13 下午2:51
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/been/Witness.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.chain.witness;
+package com.xboson.been;
 
-import com.xboson.chain.Block;
-import com.xboson.db.analyze.ParseException;
+public class Witness {
 
-import java.io.Serializable;
-
-
-/**
- * 共识表达式解析后的单元
- */
-public interface IConsensusUnit extends Serializable {
+  public final String id;
+  public final String publicKeyStr;
+  public final String urlPerfix;
+  public final String host;
+  public final String algorithm;
+  public final int port;
 
 
-  /**
-   * 添加子表达式
-   */
-  void addAction(IConsensusUnit subAct);
-
-
-  /**
-   * 执行当前单元, 如果返回 false 或抛出异常说明执行失败
-   */
-  boolean doAction(IConsensusDo d, Block b) throws ParseException;
-
-
-  /**
-   * 检查当前单元是否有效, 无效的单元配置将抛出异常, 默认什么都不做
-   */
-  default void check() throws ParseException {}
-
+  public Witness(String id, String publicKeyStr, String prefix, String host,
+                 String algorithm, int port) {
+    this.id           = id;
+    this.publicKeyStr = publicKeyStr;
+    this.urlPerfix    = prefix;
+    this.host         = host;
+    this.algorithm    = algorithm;
+    this.port         = port;
+  }
 }

@@ -34,13 +34,20 @@ import java.util.Iterator;
  */
 public class ConsensusParser {
 
+  private IConsensusPubKeyProvider keys;
+
+
+  public ConsensusParser(IConsensusPubKeyProvider keys) {
+    this.keys = keys;
+  }
+
 
   /**
    * 解析共识表达式,
    * 如果是一个空字符, 会返回一个什么都不做的执行单元
    * @throws ParseException
    */
-  public static IConsensusUnit parse(String s) throws ParseException {
+  public IConsensusUnit parse(String s) throws ParseException {
     ParsedData pd = SqlParser.parse(s);
     Iterator<IUnit> it = pd.getUnits().iterator();
     // System.out.println(pd);
@@ -69,7 +76,7 @@ public class ConsensusParser {
   }
 
 
-  private static IConsensusUnit parseAction(Iterator<IUnit> it, IUnit<String> u) {
+  private IConsensusUnit parseAction(Iterator<IUnit> it, IUnit<String> u) {
     IConsensusUnit cunit = toConsensusUnit(u);
     boolean isbegin = false;
     boolean hasend = false;
@@ -112,7 +119,7 @@ public class ConsensusParser {
   }
 
 
-  private static IConsensusUnit toConsensusUnit(IUnit<String> u) {
+  private IConsensusUnit toConsensusUnit(IUnit<String> u) {
     String name = u.getData();
 
     switch (name) {
@@ -128,14 +135,14 @@ public class ConsensusParser {
   }
 
 
-  private static ParmUnit parseParm(IUnit<String> u) {
-    String p = u.getData();
-    char ch0 = p.charAt(0);
-    char chL = p.charAt(p.length()-1);
+  private ParmUnit parseParm(IUnit<String> u) {
+    String id = u.getData();
+    char ch0 = id.charAt(0);
+    char chL = id.charAt(id.length()-1);
 
     if ((ch0 == '"' || ch0 == '\'') && ch0 == chL) {
-      p = p.substring(1, p.length()-1);
+      id = id.substring(1, id.length()-1);
     }
-    return new ParmUnit(p);
+    return new ParmUnit(id, keys.getKey(id));
   }
 }

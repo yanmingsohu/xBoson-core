@@ -6,43 +6,43 @@
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-8-12 上午10:12
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/witness/IConsensusUnit.java
+// 文件创建日期: 18-8-13 下午4:28
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/SignNode.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.chain.witness;
-
-import com.xboson.chain.Block;
-import com.xboson.db.analyze.ParseException;
+package com.xboson.chain;
 
 import java.io.Serializable;
 
 
 /**
- * 共识表达式解析后的单元
+ * 签名链表, 使用 Map 或 List 在持久化时占用内存,
+ * 随着 java 版本的升高 Map/List 可能二进制不兼容.
  */
-public interface IConsensusUnit extends Serializable {
+public class SignNode implements Serializable {
+
+  /** 内部签名使用块类型作为 id, 共识者签名使用共识者 id */
+  public final String id;
+
+  /** 签名, 签名本身不包含其他签名 */
+  public final byte[] sign;
+
+  /** 如果没有下一节点则为 null */
+  public SignNode next;
 
 
-  /**
-   * 添加子表达式
-   */
-  void addAction(IConsensusUnit subAct);
+  public SignNode(byte[] sign, String id) {
+    this.sign = sign;
+    this.id = id;
+  }
 
 
-  /**
-   * 执行当前单元, 如果返回 false 或抛出异常说明执行失败
-   */
-  boolean doAction(IConsensusDo d, Block b) throws ParseException;
-
-
-  /**
-   * 检查当前单元是否有效, 无效的单元配置将抛出异常, 默认什么都不做
-   */
-  default void check() throws ParseException {}
+  public SignNode(byte[] sign, int id) {
+    this(sign, ""+id);
+  }
 
 }

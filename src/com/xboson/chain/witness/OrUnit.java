@@ -17,6 +17,7 @@
 package com.xboson.chain.witness;
 
 
+import com.xboson.chain.Block;
 import com.xboson.db.analyze.ParseException;
 
 
@@ -39,12 +40,12 @@ public class OrUnit implements IConsensusUnit {
 
 
   @Override
-  public boolean doAction(IConsensusDo d) {
+  public boolean doAction(IConsensusDo d, Block b) {
     TwiceUnit next = root;
 
     while (next.current != null) {
       try {
-        if (next.current.doAction(d)) {
+        if (next.current.doAction(d, b)) {
           return true;
         } else {
           next = next.next;
@@ -67,4 +68,5 @@ public class OrUnit implements IConsensusUnit {
       throw new ParseException("No parameter");
     }
   }
+
 }

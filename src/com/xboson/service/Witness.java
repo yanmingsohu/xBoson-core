@@ -26,6 +26,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.chain.Btc;
 import com.xboson.chain.witness.SignerProxy;
 import com.xboson.chain.witness.WitnessConnect;
+import com.xboson.chain.witness.WitnessFactory;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
@@ -46,7 +47,7 @@ import java.sql.SQLException;
 public class Witness extends XService implements IConstant, IAResource {
 
   private static final String ERRMSG         = "Cannot found service";
-  private static final String ALGORITHM      = SignerProxy.SIGNER_ALGORITHM;
+  private static final String ALGORITHM      = WitnessFactory.SIGNER_ALGORITHM;
   private static final int GEN_RAND_DATA_LEN = 256;
 
   private final ConnectConfig db;
@@ -106,6 +107,7 @@ public class Witness extends XService implements IConstant, IAResource {
     SignerProxy sp = new SignerProxy(pk, wc);
     if (verifyRemote(data, sp)) {
       if (updateDB(id, host, port, prefix)) {
+        WitnessFactory.me().update(id);
         data.xres.responseMsg("ok", 0);
       } else {
         data.xres.responseMsg("Cannot found witness: "+ id, 11);

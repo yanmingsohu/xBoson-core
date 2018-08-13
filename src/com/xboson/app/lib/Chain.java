@@ -59,13 +59,16 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public void create(String chain, String channel) throws Exception {
+  public void create(String chain, String channel, String consensusExp)
+          throws Exception
+  {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     IPeer peer = PeerFactory.me().peer();
     if (peer.channelExists(chain, channel)) {
       throw new XBosonException("channel/chain exists: "+ channel +'/'+ chain);
     }
-    peer.createChannel(chain, channel, AppContext.me().who().identification());
+    peer.createChannel(chain, channel,
+            AppContext.me().who().identification(), consensusExp);
   }
 
 
@@ -142,13 +145,12 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
       ScriptObjectMirror ret = createJSObject();
       ret.put("key",          k);
       ret.put("hash",         new Bytes(b.hash));
-      ret.put("previousHash", new Bytes(b.previousHash));
       ret.put("previousKey",  new Bytes(b.previousKey));
-      ret.put("sign",         new Bytes(b.sign));
-      ret.put("data",         new String(b.getData()));
+      ret.put("previousHash", new Bytes(b.previousHash));
       ret.put("create",       b.create);
       ret.put("userid",       b.getUserId());
       ret.put("type",         b.type);
+      ret.put("sign",         wrap(b.sign));
 
       switch (b.type) {
         case ITypes.CHAINCODE_CONTENT:
@@ -217,5 +219,15 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
       publicKey   = b.publicKeyStr();
       privateKey  = b.privateKeyStr();
     }
+  }
+
+
+  private Object wrap(SignNode root) {
+    ScriptObjectMirror ret = createJSObject();
+    while (root != null) {
+      ret.put(root.id, new Bytes(root.sign));
+      root = root.next;
+    }
+    return ret;
   }
 }

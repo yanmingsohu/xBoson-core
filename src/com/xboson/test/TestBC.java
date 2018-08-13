@@ -26,11 +26,16 @@ import com.xboson.db.analyze.ParseException;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.util.Tool;
 import org.apache.commons.codec.binary.Hex;
+import org.mapdb.DBException;
 
+import java.io.InvalidClassException;
+import java.security.PublicKey;
 import java.util.Arrays;
 
 
 public class TestBC extends Test {
+
+  private ConsensusParser cp;
 
   public static void main(String[] av) {
     CLUSTER_NODE_ID = 0;
@@ -39,13 +44,13 @@ public class TestBC extends Test {
 
 
   public void test() throws Exception {
-    btc();
-    bfs();
-    testConsensus();
     try {
+      btc();
+      bfs();
+      testConsensus();
       testPeer();
-    } catch (XBosonException.Remote e) {
-      warn("这个测试可能引起 RPC 异常, 因为远程对象在 PeerFactory 中注册过");
+    } catch (DBException.SerializationError e) {
+      fail("需要删除区块链文件, 类文件版本已经更新", e);
     }
     TestFace.waitEventLoopEmpty();
   }
@@ -53,6 +58,7 @@ public class TestBC extends Test {
 
   public void testConsensus() throws Exception {
     sub("Test Consensus");
+    cp = new ConsensusParser((String wid) -> null);
     badConsensus("x");
     badConsensus("one('d')");
     badConsensus("and 'd')");
@@ -69,6 +75,12 @@ public class TestBC extends Test {
             "f1f2f3f4t5f6f7", false);
     goodConsensus(" or(\"f1\", or('f2', 'f3', 't4'), and('t5', or('f6', 'f7')))",
             "f1f2f3t4", true);
+
+
+//    String exp = " or(\"f1\", or('f2', 'f3', 't4'), and('t5', or('f6', 'f7')))";
+//    IConsensusUnit cu = cp.parse(exp);
+//    String js = Tool.getAdapter(IConsensusUnit.class).toJson(cu);
+//    msg(js);
   }
 
 
@@ -79,13 +91,13 @@ public class TestBC extends Test {
    */
   private void goodConsensus(String exp, String result, boolean r) {
     msg("check", exp, "=>", result);
-    IConsensusUnit cu = ConsensusParser.parse(exp);
+    IConsensusUnit cu = cp.parse(exp);
     StringBuilder ret = new StringBuilder();
 
-    boolean ar = cu.doAction((String id) -> {
+    boolean ar = cu.doAction((String id, PublicKey key, Block b) -> {
         ret.append(id);
         return id.charAt(0) != 'f';
-    });
+    }, null);
 
     eq(r, ar, "result");
     eq(result, ret.toString(), "bad");
@@ -97,7 +109,7 @@ public class TestBC extends Test {
    */
   private void badConsensus(String s) {
     try {
-      ConsensusParser.parse(s);
+      cp.parse(s);
       fail("Cannot get exception:", s);
     } catch (ParseException e) {
       success(e.getMessage());
@@ -107,32 +119,37 @@ public class TestBC extends Test {
 
   public void testPeer() throws Exception {
     sub("Test Peer / Order");
-    final String chain0 = "t2";
-    final String ch0 = "c0";
-
-    String nodeid = ClusterManager.me().localNodeID();
-    Order o = new Order();
-    Peer p  = new Peer(nodeid);
 
     try {
-      p.createChannel(chain0, ch0, "admin-pl");
-    } catch (Exception e) {
-      msg(e.getMessage());
-    }
+      final String chain0 = "t2";
+      final String ch0 = "c0";
 
-    BlockBasic b0 = new BlockBasic(Tool.randomBytes(10),
-            "u1", "api", "0");
-    byte[] k0 = p.sendBlock(chain0, ch0, b0);
+      String nodeid = ClusterManager.me().localNodeID();
+      Order o = new Order();
+      Peer p  = new Peer(nodeid);
 
-    BlockBasic bc0 = o.search(chain0, ch0, k0);
-    ok(Arrays.equals(bc0.getData(), b0.getData()), "data");
-
-    String[] chains = o.allChainNames();
-    for (String chain : chains) {
-      String[] channels = o.allChannelNames(chain);
-      for (String channel : channels) {
-        msg("Channel:", channel, ", Chain:", chain);
+      try {
+        p.createChannel(chain0, ch0, "admin-pl", null);
+      } catch (Exception e) {
+        msg(e.getMessage());
       }
+
+      BlockBasic b0 = new BlockBasic(Tool.randomBytes(10),
+              "u1", "api", "0");
+      byte[] k0 = p.sendBlock(chain0, ch0, b0);
+
+      BlockBasic bc0 = o.search(chain0, ch0, k0);
+      ok(Arrays.equals(bc0.getData(), b0.getData()), "data");
+
+      String[] chains = o.allChainNames();
+      for (String chain : chains) {
+        String[] channels = o.allChannelNames(chain);
+        for (String channel : channels) {
+          msg("Channel:", channel, ", Chain:", chain);
+        }
+      }
+    } catch (XBosonException.Remote e) {
+      warn("这个测试可能引起 RPC 异常, 因为远程对象在 PeerFactory 中注册过", e);
     }
   }
 
@@ -174,7 +191,7 @@ public class TestBC extends Test {
     BlockFileSystem.InnerChain chain = bc.getChain("test");
 
     try {
-      chain.createChannel("ch0", signer, "user");
+      chain.createChannel("ch0", signer, "user", null);
     } catch (Exception e) {
       msg(e.getMessage());
     }

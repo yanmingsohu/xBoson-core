@@ -16,20 +16,19 @@
 
 package com.xboson.chain.witness;
 
-import com.xboson.chain.Block;
-import com.xboson.chain.ISigner;
-import com.xboson.chain.VerifyException;
+import com.xboson.been.XBosonException;
+import com.xboson.util.Pipe;
+import com.xboson.util.StreamRequestBody;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.*;
 
 
 /**
- * 远程签名者代理
+ * 远程签名者代理, 与一个远程见证者连接
  */
-public class SignerProxy implements ISigner {
-
-  public static final String SIGNER_ALGORITHM = "SHA256withECDSA";
+public class SignerProxy {
 
   private WitnessConnect wit;
   private PublicKey pk;
@@ -38,18 +37,6 @@ public class SignerProxy implements ISigner {
   public SignerProxy(PublicKey pk, WitnessConnect wit) {
     this.pk  = pk;
     this.wit = wit;
-  }
-
-
-  @Override
-  public void sign(Block block) {
-    throw new UnsupportedOperationException();
-  }
-
-
-  @Override
-  public boolean verify(Block block) {
-    throw new UnsupportedOperationException();
   }
 
 
@@ -65,20 +52,25 @@ public class SignerProxy implements ISigner {
   }
 
 
+  public byte[] sign(InputStream i) throws IOException {
+    return wit.doSign(new StreamRequestBody(i, WitnessConnect.BINARY));
+  }
+
+
+  public byte[] sign(Pipe.Context pc) {
+    try {
+      Pipe p = new Pipe(pc);
+      return sign(p.openInputStream());
+    } catch (IOException io) {
+      throw new XBosonException.IOError(io);
+    }
+  }
+
+
   /**
-   * 使用公钥验证签名正确性
-   * @param data 原始数据
-   * @param sign 数据的签名
-   * @return 验证正确返回 true, 任何加密算法错误都会抛出异常.
+   * @see WitnessFactory#verify(PublicKey, byte[], byte[])
    */
   public boolean verify(byte[] data, byte[] sign) {
-    try {
-      Signature si = Signature.getInstance(SIGNER_ALGORITHM);
-      si.initVerify(pk);
-      si.update(data);
-      return si.verify(sign);
-    } catch (Exception e) {
-      throw new VerifyException(e.getMessage());
-    }
+    return WitnessFactory.verify(pk, data, sign);
   }
 }

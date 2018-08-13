@@ -22,6 +22,7 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
@@ -255,24 +256,6 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   }
 
 
-  public static byte[] toBytes(Object obj) throws IOException {
-    ByteArrayOutputStream obyte = new ByteArrayOutputStream();
-    ObjectOutputStream oobj = new ObjectOutputStream(obyte);
-    oobj.writeObject(obj);
-    oobj.flush();
-    return obyte.toByteArray();
-  }
-
-
-  public static Object fromBytes(byte[] bin)
-          throws IOException, ClassNotFoundException
-  {
-    ByteArrayInputStream ibyte = new ByteArrayInputStream(bin);
-    ObjectInputStream iobj = new ObjectInputStream(ibyte);
-    return iobj.readObject();
-  }
-
-
   /**
    * Java 序列化
    */
@@ -285,7 +268,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
         if (check_timeout(client, data, bid))
           return;
 
-        byte[] out = toBytes(data);
+        byte[] out = Hex.toBytes(data);
         client.hset(KEY_BYTE, bid, out);
       } catch(IOException e) {
         log.debug("BIN.sleep", e);
@@ -303,7 +286,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
         IBinData obj = null;
         try {
-          obj = (IBinData) fromBytes(data);
+          obj = (IBinData) Hex.fromBytes(data);
         } catch(InvalidClassException ice) {
           log.debug("BIN.wake", ice);
           //

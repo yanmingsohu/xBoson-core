@@ -21,6 +21,7 @@ import com.xboson.chain.Base58;
 import com.xboson.event.Names;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.*;
 import java.util.Base64;
 
 
@@ -33,6 +34,17 @@ public class Hex {
 
   private static final char[] hexUpCode = "0123456789ABCDEF".toCharArray();
   private static final char[] hexLoCode = "0123456789abcdef".toCharArray();
+
+
+  /**
+   * 可使用的二进制编码集名称
+   */
+  public interface Names {
+    String HEX    = "hex";
+    String BASE58 = "base58";
+    String BASE64 = "base64";
+    String BASE64URL = "base64url";
+  }
 
 
   public static String lowerHex(byte[] b) {
@@ -113,12 +125,34 @@ public class Hex {
 
 
   /**
-   * 可使用的二进制编码集名称
+   * java 对象转字节码
    */
-  public interface Names {
-    String HEX    = "hex";
-    String BASE58 = "base58";
-    String BASE64 = "base64";
-    String BASE64URL = "base64url";
+  public static byte[] toBytes(Object obj) throws IOException {
+    ByteArrayOutputStream obyte = new ByteArrayOutputStream();
+    ObjectOutputStream oobj = new ObjectOutputStream(obyte);
+    oobj.writeObject(obj);
+    oobj.flush();
+    return obyte.toByteArray();
+  }
+
+
+  /**
+   * 字节码转 java 对象
+   */
+  public static Object fromBytes(byte[] bin)
+          throws IOException, ClassNotFoundException
+  {
+    ByteArrayInputStream ibyte = new ByteArrayInputStream(bin);
+    ObjectInputStream iobj = new ObjectInputStream(ibyte);
+    return iobj.readObject();
+  }
+
+
+  public static byte[] toBytesWithoutErr(Object obj) {
+    try {
+      return toBytes(obj);
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 }

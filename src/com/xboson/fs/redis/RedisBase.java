@@ -20,6 +20,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.Hex;
 import com.xboson.util.c0nst.IConstant;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ScanParams;
@@ -120,7 +121,7 @@ public class RedisBase implements IConstant {
    */
   public void saveStruct(RedisFileAttr struct) {
     try (JedisSession js = openSession()) {
-      byte[] out = RedisMesmerizer.toBytes(struct);
+      byte[] out = Hex.toBytes(struct);
       js.client.hset(structNameBytes, struct.path.getBytes(CHARSET), out);
 
     } catch (IOException e) {
@@ -153,7 +154,7 @@ public class RedisBase implements IConstant {
       if (bin == null || bin.length == 0)
         return null;
 
-      return (RedisFileAttr) RedisMesmerizer.fromBytes(bin);
+      return (RedisFileAttr) Hex.fromBytes(bin);
 
     } catch (ObjectStreamException e) {
       if (! XBosonException.isChecked(e)) {

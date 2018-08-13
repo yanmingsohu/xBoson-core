@@ -16,6 +16,7 @@
 
 package com.xboson.chain.witness;
 
+import com.xboson.chain.Block;
 import com.xboson.db.analyze.ParseException;
 
 
@@ -27,7 +28,8 @@ public class DoNothingUnit implements IConsensusUnit {
 
 
   @Override
-  public boolean doAction(IConsensusDo d) throws ParseException {
+  public boolean doAction(IConsensusDo d, Block b) throws ParseException {
     return true;
   }
+
 }

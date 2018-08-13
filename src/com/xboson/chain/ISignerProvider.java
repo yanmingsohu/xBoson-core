@@ -19,8 +19,12 @@ package com.xboson.chain;
 public interface ISignerProvider {
 
   /**
-   * 返回通道的签名器
+   * 返回通道的签名器, 该方法会创建一个全新的签名器
+   * @see com.xboson.chain.witness.ConsensusParser 共识表达式解析
+   * @param chainName 链名
+   * @param channelName 通道名
+   * @param consensusExp 共识表达式, 可以空
    */
-  ISigner getSigner(String chainName, String channelName);
+  ISigner getSigner(String chainName, String channelName, String consensusExp);
 
 }

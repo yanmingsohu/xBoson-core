@@ -17,10 +17,16 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.Config;
+import com.xboson.been.Witness;
 import com.xboson.been.XBosonException;
 import com.xboson.chain.*;
+import com.xboson.chain.witness.ConsensusParser;
+import com.xboson.chain.witness.IConsensusPubKeyProvider;
+import com.xboson.chain.witness.IConsensusUnit;
+import com.xboson.chain.witness.WitnessFactory;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
@@ -28,28 +34,40 @@ import com.xboson.util.c0nst.IConstant;
 import java.nio.charset.Charset;
 import java.security.*;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 
 /**
  * 区块链签名提供商, 使用平台数据库做签名架构.
  * @see com.xboson.chain.Btc 公钥/私钥生成算法
+ * @see IConstant#CHAIN_SIGNER_PROVIDER 全局区块签名提供商配置
  */
-public class ChainSignerProvider implements ISignerProvider {
+public class ChainSignerProvider implements
+        ISignerProvider, IConsensusPubKeyProvider {
 
   private static final String SIGNER_ALGORITHM = "SHA256withECDSA";
   private static final String SQL_FILE = "open_chain_key";
   private static final Charset CS = IConstant.CHARSET;
 
+  private final ConsensusParser cp;
+
+
+  public ChainSignerProvider() {
+    this.cp = new ConsensusParser(this);
+  }
+
 
   @Override
-  public ISigner getSigner(String chainName, String channelName) {
+  public ISigner getSigner(String chainName, String channelName, String exp) {
     if (Tool.isNulStr(chainName)) throw new XBosonException.BadParameter(
               "String chainName", "is null");
     if (Tool.isNulStr(channelName)) throw new XBosonException.BadParameter(
               "String channelName", "is null");
 
     KeyPair[] kp = openChainKeys(chainName, channelName);
-    return new Signer(chainName, channelName, kp);
+    return new Signer(chainName, channelName, kp, cp.parse(exp));
   }
 
 
@@ -76,29 +94,40 @@ public class ChainSignerProvider implements ISignerProvider {
   }
 
 
+  @Override
+  public PublicKey getKey(String witness_id) {
+    Witness wit = WitnessFactory.me().get(witness_id);
+    return Btc.publicKey(Hex.Names.BASE64, wit.publicKeyStr);
+  }
+
+
   public static class Signer implements ISigner {
+    private IConsensusUnit consensus;
     private KeyPair[] keys;
     private String signer_algorithm;
     private String chain;
     private String channel;
 
 
-    private Signer(String chainName, String channelName, KeyPair[] keys) {
+    private Signer(String chainName, String channelName,
+                   KeyPair[] keys, IConsensusUnit consensus) {
       this.signer_algorithm = SIGNER_ALGORITHM;
-      this.chain    = chainName;
-      this.channel  = channelName;
-      this.keys     = keys;
+      this.chain            = chainName;
+      this.channel          = channelName;
+      this.keys             = keys;
+      this.consensus        = consensus;
     }
 
 
     @Override
     public void sign(Block block) {
       try {
+        consensus.doAction(WitnessFactory.me().openConsensusSign(), block);
         Signature si = Signature.getInstance(signer_algorithm);
         KeyPair pair = getKeyPair(block.type);
         si.initSign(pair.getPrivate());
         doFields(block, si);
-        block.sign = si.sign();
+        block.pushSign(new SignNode(si.sign(), block.type));
       } catch (Exception e) {
         throw new XBosonException(e);
       }
@@ -112,7 +141,10 @@ public class ChainSignerProvider implements ISignerProvider {
         KeyPair pair = getKeyPair(block.type);
         si.initVerify(pair.getPublic());
         doFields(block, si);
-        return si.verify(block.sign);
+        if (si.verify(block.sign.sign)) {
+          return WitnessFactory.me().consensusLocalVerify(block);
+        }
+        return false;
       } catch (Exception e) {
         throw new XBosonException(e);
       }
@@ -136,35 +168,7 @@ public class ChainSignerProvider implements ISignerProvider {
 
 
     private void doFields(Block block, Signature si) throws SignatureException {
-      si.update(block.key);
-      si.update(block.getData());
-      si.update(block.getUserId().getBytes(CS));
-      si.update(Long.toString(block.create.getTime()).getBytes(CS));
-
-      switch (block.type) {
-        case ITypes.CHAINCODE_CONTENT:
-          si.update(block.getApiPath().getBytes(CS));
-          si.update(block.getApiHash().getBytes(CS));
-          break;
-
-        case ITypes.GENESIS:
-          for (int i=1; i<keys.length; ++i) {
-            KeyPair kp = keys[i];
-            //
-            // 创世区块私钥离线后无法验证
-            //
-            if (i != ITypes.GENESIS) {
-              si.update(kp.getPrivate().getEncoded());
-            }
-            si.update(kp.getPublic().getEncoded());
-          }
-          break;
-
-        case ITypes.NORM_DATA:
-        case ITypes.ENCRYPTION_DATA:
-          si.update(block.getChaincodeKey());
-          break;
-      }
+      WitnessFactory.doFields(keys, block, si);
     }
   }
 }

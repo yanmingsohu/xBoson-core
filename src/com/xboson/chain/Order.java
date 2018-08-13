@@ -16,6 +16,7 @@
 
 package com.xboson.chain;
 
+import com.xboson.been.ChainEvent;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.rpc.IXRemote;
@@ -43,18 +44,21 @@ public class Order extends AbsPeer implements IXRemote, IPeer {
   }
 
 
-  public void createChannel(String chainName, String channelName, String uid) {
-    createChannelLocal(chainName, channelName, uid);
-    sendNewChannel(chainName, channelName);
+  public void createChannel(String chainName, String channelName,
+                            String uid, String exp) {
+    createChannelLocal(chainName, channelName, uid, exp);
+    sendNewChannel(chainName, channelName, exp);
   }
 
 
-  private void sendNewChannel(String chain, String channel) {
-    GlobalEventBus.me().emit(Names.chain_sync, channel, NEW_CHANNEL, chain);
+  private void sendNewChannel(String chain, String channel, String exp) {
+    ChainEvent e = new ChainEvent(chain, channel, exp);
+    GlobalEventBus.me().emit(Names.chain_sync, e, NEW_CHANNEL);
   }
 
 
   private void sendNewBlock(String chain, String channel) {
-    GlobalEventBus.me().emit(Names.chain_sync, channel, NEW_BLOCK, chain);
+    ChainEvent e = new ChainEvent(chain, channel, null);
+    GlobalEventBus.me().emit(Names.chain_sync, e, NEW_BLOCK);
   }
 }

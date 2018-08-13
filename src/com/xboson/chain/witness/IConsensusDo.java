@@ -16,15 +16,20 @@
 
 package com.xboson.chain.witness;
 
+import com.xboson.chain.Block;
+
+import java.security.PublicKey;
+
+
 /**
  * 共识表达式的执行体
  */
 public interface IConsensusDo {
 
   /**
-   * 在 id 指定的见证者上执行共识.
+   * 在 id 指定的见证者上对数据块执行共识.
    */
-  boolean doAction(String id);
+  boolean doAction(String witnessId, PublicKey key, Block b);
 
 
   /**
