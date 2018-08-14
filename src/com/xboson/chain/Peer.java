@@ -30,6 +30,7 @@ import com.xboson.util.LocalLock;
 
 import javax.naming.event.NamingEvent;
 import java.rmi.RemoteException;
+import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -73,11 +74,12 @@ public class Peer extends AbsPeer {
   }
 
 
+  @Override
   public void createChannel(String chainName, String channelName,
-                            String uid, String exp)
+                            String uid, String exp, KeyPair[] kp)
           throws RemoteException {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      getOrder().createChannel(chainName, channelName, uid, exp);
+      getOrder().createChannel(chainName, channelName, uid, exp, kp);
     }
   }
 
@@ -88,9 +90,9 @@ public class Peer extends AbsPeer {
 
       for (ChainEvent ce : getOrder().allChainSetting()) {
         if (! channelExists(ce.chain, ce.channel)) {
-          syncChannel(ce.chain, ce.channel, ce.exp);
+          syncChannel(ce);
         }
-        syncBlock(ce.chain, ce.channel);
+        syncBlock(ce);
       }
     } catch(Exception e) {
       log.error("synchronized all channels", e);
@@ -101,18 +103,18 @@ public class Peer extends AbsPeer {
   /**
    * 同步: 拉取主节点的链到本地链
    */
-  private void syncBlock(String chain, String channel) {
+  private void syncBlock(ChainEvent e) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      log.debug("synchronized block", chain, "/", channel);
+      log.debug("synchronized block", e.chain, "/", e.channel);
 
-      byte[] lkey = getOrder().lastBlockKey(chain, channel);
+      byte[] lkey = getOrder().lastBlockKey(e.chain, e.channel);
       Deque<Block> syncBlockStack = new LinkedList<>();
 
-      BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
-      BlockFileSystem.InnerChannel ch = ca.openChannel(channel);
+      BlockFileSystem.InnerChain ca = getChain(e.chain);
+      BlockFileSystem.InnerChannel ch = getChannel(e.chain, e.channel);
 
       while (ch.search(lkey) == null) {
-        Block b = getOrder().search(chain, channel, lkey);
+        Block b = getOrder().search(e.chain, e.channel, lkey);
         if (b == null && !ch.verify(b)) {
           log.error("synchronized block", JsonHelper.toJSON(b));
           break;
@@ -132,30 +134,30 @@ public class Peer extends AbsPeer {
         ch.pushOriginal(b);
       }
       ca.commit();
-    } catch (Exception e) {
-      log.error("synchronized block", e);
+    } catch (Exception err) {
+      log.error("synchronized block", err);
     }
   }
 
 
-  private void syncChannel(String chain, String channel, String exp) {
+  private void syncChannel(ChainEvent e) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
-      log.debug("synchronized channel setting", chain, "/", channel);
-      byte[] gkey = getOrder().genesisKey(chain, channel);
-      Block gb = getOrder().search(chain, channel, gkey);
+      log.debug("synchronized channel setting", e.chain, "/", e.channel);
+      byte[] gkey = getOrder().genesisKey(e.chain, e.channel);
+      Block gb = getOrder().search(e.chain, e.channel, gkey);
 
-      ISigner si = getSigner(chain, channel, exp);
+      ISigner si = getSigner(e.chain, e.channel, e.exp, e.kp);
       if (! si.verify(gb)) {
         log.error("synchronized genesis block verify fail",
                 JsonHelper.toJSON(gb));
         return;
       }
 
-      BlockFileSystem.InnerChain ca = BlockFileSystem.me().getChain(chain);
-      ca.createChannel(channel, si, gb, exp);
+      BlockFileSystem.InnerChain ca = getChain(e.chain);
+      ca.createChannel(e.channel, si, gb);
       ca.commit();
-    } catch (RemoteException e) {
-      log.error("synchronized channel", e);
+    } catch (RemoteException re) {
+      log.error("synchronized channel", re);
     }
   }
 
@@ -176,11 +178,11 @@ public class Peer extends AbsPeer {
 
       switch (e.getType()) {
         case NEW_CHANNEL:
-          syncChannel(ce.chain, ce.channel, ce.exp);
+          syncChannel(ce);
           break;
 
         case NEW_BLOCK:
-          syncBlock(ce.chain, ce.channel);
+          syncBlock(ce);
           break;
 
         default:

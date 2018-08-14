@@ -40,7 +40,7 @@ public class AndUnit implements IConsensusUnit {
 
 
   @Override
-  public boolean doAction(IConsensusDo d, Block b) {
+  public boolean doAction(IConsensusContext d, Block b) {
     TwiceUnit next = root;
     while (next.current.doAction(d, b)) {
       next = next.next;

@@ -21,8 +21,12 @@ import com.xboson.db.analyze.ParseException;
 import com.xboson.db.analyze.ParsedData;
 import com.xboson.db.analyze.SqlParser;
 import com.xboson.db.analyze.unit.*;
+import com.xboson.util.Tool;
 
+import java.security.PublicKey;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -35,10 +39,12 @@ import java.util.Iterator;
 public class ConsensusParser {
 
   private IConsensusPubKeyProvider keys;
+  private Map<String, PublicKey> usedKeys;
 
 
   public ConsensusParser(IConsensusPubKeyProvider keys) {
     this.keys = keys;
+    this.usedKeys = new HashMap<>();
   }
 
 
@@ -48,6 +54,9 @@ public class ConsensusParser {
    * @throws ParseException
    */
   public IConsensusUnit parse(String s) throws ParseException {
+    if (Tool.isNulStr(s))
+      return new DoNothingUnit();
+
     ParsedData pd = SqlParser.parse(s);
     Iterator<IUnit> it = pd.getUnits().iterator();
     // System.out.println(pd);
@@ -143,6 +152,17 @@ public class ConsensusParser {
     if ((ch0 == '"' || ch0 == '\'') && ch0 == chL) {
       id = id.substring(1, id.length()-1);
     }
-    return new ParmUnit(id, keys.getKey(id));
+
+    PublicKey pubkey = usedKeys.get(id);
+    if (pubkey == null) {
+      pubkey = keys.getKey(id);
+      usedKeys.put(id, pubkey);
+    }
+    return new ParmUnit(id, pubkey);
+  }
+
+
+  public Map<String, PublicKey> getUsedPublicKeys() {
+    return usedKeys;
   }
 }

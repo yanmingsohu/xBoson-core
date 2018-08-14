@@ -14,29 +14,20 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-package com.xboson.app.lib;
+package com.xboson.chain;
 
-import com.xboson.been.Config;
 import com.xboson.been.Witness;
 import com.xboson.been.XBosonException;
-import com.xboson.chain.*;
-import com.xboson.chain.witness.ConsensusParser;
-import com.xboson.chain.witness.IConsensusPubKeyProvider;
-import com.xboson.chain.witness.IConsensusUnit;
-import com.xboson.chain.witness.WitnessFactory;
-import com.xboson.db.SqlResult;
-import com.xboson.db.sql.SqlReader;
+import com.xboson.chain.witness.*;
 import com.xboson.util.Hex;
-import com.xboson.util.SysConfig;
+import com.xboson.util.IBytesWriter;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 
-import java.nio.charset.Charset;
-import java.security.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.security.KeyPair;
+import java.security.PublicKey;
+import java.security.Signature;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 
 /**
@@ -47,50 +38,22 @@ import java.util.WeakHashMap;
 public class ChainSignerProvider implements
         ISignerProvider, IConsensusPubKeyProvider {
 
-  private static final String SIGNER_ALGORITHM = "SHA256withECDSA";
-  private static final String SQL_FILE = "open_chain_key";
-  private static final Charset CS = IConstant.CHARSET;
-
-  private final ConsensusParser cp;
-
 
   public ChainSignerProvider() {
-    this.cp = new ConsensusParser(this);
   }
 
 
   @Override
-  public ISigner getSigner(String chainName, String channelName, String exp) {
+  public ISigner getSigner(String chainName, String channelName,
+                           String exp, KeyPair[] kp) {
     if (Tool.isNulStr(chainName)) throw new XBosonException.BadParameter(
               "String chainName", "is null");
     if (Tool.isNulStr(channelName)) throw new XBosonException.BadParameter(
               "String channelName", "is null");
 
-    KeyPair[] kp = openChainKeys(chainName, channelName);
-    return new Signer(chainName, channelName, kp, cp.parse(exp));
-  }
-
-
-  /**
-   * 在脚本环境中调用该方法
-   */
-  private KeyPair[] openChainKeys(String chain, String channel) {
-    KeyPair[] keys = new KeyPair[ ITypes.LENGTH +1 ];
-    Object[] parm = { chain, channel };
-
-    Config cf = SysConfig.me().readConfig();
-    try (SqlResult sr = SqlReader.query(SQL_FILE, cf.db, parm)) {
-      ResultSet rs = sr.getResult();
-      while (rs.next()) {
-        PublicKey  pub = Btc.publicKey(rs.getString("publickey"));
-        PrivateKey pri = Btc.privateKey(rs.getString("privatekey"));
-        int index      = rs.getInt("type");
-        keys[index]    = new KeyPair(pub, pri);
-      }
-      return keys;
-    } catch (Exception e) {
-      throw new XBosonException(e);
-    }
+    ConsensusParser cp = new ConsensusParser(this);
+    return new Signer(chainName, channelName, kp,
+                      cp.parse(exp), cp.getUsedPublicKeys(), exp);
   }
 
 
@@ -105,28 +68,33 @@ public class ChainSignerProvider implements
     private IConsensusUnit consensus;
     private KeyPair[] keys;
     private String signer_algorithm;
-    private String chain;
+    private String chain;  // 虽然没有使用过, 但是序列化时将被保存在创世区块上
     private String channel;
+    private String consensusExp;
+    private Map<String, PublicKey> usedKeys;
 
 
     private Signer(String chainName, String channelName,
-                   KeyPair[] keys, IConsensusUnit consensus) {
-      this.signer_algorithm = SIGNER_ALGORITHM;
+                   KeyPair[] keys, IConsensusUnit consensus,
+                   Map<String, PublicKey> usedKeys, String consensusExp) {
+      this.signer_algorithm = SignerProxy.SIGNER_ALGORITHM;
       this.chain            = chainName;
       this.channel          = channelName;
       this.keys             = keys;
       this.consensus        = consensus;
+      this.usedKeys         = usedKeys;
+      this.consensusExp     = consensusExp;
     }
 
 
     @Override
     public void sign(Block block) {
       try {
-        consensus.doAction(WitnessFactory.me().openConsensusSign(), block);
+        consensus.doAction(SignerProxy.openConsensusSign(keys), block);
         Signature si = Signature.getInstance(signer_algorithm);
         KeyPair pair = getKeyPair(block.type);
         si.initSign(pair.getPrivate());
-        doFields(block, si);
+        block.writeTo(IBytesWriter.wrap(si), keys);
         block.pushSign(new SignNode(si.sign(), block.type));
       } catch (Exception e) {
         throw new XBosonException(e);
@@ -140,9 +108,9 @@ public class ChainSignerProvider implements
         Signature si = Signature.getInstance(signer_algorithm);
         KeyPair pair = getKeyPair(block.type);
         si.initVerify(pair.getPublic());
-        doFields(block, si);
+        block.writeTo(IBytesWriter.wrap(si), keys);
         if (si.verify(block.sign.sign)) {
-          return WitnessFactory.me().consensusLocalVerify(block);
+          return SignerProxy.consensusLocalVerify(block, usedKeys, keys);
         }
         return false;
       } catch (Exception e) {
@@ -167,8 +135,15 @@ public class ChainSignerProvider implements
     }
 
 
-    private void doFields(Block block, Signature si) throws SignatureException {
-      WitnessFactory.doFields(keys, block, si);
+    @Override
+    public String getConsensusExp() {
+      return consensusExp;
+    }
+
+
+    @Override
+    public KeyPair[] getKeyPairs() {
+      return keys;
     }
   }
 }

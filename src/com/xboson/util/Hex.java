@@ -125,7 +125,7 @@ public class Hex {
 
 
   /**
-   * java 对象转字节码
+   * java 对象转字节码 (使用序列化算法)
    */
   public static byte[] toBytes(Object obj) throws IOException {
     ByteArrayOutputStream obyte = new ByteArrayOutputStream();

@@ -16,7 +16,7 @@
 
 package com.xboson.util.c0nst;
 
-import com.xboson.app.lib.ChainSignerProvider;
+import com.xboson.chain.ChainSignerProvider;
 import com.xboson.chain.ISignerProvider;
 import com.xboson.db.IDict;
 

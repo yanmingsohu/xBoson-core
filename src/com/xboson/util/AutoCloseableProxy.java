@@ -129,4 +129,12 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
       super("Object " + classname + " is closed");
     }
   }
+
+
+  /**
+   * what ??
+   */
+  public static AutoCloseable wrap(AutoCloseable out) {
+    return out;
+  }
 }

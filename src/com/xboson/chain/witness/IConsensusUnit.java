@@ -37,7 +37,7 @@ public interface IConsensusUnit extends Serializable {
   /**
    * 执行当前单元, 如果返回 false 或抛出异常说明执行失败
    */
-  boolean doAction(IConsensusDo d, Block b) throws ParseException;
+  boolean doAction(IConsensusContext d, Block b) throws ParseException;
 
 
   /**

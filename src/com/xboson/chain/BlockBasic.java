@@ -49,6 +49,7 @@ public class BlockBasic implements ITypes, Serializable {
     setUserid(userid);
     setApiHash(apiHash);
     setApiPath(apiPath);
+    type = CHAINCODE_CONTENT;
   }
 
 
@@ -59,6 +60,7 @@ public class BlockBasic implements ITypes, Serializable {
     setData(data);
     setUserid(userid);
     setChaincodeKey(chaincodeKey);
+    type = NORM_DATA;
   }
 
 
@@ -91,7 +93,7 @@ public class BlockBasic implements ITypes, Serializable {
 
   public void setUserid(String uid) {
     if (Tool.isNulStr(uid))
-      throw new NullPointerException();
+      throw new NullPointerException("String uid "+uid);
     this.userid = uid;
   }
 

@@ -21,6 +21,7 @@ import com.xboson.rpc.IXRemote;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.security.KeyPair;
 
 
 /**
@@ -53,10 +54,12 @@ public interface IPeer extends Serializable, IXRemote {
    * @param channelName 通道名, 如果通道已经存在会抛出异常
    * @param userid 用户id
    * @param consensusExp 共识表达式
+   * @param keys 系统密钥对数组
    * @throws RemoteException
    */
   void createChannel(String chainName, String channelName,
-                     String userid, String consensusExp)
+                     String userid, String consensusExp,
+                     KeyPair[] keys)
           throws RemoteException;
 
 

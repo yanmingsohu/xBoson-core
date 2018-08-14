@@ -33,7 +33,8 @@ import java.util.Base64;
 public class Btc {
 
   private final static byte[] networkID = new byte[] {0, 0};
-  private final static String KEY_GEN_ALGORITHM = "EC";
+  public final static String KEY_GEN_ALGORITHM = "EC";
+  public final static String EC_KEY_PARM = "secp256k1";
 
   private KeyPair kp;
   private String wallet;
@@ -154,18 +155,26 @@ public class Btc {
   /**
    * 随机生成密钥对
    */
-  private KeyPair getKeyPair() throws NoSuchAlgorithmException,
-          InvalidAlgorithmParameterException {
+  public KeyPair getKeyPair() {
     if (kp == null) {
       synchronized (this) {
         if (kp == null) {
-          KeyPairGenerator kpg = KeyPairGenerator.getInstance(KEY_GEN_ALGORITHM);
-          ECGenParameterSpec ps = new ECGenParameterSpec("secp256k1");
-          kpg.initialize(ps);
-          kp = kpg.generateKeyPair();
+          kp = genRandomKeyPair();
         }
       }
     }
     return kp;
+  }
+
+
+  public static KeyPair genRandomKeyPair() {
+    try {
+      KeyPairGenerator kpg = KeyPairGenerator.getInstance(KEY_GEN_ALGORITHM);
+      ECGenParameterSpec ps = new ECGenParameterSpec(EC_KEY_PARM);
+      kpg.initialize(ps);
+      return kpg.generateKeyPair();
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
   }
 }

@@ -21,6 +21,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import com.xboson.util.WeakMemCache;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
@@ -29,6 +30,7 @@ import org.mapdb.Serializer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.KeyPair;
 import java.util.*;
 
 
@@ -47,7 +49,6 @@ public class BlockFileSystem implements ITypes {
   private static final int INCREMENT_SIZE   = 1  * 1024*1024;
   private static BlockFileSystem instance;
 
-  private Map<String, InnerChain> chain_cache;
   private final String rootDir;
   private final int increment;
   private final DB sysdb;
@@ -72,7 +73,6 @@ public class BlockFileSystem implements ITypes {
                 ? cf.configPath+PATH : cf.chainPath;
     increment   = cf.chainIncrement > 0
                 ? cf.chainIncrement : INCREMENT_SIZE;
-    chain_cache = new HashMap<>();
 
     sysdb       = makeDB(SYS_FILE);
     chainNames  = sysdb.hashSet("chains").createOrOpen();
@@ -92,13 +92,9 @@ public class BlockFileSystem implements ITypes {
     if (Tool.isNulStr(name))
       throw new NullPointerException("name");
 
-    InnerChain chain = chain_cache.get(name);
-    if (chain == null) {
-      chain = new InnerChain(name);
-      chain_cache.put(name, chain);
-      chainNames.add(name);
-      sysdb.commit();
-    }
+    InnerChain chain = new InnerChain(name);
+    chainNames.add(name);
+    sysdb.commit();
     return chain;
   }
 
@@ -113,11 +109,6 @@ public class BlockFileSystem implements ITypes {
   }
 
 
-  private synchronized void closeCache(InnerChain chain) {
-    chain_cache.remove(chain.name);
-  }
-
-
   private DB makeDB(String fileName) {
     return DBMaker.fileDB(rootDir +'/'+ fileName)
             .allocateStartSize(INIT_SIZE)
@@ -127,8 +118,11 @@ public class BlockFileSystem implements ITypes {
   }
 
 
+  /**
+   * 链的实现, 所有写操作都需要 commit() 来将改变写入文件系统
+   */
   public class InnerChain implements AutoCloseable {
-    private final String name;
+    private final String chainName;
     private HTreeMap metaMap;
     private HTreeMap signerMap;
     private DB db;
@@ -136,7 +130,7 @@ public class BlockFileSystem implements ITypes {
 
     private InnerChain(String name) {
       this.db         = makeDB(name + CHAIN_EXT);
-      this.name       = name;
+      this.chainName  = name;
       this.metaMap    = metaTemplate("meta");
       this.signerMap  = metaTemplate("signer");
     }
@@ -162,7 +156,6 @@ public class BlockFileSystem implements ITypes {
      * 关闭底层文件系统, 未递交的操作被丢弃
      */
     public void close() {
-      closeCache(this);
       db.close();
       db = null;
       metaMap = null;
@@ -170,12 +163,17 @@ public class BlockFileSystem implements ITypes {
     }
 
 
+    @Override
+    protected void finalize() throws Throwable {
+      close();
+    }
+
+
     /**
      * 如果通道已经存在抛出异常, 签名器将被绑定到区块, 任何对签名器类的修改都会引起异常.
      */
-    public InnerChannel createChannel(String name, ISigner si, String userid,
-                                      String consensusExp) {
-      return createChannel(name, si, null, userid, consensusExp);
+    public InnerChannel createChannel(String name, ISigner si, String userid) {
+      return createChannel(name, si, null, userid);
     }
 
 
@@ -183,9 +181,8 @@ public class BlockFileSystem implements ITypes {
      * 使用完整的创世区块创建通道.
      * [为多节点同步而设计]
      */
-    InnerChannel createChannel(String name, ISigner si, Block genesis,
-                                      String consensusExp) {
-      return createChannel(name, si, genesis, null, consensusExp);
+    InnerChannel createChannel(String name, ISigner si, Block genesis) {
+      return createChannel(name, si, genesis, null);
     }
 
 
@@ -194,20 +191,25 @@ public class BlockFileSystem implements ITypes {
      * 1. genesis 参数为 null 时 userid 生效, 创建一个创世区块.
      * 2. 否则使用创世区块生产通道.
      */
-    private InnerChannel createChannel(String name, ISigner si, Block genesis,
-                               String userid, String consensusExp) {
+    private InnerChannel createChannel(String name, ISigner si,
+                                       Block genesis, String userid) {
       HTreeMap<byte[], Block> map = channelTemplate(name).create();
-      MetaBlock gb = new MetaBlock(name, consensusExp);
+      MetaBlock gb = new MetaBlock(name, si);
       InnerChannel ch = new InnerChannel(map, gb, this, si);
 
       if (genesis != null) {
         si.verify(genesis);
         gb.genesisKey = ch.pushOriginal(genesis);
-      } else {
+      }
+      else if (userid != null) {
         BlockBasic genesis_b = MetaBlock.createGenesis(si);
         genesis_b.setUserid(userid);
         gb.genesisKey = ch.push(genesis_b);
       }
+      else {
+        throw new NullPointerException("genesis and userid both null");
+      }
+
       si.removeGenesisPrivateKey();
       signerMap.put(name, si);
       metaMap.put(name, gb);
@@ -251,9 +253,17 @@ public class BlockFileSystem implements ITypes {
               .valueSerializer(Serializer.JAVA)
               .createOrOpen();
     }
+
+
+    public String getName() {
+      return chainName;
+    }
   }
 
 
+  /**
+   * 通道的实现, 所有写操作都需要 commit() 来将改变写入文件系统
+   */
   public class InnerChannel {
     private Map<byte[], Block> map;
     private Map<String, byte[]> chaincode;
@@ -345,6 +355,11 @@ public class BlockFileSystem implements ITypes {
     }
 
 
+    public KeyPair[] getKeyPairs() {
+      return gb.keys;
+    }
+
+
     /**
      * 验证数据块
      * @return 成功返回 true
@@ -401,6 +416,23 @@ public class BlockFileSystem implements ITypes {
 
     public int size() {
       return map.size();
+    }
+
+
+
+    /**
+     * 递交所有操作到文件, 注意这将递交在链上的所有操作
+     */
+    public void commit() {
+      chain.commit();
+    }
+
+
+    /**
+     * 回滚操作, 这将回滚链上所有未递交的操作
+     */
+    public void rollback() {
+      chain.rollback();
     }
   }
 }

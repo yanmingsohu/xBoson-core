@@ -79,4 +79,9 @@ public interface Names {
    */
   String chain_sync = "sys.chain.sync";
 
+  /**
+   * 见证者更新
+   */
+  String witness_update = "sys.chain.witness.update";
+
 }

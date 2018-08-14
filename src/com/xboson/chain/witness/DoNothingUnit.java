@@ -28,7 +28,7 @@ public class DoNothingUnit implements IConsensusUnit {
 
 
   @Override
-  public boolean doAction(IConsensusDo d, Block b) throws ParseException {
+  public boolean doAction(IConsensusContext d, Block b) throws ParseException {
     return true;
   }
 

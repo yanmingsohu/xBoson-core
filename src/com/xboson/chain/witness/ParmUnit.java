@@ -40,7 +40,7 @@ public class ParmUnit implements IConsensusUnit {
 
 
   @Override
-  public boolean doAction(IConsensusDo d, Block b) {
+  public boolean doAction(IConsensusContext d, Block b) {
     return d.doAction(id, key, b);
   }
 

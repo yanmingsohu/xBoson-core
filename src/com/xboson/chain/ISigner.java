@@ -17,6 +17,7 @@
 package com.xboson.chain;
 
 import java.io.Serializable;
+import java.security.KeyPair;
 
 
 /**
@@ -47,5 +48,17 @@ public interface ISigner extends Serializable {
    * 删除创世区块私钥可保证安全, 防止重构链数据.
    */
   default void removeGenesisPrivateKey() {}
+
+
+  /**
+   * 返回共识表达式原始字符串
+   */
+  default String getConsensusExp() { return null; }
+
+
+  /**
+   * 返回系统密钥对
+   */
+  default KeyPair[] getKeyPairs() { return null; }
 
 }

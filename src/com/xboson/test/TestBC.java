@@ -20,7 +20,6 @@ import com.xboson.been.JsonHelper;
 import com.xboson.been.XBosonException;
 import com.xboson.chain.*;
 import com.xboson.chain.witness.ConsensusParser;
-import com.xboson.chain.witness.IConsensusDo;
 import com.xboson.chain.witness.IConsensusUnit;
 import com.xboson.db.analyze.ParseException;
 import com.xboson.rpc.ClusterManager;
@@ -28,7 +27,7 @@ import com.xboson.util.Tool;
 import org.apache.commons.codec.binary.Hex;
 import org.mapdb.DBException;
 
-import java.io.InvalidClassException;
+import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
 
@@ -36,6 +35,8 @@ import java.util.Arrays;
 public class TestBC extends Test {
 
   private ConsensusParser cp;
+  private final static String userid = "admin-pl";
+
 
   public static void main(String[] av) {
     CLUSTER_NODE_ID = 0;
@@ -48,6 +49,7 @@ public class TestBC extends Test {
       btc();
       bfs();
       testConsensus();
+      testOrder();
       testPeer();
     } catch (DBException.SerializationError e) {
       fail("需要删除区块链文件, 类文件版本已经更新", e);
@@ -117,8 +119,48 @@ public class TestBC extends Test {
   }
 
 
+  private BlockBasic genRandomBlock(byte[] chaincodeKey) {
+    if (chaincodeKey == null)
+      chaincodeKey = Tool.randomBytes(10);
+
+    BlockBasic ret = new BlockBasic(
+            Tool.randomBytes(20),
+            userid,
+            chaincodeKey
+    );
+    return ret;
+  }
+
+
+  public void testOrder() throws Exception {
+    sub("Test Order");
+
+    String chainName = "t3";
+    String channelName = "c00001";
+    KeyPair[] kp = genKeys();
+    IPeer o = PeerFactory.me().peer();
+
+    if (! o.channelExists(chainName, channelName)) {
+      o.createChannel(chainName, channelName, userid, null, kp);
+    }
+    BlockBasic b0 = genRandomBlock(null);
+    byte[] k0 = o.sendBlock(chainName, channelName, b0);
+    Block r0 = o.search(chainName, channelName, k0);
+    msg(r0);
+  }
+
+
+  private KeyPair[] genKeys() throws Exception {
+    KeyPair[] ret = new KeyPair[ITypes.LENGTH];
+    for (int i=0; i<ret.length; ++i) {
+      ret[i] = Btc.genRandomKeyPair();
+    }
+    return ret;
+  }
+
+
   public void testPeer() throws Exception {
-    sub("Test Peer / Order");
+    sub("Test Peer");
 
     try {
       final String chain0 = "t2";
@@ -129,7 +171,7 @@ public class TestBC extends Test {
       Peer p  = new Peer(nodeid);
 
       try {
-        p.createChannel(chain0, ch0, "admin-pl", null);
+        p.createChannel(chain0, ch0, userid, null, genKeys());
       } catch (Exception e) {
         msg(e.getMessage());
       }
@@ -191,20 +233,26 @@ public class TestBC extends Test {
     BlockFileSystem.InnerChain chain = bc.getChain("test");
 
     try {
-      chain.createChannel("ch0", signer, "user", null);
+      chain.createChannel("ch0", signer, "user");
     } catch (Exception e) {
       msg(e.getMessage());
     }
 
     BlockFileSystem.InnerChannel ch = chain.openChannel("ch0");
     BlockBasic b0 = new BlockBasic(Tool.randomBytes(10),
-            "first", "/api", "0");
-    ch.push(b0);
+            userid, "/api", "0");
+
+    byte[] b0key = null;
+
+    try {
+      b0key = ch.push(b0);
+    } catch(VerifyException ve) {
+      msg(ve.getMessage());
+    }
 
     byte[] oldworld = ch.worldState();
     Block pre = ch.search(ch.lastBlockKey());
-    BlockBasic bb = new BlockBasic(Tool.randomBytes(10),
-            "user", "/api", "0");
+    BlockBasic bb = genRandomBlock(b0key);
     byte[] key = ch.push(bb);
     msg("push", Arrays.toString(key), ch.size());
     chain.commit();

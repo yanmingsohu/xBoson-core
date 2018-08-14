@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 18-8-12 上午10:46
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/witness/IConsensusDo.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/chain/witness/IConsensusContext.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -22,18 +22,13 @@ import java.security.PublicKey;
 
 
 /**
- * 共识表达式的执行体
+ * 共识表达式的执行体上下文
  */
-public interface IConsensusDo {
+public interface IConsensusContext {
 
   /**
    * 在 id 指定的见证者上对数据块执行共识.
    */
   boolean doAction(String witnessId, PublicKey key, Block b);
 
-
-  /**
-   * 记录日志, 默认什么都不做
-   */
-  default void log(Object...p) {}
 }

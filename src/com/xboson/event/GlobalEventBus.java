@@ -175,7 +175,7 @@ public class GlobalEventBus {
 
 
   /**
-   * 触发事件.
+   * 触发事件. (节点自身也会接受到)
    *
    * @param name 事件名称
    * @param data 数据, NamingEvent.getNewBinding().getObject() 返回

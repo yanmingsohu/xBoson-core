@@ -18,9 +18,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 # 需要做:
 
-* 创世区块使用私钥加密公钥认证, 私钥在生成创世区块时被用户下载并离线保存.
-* [Paxos 的共识算法](https://www.zhihu.com/question/19787937)
-* 区块链底层/api接口
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
@@ -50,6 +47,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * 虚拟文件系统通过 api 开放给脚本, 直接在脚本中操作文件.
 * 第三方使用 OAuth 2.0 接入平台.
 * 当内存不足, 内核会卸载已经编译的 api 来释放紧张的内存.
+* 与业务紧密结合的区块链系统, 0部署, 0维护, 开箱即用.
 
 
 # JAR 依赖
@@ -263,3 +261,4 @@ max_allowed_packet=100M
 * (hyperledger 实现)[http://hyperledger-fabric.readthedocs.io/en/latest/blockchain.html]
 * (OLTU WIKI)[https://cwiki.apache.org/confluence/display/OLTU/Index]
 * (OAuth2 规范文档)[https://oauth.net/2/]
+* (Paxos 的共识算法)[https://www.zhihu.com/question/19787937]

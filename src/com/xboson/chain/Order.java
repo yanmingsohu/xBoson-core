@@ -22,6 +22,8 @@ import com.xboson.event.Names;
 import com.xboson.rpc.IXRemote;
 import com.xboson.rpc.RpcFactory;
 
+import java.security.KeyPair;
+
 
 /**
  * 只有 0 号节点有排序服务
@@ -45,20 +47,20 @@ public class Order extends AbsPeer implements IXRemote, IPeer {
 
 
   public void createChannel(String chainName, String channelName,
-                            String uid, String exp) {
-    createChannelLocal(chainName, channelName, uid, exp);
-    sendNewChannel(chainName, channelName, exp);
+                            String uid, String exp, KeyPair[] ks) {
+    createChannelLocal(chainName, channelName, uid, exp, ks);
+    sendNewChannel(chainName, channelName, exp, ks);
   }
 
 
-  private void sendNewChannel(String chain, String channel, String exp) {
-    ChainEvent e = new ChainEvent(chain, channel, exp);
+  private void sendNewChannel(String chain, String channel, String exp, KeyPair[] ks) {
+    ChainEvent e = new ChainEvent(chain, channel, exp, ks);
     GlobalEventBus.me().emit(Names.chain_sync, e, NEW_CHANNEL);
   }
 
 
   private void sendNewBlock(String chain, String channel) {
-    ChainEvent e = new ChainEvent(chain, channel, null);
+    ChainEvent e = new ChainEvent(chain, channel, null, null);
     GlobalEventBus.me().emit(Names.chain_sync, e, NEW_BLOCK);
   }
 }

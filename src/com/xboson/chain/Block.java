@@ -17,13 +17,19 @@
 package com.xboson.chain;
 
 import com.xboson.util.Hash;
+import com.xboson.util.IBytesWriter;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
 
 import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.security.KeyPair;
 import java.util.Date;
 
 
 public class Block extends BlockBasic implements ITypes, Serializable {
+
+  private static final Charset CS = IConstant.CHARSET;
 
   /** 当前块主键 */
   public byte[] key;
@@ -57,6 +63,18 @@ public class Block extends BlockBasic implements ITypes, Serializable {
   }
 
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    return super.equals(o);
+  }
+
+
+  public byte[] generateKey() {
+    return key = Tool.uuid.getBytes(Tool.uuid.v4obj());
+  }
+
+
   public void computeHash() {
     Hash h = new Hash();
     h.update(key);
@@ -78,14 +96,45 @@ public class Block extends BlockBasic implements ITypes, Serializable {
   }
 
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    return super.equals(o);
-  }
+  /**
+   * 将区块的全部数据写出到字节输出器, 该方法通常用于生成用于签名的数据,
+   * 根据不同的区块类型有不同的输出组合
+   *
+   * @param out 输出到字节输出器
+   * @param keys 创世区块时必须非空, 否则抛出异常; 其他类型可以空.
+   */
+  public void writeTo(IBytesWriter out, KeyPair[] keys) {
+    out.write(key);
+    out.write(data);
+    out.write(userid.getBytes(CS));
+    out.write(create.getTime());
 
+    switch (type) {
+      case ITypes.CHAINCODE_CONTENT:
+        out.write(apiPath.getBytes(CS));
+        out.write(apiHash.getBytes(CS));
+        break;
 
-  public byte[] generateKey() {
-    return key = Tool.uuid.getBytes(Tool.uuid.v4obj());
+      case ITypes.GENESIS:
+        if (keys == null)
+          throw new NullPointerException("Genesis block need KeyPair[]");
+
+        for (int i=1; i<keys.length; ++i) {
+          KeyPair kp = keys[i];
+          //
+          // 创世区块私钥离线后无法验证
+          //
+          if (i != ITypes.GENESIS) {
+            out.write(kp.getPrivate().getEncoded());
+          }
+          out.write(kp.getPublic().getEncoded());
+        }
+        break;
+
+      case ITypes.NORM_DATA:
+      case ITypes.ENCRYPTION_DATA:
+        out.write(chaincodeKey);
+        break;
+    }
   }
 }

@@ -17,6 +17,7 @@
 package com.xboson.been;
 
 import java.io.Serializable;
+import java.security.KeyPair;
 
 
 public class ChainEvent implements Serializable {
@@ -24,11 +25,13 @@ public class ChainEvent implements Serializable {
   public String chain;
   public String channel;
   public String exp;
+  public KeyPair[] kp;
 
 
-  public ChainEvent(String chain, String channel, String exp) {
+  public ChainEvent(String chain, String channel, String exp, KeyPair[] kp) {
     this.chain    = chain;
     this.channel  = channel;
     this.exp      = exp;
+    this.kp       = kp;
   }
 }

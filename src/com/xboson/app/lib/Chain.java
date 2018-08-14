@@ -30,6 +30,9 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.sql.ResultSet;
 
 
@@ -59,16 +62,21 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public void create(String chain, String channel, String consensusExp)
-          throws Exception
+  public void create(String chain, String channel,
+                     String consensusExp, KeyPairJs[] ks) throws Exception
   {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     IPeer peer = PeerFactory.me().peer();
     if (peer.channelExists(chain, channel)) {
       throw new XBosonException("channel/chain exists: "+ channel +'/'+ chain);
     }
-    peer.createChannel(chain, channel,
-            AppContext.me().who().identification(), consensusExp);
+
+    String uid = AppContext.me().who().identification();
+    KeyPair[] kps = new KeyPair[ks.length];
+    for (int i=0; i<kps.length; ++i) {
+      kps[i] = ks[i].toKeyPair();
+    }
+    peer.createChannel(chain, channel, uid, consensusExp, kps);
   }
 
 
@@ -218,6 +226,11 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
       Btc b       = new Btc();
       publicKey   = b.publicKeyStr();
       privateKey  = b.privateKeyStr();
+    }
+
+    private KeyPair toKeyPair() {
+      return new KeyPair(Btc.publicKey(publicKey),
+                         Btc.privateKey(privateKey));
     }
   }
 

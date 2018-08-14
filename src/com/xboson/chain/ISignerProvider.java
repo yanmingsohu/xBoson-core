@@ -16,6 +16,9 @@
 
 package com.xboson.chain;
 
+import java.security.KeyPair;
+
+
 public interface ISignerProvider {
 
   /**
@@ -24,7 +27,9 @@ public interface ISignerProvider {
    * @param chainName 链名
    * @param channelName 通道名
    * @param consensusExp 共识表达式, 可以空
+   * @param kp 系统密钥对数组
    */
-  ISigner getSigner(String chainName, String channelName, String consensusExp);
+  ISigner getSigner(String chainName, String channelName,
+                    String consensusExp, KeyPair[] kp);
 
 }

@@ -21,6 +21,7 @@ import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 
 import java.io.Serializable;
+import java.security.KeyPair;
 import java.util.Date;
 
 
@@ -36,14 +37,17 @@ public class MetaBlock implements Serializable, ITypes {
   public byte[] genesisKey;
   /** 共识表达式 */
   public String consensusExp;
+  /** 系统默认密钥对 */
+  public KeyPair[] keys;
 
 
   /**
    * 该构造函数用于在程序中创建新的 MetaBlock
    */
-  public MetaBlock(String channelName, String consensusExp) {
+  public MetaBlock(String channelName, ISigner si) {
     this.channelName    = channelName;
-    this.consensusExp   = consensusExp;
+    this.consensusExp   = si.getConsensusExp();
+    this.keys           = si.getKeyPairs();
     this.lastBlockKey   = new byte[] {};
     this.worldStateHash = new byte[] {};
     this.genesisKey     = new byte[] {};

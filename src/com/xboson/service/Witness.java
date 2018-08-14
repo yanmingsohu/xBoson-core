@@ -47,7 +47,7 @@ import java.sql.SQLException;
 public class Witness extends XService implements IConstant, IAResource {
 
   private static final String ERRMSG         = "Cannot found service";
-  private static final String ALGORITHM      = WitnessFactory.SIGNER_ALGORITHM;
+  private static final String ALGORITHM      = SignerProxy.SIGNER_ALGORITHM;
   private static final int GEN_RAND_DATA_LEN = 256;
 
   private final ConnectConfig db;

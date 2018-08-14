@@ -19,11 +19,14 @@ package com.xboson.chain.witness;
 
 import com.xboson.chain.Block;
 import com.xboson.db.analyze.ParseException;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 
 
 public class OrUnit implements IConsensusUnit {
   private TwiceUnit root;
   private transient TwiceUnit next;
+  private transient Log _log;
 
 
   public OrUnit() {
@@ -40,7 +43,7 @@ public class OrUnit implements IConsensusUnit {
 
 
   @Override
-  public boolean doAction(IConsensusDo d, Block b) {
+  public boolean doAction(IConsensusContext d, Block b) {
     TwiceUnit next = root;
 
     while (next.current != null) {
@@ -51,11 +54,19 @@ public class OrUnit implements IConsensusUnit {
           next = next.next;
         }
       } catch (Exception e) {
-        d.log(e);
+        openLog().warn(e);
         next = next.next;
       }
     }
     return false;
+  }
+
+
+  private Log openLog() {
+    if (_log == null) {
+      _log = LogFactory.create("consesus-or");
+    }
+    return _log;
   }
 
 
