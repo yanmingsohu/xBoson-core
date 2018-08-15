@@ -20,6 +20,8 @@ import com.xboson.been.XBosonException;
 import com.xboson.chain.Block;
 import com.xboson.chain.SignNode;
 import com.xboson.chain.VerifyException;
+import com.xboson.event.EventLoop;
+import com.xboson.log.Log;
 import com.xboson.util.*;
 
 import java.io.IOException;
@@ -29,10 +31,11 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
- * 边界类, 远程签名者代理, 与一个远程见证者连接;
+ * 便捷类, 远程签名者代理, 与一个远程见证者连接;
  * 推荐使用静态方法.
  */
 public class SignerProxy {
@@ -126,6 +129,29 @@ public class SignerProxy {
 
 
   /**
+   * 将区块交付给 witnessIdSet 中所有见证者, 该任务在单独的线程中执行;
+   * 可以保证区块的顺序, 但不保证区块一定可以递交给见证者, 如网络错误时.
+   */
+  public static void deliver(Set<String> witnessIdSet, Block b) {
+    EventLoop.me().add(() -> {
+      WitnessFactory wf = WitnessFactory.me();
+      Log log = wf.getWitnessLog();
+
+      for (String wid : witnessIdSet) {
+        if (wf.isSkipDeliver(wid))
+          continue;
+
+        WitnessConnect wc = WitnessFactory.me().openConnection(wid);
+        if (! wc.doDeliver(b)) {
+          log.debug("Skip Deliver Witness:", wid);
+          wf.setSkipDeliver(wid);
+        }
+      }
+    });
+  }
+
+
+  /**
    * 使用本地保存的见证者公钥验证数据块
    */
   public static boolean consensusLocalVerify(
@@ -152,7 +178,7 @@ public class SignerProxy {
 
 
   /**
-   * 打开远程共识对象, 用于签名
+   * 创建一个见证者上下文, 用于签名区块
    */
   public static IConsensusContext openConsensusSign(KeyPair[] keys) {
     return (String witnessId, PublicKey key, Block b) -> {

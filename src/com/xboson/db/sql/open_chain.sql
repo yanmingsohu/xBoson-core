@@ -1,10 +1,16 @@
-SELECT
-    `offline_gpk`,
-    `create_userid`,
-    `physical_channel`,
-    `physical_chain`
-FROM
-    `sys_pl_chain`
-Where
-     status = '1'
-     And chain_id = ?
+Select distinct
+       sys_pl_chain.physical_chain,
+       sys_pl_chain.physical_channel
+  From
+	     sys_pl_chain,
+	     sys_user_role
+ Where
+		sys_pl_chain.chain_id = ?
+    AND (   (   sys_pl_chain.roleid is null )
+            OR
+            (   sys_user_role.roleid = sys_pl_chain.roleid
+                AND
+                sys_user_role.pid = ? )
+        )
+		AND sys_pl_chain.status  = '1'
+		AND sys_user_role.status = '1'

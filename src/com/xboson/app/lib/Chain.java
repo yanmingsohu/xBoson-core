@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.auth.IAResource;
+import com.xboson.auth.PermissionException;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.Config;
@@ -30,10 +31,10 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import javax.security.auth.AuthPermission;
 import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 
 
 /**
@@ -41,14 +42,17 @@ import java.sql.ResultSet;
  */
 public class Chain extends RuntimeUnitImpl implements IAResource {
 
-  private static final String SQL_FILE = "open_chain";
+  private static final String SQL_OPEN  = "open_chain";
 
   public final int TYPE_LENGTH = ITypes.LENGTH;
   public final int GENESIS     = ITypes.GENESIS;
 
+  private Config cf;
+
 
   public Chain() {
     super(null);
+    cf = SysConfig.me().readConfig();
   }
 
 
@@ -56,7 +60,7 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     String[] names = getChainConfig(chain_id);
     if (names == null) {
-      throw new XBosonException.NotFound("chain: "+ chain_id);
+      throw new XBosonException("Cannot open chain: "+ chain_id);
     }
     return new ChainImpl(names[0], names[1]);
   }
@@ -94,11 +98,16 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
   }
 
 
+  /**
+   * 打开链, 如果链设置的角色属性为空, 则任何人都可以打开该链,
+   * 否则只有该角色的用户可以打开链
+   * @param chain_id
+   * @return [physical_chain, physical_channel]
+   */
   private String[] getChainConfig(String chain_id) {
-    Object[] parm = { chain_id };
+    Object[] parm = { chain_id, AppContext.me().who().identification() };
 
-    Config cf = SysConfig.me().readConfig();
-    try (SqlResult sr = SqlReader.query(SQL_FILE, cf.db, parm)) {
+    try (SqlResult sr = SqlReader.query(SQL_OPEN, cf.db, parm)) {
       ResultSet rs = sr.getResult();
       if (rs.next()) {
         return new String[] {
@@ -107,8 +116,8 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
         };
       }
       return null;
-    } catch (Exception e) {
-      throw new XBosonException(e);
+    } catch (SQLException e) {
+      throw new XBosonException.XSqlException(e);
     }
   }
 

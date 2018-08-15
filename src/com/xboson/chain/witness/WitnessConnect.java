@@ -18,6 +18,9 @@ package com.xboson.chain.witness;
 
 import com.xboson.been.Witness;
 import com.xboson.been.XBosonException;
+import com.xboson.chain.Block;
+import com.xboson.util.Hex;
+import com.xboson.util.Tool;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -28,9 +31,11 @@ import java.io.IOException;
  */
 public class WitnessConnect {
 
+  public static final String DELIVER_METHOD = "deliver";
   public static final String SIGN_METHOD = "sign";
   public static final MediaType BINARY
           = MediaType.parse("application/octet-stream");
+  public static final int DELIVER_RETRY_COUNT = 3;
 
 
   private static OkHttpClient hc;
@@ -74,18 +79,7 @@ public class WitnessConnect {
    * @see com.xboson.util.StreamRequestBody
    */
   public byte[] doSign(RequestBody body) throws IOException {
-    HttpUrl.Builder url_build = new HttpUrl.Builder();
-    url_build.scheme("http");
-    url_build.host(host);
-    url_build.port(port);
-
-    if (prefix == null) {
-      url_build.addPathSegment(SIGN_METHOD);
-    } else {
-      url_build.addPathSegments(prefix + SIGN_METHOD);
-    }
-
-    HttpUrl urlobj = url_build.build();
+    HttpUrl urlobj = makeUrl(SIGN_METHOD);
     Request.Builder build = new Request.Builder();
     build.url(urlobj);
     build.post(body);
@@ -100,6 +94,53 @@ public class WitnessConnect {
       }
       return resp.body().bytes();
     }
+  }
+
+
+  /**
+   * 将区块数据以 json 格式发送给见证者,
+   * 如果见证者没有实现该接口返回 false, 成功返回 true.
+   */
+  public boolean doDeliver(Block b) {
+    String json = Tool.getAdapter(Block.class).toJson(b);
+    HttpUrl urlobj = makeUrl(DELIVER_METHOD);
+    Request.Builder build = new Request.Builder();
+    build.url(urlobj);
+    RequestBody body = RequestBody.create(BINARY, json);
+    build.post(body);
+
+    for (int retry=0; retry < DELIVER_RETRY_COUNT; ++retry) {
+      try (Response resp = openClient().newCall(build.build()).execute()) {
+        if (resp.code() == 200) {
+          return true;
+        }
+
+        if (resp.code() == 404) {
+          return false;
+        }
+      } catch (Exception e) {
+        WitnessFactory.me().getWitnessLog().warn(
+                "Deliver Block key:", Hex.encode64(b.key), e);
+      }
+      Tool.sleep(3000);
+    }
+    return false;
+  }
+
+
+  private HttpUrl makeUrl(String methodName) {
+    HttpUrl.Builder url_build = new HttpUrl.Builder();
+    url_build.scheme("http");
+    url_build.host(host);
+    url_build.port(port);
+
+    if (prefix == null) {
+      url_build.addPathSegment(methodName);
+    } else {
+      url_build.addPathSegments(prefix + methodName);
+    }
+
+    return url_build.build();
   }
 
 

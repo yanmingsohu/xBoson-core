@@ -22,10 +22,14 @@ import com.xboson.chain.DBFunctions;
 import com.xboson.event.GLHandle;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.util.Tool;
 import com.xboson.util.WeakMemCache;
 
 import javax.naming.event.NamingEvent;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class WitnessFactory {
@@ -33,10 +37,14 @@ public class WitnessFactory {
   private static WitnessFactory instance;
 
   private WeakMemCache<String, Witness> witnessPool;
+  private Set<String> skipDeliver;
+  private Log witconn;
 
 
   private WitnessFactory() {
     this.witnessPool = new WeakMemCache<>(new CreateWitness());
+    this.witconn     = LogFactory.create("witness-connect");
+    this.skipDeliver = new HashSet<>();
     GlobalEventBus.me().on(Names.witness_update, new OnUpdate());
   }
 
@@ -61,6 +69,27 @@ public class WitnessFactory {
   }
 
 
+  public Log getWitnessLog() {
+    return witconn;
+  }
+
+
+  /**
+   * 当见证者的 deliver 被标记为无效返回 true
+   */
+  public boolean isSkipDeliver(String id) {
+    return skipDeliver.contains(id);
+  }
+
+
+  /**
+   * 标记见证者的 deliver 方法无效
+   */
+  public void setSkipDeliver(String id) {
+    skipDeliver.add(id);
+  }
+
+
   /**
    * 更新见证者数据, 当主机地址变更时调用
    */
@@ -69,7 +98,9 @@ public class WitnessFactory {
   }
 
 
-
+  /**
+   * 根据 id 返回见证者链接, 该方法有缓存优化.
+   */
   public WitnessConnect openConnection(String witnessId) {
     Witness wit = get(witnessId);
     return new WitnessConnect(wit);
@@ -93,6 +124,7 @@ public class WitnessFactory {
     public void objectChanged(NamingEvent e) {
       String id = (String) e.getNewBinding().getObject();
       witnessPool.remove(id);
+      skipDeliver.remove(id);
     }
   }
 }

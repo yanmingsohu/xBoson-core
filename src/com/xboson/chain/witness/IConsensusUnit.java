@@ -23,7 +23,7 @@ import java.io.Serializable;
 
 
 /**
- * 共识表达式解析后的单元
+ * 共识表达式解析后的单元, 该对象需要能序列化, 不要存储复杂的对象.
  */
 public interface IConsensusUnit extends Serializable {
 

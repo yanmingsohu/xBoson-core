@@ -162,6 +162,9 @@ public class ConsensusParser {
   }
 
 
+  /**
+   * 返回 见证者id 对应的公钥 map
+   */
   public Map<String, PublicKey> getUsedPublicKeys() {
     return usedKeys;
   }

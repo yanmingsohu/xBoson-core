@@ -96,6 +96,7 @@ public class ChainSignerProvider implements
         si.initSign(pair.getPrivate());
         block.writeTo(IBytesWriter.wrap(si), keys);
         block.pushSign(new SignNode(si.sign(), block.type));
+        SignerProxy.deliver(usedKeys.keySet(), block);
       } catch (Exception e) {
         throw new XBosonException(e);
       }

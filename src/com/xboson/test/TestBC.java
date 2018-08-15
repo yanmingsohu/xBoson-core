@@ -30,6 +30,7 @@ import org.mapdb.DBException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Date;
 
 
 public class TestBC extends Test {
@@ -51,10 +52,29 @@ public class TestBC extends Test {
       testConsensus();
       testOrder();
       testPeer();
+      testBlockJson();
     } catch (DBException.SerializationError e) {
       fail("需要删除区块链文件, 类文件版本已经更新", e);
     }
     TestFace.waitEventLoopEmpty();
+  }
+
+
+  private void testBlockJson() {
+    sub("Block TO json");
+
+    BlockBasic bb = genRandomBlock(null);
+    Block block = bb.createBlock();
+    block.key = Tool.randomBytes(16);
+    block.hash = Tool.randomBytes(16);
+    block.previousHash = Tool.randomBytes(16);
+    block.previousKey = Tool.randomBytes(16);
+    block.create = new Date();
+
+    block.pushSign(new SignNode(Tool.randomBytes(15), Tool.randomString(5)));
+    block.pushSign(new SignNode(Tool.randomBytes(15), Tool.randomString(5)));
+    block.pushSign(new SignNode(Tool.randomBytes(15), Tool.randomString(5)));
+    msg(Tool.beautifyJson(Block.class, block));
   }
 
 
