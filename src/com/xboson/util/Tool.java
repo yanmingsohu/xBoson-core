@@ -533,6 +533,11 @@ public final class Tool extends StaticLogProvider {
   }
 
 
+  public static boolean notNulStr(String s) {
+    return !isNulStr(s);
+  }
+
+
   /**
    * 使用 unix 风格规范化路径
    * @see com.xboson.script.lib.Path#normalize(String)

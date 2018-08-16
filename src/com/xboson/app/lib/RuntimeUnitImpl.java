@@ -260,11 +260,31 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
   }
 
 
+  /**
+   * 严格检查对象必须是 true
+   */
   public static boolean isTrue(Object o) {
     if (o == null)
       return false;
     if (o instanceof Boolean)
       return (Boolean) o;
+    return false;
+  }
+
+
+  /**
+   * 通常约定一些值的意义为 true.
+   * 当 o==true 或 o!=0 或 o是非空字符串 的情况返回 true
+   */
+  public static boolean isAboutTrue(Object o) {
+    if (o == null)
+      return false;
+    if (o instanceof Boolean)
+      return (Boolean) o;
+    if (o instanceof Number)
+      return ((int) o) != 0;
+    if (o instanceof String)
+      return Tool.notNulStr((String)o);
     return false;
   }
 

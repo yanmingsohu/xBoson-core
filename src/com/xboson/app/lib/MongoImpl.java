@@ -54,6 +54,13 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
+  public Client connect() {
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
+    MongoDBPool.VirtualMongoClient client = MongoDBPool.me().get();
+    return new Client(client);
+  }
+
+
   @Override
   public String description() {
     return "app.module.mongodb.functions()";
@@ -173,9 +180,13 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
       return coll.deleteOne(new JSObjectToBson(filter));
     }
 
-
     public Object find(Object query) {
       return toObject(coll.find(new JSObjectToBson(query)));
+    }
+
+    public Object find(Object query, Map projection) {
+      projection.put("_id", true);
+      return toObject(coll.find(new JSObjectToBson(query)), projection);
     }
 
     public Object find() {
@@ -285,10 +296,15 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
    * Mongo 结果集转换为 js 数组
    */
   protected Object toObject(Iterable<?> iter) {
+    return toObject(iter, null);
+  }
+
+
+  protected Object toObject(Iterable<?> iter, Map projection) {
     ScriptObjectMirror list = createJSList();
     int i = 0;
     for (Object o : iter) {
-      list.setSlot(i, toObject(o));
+      list.setSlot(i, toObject(o, projection));
       ++i;
     }
     return unwrap(list);
@@ -299,11 +315,16 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
    * 判断 mongo 数据类型转换为 js 对象
    */
   protected Object toObject(Object mongoObj) {
+    return toObject(mongoObj, null);
+  }
+
+
+  protected Object toObject(Object mongoObj, Map projection) {
     if (mongoObj instanceof Map) {
-      return toObject((Map) mongoObj);
+      return toObject((Map) mongoObj, projection);
     }
     if (mongoObj instanceof Iterable) {
-      return toObject((Iterable) mongoObj);
+      return toObject((Iterable) mongoObj, projection);
     }
     return mongoObj;
   }
@@ -313,9 +334,21 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
    * 将 mongo 对象转换为 js 对象
    */
   protected Object toObject(Map<String, Object> doc) {
+    return toObject(doc, null);
+  }
+
+
+  /**
+   * projection 可以空, 非空时, 只有集合中的属性会被输出
+   */
+  protected Object toObject(Map<String, Object> doc, Map projection) {
     ScriptObjectMirror obj = createJSObject();
 
     for (Map.Entry<String, Object> entry : doc.entrySet()) {
+      if (projection != null && !isAboutTrue(projection.get(entry.getKey()))) {
+        continue;
+      }
+      // 不传递 projection, 不支持深层 projection.
       obj.setMember(entry.getKey(), toObject(entry.getValue()));
     }
     return unwrap(obj);
@@ -542,12 +575,13 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
   private void writeMap(BsonDocumentWriter writer, ScriptObjectMirror s) {
     writer.writeStartDocument();
-    for (String name : s.keySet()) {
-      writer.writeName(name);
-      writeValue(writer, s.getMember(name));
+    for (Map.Entry<String, Object> et : s.entrySet()) {
+      writer.writeName(et.getKey());
+      writeValue(writer, et.getValue());
     }
     writer.writeEndDocument();
   }
+
 
   private void writeArray(BsonDocumentWriter writer, ScriptObjectMirror s) {
     writer.writeStartArray();

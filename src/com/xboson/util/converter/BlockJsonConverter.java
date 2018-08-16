@@ -59,7 +59,7 @@ public class BlockJsonConverter extends JsonAdapter<Block> {
             .value(b.getUserId());
     // 链码块为空
     w.name("chaincodeKey")
-            .value(bin(b.getChaincodeKey())); 
+            .value(bin(b.getChaincodeKey()));
     w.name("apiPath")
             .value(b.getApiPath());
     w.name("apiHash")

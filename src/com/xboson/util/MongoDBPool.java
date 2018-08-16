@@ -21,6 +21,7 @@ import com.mongodb.client.ListDatabasesIterable;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
 import com.mongodb.session.ClientSession;
+import com.xboson.been.MongoConfig;
 import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
@@ -76,6 +77,27 @@ public class MongoDBPool extends OnExitHandle {
     } catch (Exception e) {
       throw new XBosonException(e);
     }
+  }
+
+
+  /**
+   * 打开平台默认连接, 该方法没有优化, 为动态修改配置做准备.
+   */
+  public VirtualMongoClient get() {
+    MongoConfig mc = SysConfig.me().readConfig().mongodb;
+    if (!mc.enable) {
+      throw new XBosonException("Default Mongodb Config disabled");
+    }
+
+    StringBuilder buf = new StringBuilder("mongodb://");
+    if (Tool.notNulStr(mc.username) && Tool.notNulStr(mc.password)) {
+      buf.append(mc.username).append(':').append(mc.password).append('@');
+    }
+    buf.append(mc.host);
+    if (mc.port > 0) {
+      buf.append(':').append(mc.port);
+    }
+    return get(buf.toString());
   }
 
 
