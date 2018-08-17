@@ -441,6 +441,9 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     private String s_key;
 
 
+    /**
+     * @param s - base64 编码字符串
+     */
     public Bytes(String s) {
       this.s_key = s;
     }
@@ -448,6 +451,14 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
 
     public Bytes(byte[] k) {
       this.key = k;
+    }
+
+
+    /**
+     * 0 字节数组
+     */
+    public Bytes() {
+      this.key = new byte[0];
     }
 
 
@@ -460,6 +471,17 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     }
 
 
+    public String toHex() {
+      if (key == null) {
+        if (s_key == null) {
+          return null;
+        }
+        bin();
+      }
+      return Hex.upperHex(key);
+    }
+
+
     public byte[] bin() {
       if (key == null) {
         key = Hex.decode64(s_key);
@@ -468,9 +490,24 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     }
 
 
+    public String toJavaString() {
+      return new String(bin());
+    }
+
+
     @Override
     public String toJSON() {
       return JsonHelper.toJSON(toString());
+    }
+
+
+    public Bytes concat(Bytes other) {
+      byte[] a = this.bin();
+      byte[] b = other.bin();
+      byte[] c = new byte[a.length + b.length];
+      System.arraycopy(a, 0, c, 0, a.length);
+      System.arraycopy(b, 0, c, a.length, b.length);
+      return new Bytes(c);
     }
   }
 

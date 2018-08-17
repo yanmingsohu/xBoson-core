@@ -35,6 +35,19 @@ public final class ConnectConfig extends JsonHelper {
 
   /**
    * 数据库类型 id
+   *
+   * SQL 数据库:
+   *    1: Mysql
+   *    2: SqlServer
+   *    3: Oracle
+   *    4: DB2
+   *    5: H3C
+   *    6: Inspur
+   *    20: H2
+   *
+   * NoSql 数据库:
+   *    1000: MongoDB
+   *
    * @see IDriver#id()
    */
   Integer dbid;

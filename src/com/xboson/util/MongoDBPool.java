@@ -23,6 +23,7 @@ import com.mongodb.client.MongoIterable;
 import com.mongodb.session.ClientSession;
 import com.xboson.been.MongoConfig;
 import com.xboson.been.XBosonException;
+import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -39,6 +40,7 @@ import java.util.*;
  */
 public class MongoDBPool extends OnExitHandle {
 
+  private static final int MONGODB_DB_TYPE = 1000;
   private static MongoDBPool instance;
   private GenericKeyedObjectPool<MongoClientURI, MongoClient> pool;
 
@@ -81,10 +83,9 @@ public class MongoDBPool extends OnExitHandle {
 
 
   /**
-   * 打开平台默认连接, 该方法没有优化, 为动态修改配置做准备.
+   * 用 mongo 配置, 打开客户端连接.
    */
-  public VirtualMongoClient get() {
-    MongoConfig mc = SysConfig.me().readConfig().mongodb;
+  public VirtualMongoClient get(MongoConfig mc) {
     if (!mc.enable) {
       throw new XBosonException("Default Mongodb Config disabled");
     }
@@ -96,6 +97,34 @@ public class MongoDBPool extends OnExitHandle {
     buf.append(mc.host);
     if (mc.port > 0) {
       buf.append(':').append(mc.port);
+    }
+    return get(buf.toString());
+  }
+
+
+  /**
+   * 使用数据源配置打开客户端连接
+   */
+  public VirtualMongoClient get(ConnectConfig conf) {
+    if (conf.getDbid() != MONGODB_DB_TYPE) {
+      throw new XBosonException.BadParameter(
+              "dbid="+conf.getDbid(),
+              "Is not Mongodb ("+MONGODB_DB_TYPE+')');
+    }
+
+    StringBuilder buf = new StringBuilder("mongodb://");
+    String user = conf.getUsername();
+    String ps   = conf.getPassword();
+    if (Tool.notNulStr(user) && Tool.notNulStr(ps)) {
+      buf.append(user).append(':').append(ps).append('@');
+    }
+    buf.append(conf.getHost());
+    if (conf.getIntPort(0) > 0) {
+      buf.append(':').append(conf.getPort());
+    }
+    String base = conf.getDatabase();
+    if (Tool.notNulStr(base)) {
+      buf.append('/').append(base);
     }
     return get(buf.toString());
   }

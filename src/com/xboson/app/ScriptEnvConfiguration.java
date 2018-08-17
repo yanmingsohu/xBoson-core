@@ -71,6 +71,7 @@ public final class ScriptEnvConfiguration {
     mod.put("ws",        WebService.class);
     mod.put("chain",     Chain.class);
     mod.put("digest",    Digest.class);
+    mod.put("crypto",    CryptoImpl.class);
     return mod;
   }
 }

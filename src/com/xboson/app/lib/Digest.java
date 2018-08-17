@@ -16,7 +16,9 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.script.lib.Buffer;
 import com.xboson.util.Hash;
+import com.xboson.util.Hex;
 
 
 /**
@@ -60,7 +62,13 @@ public class Digest {
   }
 
 
-  public class HashWarp {
+  public RuntimeUnitImpl.Bytes toBytes(String str, String coding) {
+    byte[] buf = Hex.decode(coding, str);
+    return new RuntimeUnitImpl.Bytes(buf);
+  }
+
+
+  public static class HashWarp {
     private Hash h;
 
     public HashWarp(String algorithm) {
@@ -80,6 +88,11 @@ public class Digest {
 
     public void update(RuntimeUnitImpl.Bytes b) {
       h.update(b.bin());
+    }
+
+
+    public void update(Buffer.JsBuffer b) {
+      h.update(b._buffer().array());
     }
 
 

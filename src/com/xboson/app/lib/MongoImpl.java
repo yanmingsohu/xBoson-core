@@ -21,9 +21,14 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
+import com.xboson.app.AppContext;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
+import com.xboson.been.LoginUser;
+import com.xboson.been.XBosonException;
+import com.xboson.db.ConnectConfig;
+import com.xboson.fs.mongo.SysMongoFactory;
 import com.xboson.util.MongoDBPool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
@@ -33,30 +38,49 @@ import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
 public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
+  /**
+   * url 类型前缀
+   */
+  public interface URLTypes {
+    /** Mongo url 前缀: mongodb://username:password@localhost:27017,somehost */
+    String MONGO = "mongodb://";
+
+    /** 数据源 url 前缀: source://sourcekey */
+    String SOURCEKEY = "source://";
+  }
+
+  private Set<String> dbBlackList;
+
+
   public MongoImpl() {
     super(null);
+    dbBlackList = new HashSet<>();
+    dbBlackList.add(SysMongoFactory.DEFAULT_DISK);
   }
 
 
-  public Client connect(String url) {
+  public Client connect(String url) throws Exception {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    MongoDBPool.VirtualMongoClient client = MongoDBPool.me().get(url);
-    return new Client(client);
-  }
+    MongoDBPool.VirtualMongoClient client;
 
-
-  public Client connect() {
-    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    MongoDBPool.VirtualMongoClient client = MongoDBPool.me().get();
+    if (url.startsWith(URLTypes.MONGO)) {
+      client = MongoDBPool.me().get(url);
+    }
+    else if (url.startsWith(URLTypes.SOURCEKEY)) {
+      String key = url.substring(URLTypes.SOURCEKEY.length());
+      LoginUser user = (LoginUser) AppContext.me().who();
+      ConnectConfig cc = SqlImpl.sourceConfig(key, user.userid);
+      client = MongoDBPool.me().get(cc);
+    }
+    else {
+      throw new XBosonException("Invaild URL: "+ url);
+    }
     return new Client(client);
   }
 

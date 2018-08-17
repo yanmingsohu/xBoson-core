@@ -16,6 +16,7 @@
 
 package com.xboson.script.lib;
 
+import com.xboson.app.lib.RuntimeUnitImpl;
 import com.xboson.util.c0nst.IConstant;
 
 import java.io.IOException;
@@ -52,6 +53,11 @@ public class JsOutputStream extends OutputStream {
   @Override
   public void write(byte[] bytes, int i, int i1) throws IOException {
     ori.write(bytes, i, i1);
+  }
+
+
+  public void write(RuntimeUnitImpl.Bytes bs) throws IOException {
+    ori.write(bs.bin());
   }
 
 

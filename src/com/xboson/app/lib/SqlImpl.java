@@ -278,36 +278,13 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
   public void connection(String key) throws Exception {
     //PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    ConnectConfig db =  SysConfig.me().readConfig().db;
-    String userid = cd.sess.login_user.userid;
-
-    if (userid == null) {
-      throw new XBosonException("Cannot found USER_ID in request");
-    }
-
-    try (SqlResult sr = SqlReader.query(
-            "open_db_with_userid", db, key, userid)) {
-      ResultSet rs = sr.getResult();
-      if (! rs.next()) {
-        throw new XBosonException("Cannot connect to DB: " + key);
-      }
-
-      ConnectConfig connsetting = new ConnectConfig();
-      connsetting.setDbid(rs.getInt("dbid"));
-      connsetting.setHost(rs.getString("host"));
-      connsetting.setPort(rs.getString("port"));
-      connsetting.setUsername(rs.getString("username"));
-      connsetting.setPassword(rs.getString("password"));
-      connsetting.setDatabase(rs.getString("database"));
-
-      Connection newconn = DbmsFactory.me().open(connsetting);
-      close();
-      __conn = newconn;
-      __currdb = connsetting;
-      setDBType(connsetting.getDbid());
-    }
+    ConnectConfig connsetting = sourceConfig(key, cd.sess.login_user.userid);
+    Connection newconn = DbmsFactory.me().open(connsetting);
+    close();
+    __conn = newconn;
+    __currdb = connsetting;
+    setDBType(connsetting.getDbid());
   }
-
 
 
   /**
@@ -322,6 +299,39 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     close();
     __conn = newconn;
     _dbType = "x";
+  }
+
+
+  /**
+   * 从数据源配置列表中获取一个数据源配置, 会检查用户对数据源的权限, 失败抛出异常.
+   * @param sourceID 数据源 id
+   * @param userID 用户 id
+   * @return 数据库配置
+   */
+  public static ConnectConfig sourceConfig(String sourceID, String userID)
+          throws SQLException {
+    if (userID == null) {
+      throw new XBosonException("Cannot found USER_ID in request");
+    }
+
+    ConnectConfig db =  SysConfig.me().readConfig().db;
+
+    try (SqlResult sr = SqlReader.query(
+            "open_db_with_userid", db, sourceID, userID)) {
+      ResultSet rs = sr.getResult();
+      if (! rs.next()) {
+        throw new XBosonException("Cannot connect to DB: " + sourceID);
+      }
+
+      ConnectConfig conf = new ConnectConfig();
+      conf.setDbid(rs.getInt("dbid"));
+      conf.setHost(rs.getString("host"));
+      conf.setPort(rs.getString("port"));
+      conf.setUsername(rs.getString("username"));
+      conf.setPassword(rs.getString("password"));
+      conf.setDatabase(rs.getString("database"));
+      return conf;
+    }
   }
 
 

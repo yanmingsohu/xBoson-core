@@ -1184,6 +1184,24 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public Bytes joinBytes(Bytes...arr) {
+    int total = 0;
+    for (Bytes b : arr) {
+      if (b == null) continue;
+      total += b.bin().length;
+    }
+    byte[] base = new byte[total];
+    int begin = 0;
+    for (Bytes b : arr) {
+      if (b == null) continue;
+      byte[] read = b.bin();
+      System.arraycopy(read, 0, base, begin, read.length);
+      begin += read.length;
+    }
+    return new Bytes(base);
+  }
+
+
   /**
    * 没有 api 用到这个函数, 通过其他函数组合可以实现
    */
