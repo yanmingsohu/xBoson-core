@@ -1184,24 +1184,6 @@ public class SysImpl extends DateImpl {
   }
 
 
-  public Bytes joinBytes(Bytes...arr) {
-    int total = 0;
-    for (Bytes b : arr) {
-      if (b == null) continue;
-      total += b.bin().length;
-    }
-    byte[] base = new byte[total];
-    int begin = 0;
-    for (Bytes b : arr) {
-      if (b == null) continue;
-      byte[] read = b.bin();
-      System.arraycopy(read, 0, base, begin, read.length);
-      begin += read.length;
-    }
-    return new Bytes(base);
-  }
-
-
   /**
    * 没有 api 用到这个函数, 通过其他函数组合可以实现
    */
@@ -1226,7 +1208,7 @@ public class SysImpl extends DateImpl {
   /**
    * 检查授权证书中是否有 authName 的使用授权, 未授权抛出异常.
    *
-   * ! 隐藏函数不做文档, 让谁都看不懂 !
+   * ! 隐藏函数不做文档 !
    */
   public void authorization(String authName) {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, ()-> authName);

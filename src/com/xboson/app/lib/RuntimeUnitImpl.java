@@ -17,11 +17,11 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
-import com.xboson.been.IJson;
-import com.xboson.been.JsonHelper;
 import com.xboson.been.XBosonException;
+import com.xboson.script.lib.Bytes;
 import com.xboson.util.Hex;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
@@ -36,7 +36,7 @@ import java.util.*;
 
 
 /**
- * js 运行时抽象基类
+ * js 运行时抽象基类, 该类中定义的公共方法将被导出到 js 环境中.
  */
 public abstract class RuntimeUnitImpl implements IApiConstant {
 
@@ -218,7 +218,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
    * 便捷方法
    * @see QueryImpl#copyToList(RuntimeUnitImpl, ScriptObjectMirror, ResultSet)
    */
-  public int copyToList(ScriptObjectMirror list, ResultSet rs)
+  protected int copyToList(ScriptObjectMirror list, ResultSet rs)
           throws SQLException {
     return QueryImpl.copyToList(this, list, rs);
   }
@@ -432,83 +432,31 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
   }
 
 
-
-  /**
-   * 字节数组对象, 可以将字节数组和字符串互相转换
-   */
-  public static class Bytes implements IJson {
-    private byte[] key;
-    private String s_key;
-
-
-    /**
-     * @param s - base64 编码字符串
-     */
-    public Bytes(String s) {
-      this.s_key = s;
-    }
-
-
-    public Bytes(byte[] k) {
-      this.key = k;
-    }
-
-
-    /**
-     * 0 字节数组
-     */
-    public Bytes() {
-      this.key = new byte[0];
-    }
-
-
-    @Override
-    public String toString() {
-      if (s_key == null) {
-        s_key = Hex.encode64(key);
-      }
-      return s_key;
-    }
-
-
-    public String toHex() {
-      if (key == null) {
-        if (s_key == null) {
-          return null;
-        }
-        bin();
-      }
-      return Hex.upperHex(key);
-    }
-
-
-    public byte[] bin() {
-      if (key == null) {
-        key = Hex.decode64(s_key);
-      }
-      return key;
-    }
-
-
-    public String toJavaString() {
-      return new String(bin());
-    }
-
-
-    @Override
-    public String toJSON() {
-      return JsonHelper.toJSON(toString());
-    }
-
-
-    public Bytes concat(Bytes other) {
-      byte[] a = this.bin();
-      byte[] b = other.bin();
-      byte[] c = new byte[a.length + b.length];
-      System.arraycopy(a, 0, c, 0, a.length);
-      System.arraycopy(b, 0, c, a.length, b.length);
-      return new Bytes(c);
-    }
+  public Bytes toBytes(String str, String coding) {
+    byte[] buf = Hex.decode(coding, str);
+    return new Bytes(buf);
   }
 
+
+  public Bytes toBytes(String javastr) {
+    return new Bytes(javastr.getBytes(IConstant.CHARSET));
+  }
+
+
+  public Bytes joinBytes(Bytes...arr) {
+    int total = 0;
+    for (Bytes b : arr) {
+      if (b == null) continue;
+      total += b.bin().length;
+    }
+    byte[] base = new byte[total];
+    int begin = 0;
+    for (Bytes b : arr) {
+      if (b == null) continue;
+      byte[] read = b.bin();
+      System.arraycopy(read, 0, base, begin, read.length);
+      begin += read.length;
+    }
+    return new Bytes(base);
+  }
 }

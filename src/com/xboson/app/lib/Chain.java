@@ -18,7 +18,6 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.auth.IAResource;
-import com.xboson.auth.PermissionException;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.Config;
@@ -26,12 +25,12 @@ import com.xboson.been.XBosonException;
 import com.xboson.chain.*;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.script.lib.Bytes;
 import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
-import javax.security.auth.AuthPermission;
 import java.security.KeyPair;
 import java.sql.ResultSet;
 import java.sql.SQLException;

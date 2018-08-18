@@ -16,14 +16,14 @@
 
 package com.xboson.util.converter;
 
-import com.xboson.app.lib.RuntimeUnitImpl;
+import com.xboson.script.lib.Bytes;
 
 
 public class BytesConverter extends
-        AbsJsonConverterHelper<RuntimeUnitImpl.Bytes> {
+        AbsJsonConverterHelper<Bytes> {
 
   @Override
-  Class<RuntimeUnitImpl.Bytes> classType() {
-    return RuntimeUnitImpl.Bytes.class;
+  Class<Bytes> classType() {
+    return Bytes.class;
   }
 }

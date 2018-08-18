@@ -17,14 +17,19 @@
 package com.xboson.app.lib;
 
 import com.xboson.script.lib.Buffer;
+import com.xboson.script.lib.Bytes;
 import com.xboson.util.Hash;
-import com.xboson.util.Hex;
 
 
 /**
  * 摘要算法
  */
-public class Digest {
+public class Digest extends RuntimeUnitImpl {
+
+
+  public Digest() {
+    super(null);
+  }
 
 
   public HashWarp sha1() {
@@ -62,12 +67,6 @@ public class Digest {
   }
 
 
-  public RuntimeUnitImpl.Bytes toBytes(String str, String coding) {
-    byte[] buf = Hex.decode(coding, str);
-    return new RuntimeUnitImpl.Bytes(buf);
-  }
-
-
   public static class HashWarp {
     private Hash h;
 
@@ -86,7 +85,7 @@ public class Digest {
     }
 
 
-    public void update(RuntimeUnitImpl.Bytes b) {
+    public void update(Bytes b) {
       h.update(b.bin());
     }
 
@@ -96,8 +95,8 @@ public class Digest {
     }
 
 
-    public RuntimeUnitImpl.Bytes digest() {
-      return new RuntimeUnitImpl.Bytes(h.digest());
+    public Bytes digest() {
+      return new Bytes(h.digest());
     }
   }
 }

@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Buffer;
+import com.xboson.script.lib.Bytes;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 

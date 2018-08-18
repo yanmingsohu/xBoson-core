@@ -74,7 +74,7 @@ public class Hex {
 
 
   /**
-   * base64 编码
+   * base64 url without padding 编码
    */
   public static String encode64(byte[] bin) {
     return b64e.encodeToString(bin);
@@ -82,7 +82,7 @@ public class Hex {
 
 
   /**
-   * base64 解码
+   * base64 url 解码
    */
   public static byte[]  decode64(String base64str) {
     return b64d.decode(base64str);
@@ -93,7 +93,7 @@ public class Hex {
    * 按照指定的编码将 data 解密为字节数组
    * @param coding 编码名: base58/base64/base64url/hex
    * @param data 已编码字符串
-   * @see Names
+   * @see Names 可用编码
    */
   public static byte[] decode(String coding, String data) {
     switch (coding.toLowerCase()) {
@@ -108,6 +108,31 @@ public class Hex {
 
       case Names.HEX:
         return parse(data);
+
+      default:
+        throw new XBosonException.BadParameter(
+                "String coding", "unknow coding: "+ coding);
+    }
+  }
+
+
+  /**
+   * 编码字节数组为字符串
+   * @see Names 可用编码
+   */
+  public static String encode(String coding, byte[] data) {
+    switch (coding.toLowerCase()) {
+      case Names.BASE58:
+        return Base58.encode(data);
+
+      case Names.BASE64:
+        return Base64.getEncoder().encodeToString(data);
+
+      case Names.BASE64URL:
+        return b64e.encodeToString(data);
+
+      case Names.HEX:
+        return upperHex(data);
 
       default:
         throw new XBosonException.BadParameter(
