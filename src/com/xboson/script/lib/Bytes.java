@@ -19,14 +19,13 @@ package com.xboson.script.lib;
 import com.xboson.been.IJson;
 import com.xboson.been.JsonHelper;
 import com.xboson.util.Hex;
-import jdk.nashorn.api.scripting.AbstractJSObject;
 
 
 /**
  * 字节数组对象, 可以将字节数组和字符串互相转换.
  * 不可直接导出到 js 环境.
  */
-public class Bytes extends AbstractJSObject implements IJson {
+public class Bytes implements IJson {
   private byte[] key;
   private String s_key;
 
@@ -41,24 +40,6 @@ public class Bytes extends AbstractJSObject implements IJson {
 
   public Bytes(byte[] k) {
     this.key = k;
-  }
-
-
-  @Override
-  public Object getSlot(int index) {
-    return bin()[index];
-  }
-
-
-  @Override
-  public boolean hasSlot(int slot) {
-    return slot > 0 && slot < bin().length;
-  }
-
-
-  @Override
-  public void setSlot(int index, Object value) {
-    bin()[index] = (byte) value;
   }
 
 

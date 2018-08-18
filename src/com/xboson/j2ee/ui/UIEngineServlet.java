@@ -171,7 +171,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("POST");
   }
 
 

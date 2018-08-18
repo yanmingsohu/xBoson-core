@@ -21,7 +21,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * 区块链管理 角色字段完成.
 * 增加公共服务注册: 增加openpi 公共接口, 在表 sys_open_api 中注册的接口使用用户 
   anonymous访问, 在平台上模拟 anonymous 用户, 在数据库上增加 anonymous 用户.
-* 构建流程图应用, 预览不一致
 * 构建宣传页.
 * 完成 ui 模板文档, 扩展 wiki, 尝试将 wiki 挂载到公共服务
 * 接管 Tomcat.
