@@ -30,7 +30,7 @@ public class PermissionException extends XBosonException {
 
 
   public PermissionException(String s) {
-    super(s);
+    super(s, 1101);
   }
 
 
@@ -45,7 +45,7 @@ public class PermissionException extends XBosonException {
 
 
   public PermissionException(IAWho who, IAWhere where, IAResource res) {
-    this(who, where, res, 1100);
+    this(who, where, res, 1101);
   }
 
 

@@ -19,6 +19,7 @@ package com.xboson.service;
 import com.xboson.app.AppContext;
 import com.xboson.been.ApiCall;
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 
@@ -39,6 +40,8 @@ public class App extends XService {
 
   @Override
   public void service(CallData data) throws ServletException, IOException {
+    OpenApp.banAnonymous(data);
+
     AppContext af = AppContext.me();
     data.url.setErrorMessage(PATH_FOTMAT);
 

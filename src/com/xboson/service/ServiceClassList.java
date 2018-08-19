@@ -29,6 +29,7 @@ public interface ServiceClassList {
           OAuth2.class,
           OlderApi.class,
           Witness.class,
+          OpenApp.class,
   };
 
 }

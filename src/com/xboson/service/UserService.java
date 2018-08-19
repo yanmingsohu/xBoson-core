@@ -75,6 +75,8 @@ public class UserService extends XService implements IDict, IConstant {
     try {
       subService(data, MSG);
     } catch (XBosonException.NoService ns) {
+      OpenApp.banAnonymous(data);
+
       ApiCall ac = new ApiCall(
         data.getString("org", 0, 100),
         data.getString("app", 1, 100),
@@ -106,7 +108,7 @@ public class UserService extends XService implements IDict, IConstant {
    * password 参数必须已经 md5 后传入接口.
    */
 	public void login(CallData data) throws Exception {
-	  if (isLogin(data)) {
+	  if (isLogin(data) && !OpenApp.isAnonymousUser(data)) {
       data.xres.bindResponse("openid", data.sess.login_user.userid);
       msg(data, "用户已经登录", 0);
       return;
@@ -129,6 +131,8 @@ public class UserService extends XService implements IDict, IConstant {
         return;
       }
     }
+
+    OpenApp.banAnonymous(userid);
 
     boolean isRoot = userid.equals(cf.rootUserName)
             && md5ps.equals(cf.rootPassword);
