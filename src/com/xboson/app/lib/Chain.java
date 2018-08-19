@@ -21,6 +21,7 @@ import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.Config;
+import com.xboson.been.LoginUser;
 import com.xboson.been.XBosonException;
 import com.xboson.chain.*;
 import com.xboson.db.SqlResult;
@@ -41,7 +42,9 @@ import java.sql.SQLException;
  */
 public class Chain extends RuntimeUnitImpl implements IAResource {
 
-  private static final String SQL_OPEN  = "open_chain";
+  private static final String SQL_OPEN    = "open_chain";
+  private static final String ID_PREFIX   = "id://";
+  private static final String NAME_PREFIX = "name://";
 
   public final int TYPE_LENGTH = ITypes.LENGTH;
   public final int GENESIS     = ITypes.GENESIS;
@@ -55,11 +58,23 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public Object open(String chain_id) {
+  public Object open(String exp) {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    String[] names = getChainConfig(chain_id);
+    String[] names;
+    if (exp.startsWith(ID_PREFIX)) {
+      String id = exp.substring(ID_PREFIX.length());
+      names = getChainConfig(id, null);
+    }
+    else if (exp.startsWith(NAME_PREFIX)) {
+      String name = exp.substring(NAME_PREFIX.length());
+      names = getChainConfig(null, name);
+    }
+    else {
+      throw new XBosonException.BadParameter(
+              "String exp", "Exp like `id://*` or `name://*`");
+    }
     if (names == null) {
-      throw new XBosonException("Cannot open chain: "+ chain_id);
+      throw new XBosonException("Cannot open chain from: "+ exp);
     }
     return new ChainImpl(names[0], names[1]);
   }
@@ -101,10 +116,12 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
    * 打开链, 如果链设置的角色属性为空, 则任何人都可以打开该链,
    * 否则只有该角色的用户可以打开链
    * @param chain_id
+   * @param name
    * @return [physical_chain, physical_channel]
    */
-  private String[] getChainConfig(String chain_id) {
-    Object[] parm = { chain_id, AppContext.me().who().identification() };
+  private String[] getChainConfig(String chain_id, String name) {
+    LoginUser user = (LoginUser) AppContext.me().who();
+    Object[] parm = { chain_id, name, user.userid, user.pid };
 
     try (SqlResult sr = SqlReader.query(SQL_OPEN, cf.db, parm)) {
       ResultSet rs = sr.getResult();
