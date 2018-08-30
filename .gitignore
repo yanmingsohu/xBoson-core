@@ -8,6 +8,7 @@ gradle/**
 build/**
 .classpath
 .project
+.DS_Store
 
 *.class
 *.zip
