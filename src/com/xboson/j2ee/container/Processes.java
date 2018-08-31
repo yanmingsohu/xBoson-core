@@ -206,7 +206,9 @@ public final class Processes {
   private String execution(License license) throws Exception {
     CRC32 crc = new CRC32();
     crc.update(Tool.readAllBytes(license.getPublicKeyFile()));
-
+Tool.pl("---------------------crc", crc.getValue(), Version.PKCRC,
+        license.getPublicKeyFile());
+Tool.println(Tool.readAllBytes(license.getPublicKeyFile()));
     if (crc.getValue() != Version.PKCRC) {
       return s[7];
     }

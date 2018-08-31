@@ -251,7 +251,7 @@ public final class Tool extends StaticLogProvider {
   public static void copy(InputStream src, OutputStream dst, boolean close) throws IOException {
     try {
       byte[] buff = new byte[1024];
-      int len = 0;
+      int len;
       while ((len = src.read(buff)) > 0) {
         dst.write(buff, 0, len);
       }

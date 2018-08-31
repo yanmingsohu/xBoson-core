@@ -67,7 +67,7 @@ public class StringBufferOutputStream extends OutputStream {
   public void write(int b) throws IOException {
     buf[pos] = (byte) b;
     if (++pos >= buf.length) {
-      buf = Arrays.copyOf(buf, buf.length * 2);
+      buf = Arrays.copyOf(buf, buf.length << 1);
     }
   }
 

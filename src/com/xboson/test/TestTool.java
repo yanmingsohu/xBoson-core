@@ -22,6 +22,7 @@ import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
 import com.xboson.util.ChineseInital;
+import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -30,6 +31,7 @@ import okhttp3.Response;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -53,6 +55,27 @@ public class TestTool extends Test {
     test_calendar();
     read_package();
     null_speed();
+    copy_bytes();
+  }
+
+
+  public void copy_bytes() throws IOException {
+    StringBufferOutputStream out = new StringBufferOutputStream();
+    InputStream i = new Counter();
+    out.write(i);
+    byte[] b = out.toBytes();
+    Tool.println(b);
+  }
+
+
+  private class Counter extends InputStream {
+    int i = 0;
+
+    @Override
+    public int read() throws IOException {
+      if (i > 10240) return -1;
+      return i++%16;
+    }
   }
 
 
