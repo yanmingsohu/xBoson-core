@@ -24,33 +24,22 @@ import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.SingleFile;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
-import com.xboson.util.Tool;
 import com.xboson.util.Version;
+import com.xboson.util.c0nst.IConstant;
 
 import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.*;
 import java.nio.file.WatchEvent;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.CRC32;
-
-import static com.xboson.been.License.PUB_FILE;
 
 
 public final class Processes {
@@ -204,13 +193,20 @@ public final class Processes {
 
 
   private String execution(License license) throws Exception {
+    //
+    // crc 算法放在这里方便混淆.
+    // 之所以使用 readLine 是因为文本换行在不同系统上的差异导致 crc 不一致.
+    //
     CRC32 crc = new CRC32();
-    crc.update(Tool.readAllBytes(license.getPublicKeyFile()));
-Tool.pl("---------------------crc", crc.getValue(), Version.PKCRC,
-        license.getPublicKeyFile());
-Tool.println(Tool.readAllBytes(license.getPublicKeyFile()));
+    BufferedReader read = new BufferedReader(
+            new FileReader(license.getPublicKeyFile()));
+    String line;
+    while ((line = read.readLine()) != null) {
+      crc.update(line.getBytes(IConstant.CHARSET));
+    }
+
     if (crc.getValue() != Version.PKCRC) {
-      return s[7];
+      return s[7] +' '+ Long.toString(Long.MAX_VALUE-crc.getValue(), 16);
     }
 
     if (! license.zz().equals(License.singleline(license.z))) {

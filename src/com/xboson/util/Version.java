@@ -22,8 +22,9 @@ public class Version {
   public final static String Name = "智慧大数据开放平台";
 
   /**
-   * 公钥 CRC, 不一致程序不能启动
+   * 公钥 CRC, 不一致程序不能启动,
+   * 控制台会输出 crc 的正确数字, 将数字替换 0xNL 中的 N 即可.
    */
-  public final static long PKCRC = 3128569923L;
+  public final static long PKCRC = Long.MAX_VALUE- 0x7fffffff9ca646f7L;
 
 }

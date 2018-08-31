@@ -60,21 +60,29 @@ public class TestTool extends Test {
 
 
   public void copy_bytes() throws IOException {
+    sub("Copyt bytes [Tool / StringBufferOutputStream]");
     StringBufferOutputStream out = new StringBufferOutputStream();
-    InputStream i = new Counter();
-    out.write(i);
+    InputStream input = new Counter();
+    out.write(input);
+
     byte[] b = out.toBytes();
-    Tool.println(b);
+    for (int i=0; i<b.length; ++i) {
+      if (i%16 != b[i]) {
+        fail("copy bytes on offset", i, b[i], "!=", i%16);
+        return;
+      }
+    }
+    msg("ok, bytes length is", b.length);
   }
 
 
   private class Counter extends InputStream {
-    int i = 0;
+    int i = -1;
 
     @Override
     public int read() throws IOException {
       if (i > 10240) return -1;
-      return i++%16;
+      return ++i%16;
     }
   }
 
@@ -98,6 +106,7 @@ public class TestTool extends Test {
       }
     }
     endTime("String.trim().length()", count);
+    msg("ok");
 
     beginTime();
     for (int i=0; i<count; ++i) {
@@ -106,6 +115,7 @@ public class TestTool extends Test {
       }
     }
     endTime("Tool.isNulStr()", count);
+    msg("ok");
   }
 
 

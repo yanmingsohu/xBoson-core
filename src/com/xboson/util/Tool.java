@@ -270,7 +270,7 @@ public final class Tool extends StaticLogProvider {
       StringBuilder out = new StringBuilder();
       r = new FileReader(filename);
       char[] buff = new char[1024];
-      int len = 0;
+      int len;
       while ((len = r.read(buff)) > 0) {
         out.append(buff, 0, len);
       }
