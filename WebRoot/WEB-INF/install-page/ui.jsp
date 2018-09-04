@@ -56,7 +56,7 @@
           <tr>
             <td class='td1'>静态文件根目录:</td><td>
               <input name="uiUrl" value="${ param.uiUrl }" />
-              <a href='#' val='/home/plat/web4xboson/public'
+              <a href='#' val='~/web4xboson/public'
                  setto='[name=uiUrl]'/>(Linux)</a>
               <a href='#' val='C:\web4xboson\public'
                  setto='[name=uiUrl]'/>(Windows)</a>

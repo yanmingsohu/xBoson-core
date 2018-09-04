@@ -2,6 +2,8 @@
 
 Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
+> 该文档部分内容为商业机密
+
 
 # 注意:
 
@@ -12,14 +14,14 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * SqlServer 2012 之后的版本支持分页查询.
 * 使用 `gradle` 构建/发布混淆后的 war 包.
 * 配置文件中 `rootUserName: admin-pl`, 
-  `rootPassword: 61a8ecea2a10a16ef19cad494862ee5f` 方可启用超级用户
+  `rootPassword: 861170a039539136e605744dbbeb81e607173d1aa8e94bac1f0db9ba77ec88fc` 
+  方可启用超级用户
 * 若要启用区块链服务器, 必须有 0 号节点.
 
 
 # 需要做:
 
 * 构建宣传页.
-* 见证者直接通过接口拉取区块.
 * 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)
 * 接管 Tomcat.
 * 云盘系统(api已经完成)

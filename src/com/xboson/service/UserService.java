@@ -110,6 +110,8 @@ public class UserService extends XService implements IDict, IConstant {
   /**
    * 检查登录攻击, 失败次数, 验证图片
    * password 参数必须已经 md5 后传入接口.
+   *
+   * @see com.xboson.test.TestSign#admin() 计算 root 用户密钥.
    */
 	public void login(CallData data) throws Exception {
 	  if (isLogin(data) && !OpenApp.isAnonymousUser(data)) {
@@ -138,10 +140,7 @@ public class UserService extends XService implements IDict, IConstant {
 
     OpenApp.banAnonymous(userid);
 
-    boolean isRoot = userid.equals(cf.rootUserName)
-            && md5ps.equals(cf.rootPassword);
-    LoginUser lu = LoginUser.fromDb(userid, cf.db, isRoot);
-
+    LoginUser lu = LoginUser.fromDb(userid, cf.db, md5ps);
     if (lu == null) {
       msg(data, "用户不存在", 1014);
       ipLoginFail(data);

@@ -47,7 +47,7 @@
           <tr>
             <td class='td1'>静态文件根目录:</td><td>
               <input name="nodeUrl" value="${ param.nodeUrl }" />
-              <a href='#' val='/home/plat/web4xboson/xboson-node-modules'
+              <a href='#' val='~/web4xboson/xboson-node-modules'
                  setto='[name=nodeUrl]'/>(Linux)</a>
               <a href='#' val='C:\web4xboson\xboson-node-modules'
                  setto='[name=nodeUrl]'/>(Windows)</a>

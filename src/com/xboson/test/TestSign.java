@@ -17,6 +17,9 @@
 package com.xboson.test;
 
 import com.xboson.been.License;
+import com.xboson.util.Hash;
+import com.xboson.util.Hex;
+import com.xboson.util.Password;
 import com.xboson.util.Version;
 
 import java.io.File;
@@ -33,10 +36,12 @@ public class TestSign extends Test {
   public void test() throws Throwable {
     init();
     write();
+    admin();
   }
 
 
   private void init() throws UnsupportedEncodingException {
+    // 使用后注释, 防止出现在代码中
     String s[] = new String[] {
 //            "Bad License, Copy protection",
 //            "Bad License, Wrong application",
@@ -57,6 +62,22 @@ public class TestSign extends Test {
       msg("        \""+ s[i] +"\",");
     }
     msg("};");
+  }
+
+
+  /**
+   * 计算超级管理员密钥, 使用后全部注释, 防止出现在代码中
+   * @throws Exception
+   */
+  private void admin() throws Exception {
+//    sub("Root password");
+//    String userid = "admin-pl";
+//    String ps = "vfr4#3edc";
+//    Hash h = new Hash();
+//    h.update(userid);
+//    h.update(Hex.lowerHex(Password.md5(ps)));
+//    h.update("Fm=κqm1qm2/γ2r <Magnetic coulomb law>");
+//    msg("ROOT:", userid, h.digestStr());
   }
 
 

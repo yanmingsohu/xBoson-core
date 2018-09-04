@@ -23,7 +23,10 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.service.UserService;
+import com.xboson.util.Hash;
 import com.xboson.util.Password;
+import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -68,17 +71,37 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
   }
 
 
+  public static LoginUser fromDb(String userid, ConnectConfig db)
+          throws SQLException {
+    return fromDb(userid, db, null);
+  }
+
+
   /**
    * 从数据库中恢复用户
+   *
    * @param userid 用户 id
    * @param db 数据库连接配置
-   * @param isRoot false 则总是创建普通用户.
+   * @param ps 登录密码, 可以空; 该参数用于检查是否超级管理员.
    * @return 找不到返回 null
    * @throws SQLException
    */
-  public static LoginUser fromDb(String userid, ConnectConfig db, boolean isRoot)
+  public static LoginUser fromDb(String userid, ConnectConfig db, String ps)
           throws SQLException
   {
+    //
+    // 该算法和登录放在一起方便混淆
+    //
+    Config cf = SysConfig.me().readConfig();
+    boolean isRoot = false;
+    if (Tool.notNulStr(ps) && userid.equals(cf.rootUserName)) {
+      Hash h = new Hash();
+      h.update(userid);
+      h.update(ps);
+      h.update("Fm=κqm1qm2/γ2r <Magnetic coulomb law>");
+      isRoot = h.digestStr().equals(cf.rootPassword);
+    }
+
     //
     // 把 userid 分别假设为 userid/tel/email 查出哪个算哪个
     //

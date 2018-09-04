@@ -103,7 +103,7 @@ public class SessionCluster extends HttpFilter {
       throw new XBosonException("invalid Token: "+ token, 21323);
     }
 
-    LoginUser user = LoginUser.fromDb(at.userid, db, false);
+    LoginUser user = LoginUser.fromDb(at.userid, db);
     if (user == null) {
       throw new XBosonException("Token 对应的用户无法访问: "+ at.userid);
     }

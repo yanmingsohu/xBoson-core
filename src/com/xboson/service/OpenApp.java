@@ -136,7 +136,7 @@ public class OpenApp extends XService {
    */
   private LoginUser buildAnonymousUser() {
     try {
-      LoginUser user = LoginUser.fromDb(Anonymous, cf.db, false);
+      LoginUser user = LoginUser.fromDb(Anonymous, cf.db);
       if (user != null) {
         user.bindUserRoles(cf.db);
         return user;

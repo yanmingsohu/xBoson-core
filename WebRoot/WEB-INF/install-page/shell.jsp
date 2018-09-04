@@ -36,7 +36,7 @@
           <tr>
             <td>脚本目录</td><td>
             <input name="shellUrl" value="${ param.shellUrl }" />
-              <a href='#' val='/home/plat/web4xboson/shell-script'
+              <a href='#' val='~/web4xboson/shell-script'
                  setto='[name=shellUrl]'/>(Linux)</a>
               <a href='#' val='c:\web4xboson\shell-script'
                  setto='[name=shellUrl]'/>(Windows)</a>

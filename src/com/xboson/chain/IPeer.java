@@ -132,6 +132,7 @@ public interface IPeer extends Serializable, IXRemote {
   /**
    * 返回链的见证者公钥, 如果见证者不用于链的签名(不存在于共识表达式中) 返回 null.
    */
-  PublicKey getWitnessPublicKey(String chain, String channel, String wid);
+  PublicKey getWitnessPublicKey(String chain, String channel, String wid)
+          throws RemoteException;
 
 }
