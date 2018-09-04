@@ -99,7 +99,11 @@ public class UserService extends XService implements IDict, IConstant {
 
   private void msg(CallData data, String msg, int code) throws IOException {
     data.xres.responseMsg(msg, code);
-    access.log(data.sess.login_user, code, msg);
+    if (data.sess.login_user != null) {
+      access.log(data.sess.login_user, code, msg);
+    } else {
+      access.log(data.getString("userid", 0, 50), code, msg);
+    }
   }
 
 

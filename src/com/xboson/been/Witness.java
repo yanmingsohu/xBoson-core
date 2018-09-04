@@ -16,6 +16,12 @@
 
 package com.xboson.been;
 
+import com.xboson.chain.Btc;
+import com.xboson.util.Hex;
+
+import java.security.PublicKey;
+
+
 public class Witness {
 
   public final String id;
@@ -34,5 +40,10 @@ public class Witness {
     this.host         = host;
     this.algorithm    = algorithm;
     this.port         = port;
+  }
+
+
+  public PublicKey getPublicKey() {
+    return Btc.publicKey(Hex.Names.BASE64, publicKeyStr);
   }
 }

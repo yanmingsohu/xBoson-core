@@ -39,6 +39,10 @@ public class OpenApp extends XService {
   private static final String BAN_AM    = "Anonymous users are prohibited";
   private static final String BAN_APP   = "Application is forbidden";
   private static final String Anonymous = "anonymous";
+
+  /**
+   * 这些模块禁止访问, 对于信息安全敏感的接口模块都需要放在这里.
+   */
   private static final Set<String>
   BlackAppList = JavaConverter.arr2set(new String[] {
           "03229cbe4f4f11e48d6d6f51497a883b", // 应用信息管理

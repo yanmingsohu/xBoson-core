@@ -68,7 +68,7 @@ public class ChainSignerProvider implements
     private IConsensusUnit consensus;
     private KeyPair[] keys;
     private String signer_algorithm;
-    private String chain;  // 虽然没有使用过, 但是序列化时将被保存在创世区块上
+    private String chain;
     private String channel;
     private String consensusExp;
     private Map<String, PublicKey> usedKeys;
@@ -96,7 +96,7 @@ public class ChainSignerProvider implements
         si.initSign(pair.getPrivate());
         block.writeTo(IBytesWriter.wrap(si), keys);
         block.pushSign(new SignNode(si.sign(), block.type));
-        SignerProxy.deliver(usedKeys.keySet(), block);
+        SignerProxy.deliver(usedKeys.keySet(), block, chain, channel);
       } catch (Exception e) {
         throw new XBosonException(e);
       }
@@ -117,6 +117,12 @@ public class ChainSignerProvider implements
       } catch (Exception e) {
         throw new XBosonException(e);
       }
+    }
+
+
+    @Override
+    public PublicKey getWitnessPublicKey(String wid) {
+      return usedKeys.get(wid);
     }
 
 

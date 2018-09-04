@@ -132,7 +132,8 @@ public class SignerProxy {
    * 将区块交付给 witnessIdSet 中所有见证者, 该任务在单独的线程中执行;
    * 可以保证区块的顺序, 但不保证区块一定可以递交给见证者, 如网络错误时.
    */
-  public static void deliver(Set<String> witnessIdSet, Block b) {
+  public static void deliver(Set<String> witnessIdSet, Block b,
+                             String chain, String channel) {
     EventLoop.me().add(() -> {
       WitnessFactory wf = WitnessFactory.me();
       Log log = wf.getWitnessLog();
@@ -142,8 +143,8 @@ public class SignerProxy {
           continue;
 
         WitnessConnect wc = WitnessFactory.me().openConnection(wid);
-        if (! wc.doDeliver(b)) {
-          log.debug("Skip Deliver Witness:", wid);
+        if (! wc.doDeliver(b, chain, channel)) {
+          log.warn("Skip Deliver Witness:", wid);
           wf.setSkipDeliver(wid);
         }
       }

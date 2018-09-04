@@ -101,11 +101,13 @@ public class WitnessConnect {
    * 将区块数据以 json 格式发送给见证者,
    * 如果见证者没有实现该接口返回 false, 成功返回 true.
    */
-  public boolean doDeliver(Block b) {
+  public boolean doDeliver(Block b, String chain, String channel) {
     String json = Tool.getAdapter(Block.class).toJson(b);
     HttpUrl urlobj = makeUrl(DELIVER_METHOD);
     Request.Builder build = new Request.Builder();
     build.url(urlobj);
+    build.addHeader("chain",   chain);
+    build.addHeader("channel", channel);
     RequestBody body = RequestBody.create(BINARY, json);
     build.post(body);
 

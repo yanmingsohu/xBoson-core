@@ -129,6 +129,10 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
       return toObject(db.listCollectionNames());
     }
 
+    public Object docs() {
+      return all();
+    }
+
     public Collection collection(String name) {
       return new Collection(db.getCollection(name));
     }

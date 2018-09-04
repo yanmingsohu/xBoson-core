@@ -27,6 +27,7 @@ import com.xboson.util.WeakMemCache;
 import java.io.ObjectInputStream;
 import java.rmi.RemoteException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -214,6 +215,14 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
   }
 
 
+  @Override
+  public PublicKey getWitnessPublicKey(String chain, String channel, String wid) {
+    try (LocalLock _ = new LocalLock(lock.readLock())) {
+      return getChannel(chain, channel).getWitnessPublicKey(wid);
+    }
+  }
+
+
   protected byte[] sendBlockLocal(String chain, String channel, BlockBasic b) {
     try (LocalLock _ = new LocalLock(lock.writeLock())) {
       BlockFileSystem.InnerChannel ch = getChannel(chain, channel);
@@ -299,6 +308,11 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
     public boolean verify(Block block) {
       log.debug("verify block", Hex.lowerHex(block.key));
       return true;
+    }
+
+    @Override
+    public PublicKey getWitnessPublicKey(String wid) {
+      return null;
     }
 
     private void readObject(ObjectInputStream i) {

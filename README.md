@@ -19,6 +19,8 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 # 需要做:
 
 * 构建宣传页.
+* 见证者直接通过接口拉取区块.
+* 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言

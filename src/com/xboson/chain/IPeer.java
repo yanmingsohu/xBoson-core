@@ -22,6 +22,7 @@ import com.xboson.rpc.IXRemote;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 
 
 /**
@@ -64,7 +65,7 @@ public interface IPeer extends Serializable, IXRemote {
 
 
   /**
-   * 查询链上的一个块, 如果验证失败抛出 VerifyException.
+   * 查询链上的一个块, 找不到区块返回 null, 如果验证失败抛出 VerifyException.
    */
   Block search(String chainName, String channelName, byte[] key)
           throws RemoteException;
@@ -126,5 +127,11 @@ public interface IPeer extends Serializable, IXRemote {
    * 返回区块链长度
    */
   int size(String chain, String channel) throws RemoteException;
+
+
+  /**
+   * 返回链的见证者公钥, 如果见证者不用于链的签名(不存在于共识表达式中) 返回 null.
+   */
+  PublicKey getWitnessPublicKey(String chain, String channel, String wid);
 
 }

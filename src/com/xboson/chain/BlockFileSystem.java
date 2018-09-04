@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.*;
 
 
@@ -357,6 +358,11 @@ public class BlockFileSystem implements ITypes {
 
     public KeyPair[] getKeyPairs() {
       return gb.keys;
+    }
+
+
+    public PublicKey getWitnessPublicKey(String witnessID) {
+      return signer.getWitnessPublicKey(witnessID);
     }
 
 

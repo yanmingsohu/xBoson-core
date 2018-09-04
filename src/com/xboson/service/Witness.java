@@ -23,13 +23,17 @@ import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.CallData;
 import com.xboson.been.LoginUser;
 import com.xboson.been.XBosonException;
+import com.xboson.chain.Block;
 import com.xboson.chain.Btc;
+import com.xboson.chain.IPeer;
+import com.xboson.chain.PeerFactory;
 import com.xboson.chain.witness.SignerProxy;
 import com.xboson.chain.witness.WitnessConnect;
 import com.xboson.chain.witness.WitnessFactory;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.event.EventLoop;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.util.Hex;
@@ -41,12 +45,12 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 
 @XPath("/witness")
 public class Witness extends XService implements IConstant, IAResource {
 
-  private static final String ERRMSG         = "Cannot found service";
   private static final String ALGORITHM      = SignerProxy.SIGNER_ALGORITHM;
   private static final int GEN_RAND_DATA_LEN = 256;
 
@@ -63,7 +67,7 @@ public class Witness extends XService implements IConstant, IAResource {
   @Override
   public void service(CallData data) throws Exception {
     PermissionSystem.apply(anonymous, LicenseAuthorizationRating.class, this);
-    subService(data, ERRMSG);
+    subService(data, "Cannot found service");
   }
 
 
@@ -113,6 +117,88 @@ public class Witness extends XService implements IConstant, IAResource {
         data.xres.responseMsg("Cannot found witness: "+ id, 11);
       }
     }
+  }
+
+
+  public void reqb(CallData data) throws Exception {
+    String wid     = data.getString("id", 1, 45);
+    String chain   = data.getString("chain", 1, 45);
+    String channel = data.getString("channel", 1, 45);
+    String begin   = data.getString("begin", 1, 45);
+    String end     = data.getString("end", 1, 45);
+
+    // 检查区块链是否存在
+    IPeer peer = PeerFactory.me().peer();
+    if (! peer.channelExists(chain, channel)) {
+      data.xres.responseMsg("Chain or Channel not exists", 11);
+      return;
+    }
+
+    // 检查见证者是否有资格获取区块
+    PublicKey pk = peer.getWitnessPublicKey(chain, channel, wid);
+    if (pk == null) {
+      data.xres.responseMsg("Witnesses not access the blockchain", 1100);
+      return;
+    }
+
+    // 连接/验证 见证者
+    WitnessConnect conn = WitnessFactory.me().openConnection(wid);
+    SignerProxy sp = new SignerProxy(pk, conn);
+    if (! verifyRemote(data, sp)) {
+      return;
+    }
+
+    // 检查开始区块
+    Block beginb = peer.search(chain, channel, Hex.decode64(begin));
+    if (beginb == null) {
+      data.xres.responseMsg("Block not found "+ begin, 11);
+      return;
+    }
+
+    // 尝试确定结束区块
+    byte[] endkey = null;
+    if (Tool.notNulStr(end)) {
+      endkey = Hex.decode64(end);
+    }
+    if (endkey == null) {
+      endkey = peer.genesisKey(chain, channel);
+    }
+
+    sendBlockTo(conn, beginb, endkey, chain, channel);
+    data.xres.responseMsg("ok", 0);
+  }
+
+
+  /**
+   * 异步方式发送指定范围的区块到见证者
+   */
+  private void sendBlockTo(WitnessConnect conn, Block begin, byte[] endkey,
+                           String chain, String channel) {
+    EventLoop.me().add(() -> {
+      try {
+        IPeer peer = PeerFactory.me().peer();
+        Block b = begin;
+        int count = 0;
+
+        for (;;) {
+          if (! conn.doDeliver(b, chain, channel)) {
+            log.warn("Send block fail", b);
+            return;
+          }
+          ++count;
+
+          if (Arrays.equals(b.key, endkey) || b.previousKey.length == 0)
+            break;
+
+          b = peer.search(chain, channel, b.previousKey);
+          if (b == null)
+            break;
+        }
+        log.debug("Send All(", count, ") Blocks to witness");
+      } catch (Exception e) {
+        log.error("Method request block (reqb)", e.getMessage());
+      }
+    });
   }
 
 

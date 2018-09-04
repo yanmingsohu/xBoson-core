@@ -18,6 +18,7 @@ package com.xboson.chain;
 
 import java.io.Serializable;
 import java.security.KeyPair;
+import java.security.PublicKey;
 
 
 /**
@@ -41,6 +42,12 @@ public interface ISigner extends Serializable {
    * @return 验证成功返回 true, 否则返回 false.
    */
   boolean verify(Block block);
+
+
+  /**
+   * 返回见证者的公钥, 该见证者必须存在于当前签名者中否则返回 null.
+   */
+  PublicKey getWitnessPublicKey(String wid);
 
 
   /**
