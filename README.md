@@ -22,7 +22,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 # 需要做:
 
 * 构建宣传页.
-* 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)
+* 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)(https://raft.github.io/)
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
@@ -267,3 +267,5 @@ max_allowed_packet=100M
 * (OLTU WIKI)[https://cwiki.apache.org/confluence/display/OLTU/Index]
 * (OAuth2 规范文档)[https://oauth.net/2/]
 * (Paxos 的共识算法)[https://www.zhihu.com/question/19787937]
+* (Raft 共识算法)[https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md]
+* (Raft 可视化)[https://raft.github.io/]

@@ -30,20 +30,37 @@ public class PeerFactory extends OnExitHandle implements IConstant {
   private static PeerFactory instance;
 
   private final Log log;
-  private final boolean is_order;
   private final boolean enable;
   private IPeer peer;
 
 
   private PeerFactory() {
-    this.log = LogFactory.create("chain-peer-factory");
-    String nodeid = ClusterManager.me().localNodeID();
-    this.is_order = IPeer.ORDER_NODE.equals(nodeid);
+    this.log    = LogFactory.create("chain-peer-factory");
     this.enable = SysConfig.me().readConfig().chainEnable;
 
     if (!enable)
       return;
 
+    modeFixOrderNode();
+    // modeRaft();
+  }
+
+
+  /**
+   * Raft 算法, 无单点失效问题.
+   * <a href="https://raft.github.io/">Raft 可视化</a>
+   */
+  private void modeRaft() {
+    // TODO
+  }
+
+
+  /**
+   * 固定 0 号节点为主节点, 如果该节点失效, 区块链服务不可用
+   */
+  private void modeFixOrderNode() {
+    String nodeid = ClusterManager.me().localNodeID();
+    boolean is_order = IPeer.ORDER_NODE.equals(nodeid);
     if (is_order) {
       peer = new Order();
     } else {

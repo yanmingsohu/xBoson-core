@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.script.lib.Buffer;
+import com.xboson.script.lib.Bytes;
 import com.xboson.util.StringBufferOutputStream;
 
 import javax.imageio.ImageIO;
@@ -29,6 +30,16 @@ public class ImageImpl {
 
   public Picture read(Buffer.JsBuffer buf) throws IOException {
     return new Picture(new ByteArrayInputStream(buf._buffer().array()));
+  }
+
+
+  public Picture read(Bytes bytes) throws IOException {
+    return new Picture(new ByteArrayInputStream(bytes.bin()));
+  }
+
+
+  public Picture read(byte[] b) throws IOException {
+    return new Picture(new ByteArrayInputStream(b));
   }
 
 
