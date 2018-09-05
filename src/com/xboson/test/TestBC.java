@@ -23,6 +23,7 @@ import com.xboson.chain.witness.ConsensusParser;
 import com.xboson.chain.witness.IConsensusUnit;
 import com.xboson.db.analyze.ParseException;
 import com.xboson.rpc.ClusterManager;
+import com.xboson.rpc.RpcFactory;
 import com.xboson.util.Tool;
 import org.apache.commons.codec.binary.Hex;
 import org.mapdb.DBException;
@@ -185,10 +186,13 @@ public class TestBC extends Test {
     try {
       final String chain0 = "t2";
       final String ch0 = "c0";
+      final String RPC = "test.block.order";
 
       String nodeid = ClusterManager.me().localNodeID();
       Order o = new Order();
-      Peer p  = new Peer(nodeid);
+      RpcFactory.me().bind(o, RPC);
+      Peer p  = new Peer(() -> (IPeer) RpcFactory.me().lookup(nodeid, RPC));
+
 
       try {
         p.createChannel(chain0, ch0, userid, null, genKeys());

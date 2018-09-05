@@ -41,7 +41,7 @@ import java.util.LinkedList;
  */
 public class Peer extends AbsPeer {
 
-  private String orderClusterNodeID;
+  private IPeerProvider orderRpc;
   private final Log log;
 
 
@@ -49,9 +49,9 @@ public class Peer extends AbsPeer {
    * 使用工厂来创建该类的实例, 而不是使用构造函数
    * @see PeerFactory#peer() 创建该类的实例
    */
-  public Peer(String orderClusterNodeID) {
+  public Peer(IPeerProvider orderRpc) {
     this.log = LogFactory.create("chain-peer");
-    this.orderClusterNodeID = orderClusterNodeID;
+    this.orderRpc = orderRpc;
   }
 
 
@@ -62,7 +62,7 @@ public class Peer extends AbsPeer {
 
 
   private IPeer getOrder() {
-    return (IPeer) RpcFactory.me().lookup(orderClusterNodeID, RPC_NAME);
+    return orderRpc.getLeader();
   }
 
 

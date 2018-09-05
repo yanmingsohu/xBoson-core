@@ -30,9 +30,6 @@ import java.security.PublicKey;
  */
 public interface IPeer extends Serializable, IXRemote {
 
-  String RPC_NAME   = "XB.rpc.blockchain.peer";
-  String ORDER_NODE = "0";
-
   int NEW_CHANNEL   = 1;
   int NEW_BLOCK     = 2;
 

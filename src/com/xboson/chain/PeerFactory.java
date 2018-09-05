@@ -21,11 +21,15 @@ import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
+import com.xboson.rpc.RpcFactory;
 import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 
 
 public class PeerFactory extends OnExitHandle implements IConstant {
+
+  private static final String RPC_NAME   = "XB.rpc.blockchain.peer";
+  private static final String ORDER_NODE = "0";
 
   private static PeerFactory instance;
 
@@ -60,11 +64,14 @@ public class PeerFactory extends OnExitHandle implements IConstant {
    */
   private void modeFixOrderNode() {
     String nodeid = ClusterManager.me().localNodeID();
-    boolean is_order = IPeer.ORDER_NODE.equals(nodeid);
+    boolean is_order = ORDER_NODE.equals(nodeid);
     if (is_order) {
       peer = new Order();
+      RpcFactory.me().bind(peer, RPC_NAME);
     } else {
-      peer = new Peer(IPeer.ORDER_NODE);
+      peer = new Peer(() -> {
+        return (IPeer) RpcFactory.me().lookup(ORDER_NODE, RPC_NAME);
+      });
     }
 
     if (peer instanceof IPeerLocal) {

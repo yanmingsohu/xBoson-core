@@ -148,6 +148,11 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public void put(String name, Object value) {
+    bindResult(name, value);
+  }
+
+
   public void addRetData(Object o) {
     addRetData(o, "result");
   }

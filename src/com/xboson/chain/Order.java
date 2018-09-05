@@ -35,7 +35,6 @@ public class Order extends AbsPeer implements IXRemote, IPeer {
    * @see PeerFactory#peer() 创建该类的实例
    */
   public Order() {
-    RpcFactory.me().bind(this, RPC_NAME);
   }
 
 
