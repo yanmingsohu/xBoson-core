@@ -20,16 +20,22 @@ import com.xboson.been.XBosonException;
 import com.xboson.event.EventLoop;
 
 import java.io.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 /**
  * 很多 api 只接受一个输入流, 程序将数据全部写入缓冲区, 再将缓冲区保证为一个输入流,
  * 这种方法将不必要的占用内存. 该类将启动一个线程并限定一个上下文, 在上下文中将数据
  * 写入输出流, 数据做一个小的缓冲之后立即被输入流读取, 这将不会产生大量的内存占用.
- *
- * @see EventLoop 新的线程在 EventLoop 中运行
  */
 public class Pipe {
+
+  /**
+   * 和 EventLoop 混用容易死锁
+   */
+  private static final ExecutorService worker
+          = Executors.newFixedThreadPool(10);
 
   private PipedOutputStream outs;
   private PipedInputStream ins;
@@ -51,7 +57,7 @@ public class Pipe {
    * 必须尽可能从 InputStream 读取数据, 不要有另外的锁操作, 否则容易死锁.
    */
   public InputStream openInputStream() {
-    EventLoop.me().add(() -> {
+    worker.execute(() -> {
       try {
         context.run(outs);
       } finally {

@@ -97,7 +97,7 @@ public class Block extends BlockBasic implements ITypes, Serializable {
 
 
   /**
-   * 将区块的全部数据写出到字节输出器, 该方法通常用于生成用于签名的数据,
+   * 将区块的全部数据写出到字节输出器, 该方法通常用于生成签名的数据,
    * 根据不同的区块类型有不同的输出组合
    *
    * @param out 输出到字节输出器
@@ -108,6 +108,11 @@ public class Block extends BlockBasic implements ITypes, Serializable {
     out.write(data);
     out.write(userid.getBytes(CS));
     out.write(create.getTime());
+
+    if (type != ITypes.GENESIS) {
+      out.write(previousKey);
+      out.write(previousHash);
+    }
 
     switch (type) {
       case ITypes.CHAINCODE_CONTENT:

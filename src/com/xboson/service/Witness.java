@@ -122,7 +122,7 @@ public class Witness extends XService implements IConstant, IAResource {
 
   public void reqb(CallData data) throws Exception {
     String wid     = data.getString("id", 1, 45);
-    String chain   = data.getString("chain", 1, 45);
+    String chain   = data.getString("chain", 1, 99);
     String channel = data.getString("channel", 1, 45);
     String begin   = data.getString("begin", 1, 45);
     String end     = data.getString("end", 1, 45);

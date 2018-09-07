@@ -74,12 +74,15 @@ public class BlockJsonConverter extends JsonAdapter<Block> {
 
   private void sign(JsonWriter w, SignNode n) throws IOException {
     w.name("sign");
-    w.beginObject();
+    w.beginArray();
     while (n != null) {
-      w.name(n.id).value(Hex.encode64(n.sign));
+      w.beginObject();
+      w.name("id").value(n.id);
+      w.name("si").value(Hex.encode64(n.sign));
+      w.endObject();
       n = n.next;
     }
-    w.endObject();
+    w.endArray();
   }
 
 
