@@ -732,36 +732,36 @@ public class SysImpl extends DateImpl {
    *
    * @param dir 目录
    * @param filename 保存文件名
-   * @param charset 文件编码
-   * @param olist 数据数组
+   * @param charset 输出编码
+   * @param olist 输入数据数组
    */
   public void listToCsv(String dir, String filename,
                         String charset, Object olist) throws IOException {
-    dir = getDirFromDBFileSystem(dir, "param 1 (dir)");
-    StringBufferOutputStream output = new StringBufferOutputStream();
+    Pipe p = new Pipe((OutputStream out) -> {
+      try {
+        CsvMapWriter csv = new CsvMapWriter(
+                new OutputStreamWriter(out, charset),
+                CsvPreference.STANDARD_PREFERENCE);
 
-    //
-    // 如果希望在写数据的同时直接推入 db, 则需要重写 output 实现一个异步消费线程.
-    // 用 PipedInputStream / PipedOutputStream 实现
-    //
-    try (CsvMapWriter csv = new CsvMapWriter(
-            output.openWrite(charset), CsvPreference.STANDARD_PREFERENCE) ) {
+        ScriptObjectMirror list = wrap(olist);
+        ScriptObjectMirror firstRow = wrap(list.getSlot(0));
+        String[] header = firstRow.getOwnKeys(false);
+        csv.writeHeader(header);
 
-      ScriptObjectMirror list = wrap(olist);
-      ScriptObjectMirror firstRow = wrap(list.getSlot(0));
-      String[] header = firstRow.getOwnKeys(false);
-      csv.writeHeader(header);
+        final int size = list.size();
+        for (int i = 0; i < size; ++i) {
+          ScriptObjectMirror js = wrap(list.getSlot(i));
+          csv.write(js, header);
+        }
 
-      final int size = list.size();
-      for (int i = 0; i < size; ++i) {
-        ScriptObjectMirror js = wrap(list.getSlot(i));
-        csv.write(js, header);
+        csv.flush();
+      } catch (Exception e) {
+        throw new XBosonException(e);
       }
+    });
 
-      csv.flush();
-      PrimitiveOperation.me().updateFile(
-              dir, filename, output.openInputStream());
-    }
+    dir = getDirFromDBFileSystem(dir, "param 1 (dir)");
+    PrimitiveOperation.me().updateFile(dir, filename, p.openInputStream());
   }
 
 
