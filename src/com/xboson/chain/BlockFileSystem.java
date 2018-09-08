@@ -18,6 +18,7 @@ package com.xboson.chain;
 
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
+import com.xboson.chain.witness.SignerProxy;
 import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
@@ -306,6 +307,7 @@ public class BlockFileSystem implements ITypes {
 
       signer.sign(b);
       b.computeHash();
+      signer.deliver(b);
       pushOriginal(b);
 
       if (b.type == CHAINCODE_CONTENT) {

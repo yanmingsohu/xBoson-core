@@ -45,6 +45,13 @@ public interface ISigner extends Serializable {
 
 
   /**
+   * 将区块发送给见证者
+   * @param block
+   */
+  void deliver(Block block);
+
+
+  /**
    * 返回见证者的公钥, 该见证者必须存在于当前签名者中否则返回 null.
    */
   PublicKey getWitnessPublicKey(String wid);

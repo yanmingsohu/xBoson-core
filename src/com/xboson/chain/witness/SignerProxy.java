@@ -134,6 +134,8 @@ public class SignerProxy {
    */
   public static void deliver(Set<String> witnessIdSet, Block b,
                              String chain, String channel) {
+    String json = Tool.getAdapter(Block.class).toJson(b);
+
     EventLoop.me().add(() -> {
       WitnessFactory wf = WitnessFactory.me();
       Log log = wf.getWitnessLog();
@@ -143,7 +145,7 @@ public class SignerProxy {
           continue;
 
         WitnessConnect wc = WitnessFactory.me().openConnection(wid);
-        if (! wc.doDeliver(b, chain, channel)) {
+        if (! wc.doDeliver(json, chain, channel)) {
           log.warn("Skip Deliver Witness:", wid);
           wf.setSkipDeliver(wid);
         }

@@ -97,12 +97,17 @@ public class WitnessConnect {
   }
 
 
+  public boolean doDeliver(Block b, String chain, String channel) {
+    String json = Tool.getAdapter(Block.class).toJson(b);
+    return doDeliver(json, chain, channel);
+  }
+
+
   /**
    * 将区块数据以 json 格式发送给见证者,
    * 如果见证者没有实现该接口返回 false, 成功返回 true.
    */
-  public boolean doDeliver(Block b, String chain, String channel) {
-    String json = Tool.getAdapter(Block.class).toJson(b);
+  public boolean doDeliver(String json, String chain, String channel) {
     HttpUrl urlobj = makeUrl(DELIVER_METHOD);
     Request.Builder build = new Request.Builder();
     build.url(urlobj);
@@ -122,7 +127,7 @@ public class WitnessConnect {
         }
       } catch (Exception e) {
         WitnessFactory.me().getWitnessLog().warn(
-                "Deliver Block key:", Hex.encode64(b.key), e);
+                "Deliver Block:", json, e);
       }
       Tool.sleep(3000);
     }

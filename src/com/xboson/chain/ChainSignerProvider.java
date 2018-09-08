@@ -96,9 +96,9 @@ public class ChainSignerProvider implements
         si.initSign(pair.getPrivate());
         block.writeTo(IBytesWriter.wrap(si), keys);
         block.pushSign(new SignNode(si.sign(), block.type));
-        SignerProxy.deliver(usedKeys.keySet(), block, chain, channel);
       } catch (Exception e) {
-        throw new XBosonException(e);
+        throw new XBosonException(
+                "Witness signature block fail, "+ e.getMessage(), e);
       }
     }
 
@@ -115,8 +115,14 @@ public class ChainSignerProvider implements
         }
         return false;
       } catch (Exception e) {
-        throw new XBosonException(e);
+        throw new XBosonException("Verify signature fail, "+ e.getMessage(), e);
       }
+    }
+
+
+    @Override
+    public void deliver(Block block) {
+      SignerProxy.deliver(usedKeys.keySet(), block, chain, channel);
     }
 
 

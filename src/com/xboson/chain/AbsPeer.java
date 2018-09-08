@@ -311,6 +311,11 @@ public abstract class AbsPeer implements IPeer, IPeerLocal {
     }
 
     @Override
+    public void deliver(Block block) {
+      log.debug("deliver block", Hex.lowerHex(block.key));
+    }
+
+    @Override
     public PublicKey getWitnessPublicKey(String wid) {
       return null;
     }
