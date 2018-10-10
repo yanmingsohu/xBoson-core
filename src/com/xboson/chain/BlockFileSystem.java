@@ -18,11 +18,9 @@ package com.xboson.chain;
 
 import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
-import com.xboson.chain.witness.SignerProxy;
 import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
-import com.xboson.util.WeakMemCache;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
