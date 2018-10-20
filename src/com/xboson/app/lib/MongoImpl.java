@@ -29,6 +29,7 @@ import com.xboson.been.LoginUser;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.fs.mongo.SysMongoFactory;
+import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
@@ -49,39 +50,34 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
    */
   public interface URLTypes {
     /** Mongo url 前缀: mongodb://username:password@localhost:27017,somehost */
-    String MONGO = "mongodb://";
+    String MONGO = "mongodb";
 
     /** 数据源 url 前缀: source://sourcekey */
-    String SOURCEKEY = "source://";
+    String SOURCEKEY = "source";
   }
 
-  private Set<String> dbBlackList;
+  private CreatorFromUrl<Client> clientCreator;
 
 
   public MongoImpl() {
     super(null);
-    dbBlackList = new HashSet<>();
-    dbBlackList.add(SysMongoFactory.DEFAULT_DISK);
+    clientCreator = new CreatorFromUrl<>();
+
+    clientCreator.reg(URLTypes.MONGO, (v, p, url) -> {
+      return new Client(MongoDBPool.me().get(url));
+    });
+
+    clientCreator.reg(URLTypes.SOURCEKEY, (v, p, url) -> {
+      LoginUser user = (LoginUser) AppContext.me().who();
+      ConnectConfig cc = SqlImpl.sourceConfig(v, user.userid);
+      return new Client(MongoDBPool.me().get(cc));
+    });
   }
 
 
   public Client connect(String url) throws Exception {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    MongoDBPool.VirtualMongoClient client;
-
-    if (url.startsWith(URLTypes.MONGO)) {
-      client = MongoDBPool.me().get(url);
-    }
-    else if (url.startsWith(URLTypes.SOURCEKEY)) {
-      String key = url.substring(URLTypes.SOURCEKEY.length());
-      LoginUser user = (LoginUser) AppContext.me().who();
-      ConnectConfig cc = SqlImpl.sourceConfig(key, user.userid);
-      client = MongoDBPool.me().get(cc);
-    }
-    else {
-      throw new XBosonException("Invaild URL: "+ url);
-    }
-    return new Client(client);
+    return clientCreator.create(url);
   }
 
 

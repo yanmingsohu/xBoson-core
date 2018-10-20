@@ -16,12 +16,14 @@
 
 package com.xboson.test;
 
+import com.xboson.app.lib.CountImpl;
 import com.xboson.been.XBosonException;
 import com.xboson.db.driver.Mysql;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
 import com.xboson.util.ChineseInital;
+import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
 import okhttp3.OkHttpClient;
@@ -56,11 +58,49 @@ public class TestTool extends Test {
     read_package();
     null_speed();
     copy_bytes();
+    url_creator();
+    count_impl();
+  }
+
+
+  private void count_impl() throws Exception {
+    sub("Count Implement");
+    Date now = new Date();
+    String key = "a000";
+    CountImpl c = new CountImpl();
+    String pass = c.create(key);
+    c.inc(key);
+
+    Throws(Exception.class, ()-> c.openSearch(key, "bad"));
+
+    CountImpl.Search s = c.openSearch(key, pass);
+    msg("Total:", s.get(c.TOTAL, now) );
+    msg("Range HOUR:", s.range(c.HOUR, now));
+    msg("Fix HOUR:", s.range(c.FIX_HOUR, now));
+  }
+
+
+  private void url_creator() throws Exception {
+    sub("URL parse and creator");
+    CreatorFromUrl<String> cf = new CreatorFromUrl<>();
+    cf.reg("a", (v, p, u) -> p +'='+ v);
+    cf.reg("b", (v, p, u) -> v +'='+ p);
+
+    eq("a=000", cf.create("a://000"), "url1");
+    eq("000=b", cf.create("b://000"), "url2");
+
+    Throws(XBosonException.class, ()-> cf.create("c://000"));
+    Throws(XBosonException.class, ()-> cf.create("000"));
+
+    cf.reg(true, "def", (v, p, u) -> v +'!'+ p);
+
+    eq("000!def", cf.create("def://000"), "url3");
+    eq("111!null", cf.create("111"), "default protocol");
   }
 
 
   public void copy_bytes() throws IOException {
-    sub("Copyt bytes [Tool / StringBufferOutputStream]");
+    sub("Copy bytes [Tool / StringBufferOutputStream]");
     StringBufferOutputStream out = new StringBufferOutputStream();
     InputStream input = new Counter();
     out.write(input);

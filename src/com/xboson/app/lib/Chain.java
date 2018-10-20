@@ -27,6 +27,7 @@ import com.xboson.chain.*;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.script.lib.Bytes;
+import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
@@ -43,36 +44,31 @@ import java.sql.SQLException;
 public class Chain extends RuntimeUnitImpl implements IAResource {
 
   private static final String SQL_OPEN    = "open_chain";
-  private static final String ID_PREFIX   = "id://";
-  private static final String NAME_PREFIX = "name://";
+  private static final String ID_PREFIX   = "id";
+  private static final String NAME_PREFIX = "name";
 
   public final int TYPE_LENGTH = ITypes.LENGTH;
   public final int GENESIS     = ITypes.GENESIS;
 
+  private CreatorFromUrl<String[]> namesCreator;
   private Config cf;
 
 
   public Chain() {
     super(null);
     cf = SysConfig.me().readConfig();
+    namesCreator = new CreatorFromUrl<>();
+
+    namesCreator.reg(ID_PREFIX,
+            (id, p, u) -> getChainConfig(id, null));
+    namesCreator.reg(NAME_PREFIX,
+            (name, p, u) -> getChainConfig(null, name));
   }
 
 
   public Object open(String exp) {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    String[] names;
-    if (exp.startsWith(ID_PREFIX)) {
-      String id = exp.substring(ID_PREFIX.length());
-      names = getChainConfig(id, null);
-    }
-    else if (exp.startsWith(NAME_PREFIX)) {
-      String name = exp.substring(NAME_PREFIX.length());
-      names = getChainConfig(null, name);
-    }
-    else {
-      throw new XBosonException.BadParameter(
-              "String exp", "Exp like `id://*` or `name://*`");
-    }
+    String[] names = namesCreator.create(exp);
     if (names == null) {
       throw new XBosonException("Cannot open chain from: "+ exp);
     }

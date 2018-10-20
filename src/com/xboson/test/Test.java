@@ -342,6 +342,15 @@ public class Test implements IConstant {
   }
 
 
+  public static void Throws(Class<? extends Throwable> _throws, TRun r) {
+	  new Throws(_throws) {
+      public void run() throws Throwable {
+        r.run();
+      }
+    };
+  }
+
+
 
   static public abstract class TData extends JsonHelper
 					implements ISleepwalker, Serializable {
@@ -421,7 +430,7 @@ public class Test implements IConstant {
   /**
    * 抛出异常才认为是正确的行为, 继承该类实现 run()
    */
-  static public abstract class Throws {
+  static public abstract class Throws implements TRun {
     /**
      * 正确运行时抛出 _throws 类型的异常
      */
@@ -437,8 +446,11 @@ public class Test implements IConstant {
       }
       throw new RuntimeException("cannot throw Throwable: " + _throws);
     }
+  }
 
-    public abstract void run() throws Throwable;
+
+  interface TRun {
+    void run() throws Throwable;
   }
 
 
