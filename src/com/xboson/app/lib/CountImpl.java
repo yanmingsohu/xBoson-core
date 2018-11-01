@@ -24,13 +24,14 @@ import com.xboson.util.c0nst.IConstant;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 
 /**
- * 统计工具
- * TODO: 未完成
+ * 统计工具, 时间数据快速索引
  */
 public class CountImpl {
 
@@ -40,26 +41,26 @@ public class CountImpl {
   private CTYPE[] allType = new CTYPE[10];
 
   /** 总计 */
-  public final CTYPE TOTAL = new CTYPE(0, "-");
+  public final CTYPE TOTAL = new CTYPE(0, "-", 0, 0);
   /** 全年统计 */
-  public final CTYPE YEAR  = new CTYPE(1, "YYYY");
+  public final CTYPE YEAR  = new CTYPE(1, "YYYY", 0, 0);
   /** 月统计 */
-  public final CTYPE MONTH = new CTYPE(2, "YYYY-MM");
+  public final CTYPE MONTH = new CTYPE(2, "YYYY-MM", 0, 12);
   /** 每日统计 */
-  public final CTYPE DAY   = new CTYPE(3, "YYYY-MM-dd");
+  public final CTYPE DAY   = new CTYPE(3, "YYYY-MM-dd", 0, 31);
   /** 每天小时统计 */
-  public final CTYPE HOUR  = new CTYPE(4, "YYYY-MM-dd HH");
+  public final CTYPE HOUR  = new CTYPE(4, "YYYY-MM-dd HH", 0, 24);
 
   /** 固定月总计 */
-  public final CTYPE FIX_MONTH    = new CTYPE(5, "MM");
+  public final CTYPE FIX_MONTH    = new CTYPE(5, "MM", 0, 12);
   /** 固定日总计(月) */
-  public final CTYPE FIX_DAY_MON  = new CTYPE(6, "dd");
+  public final CTYPE FIX_DAY_MON  = new CTYPE(6, "dd", 0, 31);
   /** 固定日总计(年) */
-  public final CTYPE FIX_DAY_YEAR = new CTYPE(7, "DDD");
+  public final CTYPE FIX_DAY_YEAR = new CTYPE(7, "DDD", 0, 365);
   /** 固定小时总计 */
-  public final CTYPE FIX_HOUR     = new CTYPE(8, "HH");
+  public final CTYPE FIX_HOUR     = new CTYPE(8, "HH", 0, 24);
   /** 固定周总计(年) */
-  public final CTYPE FIX_WEEK     = new CTYPE(9, "ww");
+  public final CTYPE FIX_WEEK     = new CTYPE(9, "ww", 0, 53);
 
 
   public CountImpl() {
@@ -82,6 +83,27 @@ public class CountImpl {
   }
 
 
+  private void checkPass(String key, String pass) throws Exception {
+    String p = passCache.get(key);
+
+    if (p == null) {
+      openRedis((j) -> {
+        String enc = j.get("C."+ key + ".ENC");
+        String val = j.get("C."+ key + ".VAL");
+        String dec = new String(new AES2(pass).decrypt(enc), IConstant.CHARSET);
+
+        if (!val.equals(dec)) {
+          throw new PermissionException("bad password");
+        }
+        passCache.put(key, pass);
+        return null;
+      });
+    } else if (!p.equals(pass)) {
+      throw new PermissionException("bad password");
+    }
+  }
+
+
   /**
    * 在当前时间点上增加一次实例的访问计数
    */
@@ -93,8 +115,9 @@ public class CountImpl {
   public void inc(String key, Date d) throws Exception {
     transaction((j) -> {
       for (CTYPE c : allType) {
-        j.incr("C."+ key +".D."+ c.num +"."+ c.f.format(d));
+        j.incr(c.key_data_full(key, d));
       }
+      j.sadd(YEAR.key_year_index(key), YEAR.format(d));
     });
   }
 
@@ -156,16 +179,38 @@ public class CountImpl {
     private int num;
     private String p;
     private SimpleDateFormat f;
+    private String[] rangeKey;
 
-    private CTYPE(int n, String pattern) {
+    private CTYPE(int n, String pattern, int begin, int end) {
       num = n;
       f = new SimpleDateFormat(pattern);
       p = pattern;
       allType[num] = this;
+      rangeKey = createRange(begin, end);
     }
 
-    private synchronized String key(String key, Date d) {
-      return "C."+ key +".D."+ num +"."+ f.format(d);
+    private String key_data_full(String key, Date d) {
+      return "C."+ key +".D."+ num +"."+ format(d);
+    }
+
+    private synchronized String key_year_index(String key) {
+      return "C."+ key +".Y.IDX";
+    }
+
+    /** 不要直接调用 f.format 而是调用该方法 */
+    private synchronized String format(Date d) {
+      return f.format(d);
+    }
+
+    private String[] createRange(int begin, int end) {
+      String[] ret = new String[end-begin];
+      NumberFormat nf = new DecimalFormat(
+              end < 10 ? "0":(end < 100? "00":"000"));
+
+      for (int i=begin; i<end; ++i) {
+        ret[i] = nf.format(i);
+      }
+      return ret;
     }
   }
 
@@ -180,33 +225,12 @@ public class CountImpl {
     }
 
 
-    private void checkPass(String key, String pass) throws Exception {
-      String p = passCache.get(key);
-
-      if (p == null) {
-        openRedis((j) -> {
-          String enc = j.get("C."+ key + ".ENC");
-          String val = j.get("C."+ key + ".VAL");
-          String dec = new String(new AES2(pass).decrypt(enc), IConstant.CHARSET);
-
-          if (!val.equals(dec)) {
-            throw new PermissionException("bad password");
-          }
-          passCache.put(key, pass);
-          return null;
-        });
-      } else if (!p.equals(pass)) {
-        throw new PermissionException("bad password");
-      }
-    }
-
-
     /**
      * 返回 type 类型的计数器的值, 精确匹配
      */
     public Object get(CTYPE type, Date d) throws Exception {
       return openRedis((j) -> {
-        return j.get( type.key(key, d) );
+        return j.get( type.key_data_full(key, d) );
       });
     }
 
@@ -215,41 +239,45 @@ public class CountImpl {
      * 返回 type 类型的计数器的值, 范围匹配
      */
     public Object range(CTYPE type, Date d) throws Exception {
-      String searchKey;
-      switch (type.num) {
-        case 0:
-        case 1:
-          searchKey = "C."+ key +".D.1.*";
-          break;
-
-        case 2:
-        case 3:
-        case 4:
-          searchKey = "C."+ key +".D."+ type.num +"."
-                    + allType[type.num-1].f.format(d) +"*";
-          break;
-
-        case 5:
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-          searchKey = "C."+ key +".D."+ type.num +".*";
-          break;
-
-        default:
-          throw new Exception("Unknow type");
-      }
-
-      final String sk = searchKey;
       return openRedis((j) -> {
-        Set<String> keys = j.keys(sk);
-        Map<String, String> ret = new HashMap<>(keys.size());
-        int split = key.length() + 7;
-        if (type.num > 9) ++split;
+        String prefix;
+        String[] keys = type.rangeKey;
 
-        for (String n : keys) {
-          ret.put(n.substring(split), j.get(n));
+        switch (type.num) {
+          case 0:
+          case 1:
+            prefix = "C."+ key +".D.1.";
+            Set<String> ret = j.smembers(type.key_year_index(key));
+            keys = ret.toArray(new String[ret.size()]);
+            break;
+
+          case 2:
+          case 3:
+            prefix = "C."+ key +".D."+ type.num +"."
+                    + allType[type.num-1].format(d) +"-";
+            break;
+
+          case 4:
+            prefix = "C."+ key +".D."+ type.num +"."
+                    + allType[type.num-1].format(d) +" ";
+            break;
+
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+          case 9:
+            prefix = "C."+ key +".D."+ type.num +".";
+            break;
+
+          default:
+            throw new Exception("Unknow type");
+        }
+
+        Map<String, String> ret = new HashMap<>(keys.length);
+        for (String k : keys) {
+          String v = j.get(prefix + k);
+          ret.put(k, v == null? IConstant.ZERO_STR: v);
         }
         return ret;
       });

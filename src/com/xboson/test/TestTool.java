@@ -39,6 +39,8 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchEvent;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 
 
@@ -75,8 +77,18 @@ public class TestTool extends Test {
 
     CountImpl.Search s = c.openSearch(key, pass);
     msg("Total:", s.get(c.TOTAL, now) );
+    msg("Range YEAR:", s.range(c.YEAR, now));
+    msg("Range MONTH:", s.range(c.MONTH, now));
+    msg("Range DAY:", s.range(c.DAY, now));
     msg("Range HOUR:", s.range(c.HOUR, now));
-    msg("Fix HOUR:", s.range(c.FIX_HOUR, now));
+    msg("Fix FIX_MONTH:", s.range(c.FIX_MONTH, now));
+    msg("Fix FIX_DAY_MON:", s.range(c.FIX_DAY_MON, now));
+    msg("Fix FIX_DAY_YEAR:", s.range(c.FIX_DAY_YEAR, now));
+    msg("Fix FIX_HOUR:", s.range(c.FIX_HOUR, now));
+    msg("Fix FIX_WEEK:", s.range(c.FIX_WEEK, now));
+
+    NumberFormat nf = new DecimalFormat("000");
+    msg("NUM:", nf.format(1));
   }
 
 

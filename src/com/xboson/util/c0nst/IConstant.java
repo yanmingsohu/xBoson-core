@@ -94,6 +94,7 @@ public interface IConstant extends IDict {
   String ENTER  = "\n";
   /** 空字符串 */
   String NULL_STR = "";
+  String ZERO_STR = "0";
 
   /** "初始化" */
   String INITIALIZATION = "Initialization";

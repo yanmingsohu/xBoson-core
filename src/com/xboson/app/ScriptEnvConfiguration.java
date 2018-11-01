@@ -72,6 +72,7 @@ public final class ScriptEnvConfiguration {
     mod.put("chain",     Chain.class);
     mod.put("digest",    Digest.class);
     mod.put("crypto",    CryptoImpl.class);
+    mod.put("count",     CountImpl.class);
     return mod;
   }
 }
