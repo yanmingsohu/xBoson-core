@@ -33,6 +33,7 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import java.rmi.RemoteException;
 import java.security.KeyPair;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -44,6 +45,7 @@ import java.sql.SQLException;
 public class Chain extends RuntimeUnitImpl implements IAResource {
 
   private static final String SQL_OPEN    = "open_chain";
+  private static final String SQL_DISABLE = "disable_chain";
   private static final String ID_PREFIX   = "id";
   private static final String NAME_PREFIX = "name";
 
@@ -66,13 +68,22 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public Object open(String exp) {
+  /**
+   * 数据库中有记录而磁盘上找不到文件, 会将数据库中的标记为无效.
+   */
+  public Object open(String exp) throws Exception {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    String[] names = namesCreator.create(exp);
-    if (names == null) {
-      throw new XBosonException("Cannot open chain from: "+ exp);
+    String[] cf = namesCreator.create(exp);
+    if (cf == null) {
+      throw new XBosonException("Cannot open chain from [DB]: "+ exp);
     }
-    return new ChainImpl(names[0], names[1]);
+
+    IPeer peer = PeerFactory.me().peer();
+    if (! peer.channelExists(cf[0], cf[1])) {
+      disableChain(cf[2]);
+      throw new XBosonException("Cannot open chain from [FS]: "+ exp);
+    }
+    return new ChainImpl(cf[0], cf[1], peer);
   }
 
 
@@ -125,11 +136,20 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
         return new String[] {
                 rs.getString("physical_chain"),
                 rs.getString("physical_channel"),
+                rs.getString("chain_id"),
         };
       }
       return null;
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);
+    }
+  }
+
+
+  private boolean disableChain(String chain_id) {
+    Object[] parm = { chain_id };
+    try (SqlResult sr = SqlReader.query(SQL_DISABLE, cf.db, parm)) {
+      return sr.getUpdateCount() == 1;
     }
   }
 
@@ -140,9 +160,9 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
     private IPeer peer;
 
 
-    private ChainImpl(String chain, String channel) {
-      this.peer = PeerFactory.me().peer();
-      this.chain = chain;
+    private ChainImpl(String chain, String channel, IPeer peer) {
+      this.peer    = peer;
+      this.chain   = chain;
       this.channel = channel;
     }
 
