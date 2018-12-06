@@ -55,15 +55,15 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   private RedisImpl redis;
   private QueryImpl query;
   private SysImpl sys;
-  private String orgid;
+  private XjOrg org;
 
 
-  public SeImpl(CallData cd, SysImpl sys, String currentOrg) {
+  public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg) {
     super(cd);
     this.redis = new RedisImpl(IApiConstant._R_KEY_PREFIX_);
     this.query = QueryFactory.create(() -> getConnection(), this);
     this.sys   = sys;
-    this.orgid = currentOrg;
+    this.org   = currentOrg;
   }
 
 
@@ -165,7 +165,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     info.setMember("user",      db.getUsername());
     info.setMember("password",  db.getPassword());
     info.setMember("dbtype",    dbType(db.getDbid()));
-    info.setMember("owner",     orgid);
+    info.setMember("owner",     org.id());
     return unwrap(info);
   }
 
@@ -290,8 +290,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    * [原平台无该函数]
    */
   public boolean sendApiChange(String content_id) throws SQLException {
-    try (SqlResult sr = SqlReader.query(
-            "api_info.sql", getConfig(), content_id);
+    try (SqlResult sr = org.query("api_info.sql", content_id);
          ResultSet rs = sr.getResult() )
     {
       if (!rs.next()) {

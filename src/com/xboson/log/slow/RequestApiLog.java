@@ -49,7 +49,7 @@ public class RequestApiLog extends AbsSlowLog {
             cut(ac.call.req.getRequestURI(), err, 2000),
             ac.org,
             ac.call.sess.login_user.pid,
-            ac.call.req.getRemoteAddr(),
+            ac.call.getRemoteAddr(),
             ac.app,
             ac.mod,
             ac.api,

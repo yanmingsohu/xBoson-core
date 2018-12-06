@@ -121,7 +121,7 @@ public final class ServiceScriptWrapper implements IConstant, IConfigSandbox {
       CacheImpl cache = new CacheImpl(cd, org.id());
       HttpImpl http   = new HttpImpl(cd);
       SeImpl se       = runOnSysOrg == false ? null
-                      : cs.add(new SeImpl(cd, sys, org.id()));
+                      : cs.add(new SeImpl(cd, sys, org));
 
       sql._setSysRef(sys);
       ModuleHandleContext.register("sql", sql);

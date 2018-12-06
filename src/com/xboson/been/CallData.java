@@ -21,6 +21,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.xboson.j2ee.container.XResponse;
+import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 
 /**
@@ -29,11 +31,22 @@ import com.xboson.j2ee.container.XResponse;
  */
 public class CallData implements IBean {
 
+  private final static String remoteIpHeader;
+
   public final HttpServletRequest req;
   public final HttpServletResponse resp;
   public final UrlSplit url;
   public final XResponse xres;
   public final SessionData sess;
+
+  static {
+    String h = SysConfig.me().readConfig().remoteIpHeader;
+    if (Tool.isNulStr(h)) {
+      remoteIpHeader = null;
+    } else {
+      remoteIpHeader = h;
+    }
+  }
 
 
   /**
@@ -122,4 +135,15 @@ public class CallData implements IBean {
     return i;
   }
 
+
+  public String getRemoteAddr() {
+    String addr = null;
+    if (remoteIpHeader == null) {
+      addr = req.getHeader(remoteIpHeader);
+    }
+    if (addr == null) {
+      addr = req.getRemoteAddr();
+    }
+    return addr;
+  }
 }

@@ -29,7 +29,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 public class Config implements IBean {
 
-  public static final String VERSION = Version.xBoson +".8";
+  public static final String VERSION = Version.xBoson +".9";
 
   public String configVersion     = VERSION;
 
@@ -37,6 +37,7 @@ public class Config implements IBean {
   public String configPath				= null;
   public String logPath						= null;
   public String home              = null;
+  public String remoteIpHeader    = null;
 
   public String rootUserName      = null;
   public String rootPassword			= null;

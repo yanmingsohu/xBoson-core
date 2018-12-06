@@ -83,7 +83,7 @@ public class HttpImpl extends RuntimeUnitImpl {
 
 
   public String remoteIp() {
-    return cd.req.getRemoteAddr();
+    return cd.getRemoteAddr();
   }
 
 
@@ -101,6 +101,11 @@ public class HttpImpl extends RuntimeUnitImpl {
       js.setMember(name, val);
     }
     return js;
+  }
+
+
+  public Object getHeader(String name) {
+    return cd.req.getHeader(name);
   }
 
 
