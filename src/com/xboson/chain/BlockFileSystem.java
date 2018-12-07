@@ -26,7 +26,6 @@ import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyPair;
@@ -69,18 +68,17 @@ public class BlockFileSystem implements ITypes {
 
   private BlockFileSystem() {
     Config cf   = SysConfig.me().readConfig();
-    rootDir     = Tool.isNulStr(cf.chainPath)
-                ? cf.configPath+PATH : cf.chainPath;
+    rootDir     = Tool.normalize(Tool.isNulStr(cf.chainPath)
+                ? cf.configPath+PATH : cf.chainPath);
     increment   = cf.chainIncrement > 0
                 ? cf.chainIncrement : INCREMENT_SIZE;
 
-    sysdb       = makeDB(SYS_FILE);
-    chainNames  = sysdb.hashSet("chains").createOrOpen();
-
     try {
       Files.createDirectories(Paths.get(rootDir));
-    } catch (IOException e) {
-      throw new XBosonException.IOError(e);
+      sysdb       = makeDB(SYS_FILE);
+      chainNames  = sysdb.hashSet("chains").createOrOpen();
+    } catch (Exception e) {
+      throw new XBosonException(e);
     }
   }
 

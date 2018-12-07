@@ -1,6 +1,7 @@
 Select distinct
        sys_pl_chain.physical_chain,
-       sys_pl_chain.physical_channel
+       sys_pl_chain.physical_channel,
+       sys_pl_chain.chain_id
   From
 	     sys_pl_chain,
 	     sys_user_role
