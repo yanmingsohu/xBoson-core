@@ -55,7 +55,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   private RedisImpl redis;
   private QueryImpl query;
   private SysImpl sys;
-  private XjOrg org;
+  private String orgid;
 
 
   public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg) {
@@ -63,7 +63,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     this.redis = new RedisImpl(IApiConstant._R_KEY_PREFIX_);
     this.query = QueryFactory.create(() -> getConnection(), this);
     this.sys   = sys;
-    this.org   = currentOrg;
+    this.orgid = currentOrg.id();
   }
 
 
@@ -165,7 +165,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     info.setMember("user",      db.getUsername());
     info.setMember("password",  db.getPassword());
     info.setMember("dbtype",    dbType(db.getDbid()));
-    info.setMember("owner",     org.id());
+    info.setMember("owner",     orgid);
     return unwrap(info);
   }
 
@@ -289,8 +289,10 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    * api 内容被修改, 测试环境脚本将被重新编译.
    * [原平台无该函数]
    */
-  public boolean sendApiChange(String content_id) throws SQLException {
-    try (SqlResult sr = org.query("api_info.sql", content_id);
+  public boolean sendApiChange(String content_id) throws Exception {
+    Object[] bind = { AppContext.me().originalOrg() };
+    try (SqlResult sr = SqlReader.query(
+            "api_info.sql", bind, getConfig(), content_id);
          ResultSet rs = sr.getResult() )
     {
       if (!rs.next()) {

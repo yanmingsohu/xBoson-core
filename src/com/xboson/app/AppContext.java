@@ -31,14 +31,15 @@ import com.xboson.rpc.ClusterManager;
 import com.xboson.script.EventFlag;
 import com.xboson.script.IScriptEventListener;
 import com.xboson.script.IVisitByScript;
-import com.xboson.util.c0nst.IConstant;
-import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
@@ -51,7 +52,7 @@ public final class AppContext implements
 
   /** 在线程超过这个运行时间后, 降低运行优先级, 毫秒 */
   public static final long LOW_CPU_TIME = 2 * 60 * 1000;
-  public static final String API_KILL_MSG = "Api Process Killed";
+  public static final String API_KILL_MSG = "Api Process is Killed";
 
   private static AppContext instance;
   private AppPool production;

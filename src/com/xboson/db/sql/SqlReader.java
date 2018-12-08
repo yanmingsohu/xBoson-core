@@ -98,19 +98,43 @@ public class SqlReader {
    * @return 对 sql 相关对象的封装
    * @throws XBosonException.XSqlException
    */
-  public static SqlResult query(String filename, ConnectConfig config, Object...parm) {
+  public static SqlResult query(String filename, ConnectConfig config,
+                                Object...parm) {
     String sql = read(filename);
+    return queryTxt(sql, config, parm);
+  }
+
+
+  /**
+   * 从文件中读取 sql 模板, 模板使用 String.format 语法绑定变量.
+   * 该方法绑定变量的效率不高.
+   *
+   * @param filename sql 模板文件名
+   * @param bind 模板绑定变量
+   * @param config 数据库连接设置
+   * @param parm 数据库绑定参数
+   */
+  public static SqlResult query(String filename, Object[] bind,
+                                ConnectConfig config, Object...parm) {
+    String sqltpl = read(filename);
+    String sql = String.format(sqltpl, bind);
+    return queryTxt(sql, config, parm);
+  }
+
+
+  private static SqlResult queryTxt(String sqltxt, ConnectConfig cnf,
+                                   Object...parm) {
     Connection conn = null;
     boolean needClose = true;
     try {
-      conn = DbmsFactory.me().open(config);
-      SqlResult sr = SqlResult.query(conn, sql, parm);
+      conn = DbmsFactory.me().open(cnf);
+      SqlResult sr = SqlResult.query(conn, sqltxt, parm);
       needClose = false;
       return sr;
     } catch(XBosonException xe) {
       throw xe;
     } catch(Exception e) {
-      throw new XBosonException.XSqlException(sql, e);
+      throw new XBosonException.XSqlException(sqltxt, e);
     } finally {
       if (needClose) Tool.close(conn);
     }
