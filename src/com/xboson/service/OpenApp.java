@@ -97,6 +97,11 @@ public class OpenApp extends XService {
    * 如果是匿名用户返回 true, d 不能空
    */
   protected static boolean isAnonymousUser(CallData d) {
+    if (d.sess == null ||
+            d.sess.login_user == null ||
+            d.sess.login_user.userid == null)
+      return false;
+
     return Anonymous.equals(d.sess.login_user.userid);
   }
 
