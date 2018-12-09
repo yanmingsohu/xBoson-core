@@ -21,6 +21,7 @@ import com.xboson.auth.AuthFactory;
 import com.xboson.chain.PeerFactory;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.distributed.XLock;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.fs.script.FileSystemFactory;
@@ -63,6 +64,7 @@ public final class Touch {
     ClusterManager.me();
     RpcFactory.me();
     PeerFactory.me();
+    XLock.me();
   }
 
 

@@ -164,6 +164,21 @@ public final class RpcFactory extends OnExitHandle {
   }
 
 
+   /**
+    * 同一个名称的服务只绑定一次.
+    * @param remote 服务
+    * @param name 名称
+    * @return 初次绑定返回 true
+    */
+  public synchronized boolean bindOnce(IXRemote remote, String name) {
+    if (! isBind(name)) {
+      bind(remote, name);
+      return true;
+    }
+    return false;
+  }
+
+
   /**
    * 检查注册表上是否已经有命名对象
    *

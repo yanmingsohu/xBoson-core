@@ -23,7 +23,7 @@ import com.xboson.auth.IAWho;
 import com.xboson.been.*;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
-import com.xboson.event.timer.TimeFactory;
+import com.xboson.distributed.ProcessManager;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.log.slow.RequestApiLog;
@@ -39,7 +39,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 
@@ -506,169 +505,48 @@ public final class AppContext implements
     private void readyForKill() {
       __is_ready_for_kill = true;
     }
-  }
 
 
-  /**
-   * '进程' 管理器, 该对象会被导出到脚本环境, 必须仔细设计.
-   */
-  public class ProcessManager implements IProcessState, IVisitByScript {
-    /** 检查 cpu 使用情况间隔, ms */
-    private final static long INTERVAL = 30 * 1000;
-    private Map<Thread, ThreadLocalData> running;
-    private Map<Long, Thread> id;
-
-
-    private ProcessManager() {
-      running = new ConcurrentHashMap<>();
-      id = new ConcurrentHashMap<>();
-      startCpuChecker();
+    public boolean notReadyForKill() {
+      return !__is_ready_for_kill;
     }
 
 
-    private void startCpuChecker() {
-      TimeFactory.me().schedule(new TimerTask() {
-        public void run() {
-          cpuSafe();
-        }
-      }, INTERVAL, INTERVAL);
+    public boolean notLowPriority() {
+      return !__is_low_priority;
     }
 
 
-    /**
-     * 请求线程开始进入管理区
-     */
-    private void start(ThreadLocalData data) {
-      Thread t = Thread.currentThread();
-      running.put(t, data);
-      id.put(t.getId(), t);
+    public void setLowPriority(Thread t) {
+      t.setPriority(Thread.MIN_PRIORITY);
+      __is_low_priority = true;
+
+      log.debug("Change Process Min Priority, Thread:", t.getId(),
+              '"'+ t.getName() +'"', ", API:", getApiPath());
     }
 
 
-    /**
-     * 请求线程退出
-     */
-    private void exit() {
-      exit(Thread.currentThread());
+    public long runningTime() {
+      return System.currentTimeMillis() - beginAt;
     }
 
 
-    private void exit(Thread t) {
-      running.remove(t);
-      id.remove(t.getId());
-    }
-
-
-    /**
-     * 返回当前线程的绑定数据,
-     * 不在应用上下文中调用会抛出 IllegalStateException
-     */
-    private ThreadLocalData get() {
-      Thread t = Thread.currentThread();
-      ThreadLocalData ret = running.get(t);
-      if (ret == null) {
-        throw new IllegalStateException("Not in App Context");
-      }
-      return ret;
-    }
-
-
-    /**
-     * 返回当前线程的绑定数据, 不在应用上下文中调用返回 null
-     */
-    private ThreadLocalData getMaybeNull() {
-      Thread t = Thread.currentThread();
-      return running.get(t);
-    }
-
-
-    /**
-     * 检查所有线程, 一旦发现线程执行时间过长, 则降低运行优先级
-     */
-    private void cpuSafe() {
-      for (Map.Entry<Thread, ThreadLocalData> entry : running.entrySet()) {
-        ThreadLocalData tld = entry.getValue();
-
-        if (tld.__is_low_priority == false
-                && System.currentTimeMillis() - tld.beginAt > LOW_CPU_TIME) {
-
-          Thread t = entry.getKey();
-          t.setPriority(Thread.MIN_PRIORITY);
-          tld.__is_low_priority = true;
-
-          log.debug("Change Process Min Priority, Thread:", t.getId(),
-                  '"'+ t.getName() +'"', ", API:", tld.getApiPath());
-        }
-      }
-    }
-
-
-    /**
-     * 列出所有运行中的线程
-     */
-    public PublicProcessData[] list() {
-      PublicProcessData[] ppd = new PublicProcessData[running.size()];
-      int i = -1;
-
-      for (Map.Entry<Thread, ThreadLocalData> entry : running.entrySet()) {
-        ppd[++i] = createPD(entry.getKey(), entry.getValue());
-      }
-      return ppd;
-    }
-
-
-    /**
-     * 终止 api 进程.
-     * @param processId 进程 id
-     * @return 停止了正在运行的进程返回 true, 如果进程不存或已经停止在返回 false
-     */
-    public int kill(long processId) {
-      Thread t = id.get(processId);
-      if (t == null)
-        return KILL_NO_EXIST;
-
-      if (! t.isAlive())
-        return KILL_IS_KILLED;
-
-      ThreadLocalData tld = running.get(t);
-      if (tld == null)
-        return KILL_NO_EXIST;
-
-      if (! tld.__is_ready_for_kill)
-        return KILL_NO_READY;
-
-      //
-      // 必须这样做, 脚本上下文的设计可以保证安全的 stop 线程.
-      // [ 除非有 bug :( ]
-      //
-      t.stop();
-      return KILL_OK;
-    }
-
-
-    public int stop(long processId) {
-      return kill(processId);
-    }
-
-
-    private PublicProcessData createPD(Thread t, ThreadLocalData tld) {
-      PublicProcessData pd = new PublicProcessData();
-      pd.processId = t.getId();
-      pd.org = tld.ac.org;
-      pd.app = tld.ac.app;
-      pd.mod = tld.ac.mod;
-      pd.api = tld.ac.api;
-      pd.beginAt = tld.beginAt;
-      pd.runningTime = System.currentTimeMillis() - tld.beginAt;
+    public void copyTo(PublicProcessData pd) {
+      pd.org = ac.org;
+      pd.app = ac.app;
+      pd.mod = ac.mod;
+      pd.api = ac.api;
+      pd.beginAt = beginAt;
+      pd.runningTime = System.currentTimeMillis() - beginAt;
       pd.nodeID = nodeID;
 
-      if (tld.who instanceof LoginUser) {
-        pd.callUser = ((LoginUser) tld.who).userid;
+      if (who instanceof LoginUser) {
+        pd.callUser = ((LoginUser) who).userid;
       } else {
-        pd.callUser = tld.who.identification();
+        pd.callUser = who.identification();
       }
-      return pd;
     }
   }
+
 
 }

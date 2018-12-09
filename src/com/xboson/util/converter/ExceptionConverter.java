@@ -22,6 +22,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.util.Tool;
 
 import java.io.IOException;
+import java.rmi.RemoteException;
 
 
 public class ExceptionConverter extends AbsJsonConverterHelper<Exception> {
@@ -33,6 +34,7 @@ public class ExceptionConverter extends AbsJsonConverterHelper<Exception> {
     builder.add(NullPointerException.class, this);
     builder.add(IllegalArgumentException.class, this);
     builder.add(NoSuchMethodException.class, this);
+    builder.add(RemoteException.class, this);
   }
 
 

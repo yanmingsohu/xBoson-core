@@ -64,6 +64,8 @@ public interface IConstant extends IDict {
    */
   short DEFAULT_NODE_ID_SHORT = 0;
   String DEFAULT_NODE_ID = DEFAULT_NODE_ID_SHORT +"";
+  short MASTER_NODE = 0;
+  String MASTER_NODE_STR = MASTER_NODE +"";
 
   /**
    * 默认超时 (秒), session 和 redis 使用.
