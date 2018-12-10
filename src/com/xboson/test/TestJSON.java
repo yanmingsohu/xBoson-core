@@ -18,6 +18,7 @@ package com.xboson.test;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.LinkedHashMap;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
@@ -25,6 +26,8 @@ import com.xboson.been.ResponseRoot;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.util.OutputStreamSinkWarp;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
+
 
 public class TestJSON extends Test {
 
@@ -34,6 +37,7 @@ public class TestJSON extends Test {
 		outputstream_warp();
 		speed();
 		thread_safe();
+		map();
 	}
 
 
@@ -43,6 +47,16 @@ public class TestJSON extends Test {
 		Moshi moshi = new Moshi.Builder().build();
 		jsonAdapter = moshi.adapter(TestData.class);
 	}
+
+
+	public void map() {
+	  sub("LinkedHashMap");
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    map.put("a", 1);
+    JsonAdapter ja = Tool.getAdapter(map.getClass());
+    msg(ja.toJson(map));
+    success("LinkedHashMap Worked !");
+  }
 
 
 	public void speed() {

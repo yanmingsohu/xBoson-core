@@ -150,7 +150,7 @@ public class MongoDBPool extends OnExitHandle {
    * 与 MongoClient 中的函数签名一致, 只导出使用的函数.
    * MongoDB Version 3.6
    */
-  public class VirtualMongoClient {
+  public class VirtualMongoClient implements AutoCloseable {
 
     private MongoClientURI uri;
     private MongoClient client;
