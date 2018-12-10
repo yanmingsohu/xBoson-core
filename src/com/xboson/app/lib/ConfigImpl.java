@@ -21,6 +21,9 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.xboson.app.AppContext;
 import com.xboson.been.XBosonException;
+import com.xboson.event.GLHandle;
+import com.xboson.event.GlobalEventBus;
+import com.xboson.event.Names;
 import com.xboson.util.MongoDBPool;
 import com.xboson.util.SysConfig;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
@@ -29,13 +32,17 @@ import org.bson.BsonInt32;
 import org.bson.BsonString;
 import org.bson.Document;
 
+import javax.naming.event.NamingEvent;
 import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 /**
  * 配置工具, 画面由平台提供, 使用系统 mongodb 数据源;
  * 同一个配置名称下, 在不同的场景(模式)返回对应的配置数据.
- * TODO: 优化
  */
 public class ConfigImpl extends RuntimeUnitImpl {
 
@@ -57,25 +64,25 @@ public class ConfigImpl extends RuntimeUnitImpl {
   public final int MODE_GLOBAL  = 4;
   public final int MODE_ROLE    = 5;
 
-  public MongoDatabase db;
+  private static final Cache cache = new Cache();
+  public MongoDatabase __db;
 
 
   public ConfigImpl() {
     super(null);
-    MongoDBPool.VirtualMongoClient cli =
-            MongoDBPool.me().get(SysConfig.me().readConfig().mongodb);
-    ModuleHandleContext.autoClose(cli);
-    db = cli.getDatabase(DB_NAME);
   }
 
 
+  /**
+   * 虽然不创建索引也可以使用, 当效率降低时则需要启用索引.
+   */
   public void ___init() {
-    MongoCollection<Document> dataColl = db.getCollection(COLL_DATA);
+    MongoCollection<Document> dataColl = openDB().getCollection(COLL_DATA);
     BsonDocument dindex = new BsonDocument();
     dindex.put(ATTR_D_KEY, new BsonInt32(1));
     dataColl.createIndex(dindex);
 
-    MongoCollection<Document> metaColl = db.getCollection(COLL_META);
+    MongoCollection<Document> metaColl = openDB().getCollection(COLL_META);
     BsonDocument mindex = new BsonDocument();
     mindex.put(ATTR_NAME, new BsonInt32(1));
     metaColl.createIndex(dindex);
@@ -88,17 +95,28 @@ public class ConfigImpl extends RuntimeUnitImpl {
       throw new XBosonException("Config not exists:"+ name);
     }
 
-    BsonDocument find = new BsonDocument();
-    find.put(ATTR_D_KEY, dataKey(name, meta));
-    MongoCollection<Document> dataColl = db.getCollection(COLL_DATA);
-    FindIterable<Document> fi = dataColl.find(find);
-    Document ret = fi.first();
-    if (ret == null) {
-      return createJSObject();
+    BsonString dataKeyS = dataKey(name, meta);
+    Document ret = cache.getData(dataKeyS);
+    if (ret != null)
+      return ret;
+
+    try {
+      cache.wr.lock();
+      BsonDocument find = new BsonDocument();
+      find.put(ATTR_D_KEY, dataKeyS);
+      MongoCollection<Document> dataColl = openDB().getCollection(COLL_DATA);
+      FindIterable<Document> fi = dataColl.find(find);
+      ret = fi.first();
+      if (ret == null) {
+        return createJSObject();
+      }
+      ret.remove(ATTR_D_KEY);
+      ret.remove(ATTR_KEY);
+      cache.putData(dataKeyS, ret);
+      return ret;
+    } finally {
+      cache.wr.unlock();
     }
-    ret.remove(ATTR_D_KEY);
-    ret.remove(ATTR_KEY);
-    return ret;
   }
 
 
@@ -108,13 +126,19 @@ public class ConfigImpl extends RuntimeUnitImpl {
       throw new XBosonException("Config not exists:"+ name);
     }
 
-    BsonString dataKeyS = dataKey(name, meta);
-    MongoCollection<Document> dataColl = db.getCollection(COLL_DATA);
-    val.put(ATTR_D_KEY, dataKeyS);
-    BsonDocument del = new BsonDocument();
-    del.put(ATTR_D_KEY, dataKeyS);
-    dataColl.deleteMany(del);
-    dataColl.insertOne(new Document(val));
+    try {
+      cache.wr.lock();
+      BsonString dataKeyS = dataKey(name, meta);
+      cache.sendDataChange(dataKeyS);
+      MongoCollection<Document> dataColl = openDB().getCollection(COLL_DATA);
+      val.put(ATTR_D_KEY, dataKeyS);
+      BsonDocument del = new BsonDocument();
+      del.put(ATTR_D_KEY, dataKeyS);
+      dataColl.deleteMany(del);
+      dataColl.insertOne(new Document(val));
+    } finally {
+      cache.wr.unlock();
+    }
   }
 
 
@@ -131,7 +155,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
     SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
     config.put(ATTR_OWNER, sys.getUserIdByOpenId());
 
-    MongoCollection<Document> metaColl = db.getCollection(COLL_META);
+    MongoCollection<Document> metaColl = openDB().getCollection(COLL_META);
     BsonDocument find = new BsonDocument();
     find.put(ATTR_NAME, new BsonString(name));
     if (metaColl.find(find).first() != null) {
@@ -143,7 +167,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
 
 
   public Object list(int pagenum, int pagesize, Map<String, Object> condition) {
-    MongoCollection<Document> metaColl = db.getCollection(COLL_META);
+    MongoCollection<Document> metaColl = openDB().getCollection(COLL_META);
     ScriptObjectMirror ret = createJSList();
     int i = 0;
     int begin = (pagenum-1)*pagesize;
@@ -159,13 +183,13 @@ public class ConfigImpl extends RuntimeUnitImpl {
 
 
   public Object size(Map<String, Object> condition) {
-    MongoCollection<Document> metaColl = db.getCollection(COLL_META);
+    MongoCollection<Document> metaColl = openDB().getCollection(COLL_META);
     return metaColl.count(new Document(condition));
   }
 
 
   public void remove(String name) {
-    MongoCollection<Document> metaColl = db.getCollection(COLL_META);
+    MongoCollection<Document> metaColl = openDB().getCollection(COLL_META);
     BsonDocument find = new BsonDocument();
     find.put(ATTR_NAME, new BsonString(name));
     Document ret = metaColl.find(find).first();
@@ -177,6 +201,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
       throw new XBosonException("Only the creator can delete");
     }
     metaColl.findOneAndDelete(find);
+    cache.sendMetaModify(name);
   }
 
 
@@ -212,11 +237,116 @@ public class ConfigImpl extends RuntimeUnitImpl {
   }
 
 
+  /**
+   * 获取元数据, 带本地缓存
+   */
   private Document meta(String name) {
-    MongoCollection<Document> metaColl = db.getCollection(COLL_META);
-    BsonDocument find = new BsonDocument();
-    find.put(ATTR_NAME, new BsonString(name));
-    FindIterable<Document> ret = metaColl.find(find);
-    return ret.first();
+    Document meta = cache.getMeta(name);
+    if (meta != null)
+      return meta;
+
+    try {
+      cache.wr.lock();
+      MongoCollection<Document> metaColl = openDB().getCollection(COLL_META);
+      BsonDocument find = new BsonDocument();
+      find.put(ATTR_NAME, new BsonString(name));
+      FindIterable<Document> ret = metaColl.find(find);
+      meta = ret.first();
+
+      cache.putMeta(name, meta);
+      return meta;
+    } finally {
+      cache.wr.unlock();
+    }
+  }
+
+
+  private MongoDatabase openDB() {
+    if (__db == null) {
+      synchronized (this) {
+        if (__db == null) {
+          MongoDBPool.VirtualMongoClient cli =
+                  MongoDBPool.me().get(SysConfig.me().readConfig().mongodb);
+          ModuleHandleContext.autoClose(cli);
+          __db = cli.getDatabase(DB_NAME);
+        }
+      }
+    }
+    return __db;
+  }
+
+
+  private static class Cache extends GLHandle {
+    private final static int META = 1;
+    private final static int DATA = 2;
+
+    private Map<String, Document> _mc;
+    private Map<BsonString, Document> _dc;
+    private GlobalEventBus bus;
+    private ReadWriteLock lock;
+    private Lock rd, wr;
+
+
+    private Cache() {
+      _mc  = new WeakHashMap<>();
+      _dc  = new WeakHashMap<>();
+      lock = new ReentrantReadWriteLock();
+      rd   = lock.readLock();
+      wr   = lock.writeLock();
+      bus  = GlobalEventBus.me();
+      bus.on(Names.iconfig_update, this);
+    }
+
+    void sendMetaModify(String name) {
+      bus.emit(Names.iconfig_update, name, META);
+    }
+
+    void sendDataChange(BsonString key) {
+      bus.emit(Names.iconfig_update, key, DATA);
+    }
+
+    Document getMeta(String name) {
+      try {
+        rd.lock();
+        return _mc.get(name);
+      } finally {
+        rd.unlock();
+      }
+    }
+
+    void putMeta(String name, Document m) {
+      _mc.put(name, m);
+    }
+
+    Document getData(BsonString key) {
+      try {
+        rd.lock();
+        return _dc.get(key);
+      } finally {
+        rd.unlock();
+      }
+    }
+
+    void putData(BsonString key, Document d) {
+      _dc.put(key, d);
+    }
+
+    @Override
+    public void objectChanged(NamingEvent namingEvent) {
+      try {
+        wr.lock();
+        switch (namingEvent.getType()) {
+          case META:
+            _mc.remove(namingEvent.getNewBinding().getObject());
+            break;
+
+          case DATA:
+            _dc.remove(namingEvent.getNewBinding().getObject());
+            break;
+        }
+      } finally {
+        wr.unlock();
+      }
+    }
   }
 }
