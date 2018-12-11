@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
@@ -31,16 +32,20 @@ import com.xboson.db.ConnectConfig;
 import com.xboson.fs.mongo.SysMongoFactory;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
+import jdk.nashorn.internal.runtime.regexp.RegExp;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWriter;
+import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 
 public class MongoImpl extends RuntimeUnitImpl implements IAResource {
@@ -208,15 +213,32 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
       return toObject(coll.find(new JSObjectToBson(query)));
     }
 
+    public Object find(Object query, int pageNum, int pageSize) {
+      int begin = (pageNum -1) *pageSize;
+      FindIterable<Document> find = coll.find(new JSObjectToBson(query));
+      return toObject(find.skip(begin).limit(pageSize));
+    }
+
     public Object find(Object query, Map projection) {
       projection.put("_id", true);
       return toObject(coll.find(new JSObjectToBson(query)), projection);
+    }
+
+    public Object find(Object query, Map projection, int pageNum, int pageSize) {
+      projection.put("_id", true);
+      int begin = (pageNum -1) *pageSize;
+      FindIterable<Document> find = coll.find(new JSObjectToBson(query));
+      return toObject(find.skip(begin).limit(pageSize), projection);
     }
 
     public Object find() {
       return toObject(coll.find());
     }
 
+    public Object find(int pageNum, int pageSize) {
+      int begin = (pageNum -1) *pageSize;
+      return toObject(coll.find().skip(begin).limit(pageSize));
+    }
 
     public String createIndex(Object key, Object options) {
       return coll.createIndex(new JSObjectToBson(key), toIndexOptions(options));
@@ -245,6 +267,10 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
     public long count() {
       return coll.count();
+    }
+
+    public Object count(Object query) {
+      return coll.count(new JSObjectToBson(query));
     }
   }
 
@@ -585,6 +611,13 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
     if (val instanceof Boolean) {
       writer.writeBoolean((boolean) val);
+      return;
+    }
+
+    Object jsval = unwrap(val);
+    if (isRegexp(jsval)) {
+      writer.writeRegularExpression(
+              new BsonRegularExpression(getRegExp(jsval)) );
       return;
     }
 

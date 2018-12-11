@@ -245,6 +245,14 @@ public final class AppContext implements
 
 
   /**
+   * 当前运行时类型 (开发/生产)
+   */
+  public ApiTypes getRuntimeType() {
+    return pm.get().__dev_mode;
+  }
+
+
+  /**
    * HTTP 原始请求时的机构参数, 在运行后 HTTP 中的参数可以被替换为机构 orgid
    */
   public String originalOrg() {
