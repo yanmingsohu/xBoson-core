@@ -206,7 +206,7 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     }
 
     public DeleteResult deleteMany(Object filter) {
-      return coll.deleteOne(new JSObjectToBson(filter));
+      return coll.deleteMany(new JSObjectToBson(filter));
     }
 
     public Object find(Object query) {
@@ -220,12 +220,14 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     }
 
     public Object find(Object query, Map projection) {
-      projection.put("_id", true);
+      if (!projection.containsKey("_id"))
+        projection.put("_id", true);
       return toObject(coll.find(new JSObjectToBson(query)), projection);
     }
 
     public Object find(Object query, Map projection, int pageNum, int pageSize) {
-      projection.put("_id", true);
+      if (!projection.containsKey("_id"))
+        projection.put("_id", true);
       int begin = (pageNum -1) *pageSize;
       FindIterable<Document> find = coll.find(new JSObjectToBson(query));
       return toObject(find.skip(begin).limit(pageSize), projection);
