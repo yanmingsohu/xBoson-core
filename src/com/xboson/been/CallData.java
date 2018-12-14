@@ -138,7 +138,7 @@ public class CallData implements IBean {
 
   public String getRemoteAddr() {
     String addr = null;
-    if (remoteIpHeader == null) {
+    if (remoteIpHeader != null) {
       addr = req.getHeader(remoteIpHeader);
     }
     if (addr == null) {
