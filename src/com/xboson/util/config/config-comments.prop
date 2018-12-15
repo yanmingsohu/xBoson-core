@@ -41,7 +41,8 @@ shareAppList: 共享应用数组, 来自平台机构中的应用, 这些应用�
 dbpool: 数据库连接池的设置
 jedispool: redis 连接池的设置
 db: 平台核心数据库连接配置
-redis: 平台核心 redis 连接配置
+redis: 平台核心 redis 连接配置, 务必配置密钥字段, \
+       并且在 redis 服务器配置文件中加入 'requirepass yourpassword' 设置.
 mongodb: MongoDB 服务器连接配置, 禁用后不影响平台核心功能, 但脚本环境中无法调用 MongoDB 模块.
 
 

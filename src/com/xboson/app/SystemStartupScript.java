@@ -51,7 +51,7 @@ public class SystemStartupScript implements IConstant, Runnable {
   @Override
   public void run() {
     try {
-      log.info(INITIALIZATION, "Startup..");
+      log.info(INITIALIZATION, "Script Startup..");
 
       //
       // 初始化 cache 脚本所在的机构/app/模块

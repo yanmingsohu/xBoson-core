@@ -33,7 +33,8 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 * 微信接入, 扫码登录, 创建用户, 关联用户组
 * 统计分析模块 -api完成 +wiki +画面
-* 留言功能
+* docker 管理模块.
+* se模块 redis 数据加密
 
 
 # 2.0 新特性

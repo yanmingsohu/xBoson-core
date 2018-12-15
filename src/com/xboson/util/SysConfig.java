@@ -127,7 +127,7 @@ public class SysConfig {
 	private void setConfigUseString(String str) throws IOException {
 		Config run = serial.convert(str);
 
-		if (config.configVersion.compareTo(run.configVersion) > 0) {
+		if (configNeedUpdate(run)) {
 		  log.warn("Configuration files need to be upgraded",
               run.configVersion, "<", config.configVersion);
 
@@ -142,6 +142,22 @@ public class SysConfig {
 		config = run;
 		readed = true;
 	}
+
+
+  /**
+   * 如果配置文件中的配置版本比较低返回 true
+   * @param nowcfg 从配置文件读取的配置
+   */
+	private boolean configNeedUpdate(Config nowcfg) {
+	  try {
+	    // 这里会抛出一大坨错误
+      int a = Integer.parseInt(config.configVersion.split(".")[2]);
+      int b = Integer.parseInt(nowcfg.configVersion.split(".")[2]);
+      return b < a;
+    } catch (Exception e) {
+	    return true;
+    }
+  }
 
 	
 	public void checkConfigFiles() {

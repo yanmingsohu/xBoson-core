@@ -29,7 +29,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 public class Config implements IBean {
 
-  public static final String VERSION = Version.xBoson +".9";
+  public static final String VERSION = Version.xBoson +".10";
 
   public String configVersion     = VERSION;
 
