@@ -34,7 +34,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 * 微信接入, 扫码登录, 创建用户, 关联用户组
 * 统计分析模块 -api完成 +wiki +画面
 * docker 管理模块.
-* se模块 redis 数据加密
 
 
 # 2.0 新特性
@@ -121,6 +120,12 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
     
 * (MapDB 存储区块的数据库)[https://github.com/jankotek/mapdb]
     -- (mapdb-3.0.8-SNAPSHOT-jar-with-dependencies.jar) 依赖库集合
+    
+* (Docker 客户端)[https://github.com/spotify/docker-client]
+    -- (docker-client-8.14.5.jar)
+    -- (Java API 文档)[https://github.com/spotify/docker-client/blob/master/docs/user_manual.md]
+    -- (docker 原生 API)[https://docs.docker.com/engine/api/v1.39/]
+    
     
     
 		

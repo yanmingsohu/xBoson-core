@@ -16,11 +16,16 @@
 
 package com.xboson.j2ee.emu;
 
+import com.xboson.app.ApiPath;
 import com.xboson.app.AppContext;
 import com.xboson.been.*;
 import com.xboson.init.Startup;
 import com.xboson.j2ee.container.Striker;
+import com.xboson.j2ee.container.XPath;
+import com.xboson.log.slow.RequestApiLog;
+import com.xboson.service.App;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Version;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletContext;
@@ -32,6 +37,8 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class EmuJeeContext {
 
+  private final String appPrefix;
+  private final String userAgent;
   private LoginUser user;
 
 
@@ -39,7 +46,10 @@ public class EmuJeeContext {
    * 默认使用超级管理员运行 appContext
    */
   public EmuJeeContext() {
-    user = new Admin();
+    XPath x = App.class.getAnnotation(XPath.class);
+    this.appPrefix = x.value();
+    this.user      = new Admin();
+    this.userAgent = "xBoson v"+ Version.xBoson +" internal call";
   }
 
 
@@ -54,6 +64,12 @@ public class EmuJeeContext {
       ApiCall ac = new ApiCall(org, app, mod, api);
       ac.call = new CallData(req, resp);
       AppContext appCtx = AppContext.me();
+
+      if (req0 instanceof EmuServletRequest) {
+        EmuServletRequest esr = (EmuServletRequest) req0;
+        esr.requestUriWithoutContext = appPrefix + ApiPath.getPath(ac);
+        esr.setHeader(RequestApiLog.HEADER_USER_AGENT, userAgent);
+      }
 
       appCtx.call(ac);
       resp.flushBuffer();

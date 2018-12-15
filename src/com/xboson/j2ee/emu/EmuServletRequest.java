@@ -79,13 +79,18 @@ public class EmuServletRequest implements HttpServletRequest {
 
   @Override
   public String getHeader(String s) {
-    return null;
+    return header.get(s);
+  }
+
+
+  public void setHeader(String n, String v) {
+    header.put(n, v);
   }
 
 
   @Override
   public Enumeration<String> getHeaders(String s) {
-    return null;
+    return Collections.enumeration(header.values());
   }
 
 
