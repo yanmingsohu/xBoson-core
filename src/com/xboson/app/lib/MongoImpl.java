@@ -68,11 +68,11 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     super(null);
     clientCreator = new CreatorFromUrl<>();
 
-    clientCreator.reg(URLTypes.MONGO, (v, p, url) -> {
+    clientCreator.reg(URLTypes.MONGO, (v, p, url, d) -> {
       return new Client(MongoDBPool.me().get(url));
     });
 
-    clientCreator.reg(URLTypes.SOURCEKEY, (v, p, url) -> {
+    clientCreator.reg(URLTypes.SOURCEKEY, (v, p, url, d) -> {
       LoginUser user = (LoginUser) AppContext.me().who();
       ConnectConfig cc = SqlImpl.sourceConfig(v, user.userid);
       return new Client(MongoDBPool.me().get(cc));

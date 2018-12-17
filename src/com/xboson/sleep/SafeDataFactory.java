@@ -20,6 +20,7 @@ import com.xboson.app.lib.IApiConstant;
 import com.xboson.auth.impl.RoleBaseAccessControl;
 import com.xboson.util.AES2;
 import com.xboson.util.Hex;
+import com.xboson.util.Tool;
 import com.xboson.util.Version;
 import com.xboson.util.c0nst.IConstant;
 
@@ -43,7 +44,7 @@ public class SafeDataFactory implements IConstant, IApiConstant {
   static {
     ENC_DEFAULT = new IEncryptionStrategy() {};
     ENC_JDBC = new OnlyValueEnc("jdbc");
-    ENC_RBAC = new OnlyKeyEnc("rbac");
+    ENC_RBAC = new RBACKeyEnc("rbac");
   }
 
 
@@ -107,6 +108,12 @@ public class SafeDataFactory implements IConstant, IApiConstant {
      */
     default String decodeData(String s) { return s; }
 
+
+    /**
+     * 如果允许使用 key 做模糊查询返回 true, 默认返回 true
+     */
+    default boolean keyAmbiguous() { return true; }
+
   }
 
 
@@ -128,6 +135,42 @@ public class SafeDataFactory implements IConstant, IApiConstant {
     @Override
     public String decodeKey(String s) {
       return new String(aes.decryptBin(Hex.decode64(s)));
+    }
+  }
+
+
+  private static class RBACKeyEnc implements IEncryptionStrategy {
+    private AES2 aes;
+
+
+    private RBACKeyEnc(String pass) {
+      aes = new AES2("rbac-"+ pass +"-enc:"+ Version.PKCRC);
+    }
+
+
+    @Override
+    public String encodeKey(String s) {
+      int be = s.indexOf(':');
+      int ed = s.lastIndexOf(':');
+      if (be == ed) {
+        return s;
+      }
+      String a = s.substring(0, ed+1);
+      String b = s.substring(ed+1);
+      return a + Hex.encode64(aes.encryptBin(b.getBytes(CHARSET)));
+    }
+
+
+    @Override
+    public String decodeKey(String s) {
+      int be = s.indexOf(':');
+      int ed = s.lastIndexOf(':');
+      if (be == ed) {
+        return s;
+      }
+      String a = s.substring(0, ed+1);
+      String b = s.substring(ed+1);
+      return a + new String(aes.decryptBin(Hex.decode64(b)));
     }
   }
 

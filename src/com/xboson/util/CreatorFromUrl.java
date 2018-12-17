@@ -67,10 +67,20 @@ public class CreatorFromUrl<T> {
 
 
   /**
-   * 从 url 创建对象, 线程安全, 不允许 url 为空值.
+   * 从 url 创建对象, 线程安全, 不允许 url 为空值;
    * 错误会抛出异常.
+   * @see #create(String, Object)
    */
   public T create(String url) {
+    return create(url, null);
+  }
+
+
+  /**
+   * 从 url 创建对象, 线程安全, 不允许 url 为空值; data 可以为空, 用于附加参数.
+   * 错误会抛出异常.
+   */
+  public T create(String url, Object data) {
     if (Tool.isNulStr(url))
       throw new XBosonException.NullParamException("URL");
 
@@ -80,7 +90,7 @@ public class CreatorFromUrl<T> {
         if (defaultp == null) {
           throw new XBosonException("Invaild format from URL: "+ url);
         }
-        return defaultp.create(url, null, url);
+        return defaultp.create(url, null, url, data);
       }
 
       String v = url.substring(i+3);
@@ -90,7 +100,7 @@ public class CreatorFromUrl<T> {
         throw new XBosonException("Invaild protocol from URL: "+ url);
       }
 
-      return ip.create(v, p, url);
+      return ip.create(v, p, url, data);
     } catch (XBosonException e) {
       throw e;
     } catch (Exception e) {
@@ -101,13 +111,18 @@ public class CreatorFromUrl<T> {
 
   public interface IProtocol<N> {
 
+
     /**
-     * 创建对象的实例
+     * 创建对象的实例, 同时附带一些数据
+     *
+     * @see #create(String, String, String) 默认实现调用该方法
      * @param val 解析后 url 中的值部分
      * @param protocol 解析后 url 中协议部分, 不包含 `://`
      * @param url 完整的 url 字符串
+     * @param data 附加数据
      * @return 根据 url 创建的对象
      */
-    N create(String val, String protocol, String url) throws Exception;
+    N create(String val, String protocol, String url, Object data)
+            throws Exception;
   }
 }

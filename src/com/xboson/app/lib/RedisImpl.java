@@ -121,9 +121,9 @@ public class RedisImpl implements IApiConstant {
 
   public Object keys(ScriptObjectMirror list, String region, String pattern) {
     String tkey = key_prefix + region;
-    Object nul = SafeDataFactory.getMaybeNull(tkey);
-    if (nul != null)
-      throw new UnsupportedOperationException(
+
+    SafeDataFactory.IEncryptionStrategy s = SafeDataFactory.getMaybeNull(tkey);
+    if (s != null && !s.keyAmbiguous()) throw new UnsupportedOperationException(
               "The region '"+ region +"' is encrypted and cannot be ambiguous");
 
     String cursor = RedisMesmerizer.BEGIN_OVER_CURSOR;
