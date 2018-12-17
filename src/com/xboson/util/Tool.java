@@ -668,4 +668,15 @@ public final class Tool extends StaticLogProvider {
     o.write(i);
     return o.toBytes();
   }
+
+
+  /**
+   * 去掉 url 末尾的 '/' 符号.
+   */
+  public static String urlNoSuffix(String url) {
+    if (url == null) return null;
+    int i = url.length()-1;
+    while (url.charAt(i) == '/') --i;
+    return url.substring(0, i+1);
+  }
 }

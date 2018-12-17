@@ -95,8 +95,8 @@ public class TestTool extends Test {
   private void url_creator() throws Exception {
     sub("URL parse and creator");
     CreatorFromUrl<String> cf = new CreatorFromUrl<>();
-    cf.reg("a", (v, p, u) -> p +'='+ v);
-    cf.reg("b", (v, p, u) -> v +'='+ p);
+    cf.reg("a", (v, p, u, d) -> p +'='+ v);
+    cf.reg("b", (v, p, u, d) -> v +'='+ p);
 
     eq("a=000", cf.create("a://000"), "url1");
     eq("000=b", cf.create("b://000"), "url2");
@@ -104,7 +104,7 @@ public class TestTool extends Test {
     Throws(XBosonException.class, ()-> cf.create("c://000"));
     Throws(XBosonException.class, ()-> cf.create("000"));
 
-    cf.reg(true, "def", (v, p, u) -> v +'!'+ p);
+    cf.reg(true, "def", (v, p, u, d) -> v +'!'+ p);
 
     eq("000!def", cf.create("def://000"), "url3");
     eq("111!null", cf.create("111"), "default protocol");

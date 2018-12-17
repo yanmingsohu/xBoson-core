@@ -122,9 +122,10 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
     -- (mapdb-3.0.8-SNAPSHOT-jar-with-dependencies.jar) 依赖库集合
     
 * (Docker 客户端)[https://github.com/spotify/docker-client]
-    -- (docker-client-8.14.5.jar)
+    -- (docker-client-8.14.5.jar) 作为参考 - 对接 docker 完成后删除
     -- (Java API 文档)[https://github.com/spotify/docker-client/blob/master/docs/user_manual.md]
     -- (docker 原生 API)[https://docs.docker.com/engine/api/v1.39/]
+    -- (生成安全连接)[https://docs.docker.com/engine/security/https/]
     
     
     
