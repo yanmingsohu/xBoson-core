@@ -59,8 +59,10 @@ public class DockerImpl extends RuntimeUnitImpl {
 
   /**
    * 打开到服务器链接, tslConfig 保存 TSL 配置参数
-   * tslConfig.cert 客户端证书
-   * tslConfig.key 证书密钥
+   * tslConfig.cert 客户端证书, X509-PEM 格式
+   * tslConfig.key  证书私钥, pkcs8 格式
+   * tslConfig.ca   CA 证书, X509-PEM 格式
+   * tslConfig.pass 加密证书和私钥的密钥
    */
   public IDockerClient open(String uri, Object tslConfig) {
     return clientCreator.create(uri, tslConfig);
