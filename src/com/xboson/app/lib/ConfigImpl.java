@@ -69,6 +69,11 @@ public class ConfigImpl extends RuntimeUnitImpl {
   public final int MODE_ORG_DEV = 7;
   public final int MODE__MAX    = 7; // 始终是mode 的最大值
 
+  public final int TYPE_STRING  = 0;
+  public final int TYPE_NUMBER  = 1;
+  public final int TYPE_BOOL    = 2;
+  public final int TYPE_REMOVE  = -1;
+
   private static final Cache cache = new Cache();
   public MongoDatabase __db;
 

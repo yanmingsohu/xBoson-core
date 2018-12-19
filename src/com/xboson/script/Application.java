@@ -110,13 +110,14 @@ public class Application implements
     String path = ws.getFilename();
 
     ws.compile(sandbox);
-    module_cache.put(path, ws);
 
     Module mod    = ws.getModule();
     mod.filename  = path;
     mod.id        = '/'+ vfs.getID() +'/'+ path;
     ws.initModule(this);
 
+    // 在初始化成功之后才缓存模块
+    module_cache.put(path, ws);
     return mod;
   }
 
