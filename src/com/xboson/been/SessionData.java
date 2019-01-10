@@ -62,14 +62,14 @@ public class SessionData implements IBean, IBinData, ITimeout {
    */
   public SessionData(Cookie ck, int sessionTimeoutMinute) {
     this.id = ck.getValue();
+    this.duration = sessionTimeoutMinute * 60 * 1000;
     this.loginTime = System.currentTimeMillis();
-    this.endTime = this.loginTime + sessionTimeoutMinute * 60 * 1000;
-    this.duration = endTime - loginTime;
+    this.endTime = this.loginTime + this.duration;
   }
 
 
   public boolean isTimeout() {
-    return endTime - System.currentTimeMillis() < 0;
+    return System.currentTimeMillis() > endTime;
   }
 
 
@@ -100,6 +100,6 @@ public class SessionData implements IBean, IBinData, ITimeout {
    * 延长 session 有效期
    */
   public void prolong() {
-    endTime += duration;
+    endTime = System.currentTimeMillis() + duration;
   }
 }
