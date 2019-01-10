@@ -38,6 +38,7 @@ public class SessionData implements IBean, IBinData, ITimeout {
 
   public long loginTime;
   public long endTime;
+  private long duration;
 
 
   public SessionData() {
@@ -47,10 +48,12 @@ public class SessionData implements IBean, IBinData, ITimeout {
   /**
    * 使用 token 创建 session
    */
-  public SessionData(AppToken token) {
+  public SessionData(AppToken token, LoginUser user) {
     this.id = token.token;
-    this.loginTime = System.currentTimeMillis();
+    this.login_user = user;
+    this.loginTime = user.loginTime;
     this.endTime = token.over;
+    this.duration = endTime - loginTime;
   }
 
 
@@ -61,6 +64,7 @@ public class SessionData implements IBean, IBinData, ITimeout {
     this.id = ck.getValue();
     this.loginTime = System.currentTimeMillis();
     this.endTime = this.loginTime + sessionTimeoutMinute * 60 * 1000;
+    this.duration = endTime - loginTime;
   }
 
 
@@ -89,5 +93,13 @@ public class SessionData implements IBean, IBinData, ITimeout {
    */
   public void destoryFlag() {
     endTime = 0;
+  }
+
+
+  /**
+   * 延长 session 有效期
+   */
+  public void prolong() {
+    endTime += duration;
   }
 }

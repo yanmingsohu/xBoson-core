@@ -18,33 +18,28 @@ package com.xboson.service;
 
 import com.xboson.app.AppContext;
 import com.xboson.been.*;
-import com.xboson.db.ConnectConfig;
 import com.xboson.db.IDict;
-import com.xboson.db.SqlResult;
-import com.xboson.db.sql.SqlReader;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.log.slow.AccessLog;
 import com.xboson.sleep.RedisMesmerizer;
-import com.xboson.util.*;
+import com.xboson.util.Firewall;
+import com.xboson.util.JavaConverter;
+import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
+
+import static com.xboson.util.Firewall.IP_BAN_COUNT;
+import static com.xboson.util.Firewall.IP_NEED_CAPTCHA;
+import static com.xboson.util.Firewall.IP_WAIT_TIMEOUT;
 
 
 @XPath("/user")
 public class UserService extends XService implements IDict, IConstant {
-
-  public static final int IP_BAN_COUNT    = 10;
-  public static final int IP_WAIT_TIMEOUT = 10; // 分钟
-  public static final int IP_NEED_CAPTCHA = 5;
 
   public static final String MSG
           = "Provide sub-service name '/user/[sub service]'";
@@ -120,7 +115,8 @@ public class UserService extends XService implements IDict, IConstant {
       return;
     }
 
-    final int login_count = checkIpBan(data);
+    Firewall fw = Firewall.me();
+    final int login_count = fw.checkIpBan(data.req.getRemoteAddr());
     if (login_count >= IP_BAN_COUNT) {
       msg(data, "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试", 997);
 	    return;
@@ -133,7 +129,7 @@ public class UserService extends XService implements IDict, IConstant {
       String c = data.getString("c", 0, 20);
       if (! c.equalsIgnoreCase( data.sess.captchaCode )) {
         msg(data, "验证码错误", 10);
-        ipLoginFail(data);
+        fw.ipLoginFail(data.req.getRemoteAddr());
         return;
       }
     }
@@ -143,12 +139,12 @@ public class UserService extends XService implements IDict, IConstant {
     LoginUser lu = LoginUser.fromDb(userid, cf.db, md5ps);
     if (lu == null) {
       msg(data, "用户不存在", 1014);
-      ipLoginFail(data);
+      fw.ipLoginFail(data.req.getRemoteAddr());
       return;
     }
     if (! ZR001_ENABLE.equals(lu.status)) {
       msg(data, "用户已锁定", 1004);
-      ipLoginFail(data);
+      fw.ipLoginFail(data.req.getRemoteAddr());
       return;
     }
     if (! lu.checkPS(md5ps)) {
@@ -176,35 +172,6 @@ public class UserService extends XService implements IDict, IConstant {
     } finally {
       data.sess.login_user = null;
       data.sess.destoryFlag();
-    }
-  }
-
-
-  /**
-   * ip 登录失败次数超限返回 true
-   */
-  private int checkIpBan(CallData cd) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      String key = "/ip-ban/" + cd.req.getRemoteAddr();
-      String v = client.get(key);
-      if (v == null) return 0;
-      return Integer.parseInt(v);
-    }
-  }
-
-
-  /**
-   * 记录一次 ip 失败登录次数
-   */
-  private void ipLoginFail(CallData cd) {
-	  try (Jedis client = RedisMesmerizer.me().open();
-         Transaction t = client.multi() ) {
-	    String key = "/ip-ban/" + cd.req.getRemoteAddr();
-	    t.incr(key);
-	    t.expire(key, IP_WAIT_TIMEOUT * 60);
-	    t.exec();
-    } catch (IOException e) {
-      throw new XBosonException(e);
     }
   }
 

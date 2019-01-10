@@ -22,6 +22,7 @@ import com.xboson.app.XjApp;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.CallData;
+import com.xboson.been.LoginUser;
 import com.xboson.been.XBosonException;
 import com.xboson.been.XBosonException.BadParameter;
 import com.xboson.db.ConnectConfig;
@@ -60,6 +61,10 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+
+import static com.xboson.db.IDict.ZR001_ENABLE;
+import static com.xboson.util.Firewall.IP_BAN_COUNT;
+import static com.xboson.util.Firewall.IP_WAIT_TIMEOUT;
 
 
 /**
@@ -386,7 +391,6 @@ public class SysImpl extends DateImpl {
 
 
   /**
-   * 特别不理解为什么 sys 上也有这个方法,
    * 该方法与 se.encodePlatformPassword 区别是 ps 已经 md5
    */
   public String encodePlatformPassword(String uid, String date, String ps) {
@@ -1217,5 +1221,41 @@ public class SysImpl extends DateImpl {
    */
   public void authorization(String authName) {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, ()-> authName);
+  }
+
+
+  /**
+   * 用户在接口中重新登录系统, 之前登录的用户被登出.
+   * 该方法登录的用户永远不会是超级管理员 (安全设定).
+   *
+   * @param userName 用户名
+   * @param passwordMd5 md5后的用户密码
+   * @return 登录成功返回 null, 否则返回错误消息
+   */
+  public String login(String userName, String passwordMd5) throws SQLException {
+    Firewall fw = Firewall.me();
+    final int login_count = fw.checkIpBan(cd.req.getRemoteAddr());
+    if (login_count >= IP_BAN_COUNT) {
+      return "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试";
+    }
+
+    LoginUser lu = LoginUser.fromDb(userName, orgdb, null);
+    if (lu == null) {
+      fw.ipLoginFail(cd.req.getRemoteAddr());
+      return "用户不存在";
+    }
+    if (! ZR001_ENABLE.equals(lu.status)) {
+      fw.ipLoginFail(cd.req.getRemoteAddr());
+      return "用户已锁定";
+    }
+    if (! lu.checkPS(passwordMd5)) {
+      fw.ipLoginFail(cd.req.getRemoteAddr());
+      return "用户名或密码错误";
+    }
+
+    lu.bindUserRoles(orgdb);
+    lu.password = null;
+    cd.sess.login_user = lu;
+    return null;
   }
 }

@@ -70,7 +70,7 @@ public interface IConstant extends IDict {
   /**
    * 默认超时 (秒), session 和 redis 使用.
    */
-  int DEFAULT_TIMEOUT = 24 * 60 * 60;
+  int DEFAULT_TIMEOUT = 3 * 60 * 60;
 
   /**
    * 常用加密/摘要算法名字
