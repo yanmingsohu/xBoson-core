@@ -21,7 +21,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 
 # 需要做:
 
-* 构建宣传页.
 * 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)(https://raft.github.io/)
 * 接管 Tomcat.
 * 云盘系统(api已经完成)
@@ -31,7 +30,7 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
   因为 app 是不会重复的 (XjOrg 和 XjApp 解绑, 表 sys_apps 没有和机构做关联).
 * 机构自己的模板目录
 
-* 微信接入, 扫码登录, 创建用户, 关联用户组
+* 当前用户关联微信
 * 统计分析模块 -api完成 +wiki +画面
 * docker 管理模块.
 

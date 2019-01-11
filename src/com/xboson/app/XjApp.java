@@ -25,6 +25,7 @@ import com.xboson.db.SqlResult;
 import com.xboson.fs.script.ScriptAttr;
 import com.xboson.fs.script.IScriptFileSystem;
 import com.xboson.script.Application;
+import com.xboson.script.NotFoundModuleMaySkip;
 
 import javax.script.ScriptException;
 import java.io.IOException;
@@ -41,18 +42,22 @@ import java.util.WeakHashMap;
  */
 public class XjApp extends XjPool<XjModule> implements IDict, IScriptFileSystem {
 
+  public final static long MODULE_SKIP_TIME = 10* 1000;
+
   private ServiceScriptWrapper ssw;
   private Application runtime;
   private XjOrg org;
   private String name;
   private String id;
   private Map<String, Object> cacheData;
+  private Map<String, Long> skipModule;
 
 
   XjApp(XjOrg org, String id) {
     this.org = org;
     this.id = id;
     this.cacheData = Collections.synchronizedMap(new WeakHashMap<>());
+    this.skipModule = new WeakHashMap<>();
     init_app();
 
     try {
@@ -106,7 +111,24 @@ public class XjApp extends XjPool<XjModule> implements IDict, IScriptFileSystem 
 
   @Override
   protected XjModule createItem(String id) {
-    return new XjModule(org, this, id);
+    Long time = skipModule.get(id);
+    if (time != null && System.currentTimeMillis()-time < MODULE_SKIP_TIME) {
+      //
+      // 在 MODULE_SKIP_TIME 时间内不再检测 module 是否存在而是直接认为不存在,
+      // 脚本加载器在 require() 时会频繁访问同一个模块, 创建模块时需要访问 DB,
+      // 使用缓存记录不存在的模块可以大大加快脚本加载器的速度.
+      //
+      throw new NotFoundModuleMaySkip(id);
+    } else {
+      skipModule.remove(id);
+    }
+
+    try {
+      return new XjModule(org, this, id);
+    } catch (NotFoundModuleMaySkip e) {
+      skipModule.put(id, System.currentTimeMillis());
+      throw e;
+    }
   }
 
 

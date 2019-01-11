@@ -24,6 +24,15 @@ process.versions = {
 };
 
 
+process.env = {
+};
+
+
+process.cwd = function() {
+  return '/';
+};
+
+
 //
 // 初始化方法只能调用一次
 //

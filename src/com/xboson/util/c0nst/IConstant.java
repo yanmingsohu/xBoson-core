@@ -55,6 +55,11 @@ public interface IConstant extends IDict {
   String SYS_MOD_PREFIX = "ZYMODULE_";
 
   /**
+   * 匿名用户名
+   */
+  String Anonymous = "anonymous";
+
+  /**
    * 平台表前缀, 不会被 sql 替换
    */
   String SYS_TABLE_NOT_REPLACE = "sys_pl_";

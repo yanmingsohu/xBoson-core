@@ -21,6 +21,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -59,25 +60,85 @@ public class Path {
   }
 
 
+  public String resolve(String... s) {
+    String r = join(s);
+    if (Tool.isNulStr(r)) return "/";
+    if (r.charAt(0) != '/') r = '/'+ r;
+    return r;
+  }
+
+
+  public String relative(String ap, String bp) {
+    LinkedList<String> pa = split(ap);
+    LinkedList<String> pb = split(bp);
+
+    StringBuilder out = new StringBuilder();
+    int len = pa.size();
+    int a = 0;
+
+    for (a=0; a < len; ++a) {
+      if (! pa.get(a).equals( pb.get(a) )) {
+        break;
+      }
+    }
+
+    for (int i=len-a; i>0; --i) {
+      out.append("../");
+    }
+
+    len = pb.size();
+    if (a < len) {
+      for (int i=a;;) {
+        out.append(pb.get(i));
+        if (++i<len) out.append('/');
+        else break;
+      }
+    }
+    return out.toString();
+  }
+
+
   public String normalize(String s) {
+    LinkedList<String> buf = split(s);
+    StringBuilder out = new StringBuilder();
+    int a = 0;
+    int b = buf.size();
+
+    if (b > 0) {
+      for (;;) {
+        out.append(buf.get(a));
+        if (++a < b) {
+          out.append('/');
+        } else {
+          break;
+        }
+      }
+    }
+    return out.toString();
+  }
+
+
+  private LinkedList<String> split(String s) {
     LinkedList<String> buf = new LinkedList<>();
     char ch;
-    int a = 0, b = -1, i;
+    int a = 0, b = -1, i, word = 0;
 
     for (i=0; i<s.length(); ++i) {
       ch = s.charAt(i);
       if (ch == '/' || ch == '\\') {
-        if (b == -1) {
+        if (b == -1 && (a==0 || a!=i)) {
           buf.addLast(s.substring(a, i));
-          b = i;
-        } else if (b-a == 2) {
-          buf.pollLast();
-        } else if (a == b) {
-          b = i;
-        } else {
-          b = -1;
+          ++word;
+        } else if (b == 1) {
+          if (word > 0) {
+            buf.pollLast();
+            --word;
+          } else {
+            buf.addLast("..");
+          }
         }
-        a = i;
+        b = -1;
+        a = i+1;
       }
       else if (ch == '.') {
         ++b;
@@ -88,23 +149,13 @@ public class Path {
     }
 
     if (a < s.length()) {
-      buf.addLast(s.substring(a, s.length()));
-    }
-
-    StringBuilder out = new StringBuilder();
-    Iterator<String> it = buf.iterator();
-    while (it.hasNext()) {
-      String sub = it.next();
-      if (sub.length() > 0 && sub.charAt(0) == '\\') {
-        out.append('/');
-        if (sub.length() > 1) {
-          out.append(sub, 1, sub.length());
-        }
+      if (b == 1 && word > 0) {
+        buf.pollLast();
       } else {
-        out.append(sub);
+        buf.addLast(s.substring(a, s.length()));
       }
     }
-    return out.toString();
+    return buf;
   }
 
 

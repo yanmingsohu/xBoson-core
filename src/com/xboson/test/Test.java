@@ -268,6 +268,7 @@ public class Test implements IConstant {
 	 */
 	public static void eq(Object a, Object b, String msg) {
 	  if (a == b || a.equals(b)) {
+	    msg("OK", msg);
       return;
     }
 

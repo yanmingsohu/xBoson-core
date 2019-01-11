@@ -1258,4 +1258,14 @@ public class SysImpl extends DateImpl {
     cd.sess.login_user = lu;
     return null;
   }
+
+
+  public boolean isAnonymousUser() {
+    if (cd.sess == null ||
+        cd.sess.login_user == null ||
+        cd.sess.login_user.userid == null)
+      return false;
+
+    return IConstant.Anonymous.equals(cd.sess.login_user.userid);
+  }
 }

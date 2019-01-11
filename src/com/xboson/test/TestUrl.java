@@ -17,6 +17,8 @@
 package com.xboson.test;
 
 import com.xboson.been.UrlSplit;
+import com.xboson.script.lib.Path;
+
 
 public class TestUrl extends Test {
 
@@ -25,9 +27,33 @@ public class TestUrl extends Test {
 
 
 	public void test() throws Exception {
+    testPath();
     test1();
     test2();
 	}
+
+
+	public void testPath() {
+	  sub("Test Path");
+	  Path p = Path.me;
+
+	  eq(p.resolve(""), "/", "path.resolve()");
+
+    eq(p.normalize("/foo/bar//baz/asdf/quux/.."),
+            "/foo/bar/baz/asdf", "normalize1");
+    eq(p.normalize("C:\\\\temp\\\\\\\\foo\\\\bar\\\\..\\\\"),
+            "C:/temp/foo", "normalize2");
+    eq(p.normalize("C:////temp\\\\\\\\/\\\\/\\\\/foo/bar"),
+            "C:/temp/foo/bar", "normalize3");
+    eq(p.normalize("/c/../a/b"), "/a/b", "normalize4");
+    eq(p.normalize("c/../a/b"), "a/b", "normalize5");
+    eq(p.normalize("../../a/b"), "../../a/b", "normalize6");
+
+	  String a = "/data/orandea/test/aaa";
+	  String b = "/data/orandea/impl/bbb";
+	  String c = "../../impl/bbb";
+	  eq(p.relative(a, b), c, "path.relative");
+  }
 
 
 	public void test2() {

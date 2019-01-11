@@ -96,8 +96,11 @@ public class Application implements
       mod.loaderid = IModuleProvider.LOADER_ID_APPLICATION;
       return mod;
 
+    } catch (NotFoundModuleMaySkip e) {
+      // 不做任何处理
+      return null;
     } catch (IOException | XBosonException.IOError e) {
-      log.warn("Read script file", e);
+      log.warn("Read script file", e, path);
       return null;
     }
   }
