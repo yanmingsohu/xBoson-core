@@ -109,6 +109,7 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'class com.xboson.log.writer.* { public *; }'
     keep 'public class com.xboson.test.* { public *; }'
     keeppackagenames 'com.xboson.test.js'
+    keeppackagenames 'com.xboson.util.config'
 
     // RPC
     keep 'class com.xboson.rpc.* { public *; *; }'
