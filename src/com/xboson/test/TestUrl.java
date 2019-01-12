@@ -37,7 +37,7 @@ public class TestUrl extends Test {
 	  sub("Test Path");
 	  Path p = Path.me;
 
-	  eq(p.resolve(""), "/", "path.resolve()");
+	  eq(p.resolve(""), "/", "resolve");
 
     eq(p.normalize("/foo/bar//baz/asdf/quux/.."),
             "/foo/bar/baz/asdf", "normalize1");
@@ -48,6 +48,10 @@ public class TestUrl extends Test {
     eq(p.normalize("/c/../a/b"), "/a/b", "normalize4");
     eq(p.normalize("c/../a/b"), "a/b", "normalize5");
     eq(p.normalize("../../a/b"), "../../a/b", "normalize6");
+    eq(p.normalize("/a"), "/a", "normalize7");
+    eq(p.normalize("/"), "/", "normalize8");
+    eq(p.normalize(""), "", "normalize9");
+    eq(p.normalize("////"), "/", "normalize10");
 
 	  String a = "/data/orandea/test/aaa";
 	  String b = "/data/orandea/impl/bbb";

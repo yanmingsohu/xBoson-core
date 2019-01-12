@@ -27,6 +27,7 @@ import java.util.LinkedList;
 
 public class Path {
 
+  public static final String R = "/";
   public static final Path me = new Path();
 
 
@@ -62,7 +63,7 @@ public class Path {
 
   public String resolve(String... s) {
     String r = join(s);
-    if (Tool.isNulStr(r)) return "/";
+    if (Tool.isNulStr(r)) return R;
     if (r.charAt(0) != '/') r = '/'+ r;
     return r;
   }
@@ -74,23 +75,23 @@ public class Path {
 
     StringBuilder out = new StringBuilder();
     int len = pa.size();
-    int a = 0;
+    int sameIndex;
 
-    for (a=0; a < len; ++a) {
-      if (! pa.get(a).equals( pb.get(a) )) {
+    for (sameIndex=0; sameIndex < len; ++sameIndex) {
+      if (! pa.get(sameIndex).equals( pb.get(sameIndex) )) {
         break;
       }
     }
 
-    for (int i=len-a; i>0; --i) {
+    for (int i=len-sameIndex; i>0; --i) {
       out.append("../");
     }
 
     len = pb.size();
-    if (a < len) {
-      for (int i=a;;) {
-        out.append(pb.get(i));
-        if (++i<len) out.append('/');
+    if (sameIndex < len) {
+      for (;;) {
+        out.append(pb.get(sameIndex));
+        if (++sameIndex < len) out.append('/');
         else break;
       }
     }
@@ -100,11 +101,13 @@ public class Path {
 
   public String normalize(String s) {
     LinkedList<String> buf = split(s);
-    StringBuilder out = new StringBuilder();
     int a = 0;
     int b = buf.size();
 
-    if (b > 0) {
+    if (b == 1 && IConstant.NULL_STR.equals(buf.get(0))) {
+      return R;
+    } else if (b > 0) {
+      StringBuilder out = new StringBuilder();
       for (;;) {
         out.append(buf.get(a));
         if (++a < b) {
@@ -113,8 +116,9 @@ public class Path {
           break;
         }
       }
+      return out.toString();
     }
-    return out.toString();
+    return IConstant.NULL_STR;
   }
 
 

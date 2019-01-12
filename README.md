@@ -30,7 +30,6 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
   因为 app 是不会重复的 (XjOrg 和 XjApp 解绑, 表 sys_apps 没有和机构做关联).
 * 机构自己的模板目录
 
-* 当前用户关联微信
 * 统计分析模块 -api完成 +wiki +画面
 * docker 管理模块.
 
