@@ -68,7 +68,7 @@ public class Peer extends AbsPeer {
 
   public byte[] sendBlock(String chainName, String channelName, BlockBasic b)
           throws RemoteException {
-    try (LocalLock _ = new LocalLock(lock.writeLock())) {
+    try (LocalLock l = new LocalLock(lock.writeLock())) {
       return getOrder().sendBlock(chainName, channelName, b);
     }
   }
@@ -78,7 +78,7 @@ public class Peer extends AbsPeer {
   public void createChannel(String chainName, String channelName,
                             String uid, String exp, KeyPair[] kp)
           throws RemoteException {
-    try (LocalLock _ = new LocalLock(lock.writeLock())) {
+    try (LocalLock l = new LocalLock(lock.writeLock())) {
       getOrder().createChannel(chainName, channelName, uid, exp, kp);
     }
   }
@@ -104,7 +104,7 @@ public class Peer extends AbsPeer {
    * 同步: 拉取主节点的链到本地链
    */
   private void syncBlock(ChainEvent e) {
-    try (LocalLock _ = new LocalLock(lock.writeLock())) {
+    try (LocalLock l = new LocalLock(lock.writeLock())) {
       log.debug("synchronized block", e.chain, "/", e.channel);
 
       byte[] lkey = getOrder().lastBlockKey(e.chain, e.channel);
@@ -141,7 +141,7 @@ public class Peer extends AbsPeer {
 
 
   private void syncChannel(ChainEvent e) {
-    try (LocalLock _ = new LocalLock(lock.writeLock())) {
+    try (LocalLock l = new LocalLock(lock.writeLock())) {
       log.debug("synchronized channel setting", e.chain, "/", e.channel);
       byte[] gkey = getOrder().genesisKey(e.chain, e.channel);
       Block gb = getOrder().search(e.chain, e.channel, gkey);

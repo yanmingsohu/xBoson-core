@@ -71,6 +71,7 @@ public final class DefaultConfig {
     c.rootUserName      = "admin-pl";
     c.rootPassword      = "unnecessary";
     c.rootPid           = "unnecessary";
+    c.maxPostBody       = 5 * 1024 * 1024;
 
     c.rootPassword =
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));

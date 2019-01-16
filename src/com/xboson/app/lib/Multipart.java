@@ -55,6 +55,7 @@ public class Multipart extends RuntimeUnitImpl {
 
 
   public void checkLimit(int limit) {
+    if (limit <= 0) return;
     final int clen = req.getContentLength();
     if (clen > limit) {
       throw new XBosonException(

@@ -63,7 +63,7 @@ public class DbOut extends OutBase implements ILogWriter {
 
   private void init() {
     try {
-      try (SqlResult _ = SqlReader.query(ALERT, cfg.db)) {
+      try (SqlResult q = SqlReader.query(ALERT, cfg.db)) {
       }
 
       ILogWriter sys_log = new SystemLog();

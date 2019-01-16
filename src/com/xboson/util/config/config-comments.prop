@@ -82,3 +82,4 @@ chainIncrement: 区块链文件增长单位, KB
 chainEnable: 启用区块链服务器
 
 remoteIpHeader: 客户端地址来自 http 头域(当平台在代理后面), 可以空.
+maxPostBody: 默认客户端上传文件尺寸允许的最大值, 0 表示没有限制.

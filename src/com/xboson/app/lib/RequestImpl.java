@@ -23,6 +23,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.script.JSObject;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Checker;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.AbstractJSObject;
 import okhttp3.MultipartBody;
@@ -40,11 +41,15 @@ import java.util.concurrent.Executors;
  */
 public class RequestImpl extends JSObject.Helper implements IJson {
 
-  public final static int MAX_BODY_LENGTH = 5 * 1024 * 1024;
+  private final static int MAX_BODY_LENGTH;
 
   private CallData cd;
   private Map<String, Object> extendParameter;
   private Checker ck;
+
+  static {
+    MAX_BODY_LENGTH = SysConfig.me().readConfig().maxPostBody;
+  }
 
 
   public RequestImpl(CallData cd) {
@@ -317,11 +322,8 @@ public class RequestImpl extends JSObject.Helper implements IJson {
    * 如果没有 body 数据返回 null;
    */
   public Buffer.JsBuffer body(int limit) throws IOException {
-    if (limit <= 0) {
-      limit = MAX_BODY_LENGTH;
-    }
     final int clen = cd.req.getContentLength();
-    if (clen > limit) {
+    if (clen > limit && limit > 0) {
       throw new XBosonException(
               "Http Body too bigher, max: "+ limit +" bytes.");
     } else if (clen <= 0) {
