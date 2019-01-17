@@ -18,87 +18,75 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Buffer;
+import com.xboson.script.lib.Bytes;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.commons.fileupload.MultipartStream;
 import org.apache.commons.fileupload.ParameterParser;
+import org.apache.commons.fileupload.ProgressListener;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
 
 public class Multipart extends RuntimeUnitImpl {
 
-  public static final int BUFFER_SIZE = 4 * 1024;
+  public static final int BUFFER_SIZE = 16 * 1024;
 
   private HttpServletRequest req;
   private byte[] boundary;
   private int bufferSize;
-  private ScriptObjectMirror ret;
+  private int maxBody;
 
 
-  public Multipart(HttpServletRequest req) {
+  public Multipart(HttpServletRequest req, int maxBody) {
     super(null);
-    this.req = req;
+    this.req        = req;
     this.bufferSize = BUFFER_SIZE;
+    this.maxBody    = maxBody;
   }
 
 
-  public ScriptObjectMirror parse() throws IOException {
-    if (req.getContentLength() == 0) return null;
+  public int parse(ScriptObjectMirror callback) throws IOException {
+    if (req.getContentLength() == 0) return 0;
+    if (!callback.isFunction())
+      throw new XBosonException("callback must Function");
+
     parseBoundary();
-    ret = createJSList();
-    parseBody();
-    return ret;
+    return parseBody(callback);
   }
 
 
-  public void checkLimit(int limit) {
-    if (limit <= 0) return;
-    final int clen = req.getContentLength();
-    if (clen > limit) {
-      throw new XBosonException(
-              "Http Body too bigher, max: "+ limit +" bytes.");
-    }
-  }
-
-
-  private void parseBody() throws IOException {
+  private int parseBody(ScriptObjectMirror callback) throws IOException {
     MultipartStream ms = new MultipartStream(
             req.getInputStream(), boundary, bufferSize, null);
 
     boolean nextPart = ms.skipPreamble();
-    int count = ret.size();
+    int count = 0;
 
     while(nextPart) {
-      ScriptObjectMirror item = createJSObject();
-      ret.setSlot(count++, item);
-
       String header = ms.readHeaders();
-      parseHeader(item, header);
-
-      StringBufferOutputStream output = new StringBufferOutputStream();
-      ms.readBodyData(output);
-      Buffer.JsBuffer buf = new Buffer().from(output.toBytes());
-      item.setMember("content", buf);
-
+      MultipartItem item = new MultipartItem(header, ms);
+      callback.call(null, item);
+      if (! item.isRead) ms.discardBodyData();
       nextPart = ms.readBoundary();
+      ++count;
     }
+    return count;
   }
 
 
-  private void parseHeader(ScriptObjectMirror item, String headers) {
-    ScriptObjectMirror header = createJSObject();
-    item.setMember("header", header);
+  private void parseHeader(ScriptObjectMirror header, String headersStr) {
     ParameterParser pp = new ParameterParser();
     int end = 0, st = 0;
 
     for (;;st = end+2) {
-      end = headers.indexOf('\r', st);
+      end = headersStr.indexOf('\r', st);
       if (end < 0) break;
 
-      String line = headers.substring(st, end);
+      String line = headersStr.substring(st, end);
       int i = line.indexOf(':');
       if (i >= 0) {
         String hname = line.substring(0, i);
@@ -116,6 +104,7 @@ public class Multipart extends RuntimeUnitImpl {
       }
     }
   }
+
 
   private void parseBoundary() {
     do {
@@ -141,4 +130,49 @@ public class Multipart extends RuntimeUnitImpl {
     }
   }
 
+
+  public class MultipartItem {
+
+    public final ScriptObjectMirror header;
+    private final MultipartStream ms;
+    private boolean isRead;
+
+    private MultipartItem(String headerStr, MultipartStream ms) {
+      this.ms     = ms;
+      this.isRead = false;
+      this.header = createJSObject();
+      parseHeader(this.header, headerStr);
+    }
+
+    public Object readBuffer() throws IOException {
+      StringBufferOutputStream output = new StringBufferOutputStream();
+      readTo(output);
+      return new Buffer().from(output.toBytes());
+    }
+
+    public Object readBytes() throws IOException {
+      StringBufferOutputStream output = new StringBufferOutputStream();
+      readTo(output);
+      return new Bytes(output.toBytes());
+    }
+
+    public String readString(String charset) throws IOException {
+      StringBufferOutputStream output = new StringBufferOutputStream();
+      readTo(output);
+      return new String(output.toBytes(), charset);
+    }
+
+    public String readString() throws IOException {
+      return readString(IConstant.CHARSET_NAME);
+    }
+
+    public int readTo(OutputStream out) throws IOException {
+      try {
+        if (isRead) throw new XBosonException("Cannot read repeatedly");
+        return ms.readBodyData(out);
+      } finally {
+        isRead = true;
+      }
+    }
+  }
 }

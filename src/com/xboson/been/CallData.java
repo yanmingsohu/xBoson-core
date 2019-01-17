@@ -31,7 +31,10 @@ import com.xboson.util.Tool;
  */
 public class CallData implements IBean {
 
+  /** @see Config#remoteIpHeader */
   private final static String remoteIpHeader;
+  /** @see Config#maxPostBody */
+  public final static int maxPostBody;
 
   public final HttpServletRequest req;
   public final HttpServletResponse resp;
@@ -39,8 +42,11 @@ public class CallData implements IBean {
   public final XResponse xres;
   public final SessionData sess;
 
+
   static {
-    String h = SysConfig.me().readConfig().remoteIpHeader;
+    Config c = SysConfig.me().readConfig();
+    maxPostBody = c.maxPostBody;
+    String h = c.remoteIpHeader;
     if (Tool.isNulStr(h)) {
       remoteIpHeader = null;
     } else {

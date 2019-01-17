@@ -89,6 +89,7 @@ public class SysImpl extends DateImpl {
   public final Object requestParameterMap;
   public ScriptObjectMirror result;
   public Object requestJson = null;
+  public int maxPostBody;
 
   private ConnectConfig orgdb;
   private ScriptObjectMirror printList;
@@ -102,10 +103,11 @@ public class SysImpl extends DateImpl {
   public SysImpl(CallData cd, ConnectConfig orgdb, XjApp app) {
     super(cd);
     this.orgdb = orgdb;
-    this.request = new RequestImpl(cd);
+    this.request = new RequestImpl(cd, this);
     this.requestParameterMap = new RequestParametersImpl(cd);
     this.appCache = app.getCacheData();
     this.isNestedCall = AppContext.me().isNestedCall();
+    this.maxPostBody = cd.maxPostBody;
   }
 
 
@@ -125,6 +127,7 @@ public class SysImpl extends DateImpl {
     if (type == null)
       return;
 
+    checkBodySize(maxPostBody);
     ServletInputStream in = cd.req.getInputStream();
     if (in == null || in.isFinished())
       return;
@@ -134,6 +137,21 @@ public class SysImpl extends DateImpl {
       buf.write(in, true);
       requestJson = jsonParse(buf.toString());
     }
+  }
+
+
+  /**
+   * 检查 http-post 方法的 'content-length' 头域是否超限, 但不做内容检查,
+   * 如果超限抛出异常, 可以通过更改 maxPostBody 属性修改上限, 上限的默认值在配置文件中.
+   * 返回头域中的 content-length 值.
+   */
+  protected int checkBodySize(int limit) {
+    int clen = cd.req.getContentLength();
+    if (limit > 0 && clen > limit) {
+      throw new XBosonException(
+              "Http Body too bigher, max: "+ maxPostBody +" bytes.");
+    }
+    return clen;
   }
 
 
