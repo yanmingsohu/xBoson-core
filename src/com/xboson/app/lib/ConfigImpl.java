@@ -26,6 +26,7 @@ import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.util.MongoDBPool;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
@@ -59,6 +60,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
   public final String COLL_META = "meta";
   public final String COLL_DATA = "data";
   public final String COLL_TPL  = "template";
+  public final String COLL_DESC = "desc";
 
   public final int MODE_USER    = 1;
   public final int MODE_ORG     = 2;
@@ -252,6 +254,37 @@ public class ConfigImpl extends RuntimeUnitImpl {
     //    cache.sendDataRemote(name);
 
     cache.sendMetaModify(name);
+  }
+
+
+  /**
+   * 设置配置文件中属性的说明
+   */
+  public void setDesc(String name, Map<String, Object> attrDesc) {
+    if (Tool.isNulStr(name))
+      throw new XBosonException.NullParamException("name");
+
+    attrDesc.put(ATTR_KEY, name);
+    MongoCollection<Document> desc = open(COLL_DESC);
+    BsonDocument where = new BsonDocument(ATTR_KEY, new BsonString(name));
+    if (desc.count(where) > 0) {
+      desc.findOneAndReplace(where, new Document(attrDesc));
+    } else {
+      desc.insertOne(new Document(attrDesc));
+    }
+  }
+
+
+  /**
+   * 读取配置文件中属性的说明 (无缓存)
+   */
+  public Object getDesc(String name) {
+    if (Tool.isNulStr(name))
+      throw new XBosonException.NullParamException("name");
+
+    MongoCollection<Document> desc = open(COLL_DESC);
+    BsonDocument where = new BsonDocument(ATTR_KEY, new BsonString(name));
+    return js_obj(desc.find(where).first(), ATTR_KEY);
   }
 
 
