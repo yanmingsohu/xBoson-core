@@ -149,7 +149,7 @@ public class SysImpl extends DateImpl {
     int clen = cd.req.getContentLength();
     if (limit > 0 && clen > limit) {
       throw new XBosonException(
-              "Http Body too bigher, max: "+ maxPostBody +" bytes.");
+              "Http Body is greater than "+ maxPostBody +" bytes.");
     }
     return clen;
   }

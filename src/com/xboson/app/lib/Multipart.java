@@ -19,15 +19,16 @@ package com.xboson.app.lib;
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
+import com.xboson.util.LimitInputStream;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.apache.commons.fileupload.MultipartStream;
 import org.apache.commons.fileupload.ParameterParser;
-import org.apache.commons.fileupload.ProgressListener;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 
@@ -61,7 +62,8 @@ public class Multipart extends RuntimeUnitImpl {
 
   private int parseBody(ScriptObjectMirror callback) throws IOException {
     MultipartStream ms = new MultipartStream(
-            req.getInputStream(), boundary, bufferSize, null);
+            LimitInputStream.wrap(req.getInputStream(), maxBody),
+            boundary, bufferSize, null);
 
     boolean nextPart = ms.skipPreamble();
     int count = 0;
@@ -175,4 +177,5 @@ public class Multipart extends RuntimeUnitImpl {
       }
     }
   }
+
 }
