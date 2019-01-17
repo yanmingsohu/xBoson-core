@@ -17,21 +17,23 @@
 package com.xboson.been;
 
 import com.xboson.auth.IAWho;
-import com.xboson.been.IBean;
-import com.xboson.been.JsonHelper;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
-import com.xboson.service.UserService;
+import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Hash;
 import com.xboson.util.Password;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
+import com.xboson.util.c0nst.IConstant;
+import redis.clients.jedis.Jedis;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.xboson.util.c0nst.IConstant.MULTI_LOGIN;
 
 
 public class LoginUser extends JsonHelper implements IBean, IAWho {
@@ -46,6 +48,7 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
   transient public String password_dt;
 
   public List<String> roles;
+  private boolean multi_login;
 
 
   @Override
@@ -124,6 +127,7 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
           lu.email        = rs.getString("email");
           lu.status       = rs.getString("status");
           lu.loginTime    = System.currentTimeMillis();
+          lu.multi_login  = MULTI_LOGIN.equals(rs.getString("multiflag"));
           break;
         }
       }
@@ -159,6 +163,31 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
       }
 
       this.roles = roles;
+    }
+  }
+
+
+  /**
+   * 把用户绑定到 session 上;
+   * 检查用户多点登录, 如果当前用户允许多点登录则什么都不做, 否则将之前登录的客户端登出.
+   */
+  public void bindTo(SessionData sess) {
+    if (pid == null) throw new NullPointerException("not login");
+    sess.login_user = this;
+
+    if (! multi_login) {
+      try (Jedis cli = RedisMesmerizer.me().open()) {
+        String prv_sid = cli.hget(IConstant.REDIS_KEY_MULTI_LOGIN, pid);
+        if (! Tool.isNulStr(prv_sid)) {
+          //
+          // 删除另一个客户端的 session
+          //
+          cli.hdel(RedisMesmerizer.KEY,
+                  RedisMesmerizer.genid(
+                          sess.getClass(), prv_sid, RedisMesmerizer.BINARY));
+        }
+        cli.hset(IConstant.REDIS_KEY_MULTI_LOGIN, pid, sess.getid());
+      }
     }
   }
 

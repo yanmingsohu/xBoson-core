@@ -152,10 +152,9 @@ public class UserService extends XService implements IDict, IConstant {
       throw new XBosonException("用户名或密码错误", 1001);
     }
 
-    lu.bindUserRoles(cf.db);
     lu.password = null;
-
-    data.sess.login_user = lu;
+    lu.bindUserRoles(cf.db);
+    lu.bindTo(data.sess);
     data.xres.bindResponse("openid", lu.userid);
     msg(data, "成功登录系统", 0);
 	}

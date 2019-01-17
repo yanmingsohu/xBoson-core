@@ -1271,9 +1271,9 @@ public class SysImpl extends DateImpl {
       return "用户名或密码错误";
     }
 
-    lu.bindUserRoles(orgdb);
     lu.password = null;
-    cd.sess.login_user = lu;
+    lu.bindUserRoles(orgdb);
+    lu.bindTo(cd.sess);
     return null;
   }
 

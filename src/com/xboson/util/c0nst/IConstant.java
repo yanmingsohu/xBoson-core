@@ -102,6 +102,8 @@ public interface IConstant extends IDict {
   /** 空字符串 */
   String NULL_STR = "";
   String ZERO_STR = "0";
+  /** 允许用户多点登录标志 */
+  String MULTI_LOGIN = "1";
 
   /** "初始化" */
   String INITIALIZATION = "Initialization";
@@ -109,6 +111,8 @@ public interface IConstant extends IDict {
   String DESTORYED = "Destoryed";
   /** 生成的请求 ID */
   String REQUEST_ID = "requestid";
+  /** 多点用户登录在 redis 使用的 key */
+  String REDIS_KEY_MULTI_LOGIN = "XB.UserPID.SessionID";
 
   /** 区块链签名提供商, 必须有默认构造函数 */
   Class<? extends ISignerProvider>
