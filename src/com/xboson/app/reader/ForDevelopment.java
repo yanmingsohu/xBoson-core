@@ -42,7 +42,9 @@ public class ForDevelopment extends AbsReadScript {
           throw new XBosonException("API 已经禁用");
         }
 
-        ScriptFile file = makeFile(attr, rs.getString("content"));
+        ScriptFile file = makeFile(attr,
+                rs.getString("content"), rs.getInt("zip"));
+
         attr.fileSize   = file.content.length;
         attr.fileName   = api;
         attr.pathName   = '/' + mod;

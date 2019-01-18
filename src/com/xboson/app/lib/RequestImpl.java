@@ -27,6 +27,7 @@ import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 
@@ -319,7 +320,9 @@ public class RequestImpl extends JSObject.Helper implements IJson {
     if (clen <= 0) return null;
 
     byte[] buf = new byte[clen];
-    int rlen = cd.req.getInputStream().read(buf);
+    InputStream i = cd.req.getInputStream();
+    int rlen = i.read(buf);
+    i.close();
     return new Buffer().from(buf, 0, rlen);
   }
 

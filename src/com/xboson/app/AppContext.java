@@ -286,7 +286,7 @@ public final class AppContext implements
 
 
   /**
-   * 返回当前运行脚本已经加密的代码
+   * 返回当前运行脚本已经加密的代码, 始终使用 zip=0 加密
    */
   public String getOriginalApiCode() {
     return pm.get().originalCode;

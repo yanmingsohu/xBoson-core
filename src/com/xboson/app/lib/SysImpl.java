@@ -134,7 +134,7 @@ public class SysImpl extends DateImpl {
 
     if (type.contains("application/json")) {
       StringBufferOutputStream buf = new StringBufferOutputStream();
-      buf.write(in, true);
+      buf.write(LimitInputStream.wrap(in, maxPostBody), true);
       requestJson = jsonParse(buf.toString());
     }
   }

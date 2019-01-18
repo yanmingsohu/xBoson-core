@@ -286,6 +286,38 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   /**
+   * 返回解密后的脚本, 去掉了前后 "<%..%>" 符号.
+   * [原平台无该函数, 该方法隐藏文档]
+   */
+  public String decryptApi2(String code, int zip) throws Exception {
+    if (zip == 0) return decodeApiScript(code);
+    return new String(ApiEncryption.decryptApi2(code, zip), IConstant.CHARSET);
+  }
+
+
+  /**
+   * 返回加密后的脚本
+   * [原平台无该函数, 该方法隐藏文档]
+   */
+  public String encodeApi2(String code, int zip) throws Exception {
+    if (zip == 0) return encodeApiScript(code);
+    return ApiEncryption.encryptApi2(code, zip);
+  }
+
+
+  /**
+   * 生成源代码的 zip 值, 该值在 DB.sys_api_content.zip 列的有效范围内
+   */
+  public int genZip(String code) {
+    int i = 0;
+    for (int a = code.length()-1; a>=0; --a) {
+      i += code.charAt(a);
+    }
+    return i % 255 + 1;
+  }
+
+
+  /**
    * api 内容被修改, 测试环境脚本将被重新编译.
    * [原平台无该函数]
    */

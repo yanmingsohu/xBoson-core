@@ -16,15 +16,43 @@
 
 package com.xboson.app;
 
+import com.xboson.been.XBosonException;
 import com.xboson.util.AES2;
 import com.xboson.util.Password;
+import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.c0nst.IConstant;
+
+import javax.crypto.Cipher;
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Base64;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 
 /**
  * API 脚本加密/解密
  */
-public class ApiEncryption {
+public class ApiEncryption implements IConstant {
 
+  /**
+   * 分组加密, 不可增减, 否则脚本将不可解密
+   */
+  private final static String[] zipp = {
+        "U+vynW58DN6me+A2bzSc", "wKR9+F4Qr8t9caFHG0iS", "WCF7CErNJoQ6vCGdx62w",
+        "mtCqVaqfmAQacsdIToxH", "k32bsUDqjO6virGvbUeq", "LiU38osNLhWV256aS5Qc",
+        "in6vgWitlIn05D5gDlZd", "ZZXaGxkx1WOF6LAQjcsk", "egAMM+qHfOpI1ZTZ8kCu",
+        "egAMM+qHfOpI1ZTZ8kCu", "tp+6PrEA5Bf7m3v9TCMi", "/jMBnB16ZZ5zodxqPtGQ",
+        "MdA5Zuvq83lymwbTadT/", "yM4S8cKIcf5ZEEc7WV8C", "QZDVnPHOtN4dBrMida+s",
+  };
+
+  private final static int ZLEN = zipp.length;
+  private final static SecretKeySpec[] zipkey = new SecretKeySpec[ZLEN];
+  private final static int BUF_SIZE = 1024;
   private static AES2 ekey;
 
 
@@ -33,6 +61,11 @@ public class ApiEncryption {
       String code = "1200"; // 从配置文件读取
       String encode = Password.encodeSha256(code, "zr_zy秘");
       ekey = new AES2(code + encode);
+
+      for (int i=0; i<ZLEN; ++i) {
+        zipkey[i] = AES2.genKey(zipp[i].getBytes(CHARSET));
+        zipp[i] = null;
+      }
     } catch(Exception e) {
       e.printStackTrace();
       System.exit(2);
@@ -49,4 +82,53 @@ public class ApiEncryption {
     return ekey.decrypt(mi);
   }
 
+
+  /**
+   * 加密压缩 api 脚本, zipi 码的不同使用不同的压缩密钥
+   * @param code 源代码
+   * @param zipi 压缩值可以是任意整数
+   */
+  public static String encryptApi2(String code, int zipi) {
+    if (zipi == 0) return encryptApi(code);
+    try {
+      Cipher cipher = Cipher.getInstance(AES_NAME);
+      cipher.init(ENCRYPT_MODE, zipkey[ (++zipi<0? -zipi: zipi)% ZLEN ]);
+
+      StringBufferOutputStream out = new StringBufferOutputStream(code.length());
+      OutputStream b64 = Base64.getEncoder().wrap(out);
+      CipherOutputStream cs = new CipherOutputStream(b64, cipher);
+      DeflaterOutputStream ds = new DeflaterOutputStream(cs);
+
+      ds.write(code.getBytes(CHARSET));
+      ds.close();
+      return out.toString();
+    } catch(Exception e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
+  /**
+   * 解压缩 api 脚本, zipi 码的不同使用不同的压缩密钥 (为提升效率返回 byte[])
+   * @param code 已经加密的代码
+   * @param zipi 压缩值可以是任意整数
+   */
+  public static byte[] decryptApi2(String code, int zipi) {
+    if (zipi == 0) return decryptApi(code);
+    try {
+      Cipher cipher = Cipher.getInstance(AES_NAME);
+      cipher.init(DECRYPT_MODE, zipkey[ (++zipi<0? -zipi: zipi)% ZLEN ]);
+
+      ByteArrayInputStream orgin = new ByteArrayInputStream(code.getBytes(CHARSET));
+      InputStream b64 = Base64.getDecoder().wrap(orgin);
+      CipherInputStream cs = new CipherInputStream(b64, cipher);
+      InflaterInputStream ds = new InflaterInputStream(cs);
+
+      StringBufferOutputStream out = new StringBufferOutputStream(code.length());
+      out.write(ds, true);
+      return out.toBytes();
+    } catch(Exception e) {
+      throw new XBosonException(e);
+    }
+  }
 }

@@ -45,6 +45,12 @@ public class ScriptFile {
   public final String original_hash;
 
 
+  /**
+   * 脚本文件
+   *
+   * @param content 脚本文件打过补丁的源代码
+   * @param orgi 未打过补丁使用 zip=0 加密的原文件
+   */
   public ScriptFile(byte[] content, String orgi, ScriptAttr attr) {
     this.content = content;
     this.attr = attr;

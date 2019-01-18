@@ -53,6 +53,14 @@ public class AES2 implements IConstant {
 
 
   private void init(byte[] keybin) {
+    key = genKey(keybin);
+  }
+
+
+  /**
+   * 生成密钥
+   */
+  public static SecretKeySpec genKey(byte[] keybin) {
     try {
       KeyGenerator kgen = KeyGenerator.getInstance(AES_NAME);
       SecureRandom secureRandom = SecureRandom.getInstance(SHA1_PRNG_NAME);
@@ -61,7 +69,7 @@ public class AES2 implements IConstant {
 
       SecretKey secretKey = kgen.generateKey();
       byte[] enCodeFormat = secretKey.getEncoded();
-      key = new SecretKeySpec(enCodeFormat, AES_NAME);
+      return new SecretKeySpec(enCodeFormat, AES_NAME);
     } catch(Exception e) {
       throw new XBosonException(e);
     }

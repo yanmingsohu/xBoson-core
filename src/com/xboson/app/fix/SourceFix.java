@@ -34,17 +34,17 @@ public class SourceFix {
    * 返回后参数 content 会被改动但不是最终代码, 应该丢弃.
    *
    * 补丁规则:
-   *    1. 去掉首位 "<%...%>"
-   *    2. 是严格模式则不做补丁.
+   *    1. 去掉首尾 "<%...%>".
+   *    2. 是严格模式则不做代码补丁.
    *    3. 不是严格模式, 修正脚本中的方言.
+   *    4. 多行字符串转义.
    */
   public static byte[] autoPatch(byte[] content) {
-    if (SourceFix.fixBeginEnd(content)) {
-      if (SourceFix.isStrictMode(content) == false) {
-        content = SourceFix.fixFor(content);
-        content = SourceFix.fixJavaCall(content);
-        content = SourceFix.fixVirtualAttr(content);
-      }
+    SourceFix.fixBeginEnd(content);
+    if (! SourceFix.isStrictMode(content)) {
+      content = SourceFix.fixFor(content);
+      content = SourceFix.fixJavaCall(content);
+      content = SourceFix.fixVirtualAttr(content);
     }
     content = multiLineString(content);
     return content;
@@ -53,7 +53,7 @@ public class SourceFix {
 
   /**
    * 去掉脚本的前后特殊符号 "<%...%>",
-   * 如果执行了修正操作返回 true;
+   * 如果修改了代码返回 true;
    *
    * 该方法仅适合替换运行时的代码, 不加入换行另出错后的行数正确,
    * 但是输出到 ide 后多出的空格, 让开发者以为代码被改过.

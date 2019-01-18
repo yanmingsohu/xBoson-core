@@ -35,6 +35,8 @@ Object.freeze(ide);
 function _searchApiContent(keyword, list, caseSensitive) {
   var ret = [];
   var se = moduleHandleContext.get('se');
+  // 静默失败
+  if (!se) return null;
 
   if (!caseSensitive) {
     keyword = keyword.toLowerCase();
@@ -44,7 +46,7 @@ function _searchApiContent(keyword, list, caseSensitive) {
     var _api = list[i];
 
     if (_api && _api.content && _api.content.length > 0) {
-      var content = se.decodeApiScript(_api.content);
+      var content = se.decryptApi2(_api.content, _api.zip || 0);
 
       if (!caseSensitive) {
         content = content.toLowerCase();
@@ -62,15 +64,19 @@ function _searchApiContent(keyword, list, caseSensitive) {
 }
 
 
-function _encodeApiScript(code) {
+function _encodeApiScript(code, zip) {
   var se = moduleHandleContext.get('se');
-  return se.encodeApiScript(code);
+  // 静默失败
+  if (!se) return null;
+  return se.encodeApi2(code, zip || 0);
 }
 
 
-function _decodeApiScript(code) {
+function _decodeApiScript(code, zip) {
   var se = moduleHandleContext.get('se');
-  return se.decodeApiScript(code);
+  // 静默失败
+  if (!se) return null;
+  return se.decryptApi2(code, zip || 0);
 }
 
 })(ide);

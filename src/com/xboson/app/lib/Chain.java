@@ -233,7 +233,7 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
 
       if (cckey == null) {
         String codeContent = app.getOriginalApiCode();
-        byte[] codeBuf = Hex.parse(codeContent);
+        byte[] codeBuf = codeContent.getBytes(IConstant.CHARSET);
         BlockBasic code = new BlockBasic(codeBuf, userid, aPath, aHash);
         code.type = ITypes.CHAINCODE_CONTENT;
         cckey = peer.sendBlock(chain, channel, code);
