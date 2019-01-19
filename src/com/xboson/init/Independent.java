@@ -32,9 +32,16 @@ import org.eclipse.jetty.server.session.SessionCache;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 
 /**
  * 作为独立程序启动, 无需部署到 servlet 容器中.
+ * TODO: gradle 任务需要能正确导出这个类, 以便生成启动脚本
  */
 public class Independent extends OnExitHandle {
 
@@ -46,8 +53,8 @@ public class Independent extends OnExitHandle {
     RestartServer.autoRestart = true;
     Independent i = new Independent();
     i.startServer();
-    i.log("<<<<<<<<<<< System shutdown ... >>>>>>>>>>>");
     i.startServerOnNewProcess(av);
+    i.log("<<<<<<<<<<< Java VM Shutdown ... >>>>>>>>>>>");
   }
 
 
@@ -61,17 +68,26 @@ public class Independent extends OnExitHandle {
 
     h_servlet.addEventListener(new Startup());
     h_servlet.setResourceBase("./WebRoot");
-    h_servlet.addServlet(JettyJspServlet.class, "/");
     h_servlet.setClassLoader(getClass().getClassLoader()); // 不安全?
 
+    //
+    // 使 session 完全不可用, 提升性能
+    //
     SessionHandler sessions = h_servlet.getSessionHandler();
     SessionCache cache = new NullSessionCache(sessions);
     cache.setSessionDataStore(new NullSessionDataStore());
     sessions.setSessionCache(cache);
 
+    //
+    // JSP 相关初始化
+    //
     JettyJasperInitializer jsp = new JettyJasperInitializer();
+    h_servlet.addServlet(JettyJspServlet.class, "/");
     log = LogFactory.create("independent-server");
 
+    //
+    // 服务器启动, 函数顺序严格要求
+    //
     server = new Server(app.httpPort);
     server.setHandler(h_servlet);
     server.start();
@@ -81,8 +97,37 @@ public class Independent extends OnExitHandle {
   }
 
 
+  /**
+   * 复制自身的命令行代码, 并启动一个克隆进程
+   */
   private void startServerOnNewProcess(String[] av) {
-    //TODO: 启动一个新进程
+    RuntimeMXBean run = ManagementFactory.getRuntimeMXBean();
+
+    List<String> cmd = new ArrayList<>();
+    cmd.add("java");
+    cmd.addAll(run.getInputArguments());
+
+    String classPath = run.getClassPath();
+    if (! Tool.isNulStr(classPath)) {
+      cmd.add("-classpath");
+      cmd.add(run.getClassPath());
+    }
+
+    // main function in class
+    cmd.add(this.getClass().getName());
+
+    if (av != null && av.length > 0) {
+      cmd.addAll(Arrays.asList(av));
+    }
+
+    ProcessBuilder pb = new ProcessBuilder(cmd);
+    try {
+      pb.inheritIO();
+      pb.start();
+      log("Start process success:\n", cmd);
+    } catch (Exception e) {
+      log("Start process fail:", e.getMessage());
+    }
   }
 
 

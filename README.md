@@ -38,6 +38,7 @@ Java JDK, Tomcat 9, Servlet 4.0.
 * 机构自己的模板目录
 * 升级 js 引擎到 [graaljs](https://github.com/graalvm/graaljs) 
 
+* 集成了 jetty, 需要构建 jar 的生成脚本
 * 统计分析模块 -api完成 +wiki +画面
 * docker 管理模块.
 
