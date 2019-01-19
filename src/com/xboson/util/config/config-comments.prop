@@ -83,3 +83,7 @@ chainEnable: 启用区块链服务器
 
 remoteIpHeader: 客户端地址来自 http 头域(当平台在代理后面), 可以空.
 maxPostBody: 默认客户端上传文件尺寸允许的最大值, 0 表示没有限制.
+
+appSelf: 当程序独立运行(不是部署在容器中)这些配置有效
+httpPort: http 服务器端口
+contextPath: http 应用路径

@@ -19,8 +19,8 @@ package com.xboson.j2ee.ui;
 import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
-import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
+import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.j2ee.container.IHttpHeader;
 import com.xboson.log.Log;
@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.NoSuchFileException;
-import java.util.Enumeration;
 import java.util.Set;
 
 

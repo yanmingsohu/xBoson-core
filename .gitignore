@@ -9,6 +9,7 @@ build/**
 .classpath
 .project
 .DS_Store
+jsp/**
 
 *.class
 *.zip

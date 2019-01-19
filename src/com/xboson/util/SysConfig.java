@@ -124,6 +124,15 @@ public class SysConfig {
 	}
 
 
+	/**
+	 * 重新读取配置文件并初始化配置
+	 */
+	public synchronized Config reloading() {
+		readed = false;
+		return readConfig();
+	}
+
+
 	private void setConfigUseString(String str) throws IOException {
 		Config run = serial.convert(str);
 

@@ -16,9 +16,13 @@
 
 package com.xboson.j2ee.container;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.concurrent.locks.ReentrantLock;
+import com.xboson.app.ErrorCodeMessage;
+import com.xboson.been.Config;
+import com.xboson.been.XBosonException;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
+import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -27,16 +31,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.xboson.app.ErrorCodeMessage;
-import com.xboson.been.Config;
-import com.xboson.been.ResponseRoot;
-import com.xboson.been.XBosonException;
-import com.xboson.log.Log;
-import com.xboson.log.LogFactory;
-import com.xboson.util.SysConfig;
-import com.xboson.util.Tool;
-import jdk.nashorn.internal.runtime.ECMAErrors;
+import java.io.IOException;
+import java.io.Writer;
 
 
 /**

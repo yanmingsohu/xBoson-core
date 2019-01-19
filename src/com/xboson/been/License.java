@@ -43,6 +43,7 @@ public class License extends AbsLicense {
   public static final String LIC_FILE = "/license.txt";
   public static final String REQ_FILE = "/license.req";
   public static final String PREFIX   = "file:";
+  public static final String DIR_BASE = "/WEB-INF";
 
   public transient String publicKeyFile;
   public transient String basePath;
@@ -55,7 +56,7 @@ public class License extends AbsLicense {
   }
 
 
-  public void setPublicKeyFile(URL url) throws MalformedURLException {
+  public void setPublicKeyFile(URL url) {
     publicKeyFile = url.toString();
     if (publicKeyFile.startsWith(PREFIX)) {
       publicKeyFile = publicKeyFile.substring(PREFIX.length());
@@ -64,7 +65,8 @@ public class License extends AbsLicense {
 
 
   public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
-    URL url = sc.getResource("/WEB-INF" + PUB_FILE);
+    URL url = sc.getResource(DIR_BASE + PUB_FILE);
+    if (url == null) throw new XBosonException.NotFound(DIR_BASE + PUB_FILE);
     setPublicKeyFile(url);
   }
 

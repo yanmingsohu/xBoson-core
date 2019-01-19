@@ -16,6 +16,7 @@
 
 package com.xboson.util.config;
 
+import com.xboson.been.AppSelf;
 import com.xboson.been.Config;
 import com.xboson.been.MongoConfig;
 import com.xboson.been.XBosonException;
@@ -72,6 +73,7 @@ public final class DefaultConfig {
     c.rootPassword      = "unnecessary";
     c.rootPid           = "unnecessary";
     c.maxPostBody       = 5 * 1024 * 1024;
+    c.appSelf           = new AppSelf();
 
     c.rootPassword =
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));

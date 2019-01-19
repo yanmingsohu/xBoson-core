@@ -39,6 +39,7 @@ public class Config implements IBean {
   public String home              = null;
   public String remoteIpHeader    = null;
   public int    maxPostBody       = 0;
+  public AppSelf appSelf          = null;
 
   public String rootUserName      = null;
   public String rootPassword			= null;

@@ -30,7 +30,6 @@ import com.xboson.util.Tool;
 import javax.activation.FileTypeMap;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;

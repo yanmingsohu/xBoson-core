@@ -146,11 +146,7 @@ public final class Tool extends StaticLogProvider {
    */
   public static void pl(Object...o) {
     StringBuilder out = new StringBuilder(o.length * 10);
-    for (int i=0; i<o.length; ++i) {
-      out.append(o[i]);
-      out.append(' ');
-    }
-    System.out.println(out.toString());
+    System.out.println(join(out, o).toString());
   }
 
 
@@ -160,6 +156,15 @@ public final class Tool extends StaticLogProvider {
       if (i % 16 == 0) System.out.println();
     }
     System.out.println();
+  }
+
+
+  public static StringBuilder join(StringBuilder out, Object ...o) {
+    for (int i=0; i<o.length; ++i) {
+      out.append(o[i]);
+      out.append(' ');
+    }
+    return out;
   }
 
 
@@ -311,11 +316,12 @@ public final class Tool extends StaticLogProvider {
   }
 
 
-  public static void waitOver(ExecutorService s) {
+  public static void shutdown(ExecutorService s) {
     Log log = openLog(Tool.class);
     try {
-      while (! s.awaitTermination(2, TimeUnit.SECONDS)) {
-        log.debug("Wait Executor Termination:", s);
+      s.shutdown();
+      while (! s.awaitTermination(5, TimeUnit.SECONDS)) {
+        log.debug("Wait Executor Termination:", s.shutdownNow());
       }
     } catch (InterruptedException e) {
       log.debug(e);

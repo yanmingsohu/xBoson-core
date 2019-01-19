@@ -1,6 +1,14 @@
 # 大数据平台 v2
 
-Java JDK 8u111, Tomcat 9, Servlet 4.0.
+Java JDK, Tomcat 9, Servlet 4.0.  
+
+经过测试的 JAVA 版本: 
+  * OracleJDK 1.8.0_172, 1.8.0_162, 1.8.0_111
+  
+待测试测 Java 版本:
+  * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经被移除 jdk.
+  * OpenJDK 1.8
+
 
 > 该文档部分内容为商业机密
 
@@ -22,13 +30,13 @@ Java JDK 8u111, Tomcat 9, Servlet 4.0.
 # 需要做:
 
 * 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)(https://raft.github.io/)
-* 接管 Tomcat.
 * 云盘系统(api已经完成)
 * 多语言
 * js 字典模块
 * org 参数只作为 mysql schema 选择条件, 并从 api 加载流程中分离; app 直接作为根选择条件,
   因为 app 是不会重复的 (XjOrg 和 XjApp 解绑, 表 sys_apps 没有和机构做关联).
 * 机构自己的模板目录
+* 升级 js 引擎到 [graaljs](https://github.com/graalvm/graaljs) 
 
 * 统计分析模块 -api完成 +wiki +画面
 * docker 管理模块.

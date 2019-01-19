@@ -17,7 +17,6 @@
 package com.xboson.init;
 
 import com.xboson.been.Config;
-import com.xboson.j2ee.container.Processes;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
@@ -53,7 +52,9 @@ public class Startup implements ServletContextListener {
 
 
   public void contextDestroyed(ServletContextEvent sce) {
-    Touch.exit();
+    try {
+      Touch.exit();
+    } catch (Exception e) {/* Do nothing. */}
     sc = null;
   }
 

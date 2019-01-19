@@ -70,8 +70,8 @@ public final class Touch {
 
 
   private static final int S_ZERO   = 0;
-  private static final int S_INITED = 0;
-  private static final int S_EXIT   = 0;
+  private static final int S_INITED = 1;
+  private static final int S_EXIT   = 2;
   private static int state = S_ZERO;
 
 
@@ -93,6 +93,7 @@ public final class Touch {
 
 
   public synchronized static void exit() {
+    if (state == S_EXIT) return;
     if (state != S_INITED)
       throw new RuntimeException("cannot exit system");
 

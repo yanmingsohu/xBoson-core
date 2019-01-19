@@ -2,13 +2,15 @@
   <library name="lib">
     <CLASSES>
       <root url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" />
-      <root url="jar://$PROJECT_DIR$/../.tomcat9/lib/catalina.jar!/" />
       <root url="file://$PROJECT_DIR$/libs" />
     </CLASSES>
     <JAVADOC>
       <root url="https://docs.oracle.com/javaee/7/api/" />
     </JAVADOC>
     <SOURCES />
+    <excluded>
+      <root url="jar://$PROJECT_DIR$/WebRoot/WEB-INF/lib/bson-3.6.1.jar!/" />
+    </excluded>
     <jarDirectory url="file://$PROJECT_DIR$/libs" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
   </library>
