@@ -18,7 +18,6 @@ package com.xboson.init;
 
 import com.xboson.been.AppSelf;
 import com.xboson.event.OnExitHandle;
-import com.xboson.init.install.step.RestartServer;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
@@ -50,10 +49,12 @@ public class Independent extends OnExitHandle {
 
 
   public static void main(String[] av) throws Exception {
-    RestartServer.autoRestart = true;
+    SystemFlag.canRestart = true;
     Independent i = new Independent();
     i.startServer();
-    i.startServerOnNewProcess(av);
+    if (SystemFlag.autoRestart) {
+      i.startServerOnNewProcess(av);
+    }
     i.log("<<<<<<<<<<< Java VM Shutdown ... >>>>>>>>>>>");
   }
 

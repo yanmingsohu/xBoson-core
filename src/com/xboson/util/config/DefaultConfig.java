@@ -23,7 +23,6 @@ import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.script.lib.Uuid;
-import com.xboson.test.Test;
 import com.xboson.util.Password;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
@@ -67,7 +66,7 @@ public final class DefaultConfig {
     c.loggerWriterType  = "ConsoleOut";
     c.logLevel          = "info";
     c.sessionTimeout    = IConstant.DEFAULT_TIMEOUT / 60;
-    c.sessionPassword   = Test.randomString(20);
+    c.sessionPassword   = Tool.randomString(20);
     c.debugService      = true;
     c.rootUserName      = "admin-pl";
     c.rootPassword      = "unnecessary";

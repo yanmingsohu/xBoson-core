@@ -18,25 +18,12 @@ package com.xboson.init.install.step;
 
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
+import com.xboson.init.SystemFlag;
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
 
 
 public class RestartServer implements IStep {
-
-  /**
-   * 如果某个类在外部确定 servlet 容器可以自动重启, 则设置这个变量为 true.
-   */
-  public static boolean autoRestart = false;
-
-
-  /**
-   * 寻找可以重启服务器的方法
-   */
-  private boolean restart_server(HttpData hd) {
-    GlobalEventBus.me().emit(Names.exit, RestartServer.class);
-    return autoRestart;
-  }
 
 
   @Override
@@ -53,9 +40,11 @@ public class RestartServer implements IStep {
 
   @Override
   public String getPage(HttpData data) {
-    if (!restart_server(data)) {
+    GlobalEventBus.me().emit(Names.exit, RestartServer.class);
+    if (! SystemFlag.canRestart) {
       data.msg = "您需要手动重启 Servlet 容器..";
     }
     return "restarting.jsp";
   }
+
 }

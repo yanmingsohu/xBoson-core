@@ -87,3 +87,6 @@ maxPostBody: 默认客户端上传文件尺寸允许的最大值, 0 表示没有
 appSelf: 当程序独立运行(不是部署在容器中)这些配置有效
 httpPort: http 服务器端口
 contextPath: http 应用路径
+rpcIp: RPC 监听 IPv4 地址, 通过该地址网络中的其他节点可以访问本机 RPC; \
+         默认为空, 且在本机ip地址集中搜索一个作为 localIP.
+rpcPort: RPC 监听端口, 默认 0, 在随机端口上监听 rpc.

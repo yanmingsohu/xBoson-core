@@ -25,9 +25,12 @@ import com.xboson.been.PublicProcessData;
 import com.xboson.been.XBosonException;
 import com.xboson.distributed.MultipleExportOneReference;
 import com.xboson.distributed.ProcessManager;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.IXRemote;
 import com.xboson.rpc.RpcFactory;
+import com.xboson.util.Tool;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -41,18 +44,14 @@ import java.util.List;
 public class PmImpl implements IAResource {
 
   public static final String RPC_NAME = "XB.rpc.ProcessManager";
-  private static MultipleExportOneReference<IPM> meof;
 
 
   public PmImpl() {
-    if (meof == null) {
-      synchronized (PmImpl.class) {
-        if (meof == null) {
-          meof = new MultipleExportOneReference<>(RPC_NAME);
-          meof.bindOnce(new ExportRemote());
-        }
-      }
-    }
+  }
+
+
+  public static void init(RpcFactory rpc) {
+    rpc.bindOnce(new ExportRemote(), RPC_NAME);
   }
 
 
@@ -91,6 +90,13 @@ public class PmImpl implements IAResource {
     public final int KILL_NO_EXIST  = IProcessState.KILL_NO_EXIST;
     public final int KILL_NO_READY  = IProcessState.KILL_NO_READY;
     public final int KILL_IS_KILLED = IProcessState.KILL_IS_KILLED;
+
+    private MultipleExportOneReference<IPM> meof;
+
+
+    private Local() {
+      meof = new MultipleExportOneReference<>(RPC_NAME);
+    }
 
 
     /**

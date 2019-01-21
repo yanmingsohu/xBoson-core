@@ -75,6 +75,8 @@ public class Config implements IBean {
   public MongoConfig mongodb;
 
   public short clusterNodeID;
+  public String[] rpcIp;
+  public int rpcPort;
   public boolean enableUploadClear;
   public boolean enableSessionClear;
   public boolean enableUIFileSync;

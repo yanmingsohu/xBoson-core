@@ -685,4 +685,17 @@ public final class Tool extends StaticLogProvider {
     while (url.charAt(i) == '/') --i;
     return url.substring(0, i+1);
   }
+
+
+  /**
+   * 如果 s 为 null 返回 null
+   */
+  public static String[] copy(String[] s) {
+    if (s == null) return null;
+    String[] o = new String[s.length];
+    for (int i=s.length-1; i>=0; --i) {
+      o[i] = s[i];
+    }
+    return o;
+  }
 }

@@ -16,9 +16,12 @@
 
 package com.xboson.distributed;
 
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.IXRemote;
 import com.xboson.rpc.RpcFactory;
+import com.xboson.util.Tool;
 
 import java.rmi.RemoteException;
 
@@ -31,6 +34,7 @@ public class MultipleExportOneReference<T extends IXRemote> {
   private ClusterManager cm;
   private RpcFactory rpc;
   private String name;
+  private Log log;
 
 
   public interface For<E extends IXRemote> {
@@ -53,6 +57,7 @@ public class MultipleExportOneReference<T extends IXRemote> {
     this.rpc  = RpcFactory.me();
     this.cm   = ClusterManager.me();
     this.name = name;
+    this.log  = LogFactory.create("MEOR:"+ name);
   }
 
 
@@ -65,17 +70,21 @@ public class MultipleExportOneReference<T extends IXRemote> {
 
 
   /**
-   * 遍历所有服务, 异常将会终止遍历
+   * 遍历所有服务, 异常节点被忽略
    */
   public void each(For<T> getter) throws RemoteException {
     int i = 0;
 
     for (String node : cm.list()) {
-      T service = (T) rpc.lookup(node, name);
-      if (! getter.node(i, node, service)) {
-        break;
+      try {
+        T service = (T) rpc.lookup(node, name);
+        if (! getter.node(i, node, service)) {
+          break;
+        }
+        ++i;
+      } catch(Exception e) {
+        log.error("Connect node", node, "fail,", Tool.allStack(e));
       }
-      ++i;
     }
   }
 

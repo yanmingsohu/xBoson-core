@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2018 本文件属于 xBoson 项目, 该项目由 J.yanming 维护,
+// Copyright 2019 本文件属于 xBoson 项目, 该项目由 J.yanming 维护,
 // 本文件和项目的全部权利由 [荆彦铭] 和 [王圣波] 个人所有, 如有对本文件或项目的任何修改,
 // 必须通知权利人; 该项目非开源项目, 任何将本文件和项目未经权利人同意而发行给第三方
 // 的行为都属于侵权行为, 权利人有权对侵权的个人和企业进行索赔; 未经其他合同约束而
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
-// 文件创建日期: 18-1-30 下午1:58
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/rpc/IXRemote.java
+// 文件创建日期: 19-1-20 下午8:22
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/rpc/RpcInitGlobal.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -16,25 +16,20 @@
 
 package com.xboson.rpc;
 
-import java.io.Serializable;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
+import com.xboson.app.lib.PmImpl;
 
 
 /**
- * 使用类名注册到注册表中;
- * 方法签名中必须抛出 RemoteException 异常.
- *
- * @see RemoteException
+ * RPC 对象需要启动注册的类在这里声明
  */
-public interface IXRemote extends Remote, Serializable {
+public class RpcInitGlobal {
+
 
   /**
-   * 返回 rpc 名称用于在 rpc 注册表中注册自身实例, 仅在未提供定义名称时被调用
-   * @return 默认返回类名
+   * 初始化列表, 包外禁止访问
    */
-  default String getRpcName() throws RemoteException {
-    return getClass().getName();
+  static final void init(RpcFactory rpc) {
+    PmImpl.init(rpc);
   }
 
 }

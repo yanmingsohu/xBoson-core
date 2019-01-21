@@ -4,6 +4,7 @@ Java JDK, Tomcat 9, Servlet 4.0.
 
 经过测试的 JAVA 版本: 
   * OracleJDK 1.8.0_172, 1.8.0_162, 1.8.0_111
+  * OpenJDK 1.8.0_151
   
 待测试测 Java 版本:
   * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经被移除 jdk.
@@ -25,6 +26,7 @@ Java JDK, Tomcat 9, Servlet 4.0.
   `rootPassword: 861170a039539136e605744dbbeb81e607173d1aa8e94bac1f0db9ba77ec88fc` 
   方可启用超级用户
 * 若要启用区块链服务器, 必须有 0 号节点.
+* RPC 为动态端口.
 
 
 # 需要做:
