@@ -21,6 +21,12 @@ $('[setto]').click(function() {
   return false;
 });
 
+$('select').each(function() {
+  var thiz = $(this);
+  var v = thiz.val();
+  thiz.val(thiz.attr('value'));
+});
+
 
 function hidden() {
   left.animate({"opacity": 0.1}, 5000);

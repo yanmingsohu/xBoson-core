@@ -53,7 +53,7 @@ public class Install extends HttpServlet {
           Copyright.class,
           RegLicense.class,
           RootUser.class,
-          ConfigCluster.class,// TODO: 增加 '会话密钥' 和 '本机ip' 配置
+          ConfigCluster.class,
           ConfigCoreDB.class,
           ConfigRedis.class,
           ConfigLog.class,

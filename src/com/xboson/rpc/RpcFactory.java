@@ -76,7 +76,7 @@ public final class RpcFactory extends OnExitHandle {
       this.registryCache  = new HashMap<>();
       this.ref            = new HashMap<>();
       this.log            = LogFactory.create("rpc");
-      this.serverf        = new SafeServerFactory(ps, true);
+      this.serverf        = new SafeServerFactory(ps, true, cf.rpcUpnp);
       this.forLocal       = new SafeClientFactory(ps);
       this.forRemote      = new SafeClientFactory(ps, nodeInf);
       this.server         = LocateRegistry.createRegistry(
@@ -362,8 +362,8 @@ public final class RpcFactory extends OnExitHandle {
 
   @Override
   protected synchronized void exit() {
-    for (Map.Entry<String, RemoteRegistryCache> entry : registryCache.entrySet()) {
-      entry.getValue().free();
+    for (RemoteRegistryCache reg : registryCache.values()) {
+      reg.free();
     }
 
     for (Map.Entry<String, IXRemote> entry : ref.entrySet()) {

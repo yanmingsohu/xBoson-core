@@ -37,7 +37,7 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 public class SysConfig {
 
-  private static final String UPDATE = "update-config.yaml";
+  private static final String UPDATE = "config-upgrade.yaml";
 	private static SysConfig instance;
 
 	private Log log = LogFactory.create("SysConfig");

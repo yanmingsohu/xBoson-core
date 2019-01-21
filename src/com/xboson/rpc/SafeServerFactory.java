@@ -17,6 +17,7 @@
 package com.xboson.rpc;
 
 import com.xboson.util.AES;
+import com.xboson.util.UPnP;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -30,21 +31,23 @@ public class SafeServerFactory implements RMIServerSocketFactory, Serializable {
   public static final int SOCK_TIMEOUT = 7 * 1000;
   public static final int BUF_SIZE = 1024;
 
+  private boolean useUpnp;
   private boolean updateRpcPort;
   private byte[] password;
   private double id;
 
 
   public SafeServerFactory(String password) {
-    this(password, false);
+    this(password, false, false);
   }
 
 
-  public SafeServerFactory(String password, boolean updateRpcPort) {
+  public SafeServerFactory(String password, boolean updateRpcPort, boolean upnp) {
     // Tool.pl("------------------", "Server Factory", id);
     this.password = AES.aesKey(password);
     this.id = Math.random();
     this.updateRpcPort = updateRpcPort;
+    this.useUpnp = upnp;
   }
 
 
@@ -54,6 +57,9 @@ public class SafeServerFactory implements RMIServerSocketFactory, Serializable {
     ServerSocket server = new SaveServerSocket(port);
     if (updateRpcPort) {
       ClusterManager.me().updateRpcPort(server.getLocalPort());
+    }
+    if (useUpnp) {
+      UPnP.me().setTcpPortMapping(port, UPnP.LOCAL_HOST);
     }
     return server;
   }

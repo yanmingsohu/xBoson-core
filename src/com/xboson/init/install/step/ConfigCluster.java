@@ -19,6 +19,7 @@ package com.xboson.init.install.step;
 import com.xboson.been.XBosonException;
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
+import com.xboson.util.Tool;
 
 
 public class ConfigCluster implements IStep {
@@ -33,16 +34,47 @@ public class ConfigCluster implements IStep {
   public boolean gotoNext(HttpData data) throws Exception {
     int nodeid = data.getInt("clusterNodeID");
     if (nodeid < 0 || nodeid > 1023) {
-      throw new XBosonException.BadParameter(
-              "nodeid", "运算节点 ID 有效范围 0~1023");
+      throw new XBosonException("运算节点 有效范围 0~1023");
     }
     data.cf.clusterNodeID = (short) nodeid;
+
+    String sp = data.getStr("sessionPassword");
+    if (sp != null) {
+      data.cf.sessionPassword = sp;
+    } else {
+      throw new XBosonException("会话密钥 不能为空");
+    }
+
+    int port = data.getInt("rpcPort");
+    if (port > 0) {
+      data.cf.rpcPort = port;
+    }
+
+    String ip = data.getStr("rpcIp");
+    if (ip != null) {
+      String[] ips = ip.split(",");
+      Tool.pl(ips);
+      for (int i=0; i<ips.length; ++i) {
+        ips[i] = ips[i].trim();
+        if (Tool.isNulStr(ips[i])) {
+          throw new XBosonException("本机地址 格式错误");
+        }
+      }
+      data.cf.rpcIp = ips;
+    }
+
+    data.cf.rpcUpnp = data.getBool("rpcUpnp");
     return true;
   }
 
 
   @Override
   public String getPage(HttpData data) {
+    String sp = data.getStr("sessionPassword");
+    if (sp == null) {
+      sp = data.cf.sessionPassword;
+    }
+    data.req.setAttribute("sessionPassword", sp);
     return "cluster.jsp";
   }
 }

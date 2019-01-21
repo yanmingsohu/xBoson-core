@@ -29,7 +29,7 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 public class Config implements IBean {
 
-  public static final String VERSION = Version.xBoson +".10";
+  public static final String VERSION = Version.xBoson +".11";
 
   public String configVersion     = VERSION;
 
@@ -77,6 +77,7 @@ public class Config implements IBean {
   public short clusterNodeID;
   public String[] rpcIp;
   public int rpcPort;
+  public boolean rpcUpnp;
   public boolean enableUploadClear;
   public boolean enableSessionClear;
   public boolean enableUIFileSync;

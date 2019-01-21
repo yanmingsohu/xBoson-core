@@ -91,4 +91,9 @@ public class HttpData {
     }
     return true;
   }
+
+
+  public String config() {
+    return Tool.getAdapter(Object.class).toJson(cf);
+  }
 }

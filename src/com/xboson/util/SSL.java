@@ -20,10 +20,7 @@ import com.xboson.util.c0nst.IConstant;
 
 import javax.net.ssl.*;
 import java.io.*;
-import java.security.KeyFactory;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.SecureRandom;
+import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -35,7 +32,10 @@ import java.util.List;
 
 
 /**
- * 不要碰 SSL, 你永远都不知道都干了什么.
+ * <b>不要碰 SSL, 你永远都不知道都干了什么.</b><br/>
+ *
+ * 该类绕过了 java 默认证书管理系统(通过参数或java定义的证书格式),
+ * 用参数就可以创建安全套接字对象.
  */
 public class SSL {
 
@@ -55,6 +55,7 @@ public class SSL {
   private KeyManagerFactory keyManagerFactory;
   private X509TrustManagerImpl x509trust;
   private final char[] password;
+  private String protocol;
 
 
   /**
@@ -74,7 +75,7 @@ public class SSL {
    * @throws Exception 任何密码学相关异常都可能被抛出
    */
   public SSL(String protocol, String password) throws Exception {
-    sslContext    = SSLContext.getInstance(protocol);
+    this.protocol = protocol;
     factory       = CertificateFactory.getInstance(X509);
     x509trust     = new SSL.X509TrustManagerImpl();
     keyStore      = KeyStore.getInstance(PKCS12);
@@ -136,22 +137,44 @@ public class SSL {
 
 
   /**
-   * 初始化并返回 SSL 工厂.
+   * 初始化并返回 SSL 客户端工厂.
    */
-  public SSLSocketFactory getSocketFactory() throws Exception {
-    trustManagerFactory = TrustManagerFactory.getInstance(
-            TrustManagerFactory.getDefaultAlgorithm());
-    trustManagerFactory.init(keyStore);
-    keyManagerFactory = KeyManagerFactory.getInstance(
-            KeyManagerFactory.getDefaultAlgorithm());
-    keyManagerFactory.init(keyStore, password);
+  public SSLSocketFactory getSocketFactory() throws UnrecoverableKeyException,
+          NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+  {
+    return getSSLContext().getSocketFactory();
+  }
 
-    sslContext.init(
-            keyManagerFactory.getKeyManagers(),
-            trustManagerFactory.getTrustManagers(),
-            new SecureRandom());
 
-    return sslContext.getSocketFactory();
+  /**
+   * 初始化并返回 SSL 服务端工厂.
+   */
+  public SSLServerSocketFactory getServerSocketFactory()
+          throws UnrecoverableKeyException, NoSuchAlgorithmException,
+          KeyStoreException, KeyManagementException
+  {
+    return getSSLContext().getServerSocketFactory();
+  }
+
+
+  private SSLContext getSSLContext() throws KeyManagementException,
+          NoSuchAlgorithmException, KeyStoreException, UnrecoverableKeyException
+  {
+    if (sslContext == null) {
+      sslContext = SSLContext.getInstance(protocol);
+      trustManagerFactory = TrustManagerFactory.getInstance(
+              TrustManagerFactory.getDefaultAlgorithm());
+      trustManagerFactory.init(keyStore);
+      keyManagerFactory = KeyManagerFactory.getInstance(
+              KeyManagerFactory.getDefaultAlgorithm());
+      keyManagerFactory.init(keyStore, password);
+
+      sslContext.init(
+              keyManagerFactory.getKeyManagers(),
+              trustManagerFactory.getTrustManagers(),
+              new SecureRandom());
+    }
+    return sslContext;
   }
 
 
