@@ -71,71 +71,103 @@ Java JDK, Tomcat 9, Servlet 4.0.
 
 # JAR 依赖
 
-* (解析/封装 JSON)
-    -- (moshi-1.5.0.jar)[https://github.com/square/moshi]  
-		-- (moshi-kotlin-1.5.jar)  
-		-- (okio-1.13.0.jar)  
-		
-* (控制台颜色输出)
-    -- (jansi-1.16.jar)[https://github.com/fusesource/jansi]  
+## 解析/封装 JSON
+  
+  1. [moshi-1.5.0.jar](https://github.com/square/moshi)  
+  1. [moshi-kotlin-1.5.jar]  
+  1. [okio-1.13.0.jar]  
+      
+## 控制台颜色输出
+  
+  1. [jansi-1.16.jar](https://github.com/fusesource/jansi)  
 
-* (Redis 客户端)
-    -- (jedis-2.9.0.jar)[https://github.com/xetorthio/jedis]  
-    -- (commons-pool2-2.4.3.jar)  
+## Redis 客户端
+  
+  1. [jedis-2.9.0.jar](https://github.com/xetorthio/jedis)  
+  1. [commons-pool2-2.4.3.jar]  
     
-* (数据库驱动)
-    -- (mysql-connector-java-5.1.44-bin.jar)[https://dev.mysql.com/downloads/connector/j/]
-    -- (db2jcc4.jar)[http://www-01.ibm.com/support/docview.wss?uid=swg21363866]
-    -- (mssql-jdbc-6.2.2.jre8.jar)[https://docs.microsoft.com/en-us/sql/connect/sql-connection-libraries]
-    -- (ojdbc7.jar)[http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html]
-    -- (mpp-connector-java-8.3.81.51-build-53.2-bin.jar)[华三数据库]
-    -- (inspur11-jdbc.jar)[浪潮数据库]
-    -- (h2-1.4.196.jar)[http://h2database.com/html/main.html]
+## 数据库驱动
+  
+  1. [mysql-connector-java-5.1.44-bin.jar](https://dev.mysql.com/downloads/connector/j/)
+  1. [db2jcc4.jar](http://www-01.ibm.com/support/docview.wss?uid=swg21363866)
+  1. [mssql-jdbc-6.2.2.jre8.jar](https://docs.microsoft.com/en-us/sql/connect/sql-connection-libraries)
+  1. [ojdbc7.jar](http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html)
+  1. [mpp-connector-java-8.3.81.51-build-53.2-bin.jar](华三数据库)
+  1. [inspur11-jdbc.jar](浪潮数据库)
+  1. [h2-1.4.196.jar](http://h2database.com/html/main.html)
+      
+## XML 转换
+
+  1. [xstream-1.4.10-java7.jar](http://hmkcode.com/xstream-java-object-xml/)
+  1. [xmlpull-1.1.3.1.jar]
+  1. [xpp3_min-1.1.4c.jar]
     
-* (XML 转换)
-    -- (xstream-1.4.10-java7.jar)[http://hmkcode.com/xstream-java-object-xml/]
-    -- (xmlpull-1.1.3.1.jar)
-    -- (xpp3_min-1.1.4c.jar)
+## CSV 转换
+
+  1. [super-csv-2.4.0.jar](https://github.com/super-csv/super-csv)
     
-* (CSV 转换)
-    -- (super-csv-2.4.0.jar)[https://github.com/super-csv/super-csv]
+## HTTP 客户端
+
+  1. [okhttp-3.9.1.jar](http://square.github.io/okhttp/)
     
-* (HTTP 客户端)
-    -- (okhttp-3.9.1.jar)[http://square.github.io/okhttp/]
+## MongoDB 客户端
+  
+  1. [bson-3.6.1.jar](http://bsonspec.org/)
+  1. [mongodb-driver-3.6.1.jar](http://mongodb.github.io/mongo-java-driver/)
+  1. [mongodb-driver-core-3.6.1.jar]
+      
+## Microsoft Excel 报表
+
+  1. [poi-3.17.jar](https://poi.apache.org/)
     
-* (MongoDB 客户端)
-    -- (bson-3.6.1.jar)[http://bsonspec.org/]
-    -- (mongodb-driver-3.6.1.jar)[http://mongodb.github.io/mongo-java-driver/]
-    -- (mongodb-driver-core-3.6.1.jar)
+## YAML 转换
+
+  1. [yamlbeans-1.13.jar](https://github.com/EsotericSoftware/yamlbeans/)
     
-* (Microsoft Excel 报表)
-    -- (poi-3.17.jar)[https://poi.apache.org/]
+## 软件授权许可
+
+  1. [xBoson-crypto.jar]
     
-* (YAML 转换)
-    -- (yamlbeans-1.13.jar)[https://github.com/EsotericSoftware/yamlbeans/]
+## [Hyperledger-Fabric 区块链](http://hyperledger-fabric.readthedocs.io/en/release/)
+
+  1. [fabric-sdk-java-*-with-dependencies.jar] sdk 及若干依赖库集合
     
-* (软件授权许可)
-    -- (xBoson-crypto.jar)
+## 文件上传解析
+
+  1. [commons-fileupload-1.3.3.jar](http://commons.apache.org/proper/commons-fileupload/]
     
-* (Hyperledger-Fabric 区块链)[http://hyperledger-fabric.readthedocs.io/en/release/]
-    -- (fabric-sdk-java-*-with-dependencies.jar) sdk 及若干依赖库集合
+## WebService 组件
+  
+  1. [wsdl4j.jar]
+  1. [qname.jar]
     
-* (文件上传解析)
-    -- (commons-fileupload-1.3.3.jar)[http://commons.apache.org/proper/commons-fileupload/]
+## [MapDB 存储区块的数据库](https://github.com/jankotek/mapdb)
+
+  1. [mapdb-3.0.8-SNAPSHOT-jar-with-dependencies.jar) 依赖库集合
     
-* (WebService 组件)
-    -- (wsdl4j.jar)
-    -- (qname.jar)
+## 编译依赖/脱离 servlet 容器运行库
+  
+  1. [jetty-all-9.4.14.v20181114-editor.jar]
+  1. [org.eclipse.jdt.ecj-3.14.0.jar]
+  1. [org.eclipse.jetty.apache-jsp-9.4.14.v20181114.jar]
+  1. [org.mortbay.jasper.apache-el-8.5.33.1.jar]
+  1. [org.mortbay.jasper.apache-jsp-8.5.33.1.jar]
+  1. [jsp-api.jar]
+  1. [servlet-api.jar]
     
-* (MapDB 存储区块的数据库)[https://github.com/jankotek/mapdb]
-    -- (mapdb-3.0.8-SNAPSHOT-jar-with-dependencies.jar) 依赖库集合
+## UPnP 支持
+
+  1. [weupnp-0.1.4.jar](https://github.com/bitletorg/weupnp)
     
-* (Docker 客户端)[https://github.com/spotify/docker-client]
-    -- (docker-client-8.14.5.jar) 作为参考 - 对接 docker 完成后删除
-    -- (Java API 文档)[https://github.com/spotify/docker-client/blob/master/docs/user_manual.md]
-    -- (docker 原生 API)[https://docs.docker.com/engine/api/v1.39/]
-    -- (生成安全连接)[https://docs.docker.com/engine/security/https/]
-    
+## Docker 客户端
+
+> 作为参考 - 对接 docker 完成后删除
+
+  1. [docker-client-8.14.5.jar](https://github.com/spotify/docker-client)
+  1. [Java API 文档](https://github.com/spotify/docker-client/blob/master/docs/user_manual.md)
+  1. [docker 原生 API](https://docs.docker.com/engine/api/v1.39/)
+  1. [生成安全连接](https://docs.docker.com/engine/security/https/)
+      
     
     
 		
@@ -183,6 +215,7 @@ get 请求使用标准的 http url 参数.
 上传下载接口.
 
 路径生成规则:
+
 * 当用户登录一级目录为用户 id, 否则为 temporary;
 * 二级目录为 servlet 服务路径之后的路径字符串 [sub path], 
 * 最终路径 = /[一级目录]/[二级目录]/[文件]
@@ -227,9 +260,10 @@ mysql 配置:
   如果是继承的, 则使用全局级别, 否则使用日志自己的级别.
 
 ```properties
+#
 #LogFactory Config From xBoson.
 #Tue Nov 14 21:13:11 CST 2017
-
+#
 com.xboson.event.GlobalEventBus=ALL
 Event\:\:sys.error=OFF
 com.xboson.j2ee.container.UrlMapping=DEBUG
@@ -281,12 +315,12 @@ max_allowed_packet=100M
   
 # 参考
 
-* (JVM 垃圾收集器调优)[http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html]
-* (Nashorn 上下文等)[https://wiki.openjdk.java.net/display/Nashorn/Nashorn+jsr223+engine+notes]
-* (Java 与区块链)[https://www.ibm.com/developerworks/cn/java/j-chaincode-for-java-developers/index.html]
-* (hyperledger 实现)[http://hyperledger-fabric.readthedocs.io/en/latest/blockchain.html]
-* (OLTU WIKI)[https://cwiki.apache.org/confluence/display/OLTU/Index]
-* (OAuth2 规范文档)[https://oauth.net/2/]
-* (Paxos 的共识算法)[https://www.zhihu.com/question/19787937]
-* (Raft 共识算法)[https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md]
-* (Raft 可视化)[https://raft.github.io/]
+* [JVM 垃圾收集器调优](http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html)
+* [Nashorn 上下文等](https://wiki.openjdk.java.net/display/Nashorn/Nashorn+jsr223+engine+notes)
+* [Java 与区块链](https://www.ibm.com/developerworks/cn/java/j-chaincode-for-java-developers/index.html)
+* [hyperledger 实现](http://hyperledger-fabric.readthedocs.io/en/latest/blockchain.html)
+* [OLTU WIKI](https://cwiki.apache.org/confluence/display/OLTU/Index)
+* [OAuth2 规范文档](https://oauth.net/2/)
+* [Paxos 的共识算法](https://www.zhihu.com/question/19787937)
+* [Raft 共识算法](https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md)
+* [Raft 可视化](https://raft.github.io/)
