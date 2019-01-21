@@ -47,6 +47,7 @@ public final class Touch {
 
 /****************************************************************************
  * 初始化对象列表
+ * @see com.xboson.rpc.RpcGlobalInitList RPC 对象注册初始化列表
  ***************************************************************************/
   private static void __init__process() {
     GlobalEventBus.me();
@@ -64,7 +65,6 @@ public final class Touch {
     ClusterManager.me();
     RpcFactory.me();
     PeerFactory.me();
-    XLock.me();
   }
 
 

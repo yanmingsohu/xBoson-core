@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 19-1-20 下午8:22
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/rpc/RpcInitGlobal.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/rpc/RpcGlobalInitList.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -17,19 +17,21 @@
 package com.xboson.rpc;
 
 import com.xboson.app.lib.PmImpl;
+import com.xboson.distributed.XLock;
 
 
 /**
- * RPC 对象需要启动注册的类在这里声明
+ * 所有 RPC 对象需要在启动时注册到注册表中, 把注册代码写到这里.
  */
-public class RpcInitGlobal {
+public class RpcGlobalInitList {
 
 
   /**
-   * 初始化列表, 包外禁止访问
+   * RPC 注册列表, 包外禁止访问
    */
   static final void init(RpcFactory rpc) {
     PmImpl.init(rpc);
+    XLock.me();
   }
 
 }

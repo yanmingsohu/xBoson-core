@@ -7,7 +7,7 @@ Java JDK, Tomcat 9, Servlet 4.0.
   * OpenJDK 1.8.0_151
   
 待测试测 Java 版本:
-  * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经被移除 jdk.
+  * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经从 jdk 移除.
   * OpenJDK 1.8
 
 
@@ -43,6 +43,7 @@ Java JDK, Tomcat 9, Servlet 4.0.
 * 集成了 jetty, 需要构建 jar 的生成脚本
 * 统计分析模块 -api完成 +wiki +画面
 * docker 管理模块.
+* 构建工程化的安装包.
 
 
 # 2.0 新特性

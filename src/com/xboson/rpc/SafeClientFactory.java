@@ -90,7 +90,7 @@ public class SafeClientFactory implements RMIClientSocketFactory, Serializable {
       c.recv(BUF_SIZE);
       c.send(BUF_SIZE);
       return sock;
-    } catch (IOException e){
+    } catch (IOException e) {
       c.close();
       throw e;
     }

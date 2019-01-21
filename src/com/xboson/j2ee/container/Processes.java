@@ -42,6 +42,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.CRC32;
 
 
+/**
+ * TODO: 加入集群节点数量限制, 将授权机构与集群绑定
+ */
 public final class Processes {
 
   private static Processes instance;

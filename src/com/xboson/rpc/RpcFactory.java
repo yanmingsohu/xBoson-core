@@ -96,7 +96,7 @@ public final class RpcFactory extends OnExitHandle {
       synchronized (RpcFactory.class) {
         if (instance == null) {
           instance = new RpcFactory();
-          RpcInitGlobal.init(instance);
+          RpcGlobalInitList.init(instance);
         }
       }
     }
