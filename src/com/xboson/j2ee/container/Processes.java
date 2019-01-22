@@ -89,6 +89,7 @@ public final class Processes {
   private final ReentrantLock threadLock;
   private final Log log;
   private String msg;
+  private String publicKeyFile;
   private License license;
 
 
@@ -116,8 +117,9 @@ public final class Processes {
         return;
 
       final long PERIOD = DAY / 2;
+      publicKeyFile = License.getPublicKeyFilePath(sc);
       license = License.readLicense();
-      license.setPublicKeyFile(sc);
+      license.publicKeyFile = publicKeyFile;
 
       Point point = new Point();
       point.run();
@@ -139,7 +141,7 @@ public final class Processes {
     lic.appName   = Version.Name;
     lic.company   = "未知";
     lic.dns       = "unknow.com";
-    lic.email     = "unknow@unknow.com";
+    lic.email     = "unknow@mail.unknow.com";
     lic.beginTime = System.currentTimeMillis();
     lic.endTime   = System.currentTimeMillis() + DAY;
     lic.api       = new HashSet<>();
@@ -183,7 +185,7 @@ public final class Processes {
     {
       log.info(s[6], basename, filename);
       License new_license = License.readLicense();
-      new_license.publicKeyFile = license.publicKeyFile;
+      new_license.publicKeyFile = publicKeyFile;
       license = new_license;
       run();
     }
@@ -201,8 +203,7 @@ public final class Processes {
     // 之所以使用 readLine 是因为文本换行在不同系统上的差异导致 crc 不一致.
     //
     CRC32 crc = new CRC32();
-    BufferedReader read = new BufferedReader(
-            new FileReader(license.getPublicKeyFile()));
+    BufferedReader read = new BufferedReader(new FileReader(publicKeyFile));
     String line;
     while ((line = read.readLine()) != null) {
       crc.update(line.getBytes(IConstant.CHARSET));

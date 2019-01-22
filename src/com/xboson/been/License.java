@@ -56,18 +56,21 @@ public class License extends AbsLicense {
   }
 
 
-  public void setPublicKeyFile(URL url) {
-    publicKeyFile = url.toString();
-    if (publicKeyFile.startsWith(PREFIX)) {
-      publicKeyFile = publicKeyFile.substring(PREFIX.length());
-    }
+  public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
+    publicKeyFile = getPublicKeyFilePath(sc);
   }
 
 
-  public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
+  public static String getPublicKeyFilePath(ServletContext sc)
+          throws MalformedURLException {
     URL url = sc.getResource(DIR_BASE + PUB_FILE);
-    if (url == null) throw new XBosonException.NotFound(DIR_BASE + PUB_FILE);
-    setPublicKeyFile(url);
+    if (url == null) throw
+            new XBosonException.NotFound(DIR_BASE + PUB_FILE);
+    String file = url.toString();
+    if (file.startsWith(PREFIX)) {
+      file = file.substring(PREFIX.length());
+    }
+    return file;
   }
 
 

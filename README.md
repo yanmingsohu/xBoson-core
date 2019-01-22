@@ -313,6 +313,8 @@ max_connect_errors=1000
 max_allowed_packet=100M
 ```
 
+登录帐户过期, 在 sql 控制台登录后执行 `SET GLOBAL default_password_lifetime = 0;`
+
   
 # 参考
 
