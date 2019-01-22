@@ -17,7 +17,6 @@
 package com.xboson.script;
 
 import com.xboson.script.lib.*;
-import com.xboson.util.SysConfig;
 
 import java.io.IOException;
 

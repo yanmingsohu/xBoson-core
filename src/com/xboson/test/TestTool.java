@@ -261,15 +261,16 @@ public class TestTool extends Test {
     check("窗前明月光", "cqmyg");
     check("酰孢苷酯喹呋喃瘾痫癫祛厥", "xbgzkfnyxdqj");
 
-    check2("中华abc", "zhong hua abc");
+    check2("中华abc。", "zhong hua abc");
     check2("abc茅台", "abc mao tai");
     check2("abc(茅台)好", "abc( mao tai ) hao");
 
 
-//    //
-//    // 使用缓存: to First Letter 1000000  Used Time 389 ms
-//    // 不用缓存: to First Letter 1000000  Used Time 1220 ms
-//    //
+    //
+    // 使用缓存: to First Letter 1000000  Used Time 389 ms
+    // 不用缓存: to First Letter 1000000  Used Time 1220 ms
+    // 新算法:   to First Letter 1000000  Used Time 121 ms
+    //
 //    beginTime();
 //    int c = 1000000;
 //    for (int i=0; i<c; ++i) {

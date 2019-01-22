@@ -22,7 +22,6 @@ import com.xboson.log.LogFactory;
 import com.xboson.util.c0nst.IConstant;
 
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -32,21 +31,19 @@ import java.util.Properties;
  */
 public class ChineseDictionary {
 
-  /**
-   * 只保存中文对应的拼音首字母
-   */
-  private static Map<Character, String> firstCache;
-
   private final static String PY_DICT_FILE = "pinyin.prop";
-  private final static String NULL_STR = IConstant.NULL_STR;
   private final static char SP = ' ';
+
+  private static int max = 0;
+  private static int min = Integer.MAX_VALUE;
+  private static String[] dict;
 
 
   /**
    * 从文件中加载中文拼音字典
    */
   public synchronized static void init() {
-    if (firstCache == null) {
+    if (dict == null) {
       Log log = LogFactory.create("pinyin-init");
       try {
         //
@@ -58,20 +55,28 @@ public class ChineseDictionary {
         Properties prop = new Properties();
         prop.load(utf8reader);
 
-        Map<Character, String> _map = new HashMap<>(prop.size());
+        for (Object n : prop.keySet()) {
+          char c = ((String)n).charAt(0);
+          if (min > c) min = c;
+          if (max <= c) max = c+1;
+        }
+
+        String[] _map = new String[max - min];
+
         for (Map.Entry<Object, Object> ent : prop.entrySet()) {
           String cn = ent.getKey().toString();
           String en = ent.getValue().toString();
+
+          char c = cn.charAt(0);
           if (en.length() > 0) {
-            _map.put(cn.charAt(0), en);
-          } else {
-            _map.put(cn.charAt(0), NULL_STR);
+            _map[c - min] = en;
           }
         }
-        firstCache = _map;
-        log.info("init success");
+
+        dict = _map;
+        log.info("init success", min, max, max-min);
       } catch (Exception e) {
-        log.error(e);
+        log.error(e, "min:", min, "max:", max);
       }
     }
   }
@@ -82,16 +87,20 @@ public class ChineseDictionary {
    */
   public static String toFirstPinYinLetter(String str) {
     if (Tool.isNulStr(str)) {
-      return NULL_STR;
+      return IConstant.NULL_STR;
     }
     StringBuilder out = new StringBuilder();
+
     for (int i = 0; i < str.length(); ++i) {
-      Character cn = str.charAt(i);
-      String py = firstCache.get(cn);
-      if (py != null && py != NULL_STR) {
-        out.append(py.charAt(0));
+      char cn = str.charAt(i);
+
+      if (cn >= min && cn < max) {
+        String py = dict[cn - min];
+        if (py != null) {
+          out.append(py.charAt(0));
+        }
       } else if (cn < 127) {
-        out.append((char) cn);
+        out.append(cn);
       }
     }
     return out.toString();
@@ -103,28 +112,31 @@ public class ChineseDictionary {
    */
   public static String toFullPinYinLetter(String str) {
     if (Tool.isNulStr(str)) {
-      return NULL_STR;
+      return IConstant.NULL_STR;
     }
     StringBuilder out = new StringBuilder();
     int state = 0;
 
     for (int i = 0; i < str.length(); ++i) {
-      Character cn = str.charAt(i);
-      String py = firstCache.get(cn);
+      char cn = str.charAt(i);
 
-      if (py != null && py != NULL_STR) {
-        if (state != 0) {
-          out.append(SP);
+      if (cn >= min && cn <= max) {
+        String py = dict[cn - min];
+
+        if (py != null) {
+          if (state != 0) {
+            out.append(SP);
+          }
+          state = 2;
+          out.append(py);
         }
-        state = 2;
-        out.append(py);
       }
       else if (cn < 127) {
         if (state != 1) {
           if (state > 0) out.append(SP);
           state = 1;
         }
-        out.append((char) cn);
+        out.append(cn);
       }
     }
     return out.toString();
