@@ -59,46 +59,29 @@ public class EnvironmentFactory {
    */
   public static SysModules setupNodeModules(SysModules sysmod)
           throws IOException {
+    Class processClass = com.xboson.script.lib.Process.class;
 
-    sysmod.regClass("console",
-            Console.class);
-    sysmod.regClass("path",
-            Path.class);
-    sysmod.regClass("sys/buffer",
-            Buffer.class);
-    sysmod.regClass("sys/uuid",
-            Uuid.class);
-    sysmod.regClass("vm",
-            Vm.class);
-    sysmod.regClass("sys/process",
-            com.xboson.script.lib.Process.class);
-    sysmod.regClass("streamutil",
-            StreamUtil.class);
-    sysmod.regClass("os",
-            OperatingSystem.class);
+    sysmod.regClass("console",      Console.class);
+    sysmod.regClass("path",         Path.class);
+    sysmod.regClass("sys/buffer",   Buffer.class);
+    sysmod.regClass("sys/uuid",     Uuid.class);
+    sysmod.regClass("vm",           Vm.class);
+    sysmod.regClass("sys/process",  processClass);
+    sysmod.regClass("streamutil",   StreamUtil.class);
+    sysmod.regClass("os",           OperatingSystem.class);
 
-    sysmod.loadLib("process",
-            "lib/process.js");
-    sysmod.loadLib("sys/util",
-            "lib/sysutil.js");
-    sysmod.loadLib("sys/json",
-            "lib/JSON.js");
-    sysmod.loadLib("util",
-            "lib/util.js");
-    sysmod.loadLib("assert",
-            "lib/assert.js");
-    sysmod.loadLib("events",
-            "lib/events.js");
-    sysmod.loadLib("buffer",
-            "lib/buffer.js");
-    sysmod.loadLib("querystring",
-            "lib/querystring.js");
-    sysmod.loadLib("punycode",
-            "lib/punycode.js");
-    sysmod.loadLib("url",
-            "lib/url.js");
-    sysmod.loadLib("uuid",
-            "lib/uuid.js");
+    SysModules.LibLoader sys = sysmod.open(processClass);
+    sys.load("process",             "process.js");
+    sys.load("sys/util",            "sysutil.js");
+    sys.load("sys/json",            "JSON.js");
+    sys.load("util",                "util.js");
+    sys.load("assert",              "assert.js");
+    sys.load("events",              "events.js");
+    sys.load("buffer",              "buffer.js");
+    sys.load("querystring",         "querystring.js");
+    sys.load("punycode",            "punycode.js");
+    sys.load("url",                 "url.js");
+    sys.load("uuid",                "uuid.js");
 
     return sysmod;
   }

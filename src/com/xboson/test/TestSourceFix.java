@@ -31,12 +31,15 @@ import java.util.regex.Pattern;
 
 public class TestSourceFix extends Test {
 
+  private Class loader;
+
   @Override
   public void test() throws Throwable {
-    test_file("js/need-fix.js", false);
-    test_file("js/strict-mode.js", true);
-    test_file("js/multi-line-str.js", false);
-    not_modify("js/fix-not-change.js");
+    loader = com.xboson.test.js.Loader.class;
+    test_file("need-fix.js", false);
+    test_file("strict-mode.js", true);
+    test_file("multi-line-str.js", false);
+    not_modify("fix-not-change.js");
   }
 
 
@@ -58,7 +61,7 @@ public class TestSourceFix extends Test {
   private Fix test_file(String js_file_path, boolean isStrict) throws IOException {
     sub("Fix Js file:", js_file_path, "strict:", isStrict);
     StringBufferOutputStream buf =
-            Tool.readFileFromResource(this.getClass(), js_file_path);
+            Tool.readFileFromResource(loader, js_file_path);
 
     byte[] src = buf.toBytes();
     boolean filemode = SourceFix.isStrictMode(src);

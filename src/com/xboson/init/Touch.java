@@ -21,7 +21,6 @@ import com.xboson.auth.AuthFactory;
 import com.xboson.chain.PeerFactory;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.sql.SqlReader;
-import com.xboson.distributed.XLock;
 import com.xboson.event.GlobalEventBus;
 import com.xboson.event.Names;
 import com.xboson.fs.script.FileSystemFactory;
@@ -32,6 +31,7 @@ import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.RpcFactory;
 import com.xboson.script.SandboxFactory;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.ChineseDictionary;
 import com.xboson.util.SysConfig;
 
 import javax.servlet.ServletContextEvent;
@@ -65,6 +65,7 @@ public final class Touch {
     ClusterManager.me();
     RpcFactory.me();
     PeerFactory.me();
+    ChineseDictionary.init();
   }
 
 

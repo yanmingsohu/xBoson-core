@@ -152,8 +152,8 @@ public final class Tool extends StaticLogProvider {
 
   public static void println(byte[] a) {
     for (int i=0; i<a.length; ++i) {
-      System.out.print(Integer.toString(a[i], 16) + " " );
-      if (i % 16 == 0) System.out.println();
+      System.out.print("0x"+ Integer.toString(255 & a[i], 16) + " " );
+      if (i % 16 == 15) System.out.println();
     }
     System.out.println();
   }
@@ -620,7 +620,8 @@ public final class Tool extends StaticLogProvider {
 
 
   /**
-   * 利用类加载器加载 class 中的文件, 并返回缓冲区
+   * 利用类加载器加载 class 中的文件, 并返回缓冲区,
+   * filepath 避免使用相对路径, 否则在混淆后会找不到文件.
    */
   public static StringBufferOutputStream readFileFromResource(
           Class<?> base, String filepath) {

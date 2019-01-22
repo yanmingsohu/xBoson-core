@@ -27,16 +27,17 @@ public final class ScriptEnvConfiguration {
   /**
    * 返回环境配置脚本列表,
    * 这些脚本, 在创建沙箱时被调用, 可以绑定全局变量.
+   * 加载根目录在 com.xboson.app.lib 下.
    */
   static String[] environment_script() {
     return new String[] {
-            "lib/array_sort_comparator.js",
-            "lib/sys_functions_impl.js",
-            "lib/string_functions.js",
-            "lib/compatible-syntax.js",
-            "lib/strutil.js",
-            "lib/ide.js",
-            "lib/pre-init.js",
+            "array_sort_comparator.js",
+            "sys_functions_impl.js",
+            "string_functions.js",
+            "compatible-syntax.js",
+            "strutil.js",
+            "ide.js",
+            "pre-init.js",
     };
   }
 

@@ -422,12 +422,17 @@ public class SysImpl extends DateImpl {
 
 
   public String pinyinFirstLetter(String zh) {
-    return ChineseInital.getAllFirstLetter(zh);
+    return ChineseDictionary.toFirstPinYinLetter(zh);
   }
 
 
   public String getPinyinFirstLetter(String zh) {
-    return ChineseInital.getAllFirstLetter(zh);
+    return ChineseDictionary.toFirstPinYinLetter(zh);
+  }
+
+
+  public String fullPinyinLetter(String zh) {
+    return ChineseDictionary.toFullPinYinLetter(zh);
   }
 
 

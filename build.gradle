@@ -1,3 +1,7 @@
+//
+// https://www.guardsquare.com/en/products/proguard/manual/gradle
+// https://docs.gradle.org/current/dsl/org.gradle.api.tasks.Copy.html
+//
 apply plugin: 'war'
 
 defaultTasks 'war'
@@ -33,7 +37,9 @@ tasks.withType(JavaCompile) {
 
 task copyResource(type: Copy) {
     from 'src'
-    into 'build/guard-out/classes/classes'
+    //into 'build/guard-out/classes/classes'
+    // 复制到编译后的目录, 混淆器会识别资源文件.
+    into 'build/classes/java/main'
 
     include '**/*.js'
     include '**/*.sql'
@@ -45,13 +51,25 @@ task copyResource(type: Copy) {
 }
 
 
+task mergeGuard1(type: Copy) {
+    from 'build/guard-out/classes/classes/'
+    into 'build/guard-out'
+    includeEmptyDirs = false
+}
+
+
+task mergeGuard2(type: Delete) {
+    delete 'build/guard-out/classes'
+}
+
+
 war {
     webInf {
         from('WebRoot/WEB-INF')
         exclude 'classes'
     }
     archiveName = 'xboson.war'
-    classpath = 'build/guard-out/classes/classes/'
+    classpath = 'build/guard-out'
 }
 
 
@@ -64,6 +82,8 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     libraryjars './WebRoot/WEB-INF/lib/'
     libraryjars './libs/'
 
+    // 包中的资源文件目录跟随混淆后的目录
+    adaptresourcefilenames
     dontusemixedcaseclassnames
     printmapping 'build/obfuscate-mapping.txt'
     printseeds 'build/seed.txt'
@@ -76,7 +96,6 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     // Database
     keep 'public class com.xboson.db.driver.* { public *; }'
     keep 'public class com.xboson.db.ConnectConfig { public *; }'
-    keeppackagenames 'com.xboson.db.sql'
 
     // Script
     keep 'public class com.xboson.script.JSObject { public *; }'
@@ -84,8 +103,6 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keepclassmembers 'public class com.xboson.app.lib.* { public *; }'
     keep 'interface com.xboson.script.IVisitByScript' // 必须保留
     keepclassmembers 'class * implements com.xboson.script.IVisitByScript { public *; }'
-    keeppackagenames 'com.xboson.app.lib'
-    keeppackagenames 'com.xboson.script.lib'
 
     // File system
     keep 'public class com.xboson.fs.* { public *; }'
@@ -108,8 +125,6 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'class * implements com.xboson.sleep.ISleepwalker { public *; }'
     keep 'class com.xboson.log.writer.* { public *; }'
     keep 'public class com.xboson.test.* { public *; }'
-    keeppackagenames 'com.xboson.test.js'
-    keeppackagenames 'com.xboson.util.config'
 
     // RPC
     keep 'class com.xboson.rpc.* { public *; *; }'
@@ -125,13 +140,19 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'public class com.xboson.been.AppToken { public *; }'
     keepclassmembers 'public class com.xboson.been.License { public *; }'
 
+// 已经优化了类的文件加载器路径, 在测试完成后删除下面注释的规则定义
+//    keeppackagenames 'com.xboson.util.config'
+//    keeppackagenames 'com.xboson.test.js'
+//    keeppackagenames 'com.xboson.app.lib'
+//    keeppackagenames 'com.xboson.script.lib'
+//    keeppackagenames 'com.xboson.db.sql'
+
     keepattributes '*Annotation*'
     renamesourcefileattribute 'SourceFile'
     keepattributes 'SourceFile, LineNumberTable, Exceptions, Signature'
     keep 'public class * implements java.io.Serializable { public *; *; }'
     keepclassmembers 'class * implements java.io.Serializable'
     keepclassmembers 'enum * { public *; }'
-
 }
 
 
@@ -141,7 +162,10 @@ task remove_proguard_out(type: Delete) {
 
 
 war.dependsOn proguard
-war.dependsOn copyResource
-copyResource.dependsOn proguard
+war.dependsOn mergeGuard2
+mergeGuard2.dependsOn mergeGuard1
+mergeGuard1.dependsOn proguard
 proguard.dependsOn remove_proguard_out
 proguard.dependsOn compileJava
+proguard.dependsOn copyResource
+copyResource.dependsOn compileJava

@@ -22,7 +22,7 @@ import com.xboson.db.driver.Mysql;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
-import com.xboson.util.ChineseInital;
+import com.xboson.util.ChineseDictionary;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
@@ -255,10 +255,16 @@ public class TestTool extends Test {
 
 
   public void test_chinese() {
+    sub("中文转拼音");
     check("中华人民共和国", "zhrmghg");
     check("山高似水深", "sgsss");
     check("窗前明月光", "cqmyg");
     check("酰孢苷酯喹呋喃瘾痫癫祛厥", "xbgzkfnyxdqj");
+
+    check2("中华abc", "zhong hua abc");
+    check2("abc茅台", "abc mao tai");
+    check2("abc(茅台)好", "abc( mao tai ) hao");
+
 
 //    //
 //    // 使用缓存: to First Letter 1000000  Used Time 389 ms
@@ -267,15 +273,21 @@ public class TestTool extends Test {
 //    beginTime();
 //    int c = 1000000;
 //    for (int i=0; i<c; ++i) {
-//      ChineseInital.getAllFirstLetter("中华人民共和国");
+//      ChineseDictionary.toFirstPinYinLetter("中华人民共和国");
 //    }
 //    endTime("to First Letter", c);
   }
 
 
   public void check(String cn, String en) {
-    String s = ChineseInital.getAllFirstLetter(cn);
-    eq(en, s, "ch -> en");
+    String s = ChineseDictionary.toFirstPinYinLetter(cn);
+    eq(en, s, "ch -> en ");
+  }
+
+
+  public void check2(String cn, String en) {
+    String s = ChineseDictionary.toFullPinYinLetter(cn);
+    eq(en, s, "ch -> pinyin, '"+ cn +"' -> '"+ en + "'");
   }
 
 
