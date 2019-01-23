@@ -56,15 +56,30 @@ public final class Tool extends StaticLogProvider {
 
   private Tool() {}
 
-
-  /**
-   * 提供 uuid 转换
-   */
+  /** 提供 uuid 转换 */
   public static final Uuid uuid = new Uuid();
-
+  /** 默认的日期/时间格式 */
   public static final String COMM_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
   public static final String FILE_SYS_PREFIX = "file:";
+  /** 如果当前程序在 jar 中启动为 true */
+  public static final boolean isInJar;
+
+
+  static {
+    boolean _in = false;
+    try {
+      /**
+       * getClass().getResource("") 返回
+       * 1. 文件系统上运行: /D:/xBoson/WebRoot/WEB-INF/classes/
+       * 2. 在 jar 里运行: file:/D:/xBoson/bin/xboson.jar!/com/xboson/init/
+       */
+      _in = Tool.class.getResource("").getPath()
+              .toLowerCase().indexOf(".jar!/") > 0;
+    } catch(Exception e) {
+    } finally {
+      isInJar = _in;
+    }
+  }
 
 
   /**

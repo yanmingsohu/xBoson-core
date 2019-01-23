@@ -68,7 +68,7 @@ public class Independent extends OnExitHandle {
             new ServletContextHandler(null, cp, true, false);
 
     h_servlet.addEventListener(new Startup());
-    h_servlet.setResourceBase("./WebRoot");
+    h_servlet.setResourceBase(Tool.isInJar ? "/WEB-INF": "./WebRoot");
     h_servlet.setClassLoader(getClass().getClassLoader()); // 不安全?
 
     //
