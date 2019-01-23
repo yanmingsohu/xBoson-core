@@ -16,7 +16,10 @@
 
 package com.xboson.been;
 
-public class AppSelf {
+import java.io.Serializable;
+
+
+public class AppSelf implements Serializable {
 
   public int httpPort = 8080;
   public String contextPath = "/xboson";

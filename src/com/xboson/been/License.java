@@ -63,9 +63,13 @@ public class License extends AbsLicense {
 
   public static String getPublicKeyFilePath(ServletContext sc)
           throws MalformedURLException {
-    URL url = sc.getResource(DIR_BASE + PUB_FILE);
+    final String _full = DIR_BASE + PUB_FILE;
+    URL url = sc.getResource(_full);
+    if (url == null) {
+      url = Tool.getResource(License.class, _full);
+    }
     if (url == null) throw
-            new XBosonException.NotFound(DIR_BASE + PUB_FILE);
+            new XBosonException.NotFound(_full);
     String file = url.toString();
     if (file.startsWith(PREFIX)) {
       file = file.substring(PREFIX.length());

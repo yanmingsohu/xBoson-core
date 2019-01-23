@@ -1,9 +1,13 @@
-//
-// https://www.guardsquare.com/en/products/proguard/manual/gradle
-// https://docs.gradle.org/current/dsl/org.gradle.api.tasks.Copy.html
-//
+/**
+ * 有以下 gradle 任务可执行:
+ * 1. `war` (默认): 混淆打包 servlet 应用, 输出在 build/lib
+ * 2. `app`: 混淆打包 java 独立应用, 输出在 bin
+ *
+ * 参考:
+ * https://www.guardsquare.com/en/products/proguard/manual/gradle
+ * https://docs.gradle.org/current/dsl
+ */
 apply plugin: 'war'
-
 defaultTasks 'war'
 
 
@@ -16,6 +20,9 @@ buildscript {
     }
     dependencies {
         classpath ':proguard'
+    }
+    dependencies {
+        classpath files("./WebRoot/WEB-INF/classes")
     }
 }
 
@@ -35,9 +42,17 @@ tasks.withType(JavaCompile) {
 }
 
 
+def newMani() {
+    manifest {
+        attributes 'Created-By': 'J.ym'
+        attributes 'Specification-Title': 'xBoson PAAS'
+        attributes 'Specification-Vendor': '上海竹呗信息技术有限公司'
+    }
+}
+
+
 task copyResource(type: Copy) {
     from 'src'
-    //into 'build/guard-out/classes/classes'
     // 复制到编译后的目录, 混淆器会识别资源文件.
     into 'build/classes/java/main'
 
@@ -70,6 +85,7 @@ war {
     }
     archiveName = 'xboson.war'
     classpath = 'build/guard-out'
+    manifest = newMani()
 }
 
 
@@ -91,7 +107,7 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     classobfuscationdictionary 'class-keywords.txt'
 
     // 优化次数: 5:12s | 10:18s | 20:26s | 99:93s
-    optimizationpasses 99
+    optimizationpasses 1
 
     // Database
     keep 'public class com.xboson.db.driver.* { public *; }'
@@ -139,6 +155,7 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'public class com.xboson.been.SessionData { public *; }'
     keep 'public class com.xboson.been.AppToken { public *; }'
     keepclassmembers 'public class com.xboson.been.License { public *; }'
+    keep 'public class com.xboson.init.Independent { public *; }'
 
 // 已经优化了类的文件加载器路径, 在测试完成后删除下面注释的规则定义
 //    keeppackagenames 'com.xboson.util.config'
@@ -161,6 +178,65 @@ task remove_proguard_out(type: Delete) {
 }
 
 
+// TODO: 暂时无效, 构建的单个 jar 导致无法加载 class
+task dependenciesJar(type: Jar) {
+    def lib1 = fileTree('./libs').matching { include "*.jar" }
+    def lib2 = fileTree('./WebRoot/WEB-INF/lib/').matching { include "*.jar" }
+
+    lib1.collect { println '  Depends: '+ it }
+    lib2.collect { println '  Depends: '+ it }
+
+    from { lib2.collect { zipTree(it) } }
+    from { lib1.collect { zipTree(it) } }
+    destinationDir = file('./bin')
+    archiveName = 'xboson-dependencies-all.jar'
+}
+
+
+task dependenciesFile(type: Copy) {
+    from './libs'
+    from './WebRoot/WEB-INF/lib/'
+    into './bin/lib'
+    include '*.jar'
+    includeEmptyDirs = false
+}
+
+
+task copyWebInf(type: Copy) {
+    from './WebRoot/WEB-INF'
+    into './build/guard-out/WEB-INF'
+    exclude 'classes', 'lib'
+    includeEmptyDirs = false
+}
+
+
+task app(type: Jar) {
+    from ('build/guard-out')
+    destinationDir = file('./bin')
+    archiveName = 'xboson.jar'
+
+    def classpath = '. ' + archiveName
+    fileTree('./bin/lib').matching { include "*.jar" }.collect {
+        classpath = classpath +' lib/'+ it.name
+    }
+    // println 'classpath: '+ classpath
+
+    manifest = newMani()
+    manifest {
+        attributes 'Main-Class': 'com.xboson.init.Independent'
+        attributes 'Specification-Version': com.xboson.util.Version.xBoson
+        attributes 'Class-Path': classpath
+    }
+}
+
+
+task refuse() {
+    if (project.gradle.startParameter.taskNames[0] == 'jar') {
+        throw new Exception("Not support this task, use 'gradle app'")
+    }
+}
+
+
 war.dependsOn proguard
 war.dependsOn mergeGuard2
 mergeGuard2.dependsOn mergeGuard1
@@ -169,3 +245,13 @@ proguard.dependsOn remove_proguard_out
 proguard.dependsOn compileJava
 proguard.dependsOn copyResource
 copyResource.dependsOn compileJava
+
+
+app.dependsOn proguard
+app.dependsOn mergeGuard2
+app.dependsOn dependenciesFile
+app.dependsOn copyWebInf
+copyWebInf.dependsOn proguard
+
+
+jar.dependsOn refuse

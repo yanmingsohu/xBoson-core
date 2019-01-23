@@ -620,13 +620,13 @@ public final class Tool extends StaticLogProvider {
 
 
   /**
-   * 利用类加载器加载 class 中的文件, 并返回缓冲区,
+   * 利用类加载器加载 class 路径中的文件, 并返回缓冲区,
    * filepath 避免使用相对路径, 否则在混淆后会找不到文件.
    */
   public static StringBufferOutputStream readFileFromResource(
           Class<?> base, String filepath) {
 
-    try (InputStream r = base.getResourceAsStream(filepath)) {
+    try (InputStream r = getResource(base, filepath).openStream()) {
       if (r == null) {
         throw new XBosonException.NotExist(
                 "File not found:" + filepath);
@@ -637,6 +637,26 @@ public final class Tool extends StaticLogProvider {
     } catch (Exception e) {
       throw new XBosonException(e);
     }
+  }
+
+
+  /**
+   * 利用类加载器加载 class 路径中的文件, 该方法可以在 jar 包中工作的很好
+   */
+  public static URL getResource(Class<?> base, String path) {
+    URL u = base.getResource(path);
+    if (u == null) {
+      //
+      // 当路径正确, 进入这里可能是应用在 jar 中
+      //
+      String packageName = base.getPackage().getName();
+      String packagePath = packageName.replaceAll("\\.", "/");
+      //
+      // 这里要求类路径不能有多余的 '/' 和 '.' 符号
+      //
+      u = base.getResource(p.join("/", packagePath, path));
+    }
+    return u;
   }
 
 

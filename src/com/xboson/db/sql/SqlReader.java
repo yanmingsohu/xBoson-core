@@ -67,9 +67,9 @@ public class SqlReader {
       if (ret != null)
         return ret;
 
-      URL sqlfile = SqlReader.class.getResource("./" + file);
+      URL sqlfile = Tool.getResource(SqlReader.class, "./" + file);
       if (sqlfile == null) {
-        sqlfile = SqlReader.class.getResource("./" + file + ".sql");
+        sqlfile = Tool.getResource(SqlReader.class, "./" + file + ".sql");
       }
       if (sqlfile == null) {
         throw new XBosonException("cannot found .sql file: " + file);
@@ -150,7 +150,7 @@ public class SqlReader {
    * @param val_name 作为 sql 文的属性名
    */
   public static void readSqlFromJson(String file, String key_name, String val_name) {
-    URL jsonfile = SqlReader.class.getResource("./" + file);
+    URL jsonfile = Tool.getResource(SqlReader.class, "./"+ file);
     if (jsonfile == null)
       throw new XBosonException("cannot found " + file);
 
