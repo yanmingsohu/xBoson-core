@@ -17,7 +17,9 @@
 package com.xboson.init;
 
 import com.xboson.been.AppSelf;
+import com.xboson.been.Config;
 import com.xboson.event.OnExitHandle;
+import com.xboson.log.Level;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
@@ -30,9 +32,12 @@ import org.eclipse.jetty.server.session.NullSessionDataStore;
 import org.eclipse.jetty.server.session.SessionCache;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.util.resource.Resource;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +45,6 @@ import java.util.List;
 
 /**
  * 作为独立程序启动, 无需部署到 servlet 容器中.
- * TODO: gradle 任务需要能正确导出这个类, 以便生成启动脚本
  */
 public class Independent extends OnExitHandle {
 
@@ -60,16 +64,31 @@ public class Independent extends OnExitHandle {
 
 
   private void startServer() throws Exception {
-    AppSelf app = SysConfig.me().reloading().appSelf;
-    if (app == null) app = new AppSelf();
-    String cp = app.contextPath;
+    Config config = SysConfig.me().readConfig();
+    AppSelf app   = config.appSelf != null ? config.appSelf : new AppSelf();
+    String cp     = app.contextPath;
+
+    if (! Level.find(config.logLevel).blocking(Level.DEBUG)) {
+      org.eclipse.jetty.util.log.Log.getLog().setDebugEnabled(true);
+    }
 
     ServletContextHandler h_servlet =
             new ServletContextHandler(null, cp, true, false);
 
     h_servlet.addEventListener(new Startup());
-    h_servlet.setResourceBase(Tool.isInJar ? "/WEB-INF": "./WebRoot");
     h_servlet.setClassLoader(getClass().getClassLoader()); // 不安全?
+
+    if (Tool.isInJar) {
+      //
+      // jar 独立运行包资源加载器
+      //
+      h_servlet.setBaseResource(getRootResourceFromJar());
+    } else {
+      //
+      // 开发模式带有 WebRoot 目录
+      //
+      h_servlet.setResourceBase("./WebRoot");
+    }
 
     //
     // 使 session 完全不可用, 提升性能
@@ -129,6 +148,23 @@ public class Independent extends OnExitHandle {
     } catch (Exception e) {
       log("Start process fail:", e.getMessage());
     }
+  }
+
+
+  /**
+   * 获取 jar 根路径的方法似乎可以优化
+   */
+  private Resource getRootResourceFromJar() throws MalformedURLException {
+    URL url = Independent.class.getResource("");
+    String path = url.toString();
+
+    int find = path.indexOf("!/");
+    if (find < 0) {
+      throw new MalformedURLException("Invalid JAR URL "+ path);
+    }
+    path = path.substring(0, find+2);
+    url = new URL(path);
+    return Resource.newResource(url);
   }
 
 

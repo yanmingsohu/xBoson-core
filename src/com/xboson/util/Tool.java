@@ -635,8 +635,8 @@ public final class Tool extends StaticLogProvider {
 
 
   /**
-   * 利用类加载器加载 class 路径中的文件, 并返回缓冲区,
-   * filepath 避免使用相对路径, 否则在混淆后会找不到文件.
+   * 利用类加载器加载 class 路径中的文件, 并返回缓冲区, 返回的缓冲区已经被填满数据;<br/>
+   * <b>filepath 避免使用相对路径, 否则在混淆后会找不到文件.</b>
    */
   public static StringBufferOutputStream readFileFromResource(
           Class<?> base, String filepath) {
@@ -657,6 +657,7 @@ public final class Tool extends StaticLogProvider {
 
   /**
    * 利用类加载器加载 class 路径中的文件, 该方法可以在 jar 包中工作的很好
+   * <b>filepath 避免使用相对路径, 否则在混淆后会找不到文件.</b>
    */
   public static URL getResource(Class<?> base, String path) {
     URL u = base.getResource(path);

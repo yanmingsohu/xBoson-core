@@ -47,6 +47,7 @@ def newMani() {
         attributes 'Created-By': 'J.ym'
         attributes 'Specification-Title': 'xBoson PAAS'
         attributes 'Specification-Vendor': '上海竹呗信息技术有限公司'
+        attributes 'Specification-Version': com.xboson.util.Version.xBoson
     }
 }
 
@@ -107,7 +108,7 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     classobfuscationdictionary 'class-keywords.txt'
 
     // 优化次数: 5:12s | 10:18s | 20:26s | 99:93s
-    optimizationpasses 1
+    optimizationpasses 99
 
     // Database
     keep 'public class com.xboson.db.driver.* { public *; }'
@@ -136,6 +137,7 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     // init
     keep 'public class com.xboson.init.install.step.* { public *; }'
     keep 'public class com.xboson.init.Startup'
+    keep 'public class com.xboson.init.Independent { public *; }'
 
     // Test / log / Sleep
     keep 'class * implements com.xboson.sleep.ISleepwalker { public *; }'
@@ -155,7 +157,6 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'public class com.xboson.been.SessionData { public *; }'
     keep 'public class com.xboson.been.AppToken { public *; }'
     keepclassmembers 'public class com.xboson.been.License { public *; }'
-    keep 'public class com.xboson.init.Independent { public *; }'
 
 // 已经优化了类的文件加载器路径, 在测试完成后删除下面注释的规则定义
 //    keeppackagenames 'com.xboson.util.config'
@@ -178,13 +179,16 @@ task remove_proguard_out(type: Delete) {
 }
 
 
-// TODO: 暂时无效, 构建的单个 jar 导致无法加载 class
+/**
+ * 把多个 jar 依赖打包到一起.
+ * @deprecated 暂时无效, 无法加载 class, 无法加载服务.
+ */
 task dependenciesJar(type: Jar) {
     def lib1 = fileTree('./libs').matching { include "*.jar" }
     def lib2 = fileTree('./WebRoot/WEB-INF/lib/').matching { include "*.jar" }
 
-    lib1.collect { println '  Depends: '+ it }
-    lib2.collect { println '  Depends: '+ it }
+    // lib1.collect { println '  Depends: '+ it }
+    // lib2.collect { println '  Depends: '+ it }
 
     from { lib2.collect { zipTree(it) } }
     from { lib1.collect { zipTree(it) } }
@@ -224,7 +228,6 @@ task app(type: Jar) {
     manifest = newMani()
     manifest {
         attributes 'Main-Class': 'com.xboson.init.Independent'
-        attributes 'Specification-Version': com.xboson.util.Version.xBoson
         attributes 'Class-Path': classpath
     }
 }

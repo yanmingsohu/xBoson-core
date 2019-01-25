@@ -45,23 +45,33 @@ public class License extends AbsLicense {
   public static final String PREFIX   = "file:";
   public static final String DIR_BASE = "/WEB-INF";
 
-  public transient String publicKeyFile;
+  public transient URL publicKeyFile;
   public transient String basePath;
   public String signature;
 
 
   public License() {
     basePath = SysConfig.me().readConfig().configPath;
-    publicKeyFile = "./WebRoot/WEB-INF" + PUB_FILE;
+    String pub = (Tool.isInJar ? "/WEB-INF" : "/WebRoot/WEB-INF") + PUB_FILE;
+    publicKeyFile = Tool.getResource(License.class, pub);
   }
 
 
   public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
-    publicKeyFile = getPublicKeyFilePath(sc);
+    publicKeyFile = getPublicKeyURL(sc);
   }
 
 
-  public static String getPublicKeyFilePath(ServletContext sc)
+  public static String getPublicKeyFilePath(URL url) {
+    String file = url.toString();
+    if (file.startsWith(PREFIX)) {
+      file = file.substring(PREFIX.length());
+    }
+    return file;
+  }
+
+
+  public static URL getPublicKeyURL(ServletContext sc)
           throws MalformedURLException {
     final String _full = DIR_BASE + PUB_FILE;
     URL url = sc.getResource(_full);
@@ -70,11 +80,7 @@ public class License extends AbsLicense {
     }
     if (url == null) throw
             new XBosonException.NotFound(_full);
-    String file = url.toString();
-    if (file.startsWith(PREFIX)) {
-      file = file.substring(PREFIX.length());
-    }
-    return file;
+    return url;
   }
 
 
@@ -90,9 +96,12 @@ public class License extends AbsLicense {
   }
 
 
+  /**
+   * TODO: 修改 publicKeyFile 为 URL 对象, 以便能在 jar 中正确读取资源
+   */
   @Override
   public String getPublicKeyFile() {
-    return publicKeyFile;
+    return getPublicKeyFilePath(publicKeyFile);
   }
 
 

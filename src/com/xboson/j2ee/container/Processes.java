@@ -34,6 +34,7 @@ import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URL;
 import java.nio.file.WatchEvent;
 import java.util.Base64;
 import java.util.HashSet;
@@ -89,7 +90,7 @@ public final class Processes {
   private final ReentrantLock threadLock;
   private final Log log;
   private String msg;
-  private String publicKeyFile;
+  private URL publicKeyFile;
   private License license;
 
 
@@ -117,7 +118,7 @@ public final class Processes {
         return;
 
       final long PERIOD = DAY / 2;
-      publicKeyFile = License.getPublicKeyFilePath(sc);
+      publicKeyFile = License.getPublicKeyURL(sc);
       license = License.readLicense();
       license.publicKeyFile = publicKeyFile;
 
@@ -203,7 +204,8 @@ public final class Processes {
     // 之所以使用 readLine 是因为文本换行在不同系统上的差异导致 crc 不一致.
     //
     CRC32 crc = new CRC32();
-    BufferedReader read = new BufferedReader(new FileReader(publicKeyFile));
+    BufferedReader read = new BufferedReader(
+            new InputStreamReader(publicKeyFile.openStream(), IConstant.CHARSET));
     String line;
     while ((line = read.readLine()) != null) {
       crc.update(line.getBytes(IConstant.CHARSET));

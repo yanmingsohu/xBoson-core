@@ -16,9 +16,11 @@
 
 package com.xboson.script;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
 
 import javax.script.*;
 
@@ -31,6 +33,8 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
  * 一个编译好的脚本, 可以反复运行.
  */
 public class Sandbox implements IVisitByScript {
+
+  private final static String BOoTjs = "./bootstrap.js";
 
   private ScriptEngine js;
   private Bindings bind;
@@ -195,8 +199,16 @@ public class Sandbox implements IVisitByScript {
     if (ispred) return null;
     ispred = true;
     setFilename("<bootstrap>");
-    InputStream script1 = getClass().getResourceAsStream("./bootstrap.js");
-    return eval(script1);
+    URL url = Tool.getResource(Sandbox.class, BOoTjs);
+    if (url == null) {
+      throw new ScriptException("Serious error "+ BOoTjs +" cannot found");
+    }
+    try {
+      InputStream script1 = url.openStream();
+      return eval(script1);
+    } catch (IOException e) {
+      throw new ScriptException("Load "+ BOoTjs +" failed "+ e.getMessage());
+    }
   }
 
 

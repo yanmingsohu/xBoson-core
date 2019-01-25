@@ -125,11 +125,10 @@ public class SysConfig {
 
 
 	/**
-	 * 重新读取配置文件并初始化配置
+	 * @deprecated 即使该类支持重新加载数据, 但是其他类会缓存配置文件项, 并且不再更新.
 	 */
-	public synchronized Config reloading() {
-		readed = false;
-		return readConfig();
+	public Config reloading() {
+		throw new UnsupportedOperationException("Don't do this");
 	}
 
 
