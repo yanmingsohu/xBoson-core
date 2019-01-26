@@ -39,11 +39,12 @@ import java.net.URL;
  */
 public class License extends AbsLicense {
 
-  public static final String PUB_FILE = "/public_key.pem";
+  private static final String FIX_CLASS = "com.xboson.been.License";
+
   public static final String LIC_FILE = "/license.txt";
-  public static final String REQ_FILE = "/license.req";
-  public static final String PREFIX   = "file:";
-  public static final String DIR_BASE = "/WEB-INF";
+  static final String PUB_FILE = "/public_key.pem";
+  static final String REQ_FILE = "/license.req";
+  static final String DIR_BASE = "/WEB-INF";
 
   public transient URL publicKeyFile;
   public transient String basePath;
@@ -59,15 +60,6 @@ public class License extends AbsLicense {
 
   public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
     publicKeyFile = getPublicKeyURL(sc);
-  }
-
-
-  public static String getPublicKeyFilePath(URL url) {
-    String file = url.toString();
-    if (file.startsWith(PREFIX)) {
-      file = file.substring(PREFIX.length());
-    }
-    return file;
   }
 
 
@@ -96,12 +88,9 @@ public class License extends AbsLicense {
   }
 
 
-  /**
-   * TODO: 修改 publicKeyFile 为 URL 对象, 以便能在 jar 中正确读取资源
-   */
   @Override
   public String getPublicKeyFile() {
-    return getPublicKeyFilePath(publicKeyFile);
+    return publicKeyFile.toString();
   }
 
 
@@ -136,7 +125,7 @@ public class License extends AbsLicense {
     String basePath = SysConfig.me().readConfig().configPath;
     StringBuilder buf = Tool.readFromFile(basePath + LIC_FILE);
     YamlConfig yc = new YamlConfig();
-    yc.setClassTag("com.xboson.been.License", License.class);
+    yc.setClassTag(FIX_CLASS, License.class);
     YamlReader r = new YamlReader(buf.toString(), yc);
     return r.read(License.class);
   }

@@ -181,7 +181,7 @@ task remove_proguard_out(type: Delete) {
 
 /**
  * 把多个 jar 依赖打包到一起.
- * @deprecated 暂时无效, 无法加载 class, 无法加载服务.
+ * @deprecated 打包后, 无法加载 class, 无法加载服务.
  */
 task dependenciesJar(type: Jar) {
     def lib1 = fileTree('./libs').matching { include "*.jar" }

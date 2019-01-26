@@ -10,7 +10,7 @@ build/**
 .project
 .DS_Store
 jsp/**
-bin/**
+bin/jsp/**
 
 *.class
 *.zip
