@@ -5,10 +5,13 @@ defaultTasks 'war'
 
 buildscript {
     repositories {
-        flatDir dirs: [ 'C:\\Programs64\\Java\\proguard6.0.1\\lib',
+        flatDir dirs: [
+            "~/dev-tool/proguard6.0.1/lib",
+            'C:\\Programs64\\Java\\proguard6.0.1\\lib',
 			'D:\\Java\\proguard6.0.1\\lib',
             "${System.env.JAVA_HOME}\\..\\proguard6.0.1\\lib",
-            "${System.env.JAVA_HOME}\\jre\\lib" ]
+            "${System.env.JAVA_HOME}\\jre\\lib",
+        ]
     }
     dependencies {
         classpath ':proguard'
