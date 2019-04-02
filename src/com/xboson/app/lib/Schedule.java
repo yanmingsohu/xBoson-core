@@ -44,6 +44,10 @@ import java.sql.SQLException;
 import java.util.*;
 
 
+/**
+ * 算法: 将每个任务单独作为一个 RPC 服务导出, 操作时首先在集群中搜索任务.
+ * TODO: 系统重启恢复任务
+ */
 public class Schedule extends RuntimeUnitImpl implements IAResource {
 
   private static final String LOG_FILE = "insert-scheduler-log.sql";
@@ -57,9 +61,9 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
 
   public Schedule() {
     super(null);
-    this.log = LogFactory.create();
+    this.log    = LogFactory.create();
     this.nodeID = ClusterManager.me().localNodeID();
-    this.db = SysConfig.me().readConfig().db;
+    this.db     = SysConfig.me().readConfig().db;
   }
 
 

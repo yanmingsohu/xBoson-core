@@ -55,7 +55,7 @@ public class PeerFactory extends OnExitHandle implements IConstant {
    * <a href="https://raft.github.io/">Raft 可视化</a>
    */
   private void modeRaft() {
-    // TODO
+    // TODO 完成 raft 算法
   }
 
 

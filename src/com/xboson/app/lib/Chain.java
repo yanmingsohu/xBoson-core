@@ -33,7 +33,6 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
-import java.rmi.RemoteException;
 import java.security.KeyPair;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -62,9 +61,9 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
     namesCreator = new CreatorFromUrl<>();
 
     namesCreator.reg(ID_PREFIX,
-            (id, p, u) -> getChainConfig(id, null));
+            (id, p, u, d) -> getChainConfig(id, null));
     namesCreator.reg(NAME_PREFIX,
-            (name, p, u) -> getChainConfig(null, name));
+            (name, p, u, d) -> getChainConfig(null, name));
   }
 
 
@@ -234,7 +233,7 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
 
       if (cckey == null) {
         String codeContent = app.getOriginalApiCode();
-        byte[] codeBuf = Hex.parse(codeContent);
+        byte[] codeBuf = codeContent.getBytes(IConstant.CHARSET);
         BlockBasic code = new BlockBasic(codeBuf, userid, aPath, aHash);
         code.type = ITypes.CHAINCODE_CONTENT;
         cckey = peer.sendBlock(chain, channel, code);

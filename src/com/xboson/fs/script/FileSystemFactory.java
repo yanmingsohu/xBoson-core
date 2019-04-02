@@ -22,6 +22,7 @@ import com.xboson.log.LogFactory;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystem;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +35,11 @@ public class FileSystemFactory {
   private static FileSystemFactory instance;
   public static FileSystemFactory me() {
     if (instance == null) {
-      instance = new FileSystemFactory();
+      synchronized (FileSystemFactory.class) {
+        if (instance == null) {
+          instance = new FileSystemFactory();
+        }
+      }
     }
     return instance;
   }

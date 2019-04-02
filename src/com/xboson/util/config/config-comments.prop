@@ -41,7 +41,8 @@ shareAppList: 共享应用数组, 来自平台机构中的应用, 这些应用�
 dbpool: 数据库连接池的设置
 jedispool: redis 连接池的设置
 db: 平台核心数据库连接配置
-redis: 平台核心 redis 连接配置
+redis: 平台核心 redis 连接配置, 务必配置密钥字段, \
+       并且在 redis 服务器配置文件中加入 'requirepass yourpassword' 设置.
 mongodb: MongoDB 服务器连接配置, 禁用后不影响平台核心功能, 但脚本环境中无法调用 MongoDB 模块.
 
 
@@ -81,3 +82,12 @@ chainIncrement: 区块链文件增长单位, KB
 chainEnable: 启用区块链服务器
 
 remoteIpHeader: 客户端地址来自 http 头域(当平台在代理后面), 可以空.
+maxPostBody: 默认客户端上传文件尺寸允许的最大值, 0 表示没有限制.
+
+appSelf: 当程序独立运行(不是部署在容器中)这些配置有效
+httpPort: http 服务器端口
+contextPath: http 应用路径
+rpcIp: RPC 监听 IPv4 地址, 网络中的其他节点通过该地址可以访问本机 RPC; \
+         默认为空, 且在本机ip地址集中搜索一个作为默认值.
+rpcPort: RPC 监听端口, 默认 0, 在随机端口上监听 rpc.
+rpcUpnp: RPC 利用 UPuP 自动在网关上做端口映射

@@ -45,6 +45,16 @@ public class ApiPath {
   }
 
 
+  public static String getModPath(Map<String, Object> map) {
+    return "/"+ map.get("org") +'/'+ map.get("app") +'/'+ map.get("mod");
+  }
+
+
+  public static String getAppPath(Map<String, Object> map) {
+    return "/"+ map.get("org") +'/'+ map.get("app");
+  }
+
+
   public static String toFile(String module_id, String api_id) {
     return '/' + module_id + '/' + api_id;
   }

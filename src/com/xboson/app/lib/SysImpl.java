@@ -22,6 +22,7 @@ import com.xboson.app.XjApp;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.CallData;
+import com.xboson.been.LoginUser;
 import com.xboson.been.XBosonException;
 import com.xboson.been.XBosonException.BadParameter;
 import com.xboson.db.ConnectConfig;
@@ -61,6 +62,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import static com.xboson.db.IDict.ZR001_ENABLE;
+import static com.xboson.util.Firewall.IP_BAN_COUNT;
+import static com.xboson.util.Firewall.IP_WAIT_TIMEOUT;
+
 
 /**
  * 每次请求一个实例; 在 sys 模块上调用 data 函数, 所以继承 DateImpl
@@ -84,6 +89,7 @@ public class SysImpl extends DateImpl {
   public final Object requestParameterMap;
   public ScriptObjectMirror result;
   public Object requestJson = null;
+  public int maxPostBody;
 
   private ConnectConfig orgdb;
   private ScriptObjectMirror printList;
@@ -97,10 +103,11 @@ public class SysImpl extends DateImpl {
   public SysImpl(CallData cd, ConnectConfig orgdb, XjApp app) {
     super(cd);
     this.orgdb = orgdb;
-    this.request = new RequestImpl(cd);
+    this.request = new RequestImpl(cd, this);
     this.requestParameterMap = new RequestParametersImpl(cd);
     this.appCache = app.getCacheData();
     this.isNestedCall = AppContext.me().isNestedCall();
+    this.maxPostBody = cd.maxPostBody;
   }
 
 
@@ -120,15 +127,31 @@ public class SysImpl extends DateImpl {
     if (type == null)
       return;
 
+    checkBodySize(maxPostBody);
     ServletInputStream in = cd.req.getInputStream();
     if (in == null || in.isFinished())
       return;
 
     if (type.contains("application/json")) {
       StringBufferOutputStream buf = new StringBufferOutputStream();
-      buf.write(in, true);
+      buf.write(LimitInputStream.wrap(in, maxPostBody), true);
       requestJson = jsonParse(buf.toString());
     }
+  }
+
+
+  /**
+   * 检查 http-post 方法的 'content-length' 头域是否超限, 但不做内容检查,
+   * 如果超限抛出异常, 可以通过更改 maxPostBody 属性修改上限, 上限的默认值在配置文件中.
+   * 返回头域中的 content-length 值.
+   */
+  protected int checkBodySize(int limit) {
+    int clen = cd.req.getContentLength();
+    if (limit > 0 && clen > limit) {
+      throw new XBosonException(
+              "Http Body is greater than "+ maxPostBody +" bytes.");
+    }
+    return clen;
   }
 
 
@@ -386,7 +409,6 @@ public class SysImpl extends DateImpl {
 
 
   /**
-   * 特别不理解为什么 sys 上也有这个方法,
    * 该方法与 se.encodePlatformPassword 区别是 ps 已经 md5
    */
   public String encodePlatformPassword(String uid, String date, String ps) {
@@ -400,12 +422,17 @@ public class SysImpl extends DateImpl {
 
 
   public String pinyinFirstLetter(String zh) {
-    return ChineseInital.getAllFirstLetter(zh);
+    return ChineseDictionary.toFirstPinYinLetter(zh);
   }
 
 
   public String getPinyinFirstLetter(String zh) {
-    return ChineseInital.getAllFirstLetter(zh);
+    return ChineseDictionary.toFirstPinYinLetter(zh);
+  }
+
+
+  public String fullPinyinLetter(String zh) {
+    return ChineseDictionary.toFullPinYinLetter(zh);
   }
 
 
@@ -1217,5 +1244,51 @@ public class SysImpl extends DateImpl {
    */
   public void authorization(String authName) {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, ()-> authName);
+  }
+
+
+  /**
+   * 用户在接口中重新登录系统, 之前登录的用户被登出.
+   * 该方法登录的用户永远不会是超级管理员 (安全设定).
+   *
+   * @param userName 用户名
+   * @param passwordMd5 md5后的用户密码
+   * @return 登录成功返回 null, 否则返回错误消息
+   */
+  public String login(String userName, String passwordMd5) throws SQLException {
+    Firewall fw = Firewall.me();
+    final int login_count = fw.checkIpBan(cd.req.getRemoteAddr());
+    if (login_count >= IP_BAN_COUNT) {
+      return "登录异常, 等待"+ IP_WAIT_TIMEOUT +"分钟后重试";
+    }
+
+    LoginUser lu = LoginUser.fromDb(userName, orgdb, null);
+    if (lu == null) {
+      fw.ipLoginFail(cd.req.getRemoteAddr());
+      return "用户不存在";
+    }
+    if (! ZR001_ENABLE.equals(lu.status)) {
+      fw.ipLoginFail(cd.req.getRemoteAddr());
+      return "用户已锁定";
+    }
+    if (! lu.checkPS(passwordMd5)) {
+      fw.ipLoginFail(cd.req.getRemoteAddr());
+      return "用户名或密码错误";
+    }
+
+    lu.password = null;
+    lu.bindUserRoles(orgdb);
+    lu.bindTo(cd.sess);
+    return null;
+  }
+
+
+  public boolean isAnonymousUser() {
+    if (cd.sess == null ||
+        cd.sess.login_user == null ||
+        cd.sess.login_user.userid == null)
+      return false;
+
+    return IConstant.Anonymous.equals(cd.sess.login_user.userid);
   }
 }

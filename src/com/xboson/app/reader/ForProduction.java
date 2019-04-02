@@ -17,11 +17,13 @@
 package com.xboson.app.reader;
 
 
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.app.ApiPath;
 import com.xboson.app.XjOrg;
 import com.xboson.been.XBosonException;
 import com.xboson.fs.script.ScriptAttr;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 
 import java.util.Date;
@@ -38,31 +40,31 @@ public class ForProduction extends AbsReadScript {
 
     try (Jedis j = RedisMesmerizer.me().open()) {
       String key = (app + mod + api).toLowerCase();
-      String arr = j.hget(REGION, key);
+      String json = j.hget(REGION, key);
 
-      if (arr != null) {
-        int a = arr.indexOf("\"");
-        if (a >= 0) {
-          ++a;
-          int b = arr.indexOf("\"", a);
-          if (b > a) {
-            Date now        = new Date();
-            ScriptAttr attr = new ScriptAttr();
-            ScriptFile file = makeFile(attr, arr.substring(a, b));
-            attr.fileSize   = file.content.length;
-            attr.fileName   = api;
-            attr.pathName   = '/' + mod;
-            attr.fullPath   = ApiPath.toFile(mod, api);
-            attr.createTime = now.getTime();
-            attr.modifyTime = now.getTime();
+      if (json != null) {
+        //
+        // json = [ content, orgid, zip ]
+        //
+        Object[] apiSet = Tool.getAdapter(Object[].class).fromJson(json);
+        String content  = (String) apiSet[0];
+        int zip = (apiSet.length < 3) ? 0 : ((Double)apiSet[2]).intValue();
 
-            log.debug("Load Script from CACHE:", mod, '/', api);
-            return file;
-          }
-        }
+        Date now        = new Date();
+        ScriptAttr attr = new ScriptAttr();
+        ScriptFile file = makeFile(attr, content, zip);
+        attr.fileSize   = file.content.length;
+        attr.fileName   = api;
+        attr.pathName   = '/' + mod;
+        attr.fullPath   = ApiPath.toFile(mod, api);
+        attr.createTime = now.getTime();
+        attr.modifyTime = now.getTime();
+
+        log.debug("Load Script from CACHE:", mod, '/', api);
+        return file;
       }
     } catch (Exception e) {
-      log.warn("Script from Redis fail", mod, api);
+      log.warn("Script from Redis fail", mod, api, e);
     }
     throw new XBosonException.NotFound("API:" + api);
   }

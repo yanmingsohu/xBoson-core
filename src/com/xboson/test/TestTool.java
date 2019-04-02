@@ -22,7 +22,7 @@ import com.xboson.db.driver.Mysql;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
-import com.xboson.util.ChineseInital;
+import com.xboson.util.ChineseDictionary;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
@@ -95,8 +95,8 @@ public class TestTool extends Test {
   private void url_creator() throws Exception {
     sub("URL parse and creator");
     CreatorFromUrl<String> cf = new CreatorFromUrl<>();
-    cf.reg("a", (v, p, u) -> p +'='+ v);
-    cf.reg("b", (v, p, u) -> v +'='+ p);
+    cf.reg("a", (v, p, u, d) -> p +'='+ v);
+    cf.reg("b", (v, p, u, d) -> v +'='+ p);
 
     eq("a=000", cf.create("a://000"), "url1");
     eq("000=b", cf.create("b://000"), "url2");
@@ -104,7 +104,7 @@ public class TestTool extends Test {
     Throws(XBosonException.class, ()-> cf.create("c://000"));
     Throws(XBosonException.class, ()-> cf.create("000"));
 
-    cf.reg(true, "def", (v, p, u) -> v +'!'+ p);
+    cf.reg(true, "def", (v, p, u, d) -> v +'!'+ p);
 
     eq("000!def", cf.create("def://000"), "url3");
     eq("111!null", cf.create("111"), "default protocol");
@@ -255,27 +255,40 @@ public class TestTool extends Test {
 
 
   public void test_chinese() {
+    sub("中文转拼音");
     check("中华人民共和国", "zhrmghg");
     check("山高似水深", "sgsss");
     check("窗前明月光", "cqmyg");
     check("酰孢苷酯喹呋喃瘾痫癫祛厥", "xbgzkfnyxdqj");
 
-//    //
-//    // 使用缓存: to First Letter 1000000  Used Time 389 ms
-//    // 不用缓存: to First Letter 1000000  Used Time 1220 ms
-//    //
+    check2("中华abc。", "zhong hua abc");
+    check2("abc茅台", "abc mao tai");
+    check2("abc(茅台)好", "abc( mao tai ) hao");
+
+
+    //
+    // 使用缓存: to First Letter 1000000  Used Time 389 ms
+    // 不用缓存: to First Letter 1000000  Used Time 1220 ms
+    // 新算法:   to First Letter 1000000  Used Time 121 ms
+    //
 //    beginTime();
 //    int c = 1000000;
 //    for (int i=0; i<c; ++i) {
-//      ChineseInital.getAllFirstLetter("中华人民共和国");
+//      ChineseDictionary.toFirstPinYinLetter("中华人民共和国");
 //    }
 //    endTime("to First Letter", c);
   }
 
 
   public void check(String cn, String en) {
-    String s = ChineseInital.getAllFirstLetter(cn);
-    eq(en, s, "ch -> en");
+    String s = ChineseDictionary.toFirstPinYinLetter(cn);
+    eq(en, s, "ch -> en ");
+  }
+
+
+  public void check2(String cn, String en) {
+    String s = ChineseDictionary.toFullPinYinLetter(cn);
+    eq(en, s, "ch -> pinyin, '"+ cn +"' -> '"+ en + "'");
   }
 
 

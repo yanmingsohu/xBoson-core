@@ -81,4 +81,10 @@ public final class UIFileFactory extends AbsFactory {
 
 
   private UIFileFactory() {}
+
+
+  @Override
+  protected String providerType(Config cf) {
+    return cf.uiProviderClass;
+  }
 }

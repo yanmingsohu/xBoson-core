@@ -96,13 +96,10 @@ public class SysModules extends AbsModules implements IModuleProvider {
 
 
   /**
-   * 读取 js 脚本, 并作为系统模块
-   * @param name - 模块名称
-   * @param jsfile - js 文件路径, 相对于 SysModules 类
+   * 使用 java 类作为文件资源加载器, 读取并解析 js 代码, 并装载到系统模块
    */
-  public void loadLib(String name, String jsfile) throws IOException {
-    StringBufferOutputStream buf = Tool.readFileFromResource(getClass(), jsfile);
-    modules.put(name, new WrapJavaScript(buf.toBuffer(), name));
+  public LibLoader open(Class loader) {
+    return new LibLoader(loader);
   }
 
 
@@ -112,5 +109,29 @@ public class SysModules extends AbsModules implements IModuleProvider {
   public void config(Sandbox box, ICodeRunner runner) throws ScriptException {
     box.invokeFunction("__set_sys_module_provider", this);
     this.runner = runner;
+  }
+
+
+  /**
+   * js 类加载器, 基于一个 java 的类加载器作为文件加载器
+   */
+  public class LibLoader {
+
+    private Class fileLoader;
+
+    private LibLoader(Class _loader) {
+      this.fileLoader = _loader;
+    }
+
+    /**
+     * 读取 js 脚本, 并作为系统模块
+     * @param name - 模块名称
+     * @param jsfile - js 文件路径, 相对于 SysModules 类
+     */
+    public void load(String name, String jsfile) {
+      StringBufferOutputStream buf =
+              Tool.readFileFromResource(fileLoader, jsfile);
+      modules.put(name, new WrapJavaScript(buf.toBuffer(), name));
+    }
   }
 }

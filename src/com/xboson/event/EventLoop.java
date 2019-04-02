@@ -74,8 +74,7 @@ public class EventLoop implements ThreadFactory, IConstant {
    * @see GlobalEventBus
    */
   void destory() {
-    worker.shutdown();
-    Tool.waitOver(worker);
+    Tool.shutdown(worker);
     worker = null;
     log.info(DESTORYED);
   }

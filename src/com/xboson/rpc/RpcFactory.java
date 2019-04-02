@@ -23,6 +23,7 @@ import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.util.SysConfig;
+import com.xboson.util.Tool;
 
 import javax.rmi.PortableRemoteObject;
 import java.rmi.*;
@@ -33,44 +34,55 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-
  /**
- * 默认会绑定 Ping 对象, 可以在远程进行测试.
- * 连接需要安全认证.
- * 大部分方法都会抛出 XBosonException.Remote 异常, 必要时需要检查.
- *
- * @see XBosonException.Remote
- */
+  * 默认会绑定 Ping 对象, 可以在远程进行测试; 连接需要安全认证;
+  * 大部分方法都会抛出 XBosonException.Remote 异常, 必要时需要检查.
+  * RPC 的注册表可以指定 tcp 端口, 但是导出的服务使用动态端口.
+  *
+  * @see XBosonException.Remote
+  */
 public final class RpcFactory extends OnExitHandle {
 
+  /** PING 服务用用于确定节点状态 */
+  public static final String PING = "..XB.inner.PING";
+
   private static RpcFactory instance;
+  /** 每个导出的对象都需要独立的 socket 连接, port 必须为 0 */
+  private static final int RAND_PORT = 0;
 
   private final String myselfNodeID;
-  private SafeClientFactory clientf;
+  private SafeClientFactory forRemote;
+  private SafeClientFactory forLocal;
   private SafeServerFactory serverf;
   private Registry server;
-  private Map<String, RegistryData> registryCache;
+  private Map<String, RemoteRegistryCache> registryCache;
   private Log log;
   private NodeUpdate nu;
+  private String ps;
 
-  /** RMI 创建的存根对象对本地对象是弱引用, 必须将实例强引用, 否则被 GC */
+  /** RMI 必须将实例强引用, 否则被 GC */
   private Map<String, IXRemote> ref;
 
 
   private RpcFactory() {
     try {
       Config cf = SysConfig.me().readConfig();
-      String ps = cf.sessionPassword;
+      ClusterManager cm = ClusterManager.me();
+      ComputeNodeInfo nodeInf = cm.localInfo();
+      setRpcHostName(nodeInf.nodeID);
 
-      this.clientf        = new SafeClientFactory(ps);
-      this.serverf        = new SafeServerFactory(ps);
-      this.server = LocateRegistry.createRegistry(0, clientf, serverf);
+      this.ps             = cf.sessionPassword;
+      this.myselfNodeID   = nodeInf.nodeID;
       this.registryCache  = new HashMap<>();
       this.ref            = new HashMap<>();
-      this.log            = LogFactory.create();
+      this.log            = LogFactory.create("rpc");
+      this.serverf        = new SafeServerFactory(ps, true, cf.rpcUpnp);
+      this.forLocal       = new SafeClientFactory(ps);
+      this.forRemote      = new SafeClientFactory(ps, nodeInf);
+      this.server         = LocateRegistry.createRegistry(
+                              cf.rpcPort, forRemote, serverf);
 
-      myselfNodeID = ClusterManager.me().localNodeID();
-      bind(new Ping());
+      bind(new Ping(), PING);
       attentionNodeUpdateEvent();
 
     } catch (RemoteException e) {
@@ -84,6 +96,7 @@ public final class RpcFactory extends OnExitHandle {
       synchronized (RpcFactory.class) {
         if (instance == null) {
           instance = new RpcFactory();
+          RpcGlobalInitList.init(instance);
         }
       }
     }
@@ -98,6 +111,21 @@ public final class RpcFactory extends OnExitHandle {
         updateNodeRegistryCache(nodeID);
       }
     };
+  }
+
+
+   /**
+    * 设置后, 抛出的异常带有正确的主机名称.
+    */
+  private void setRpcHostName(String nodeID) {
+    final String key = "java.rmi.server.hostname";
+    try {
+      if (Tool.isNulStr(System.getProperty(key))) {
+        System.setProperty(key, "xBoson-node-"+ nodeID);
+      }
+    } catch (SecurityException e) {
+      log.warn("Cannot set", key, e);
+    }
   }
 
 
@@ -133,16 +161,11 @@ public final class RpcFactory extends OnExitHandle {
       XBosonException.NullParamException.check(name, "String name");
 
       if (myselfNodeID.equals(nodeID)) {
-        return server.lookup(name);
+        return ref.get(name);
       }
 
-      RegistryData data = findRegistryWithCache(nodeID);
-      Remote remote = data.getOrCreate(name);
-
-      if (remote instanceof IPing) {
-        ((IPing) remote).ping();
-      }
-      return remote;
+      RemoteRegistryCache remoteReg = findRegistryWithCache(nodeID);
+      return remoteReg.getOrCreate(name);
 
     } catch (ConnectException | NotBoundException e) {
       updateNodeRegistryCache(nodeID);
@@ -151,6 +174,7 @@ public final class RpcFactory extends OnExitHandle {
     } catch (RemoteException e) {
       throw new XBosonException.Remote(e);
     }
+
   }
 
 
@@ -159,8 +183,26 @@ public final class RpcFactory extends OnExitHandle {
    * @see #bind(IXRemote, String)
    */
   public void bind(IXRemote remote) {
-    String name = getName(remote);
-    bind(remote, name);
+    try {
+      bind(remote, remote.getRpcName());
+    } catch (RemoteException e) {
+      throw new XBosonException.Remote(e);
+    }
+  }
+
+
+   /**
+    * 同一个名称的服务只绑定一次.
+    * @param remote 服务
+    * @param name 名称
+    * @return 初次绑定返回 true
+    */
+  public synchronized boolean bindOnce(IXRemote remote, String name) {
+    if (! isBind(name)) {
+      bind(remote, name);
+      return true;
+    }
+    return false;
   }
 
 
@@ -180,7 +222,11 @@ public final class RpcFactory extends OnExitHandle {
    * @see #isBind(String)
    */
   public boolean isBind(IXRemote remote) {
-    return isBind(getName(remote));
+    try {
+      return isBind(remote.getRpcName());
+    } catch (RemoteException e) {
+      throw new XBosonException.Remote(e);
+    }
   }
 
 
@@ -196,6 +242,7 @@ public final class RpcFactory extends OnExitHandle {
       stub = export(remote);
       server.bind(name, stub);
       ref.put(name, remote);
+      log.debug("bind", name, remote.getClass());
     } catch (RemoteException | AlreadyBoundException e) {
       unexport(stub);
       throw new XBosonException.Remote(e);
@@ -208,7 +255,11 @@ public final class RpcFactory extends OnExitHandle {
    * @see #unbind(String)
    */
   public Remote unbind(IXRemote remote) {
-    return unbind(getName(remote));
+    try {
+      return unbind(remote.getRpcName());
+    } catch (RemoteException e) {
+      throw new XBosonException.Remote(e);
+    }
   }
 
 
@@ -233,7 +284,11 @@ public final class RpcFactory extends OnExitHandle {
    * @see #rebind(IXRemote, String)
    */
   public Remote rebind(IXRemote remote) {
-    return rebind(remote, getName(remote));
+    try {
+      return rebind(remote, remote.getRpcName());
+    } catch(RemoteException e) {
+      throw new XBosonException.Remote(e);
+    }
   }
 
 
@@ -280,21 +335,20 @@ public final class RpcFactory extends OnExitHandle {
    */
   public synchronized String[] list(String nodeID) {
     try {
-      RegistryData data = findRegistryWithCache(nodeID);
+      RemoteRegistryCache data = findRegistryWithCache(nodeID);
       return data.reg.list();
-    } catch (RemoteException e) {
+    } catch (RemoteException | NotBoundException e) {
       throw new XBosonException.Remote(e);
     }
   }
 
 
-  private String getName(Object o) {
-    return o.getClass().getName();
-  }
-
-
+ /**
+  * 把本地对象包装成远程对象并返回远程对象, 这个远程对象将被传输到远端来调用本地对象.
+  */
   private Remote export(Remote r) throws RemoteException {
-    return UnicastRemoteObject.exportObject(r, 0, clientf, serverf);
+    serverf.setUpdateRpcPort(false);
+    return UnicastRemoteObject.exportObject(r, RAND_PORT, forRemote, serverf);
   }
 
 
@@ -308,8 +362,8 @@ public final class RpcFactory extends OnExitHandle {
 
   @Override
   protected synchronized void exit() {
-    for (Map.Entry<String, RegistryData> entry : registryCache.entrySet()) {
-      entry.getValue().free();
+    for (RemoteRegistryCache reg : registryCache.values()) {
+      reg.free();
     }
 
     for (Map.Entry<String, IXRemote> entry : ref.entrySet()) {
@@ -362,39 +416,19 @@ public final class RpcFactory extends OnExitHandle {
 
 
   /**
-   * 查询运算节点上的注册表, 找不到返回 null.
-   */
-  private Registry findRegistry(String nodeID) {
-    ComputeNodeInfo info = ClusterManager.me().info(nodeID);
-    if (info == null)
-      throw new XBosonException("Not Found Node: "+ nodeID);
-
-    Registry reg = null;
-
-    for (String host : info.ip) {
-      try {
-        reg = LocateRegistry.getRegistry(host, info.rpcPort, clientf);
-        break;
-      } catch (RemoteException e) { /* skip */ }
-    }
-    return reg;
-  }
-
-
-  /**
    * 创建远程注册表对象缓存
    */
-  private RegistryData createRemoteCache(String nodeID, Registry reg) {
-    RegistryData data = new RegistryData(reg);
+  private RemoteRegistryCache createRemoteCache(String nodeID, Registry reg)
+          throws RemoteException, NotBoundException {
+    RemoteRegistryCache data = new RemoteRegistryCache(reg);
     registryCache.put(nodeID, data);
     return data;
   }
 
 
-  private RegistryData findRegistryWithCache(String nodeID)
-          throws ConnectException
-  {
-    RegistryData data = registryCache.get(nodeID);
+  private RemoteRegistryCache findRegistryWithCache(String nodeID)
+          throws RemoteException, NotBoundException {
+    RemoteRegistryCache data = registryCache.get(nodeID);
 
     if (data == null) {
       Registry reg = findRegistry(nodeID);
@@ -408,8 +442,31 @@ public final class RpcFactory extends OnExitHandle {
   }
 
 
+   /**
+    * 查询运算节点上的注册表, 找不到返回 null.
+    */
+   private Registry findRegistry(String nodeID) {
+     ComputeNodeInfo info = ClusterManager.me().info(nodeID);
+     if (info == null)
+       throw new XBosonException("Not Found Node: "+ nodeID);
+
+     Registry remoteReg = null;
+
+     for (String host : info.ip) {
+       try {
+         remoteReg = LocateRegistry.getRegistry(host, info.rpcPort, forLocal);
+         break;
+       } catch (RemoteException e) {
+         // 这不是错误, 可以忽略
+         log.debug("Find RPC Registry", e);
+       }
+     }
+     return remoteReg;
+   }
+
+
   private void updateNodeRegistryCache(String nodeID) {
-    RegistryData data = registryCache.remove(nodeID);
+    RemoteRegistryCache data = registryCache.remove(nodeID);
     if (data != null) data.free();
   }
 
@@ -417,19 +474,26 @@ public final class RpcFactory extends OnExitHandle {
   /**
    * 保存远程注册表, 和注册表中的对象.
    */
-  private class RegistryData {
+  private class RemoteRegistryCache {
+
     private final Registry reg;
     private final Map<String, Remote> objCache;
+    private IPing remoteTest;
 
-    private RegistryData(Registry reg) {
+
+    private RemoteRegistryCache(Registry reg)
+            throws RemoteException, NotBoundException {
       this.reg = reg;
       this.objCache = new WeakHashMap<>();
+      this.remoteTest = (IPing) reg.lookup(PING);
     }
+
 
     private void free() {
       // freeRegistry(reg); // 这将改变服务端注册表
       objCache.clear();
     }
+
 
     /**
      * 获取注册表中的对象, 对象可以来自缓存, 或创建新的远程引用.
@@ -444,8 +508,16 @@ public final class RpcFactory extends OnExitHandle {
     {
       Remote remote = objCache.get(objectName);
       if (remote == null) {
+        try {
+          remoteTest.ping();
+        } catch (Exception e) {
+          throw new ConnectException("ping fail", e);
+        }
         remote = reg.lookup(objectName);
         objCache.put(objectName, remote);
+      }
+      else if (remote instanceof IPing) {
+        ((IPing) remote).ping();
       }
       return remote;
     }

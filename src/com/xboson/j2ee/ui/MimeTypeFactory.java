@@ -16,8 +16,11 @@
 
 package com.xboson.j2ee.ui;
 
+import com.xboson.util.Tool;
+
 import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
+import java.net.URL;
 
 
 public class MimeTypeFactory {
@@ -35,7 +38,8 @@ public class MimeTypeFactory {
       synchronized (MimeTypeFactory.class) {
         if (mime == null) {
           mime = new MimetypesFileTypeMap(
-                  MimeTypeFactory.class.getResourceAsStream(MIME_FILE) );
+                  Tool.readFileFromResource(MimeTypeFactory.class, MIME_FILE)
+                          .openInputStream());
         }
       }
     }

@@ -20,7 +20,9 @@ import com.xboson.app.AppContext;
 import com.xboson.auth.impl.RoleBaseAccessControl;
 import com.xboson.auth.impl.ResourceRoleTypes;
 import com.xboson.been.LoginUser;
+import com.xboson.been.XBosonException;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.sleep.SafeDataFactory;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import redis.clients.jedis.Jedis;
@@ -34,6 +36,10 @@ import java.util.List;
 import java.util.Map;
 
 
+/**
+ * 脚本将平台上的很多敏感数据(如数据库密码) 推送到缓存中, 部分敏感数据已经加密
+ * @see SafeDataFactory 加密策略
+ */
 public class RedisImpl implements IApiConstant {
 
   private final String key_prefix;
@@ -47,8 +53,9 @@ public class RedisImpl implements IApiConstant {
   public void set(String region, String key, String value, int exp) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
-
-      client.hset(tkey, key, value);
+      SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
+      client.hset(tkey, enc.encodeKey(key), enc.encodeData(value));
+      // 超时会导致整个 region 都失效, 不能这样设置
       // if (exp > 0) client.expire(tkey, exp);
     }
   }
@@ -57,7 +64,10 @@ public class RedisImpl implements IApiConstant {
   public String get(String region, String key) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
-      return client.hget(tkey, key);
+      SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
+      String sval = client.hget(tkey, enc.encodeKey(key));
+      if (sval == null) return null;
+      return enc.decodeData(sval);
     }
   }
 
@@ -65,7 +75,8 @@ public class RedisImpl implements IApiConstant {
   public void del(String region, String key) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
-      client.hdel(tkey, key);
+      SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
+      client.hdel(tkey, enc.encodeKey(key));
     }
   }
 
@@ -83,8 +94,10 @@ public class RedisImpl implements IApiConstant {
          Transaction t = client.multi() )
     {
       String tkey = key_prefix + region;
+      SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
+
       for (int i=0; i<keys.length; ++i) {
-        t.hdel(tkey, keys[i]);
+        t.hdel(tkey, enc.encodeKey(keys[i]));
       }
       return t.exec();
     }
@@ -93,11 +106,13 @@ public class RedisImpl implements IApiConstant {
 
   public Object keys(ScriptObjectMirror list, String region) {
     try (Jedis client = RedisMesmerizer.me().open()) {
-      Iterator<String> it = client.hkeys(key_prefix + region).iterator();
+      String tkey = key_prefix + region;
+      SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
+      Iterator<String> it = client.hkeys(tkey).iterator();
       int i = list.size() - 1;
 
       while (it.hasNext()) {
-        list.setSlot(++i, it.next());
+        list.setSlot(++i, enc.decodeKey(it.next()));
       }
     }
     return list;
@@ -105,6 +120,12 @@ public class RedisImpl implements IApiConstant {
 
 
   public Object keys(ScriptObjectMirror list, String region, String pattern) {
+    String tkey = key_prefix + region;
+
+    SafeDataFactory.IEncryptionStrategy s = SafeDataFactory.getMaybeNull(tkey);
+    if (s != null && !s.keyAmbiguous()) throw new UnsupportedOperationException(
+              "The region '"+ region +"' is encrypted and cannot be ambiguous");
+
     String cursor = RedisMesmerizer.BEGIN_OVER_CURSOR;
     ScanParams sp = new ScanParams();
     sp.match(pattern);
@@ -112,10 +133,9 @@ public class RedisImpl implements IApiConstant {
 
     try (Jedis client = RedisMesmerizer.me().open()) {
       for (;;) {
-        ScanResult<Map.Entry<String, String>> sr =
-                client.hscan(key_prefix + region, cursor, sp);
-
+        ScanResult<Map.Entry<String, String>> sr = client.hscan(tkey, cursor, sp);
         Iterator<Map.Entry<String, String>> it = sr.getResult().iterator();
+
         while (it.hasNext()) {
           Map.Entry<String, String> item = it.next();
           list.setSlot(++i, item.getKey());

@@ -25,6 +25,9 @@ import com.xboson.been.XmlDataMap;
 import com.xboson.util.converter.*;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 
 /**
  * xml/json 等转换器初始化列表, 不要直接调用来初始化转换器,
@@ -74,6 +77,7 @@ public final class ConverterInitialization {
     new StringBuilderJsonConverter().register(jsbuilded);
     new BytesConverter().register(jsbuilded);
     new BlockJsonConverter().registerAdapter(jsbuilded);
+    new LinkedHashMapJsonConverter().register(jsbuilded);
   }
 
 

@@ -20,8 +20,8 @@ import com.xboson.app.lib.IApiConstant;
 import com.xboson.auth.IAResource;
 import com.xboson.been.LoginUser;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.sleep.SafeDataFactory;
 import com.xboson.util.Ref;
-import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
@@ -36,6 +36,7 @@ public class RoleBaseAccessControl {
   /** 表示用户可以访问对应的资源, 但是程序中只是判断是否返回非空 */
   public final static String PASS = "0";
 
+  /** 和 NOAUTH 比较效率超过 PASS */
   public final static String NOAUTH = null;
 
   public final static String RBAC_HKEY
@@ -49,6 +50,9 @@ public class RoleBaseAccessControl {
    */
   private static Map<String, Map<String, Ref<String>>> user2resource =
           Collections.synchronizedMap(new WeakHashMap<>());
+
+  private static final SafeDataFactory.IEncryptionStrategy
+          enc = SafeDataFactory.get(SafeDataFactory.SCENES_RBAC);
 
 
   /**
@@ -91,7 +95,7 @@ public class RoleBaseAccessControl {
         // 角色对应的资源
         // roleid : typeID : resource
         //
-        hasAuth = client.hget(RBAC_HKEY, type.toKEY(roleid, resID));
+        hasAuth = client.hget(RBAC_HKEY, enc.encodeKey(type.toKEY(roleid, resID)));
         if (hasAuth != NOAUTH) break;
 
         //
@@ -99,7 +103,7 @@ public class RoleBaseAccessControl {
         // typeID : resource
         //
         if (checkPublic) {
-          hasAuth = client.hget(RBAC_HKEY, type.toKEY(resID));
+          hasAuth = client.hget(RBAC_HKEY, enc.encodeKey(type.toKEY(resID)));
           if (hasAuth != NOAUTH) break;
         }
       }

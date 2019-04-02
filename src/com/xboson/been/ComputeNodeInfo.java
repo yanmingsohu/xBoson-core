@@ -17,12 +17,13 @@
 package com.xboson.been;
 
 import com.xboson.util.Network;
+import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import java.util.Properties;
 
 
-public class ComputeNodeInfo extends JsonHelper {
+public class ComputeNodeInfo extends JsonHelper implements Cloneable {
 
   public long startAt;
   public String nodeID;
@@ -43,11 +44,17 @@ public class ComputeNodeInfo extends JsonHelper {
 
 
   /**
-   * 初始化完整对象
+   * 初始化完整对象, ip 地址来自配置文件, 或未配置则来自本机地址列表.
+   * 无效的 ip 将导致 rpc 无法连接或速度太慢.
    */
   public ComputeNodeInfo(String nodeid, int rpcPort) {
+    String[] ip = SysConfig.me().readConfig().rpcIp;
+    if (ip == null || ip.length < 1) {
+      ip = Network.toAddressString(Network.netWorkerInterfaces());
+    }
+
     Properties sysattr = System.getProperties();
-    this.ip            = Network.toAddressString(Network.netWorkerInterfaces());
+    this.ip            = ip;
     this.javaVersion   = sysattr.getProperty("java.version");
     this.javaVendor    = sysattr.getProperty("java.vendor");
     this.osName        = sysattr.getProperty("os.name");
@@ -56,5 +63,20 @@ public class ComputeNodeInfo extends JsonHelper {
     this.nodeID        = nodeid;
     this.rpcPort       = rpcPort;
     this.startAt       = System.currentTimeMillis();
+  }
+
+
+  public ComputeNodeInfo clone() {
+    ComputeNodeInfo n = new ComputeNodeInfo();
+    n.startAt     = startAt;
+    n.nodeID      = nodeID;
+    n.ip          = Tool.copy(ip);
+    n.javaVersion = javaVersion;
+    n.javaVendor  = javaVendor;
+    n.osName      = osName;
+    n.osVersion   = osVersion;
+    n.osArch      = osArch;
+    n.rpcPort     = rpcPort;
+    return n;
   }
 }

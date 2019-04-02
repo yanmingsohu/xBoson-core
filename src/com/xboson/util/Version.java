@@ -18,12 +18,13 @@ package com.xboson.util;
 
 public class Version {
 
-  public final static String xBoson = "2.2";
+  public final static String xBoson = "2.3";
   public final static String Name = "智慧大数据开放平台";
 
   /**
    * 公钥 CRC, 不一致程序不能启动,
    * 控制台会输出 crc 的正确数字, 将数字替换 0xNL 中的 N 即可.
+   * 一旦修改, 会导致使用该属性加密的数据不可用 (需刷新 redis).
    */
   public final static long PKCRC = Long.MAX_VALUE- 0x7fffffff9ca646f7L;
 

@@ -16,6 +16,7 @@
 
 package com.xboson.app.lib;
 
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
@@ -26,20 +27,22 @@ import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.LoginUser;
-import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
-import com.xboson.fs.mongo.SysMongoFactory;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.internal.runtime.ScriptObject;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWriter;
+import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 
@@ -63,11 +66,11 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     super(null);
     clientCreator = new CreatorFromUrl<>();
 
-    clientCreator.reg(URLTypes.MONGO, (v, p, url) -> {
+    clientCreator.reg(URLTypes.MONGO, (v, p, url, d) -> {
       return new Client(MongoDBPool.me().get(url));
     });
 
-    clientCreator.reg(URLTypes.SOURCEKEY, (v, p, url) -> {
+    clientCreator.reg(URLTypes.SOURCEKEY, (v, p, url, d) -> {
       LoginUser user = (LoginUser) AppContext.me().who();
       ConnectConfig cc = SqlImpl.sourceConfig(v, user.userid);
       return new Client(MongoDBPool.me().get(cc));
@@ -201,22 +204,41 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     }
 
     public DeleteResult deleteMany(Object filter) {
-      return coll.deleteOne(new JSObjectToBson(filter));
+      return coll.deleteMany(new JSObjectToBson(filter));
     }
 
     public Object find(Object query) {
       return toObject(coll.find(new JSObjectToBson(query)));
     }
 
+    public Object find(Object query, int pageNum, int pageSize) {
+      int begin = (pageNum -1) *pageSize;
+      FindIterable<Document> find = coll.find(new JSObjectToBson(query));
+      return toObject(find.skip(begin).limit(pageSize));
+    }
+
     public Object find(Object query, Map projection) {
-      projection.put("_id", true);
+      if (!projection.containsKey("_id"))
+        projection.put("_id", true);
       return toObject(coll.find(new JSObjectToBson(query)), projection);
+    }
+
+    public Object find(Object query, Map projection, int pageNum, int pageSize) {
+      if (!projection.containsKey("_id"))
+        projection.put("_id", true);
+      int begin = (pageNum -1) *pageSize;
+      FindIterable<Document> find = coll.find(new JSObjectToBson(query));
+      return toObject(find.skip(begin).limit(pageSize), projection);
     }
 
     public Object find() {
       return toObject(coll.find());
     }
 
+    public Object find(int pageNum, int pageSize) {
+      int begin = (pageNum -1) *pageSize;
+      return toObject(coll.find().skip(begin).limit(pageSize));
+    }
 
     public String createIndex(Object key, Object options) {
       return coll.createIndex(new JSObjectToBson(key), toIndexOptions(options));
@@ -245,6 +267,10 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
     public long count() {
       return coll.count();
+    }
+
+    public Object count(Object query) {
+      return coll.count(new JSObjectToBson(query));
     }
   }
 
@@ -585,6 +611,13 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
     if (val instanceof Boolean) {
       writer.writeBoolean((boolean) val);
+      return;
+    }
+
+    Object jsval = unwrap(val);
+    if (isRegexp(jsval)) {
+      writer.writeRegularExpression(
+              new BsonRegularExpression(getRegExp(jsval)) );
       return;
     }
 

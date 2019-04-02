@@ -84,4 +84,9 @@ public interface Names {
    */
   String witness_update = "sys.chain.witness.update";
 
+  /**
+   * 智能配置更新
+   */
+  String iconfig_update = "sys.app.iconfig.cache.update";
+
 }

@@ -27,7 +27,7 @@ import java.security.SecureRandom;
 
 
 /**
- * api 使用该算法加密, 该算法可实例化
+ * api 使用该算法加密, 存储该对象的实例使用效率最佳
  */
 public class AES2 implements IConstant {
 
@@ -39,39 +39,82 @@ public class AES2 implements IConstant {
    * @param keystr 密钥
    */
   public AES2(String keystr) {
+    init(keystr.getBytes(CHARSET));
+  }
+
+
+  /**
+   * 创建 aes 加密实例, 该对象可以缓存, 并且多线程安全
+   * @param keybin 密钥
+   */
+  public AES2(byte[] keybin) {
+    init(keybin);
+  }
+
+
+  private void init(byte[] keybin) {
+    key = genKey(keybin);
+  }
+
+
+  /**
+   * 生成密钥
+   */
+  public static SecretKeySpec genKey(byte[] keybin) {
     try {
       KeyGenerator kgen = KeyGenerator.getInstance(AES_NAME);
       SecureRandom secureRandom = SecureRandom.getInstance(SHA1_PRNG_NAME);
-      secureRandom.setSeed(keystr.getBytes(CHARSET));
+      secureRandom.setSeed(keybin);
       kgen.init(128, secureRandom);
 
       SecretKey secretKey = kgen.generateKey();
       byte[] enCodeFormat = secretKey.getEncoded();
-      key = new SecretKeySpec(enCodeFormat, AES_NAME);
+      return new SecretKeySpec(enCodeFormat, AES_NAME);
     } catch(Exception e) {
       throw new XBosonException(e);
     }
   }
 
 
+  /**
+   * 返回加密后数据的 HEX 字符串形式
+   * <b>encrypt 与 decrypt 不对称, 这是为了另一个使用该算法的类而做的优化</b>
+   */
   public String encrypt(String code) {
+    return Hex.upperHex(encryptBin(code.getBytes(CHARSET)));
+  }
+
+
+  /**
+   * 返回解密后的二进制数据, mi 为 HEX 形式的加密数据
+   */
+  public byte[] decrypt(String mi) {
+    return decryptBin(Hex.parse(mi));
+  }
+
+
+  /**
+   * 加密二进制数据, 返回加密原始数据
+   */
+  public byte[] encryptBin(byte[] srcBytes) {
     try {
-      byte[] srcBytes = code.getBytes(CHARSET);
       Cipher cipher = Cipher.getInstance(AES_NAME);
       cipher.init(ENCRYPT_MODE, key);
-      return Hex.upperHex(cipher.doFinal(srcBytes));
+      return cipher.doFinal(srcBytes);
     } catch (Exception e) {
       throw new XBosonException(e);
     }
   }
 
 
-  public byte[] decrypt(String mi) {
+  /**
+   * 解密二进制数据, 返回原始数据
+   */
+  public byte[] decryptBin(byte[] secret) {
     try {
-      byte[] srcBytes = Hex.parse(mi);
       Cipher cipher = Cipher.getInstance(AES_NAME);
       cipher.init(DECRYPT_MODE, key);
-      return cipher.doFinal(srcBytes);
+      return cipher.doFinal(secret);
     } catch (Exception e) {
       throw new XBosonException(e);
     }

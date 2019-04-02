@@ -74,7 +74,14 @@ public abstract class JsonHelper implements IBean, IJson {
       out.append(f.getName());
       out.append(" - ");
       try {
-        out.append(f.get(o));
+        Object v = f.get(o);
+        if (v == null) {
+          out.append("NULL");
+        } else if (v.getClass().isPrimitive()) {
+          out.append(v);
+        } else {
+          out.append(toJSON(v));
+        }
       } catch (IllegalAccessException e) {
         out.append(e.getMessage());
       }

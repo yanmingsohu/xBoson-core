@@ -27,6 +27,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJSON;
+import jdk.nashorn.internal.objects.NativeRegExp;
 import jdk.nashorn.internal.runtime.Context;
 
 import java.lang.reflect.Array;
@@ -251,6 +252,16 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
   }
 
 
+  /**
+   * 获取正则表达式的原始字符串
+   * @see #isRegexp(Object) 判断是否是正则表达式对象
+   * @param exp 必须是正则表达式对象
+   */
+  public static String getRegExp(Object exp) {
+    return (String) NativeRegExp.source(exp);
+  }
+
+
   public static boolean isNull(Object o) {
     if (o == null)
       return true;
@@ -273,6 +284,16 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
 
 
   /**
+   * 是正则表达式对象返回 true
+   * @see #getRegExp(Object) 正则表达式的原始字符串
+   */
+  public static boolean isRegexp(Object o) {
+    if (o == null) return false;
+    return o instanceof NativeRegExp;
+  }
+
+
+  /**
    * 通常约定一些值的意义为 true.
    * 当 o==true 或 o!=0 或 o是非空字符串 的情况返回 true
    */
@@ -289,6 +310,9 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
   }
 
 
+  /**
+   * 返回 js 语言环境下的 undefined 对象, 对于 java 这是一个非空对象.
+   */
   public Object nullObj() {
     return jdk.nashorn.internal.runtime.Undefined.getUndefined();
   }

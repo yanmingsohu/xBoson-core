@@ -46,7 +46,7 @@ import java.util.Arrays;
 
 /**
  * 有部分扩展函数原平台没有. <br/>
- * TODO: 脚本将平台上的很多敏感数据(如数据库密码) 推送到缓存中, 这些数据应该加密
+ * 该对象的实例只在 '平台机构' 中可用.
  */
 public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
@@ -55,7 +55,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   private RedisImpl redis;
   private QueryImpl query;
   private SysImpl sys;
-  private XjOrg org;
+  private String orgid;
 
 
   public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg) {
@@ -63,7 +63,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     this.redis = new RedisImpl(IApiConstant._R_KEY_PREFIX_);
     this.query = QueryFactory.create(() -> getConnection(), this);
     this.sys   = sys;
-    this.org   = currentOrg;
+    this.orgid = currentOrg.id();
   }
 
 
@@ -165,7 +165,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
     info.setMember("user",      db.getUsername());
     info.setMember("password",  db.getPassword());
     info.setMember("dbtype",    dbType(db.getDbid()));
-    info.setMember("owner",     org.id());
+    info.setMember("owner",     orgid);
     return unwrap(info);
   }
 
@@ -286,11 +286,45 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   /**
+   * 返回解密后的脚本, 去掉了前后 "<%..%>" 符号.
+   * [原平台无该函数, 该方法隐藏文档]
+   */
+  public String decryptApi2(String code, int zip) throws Exception {
+    if (zip == 0) return decodeApiScript(code);
+    return new String(ApiEncryption.decryptApi2(code, zip), IConstant.CHARSET);
+  }
+
+
+  /**
+   * 返回加密后的脚本
+   * [原平台无该函数, 该方法隐藏文档]
+   */
+  public String encodeApi2(String code, int zip) throws Exception {
+    if (zip == 0) return encodeApiScript(code);
+    return ApiEncryption.encryptApi2(code, zip);
+  }
+
+
+  /**
+   * 生成源代码的 zip 值, 该值在 DB.sys_api_content.zip 列的有效范围内
+   */
+  public int genZip(String code) {
+    int i = 0;
+    for (int a = code.length()-1; a>=0; --a) {
+      i += code.charAt(a);
+    }
+    return i % 255 + 1;
+  }
+
+
+  /**
    * api 内容被修改, 测试环境脚本将被重新编译.
    * [原平台无该函数]
    */
-  public boolean sendApiChange(String content_id) throws SQLException {
-    try (SqlResult sr = org.query("api_info.sql", content_id);
+  public boolean sendApiChange(String content_id) throws Exception {
+    Object[] bind = { AppContext.me().originalOrg() };
+    try (SqlResult sr = SqlReader.query(
+            "api_info.sql", bind, getConfig(), content_id);
          ResultSet rs = sr.getResult() )
     {
       if (!rs.next()) {

@@ -288,7 +288,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   /**
-   * 没有建立连接池
+   * 不用连接池保持连接.
    */
   public void connection(String url, String user, String ps) throws Exception {
     //PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
@@ -299,6 +299,28 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     close();
     __conn = newconn;
     _dbType = "x";
+  }
+
+
+  /**
+   * 不用连接池保持连接.
+   */
+  public String connection(String dbType, String host, int port, String db,
+                         String user, String ps) throws Exception {
+    IDriver dri = DbmsFactory.me().findDriver(dbType);
+    if (dri == null)
+      throw new XBosonException("Cannot find DB driver "+ dbType);
+
+    if (port <= 0) port = dri.port();
+
+    ConnectConfig cc = new ConnectConfig();
+    cc.setDbid(dri.id());
+    cc.setHost(host);
+    cc.setPort(Integer.toString(port));
+    cc.setDatabase(db);
+    String url = dri.getUrl(cc);
+    connection(url, user, ps);
+    return url;
   }
 
 

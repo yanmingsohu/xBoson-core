@@ -39,33 +39,40 @@ import java.net.URL;
  */
 public class License extends AbsLicense {
 
-  public static final String PUB_FILE = "/public_key.pem";
-  public static final String LIC_FILE = "/license.txt";
-  public static final String REQ_FILE = "/license.req";
-  public static final String PREFIX   = "file:";
+  private static final String FIX_CLASS = "com.xboson.been.License";
 
-  public transient String publicKeyFile;
+  public static final String LIC_FILE = "/license.txt";
+  static final String PUB_FILE = "/public_key.pem";
+  static final String REQ_FILE = "/license.req";
+  static final String DIR_BASE = "/WEB-INF";
+
+  public transient URL publicKeyFile;
   public transient String basePath;
   public String signature;
 
 
   public License() {
     basePath = SysConfig.me().readConfig().configPath;
-    publicKeyFile = "./WebRoot/WEB-INF" + PUB_FILE;
-  }
-
-
-  public void setPublicKeyFile(URL url) throws MalformedURLException {
-    publicKeyFile = url.toString();
-    if (publicKeyFile.startsWith(PREFIX)) {
-      publicKeyFile = publicKeyFile.substring(PREFIX.length());
-    }
+    String pub = (Tool.isInJar ? "/WEB-INF" : "/WebRoot/WEB-INF") + PUB_FILE;
+    publicKeyFile = Tool.getResource(License.class, pub);
   }
 
 
   public void setPublicKeyFile(ServletContext sc) throws MalformedURLException {
-    URL url = sc.getResource("/WEB-INF" + PUB_FILE);
-    setPublicKeyFile(url);
+    publicKeyFile = getPublicKeyURL(sc);
+  }
+
+
+  public static URL getPublicKeyURL(ServletContext sc)
+          throws MalformedURLException {
+    final String _full = DIR_BASE + PUB_FILE;
+    URL url = sc.getResource(_full);
+    if (url == null) {
+      url = Tool.getResource(License.class, _full);
+    }
+    if (url == null) throw
+            new XBosonException.NotFound(_full);
+    return url;
   }
 
 
@@ -83,7 +90,7 @@ public class License extends AbsLicense {
 
   @Override
   public String getPublicKeyFile() {
-    return publicKeyFile;
+    return publicKeyFile.toString();
   }
 
 
@@ -118,7 +125,7 @@ public class License extends AbsLicense {
     String basePath = SysConfig.me().readConfig().configPath;
     StringBuilder buf = Tool.readFromFile(basePath + LIC_FILE);
     YamlConfig yc = new YamlConfig();
-    yc.setClassTag("com.xboson.been.License", License.class);
+    yc.setClassTag(FIX_CLASS, License.class);
     YamlReader r = new YamlReader(buf.toString(), yc);
     return r.read(License.class);
   }

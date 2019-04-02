@@ -23,9 +23,14 @@ import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.PublicProcessData;
 import com.xboson.been.XBosonException;
+import com.xboson.distributed.MultipleExportOneReference;
+import com.xboson.distributed.ProcessManager;
+import com.xboson.log.Log;
+import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.IXRemote;
 import com.xboson.rpc.RpcFactory;
+import com.xboson.util.Tool;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -33,7 +38,8 @@ import java.util.List;
 
 
 /**
- * 进程管理器, 支持集群
+ * 进程管理器, 支持集群.
+ * 算法: 将本地任务导出到集群, 操作时遍历所有节点.
  */
 public class PmImpl implements IAResource {
 
@@ -41,14 +47,11 @@ public class PmImpl implements IAResource {
 
 
   public PmImpl() {
-    try {
-      RpcFactory rpc = RpcFactory.me();
-      if (! rpc.isBind(RPC_NAME)) {
-        rpc.bind(new ExportRemote(), RPC_NAME);
-      }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  }
+
+
+  public static void init(RpcFactory rpc) {
+    rpc.bindOnce(new ExportRemote(), RPC_NAME);
   }
 
 
@@ -81,33 +84,38 @@ public class PmImpl implements IAResource {
   /**
    * 本机实现
    */
-  public static class Local implements IProcessState {
+  public class Local implements IProcessState {
 
     public final int KILL_OK        = IProcessState.KILL_OK;
     public final int KILL_NO_EXIST  = IProcessState.KILL_NO_EXIST;
     public final int KILL_NO_READY  = IProcessState.KILL_NO_READY;
     public final int KILL_IS_KILLED = IProcessState.KILL_IS_KILLED;
 
-    private RpcFactory fact = RpcFactory.me();
-    private ClusterManager cm = ClusterManager.me();
+    private MultipleExportOneReference<IPM> meof;
 
 
+    private Local() {
+      meof = new MultipleExportOneReference<>(RPC_NAME);
+    }
+
+
+    /**
+     * 收集所有节点的数据并返回
+     */
     public PublicProcessData[] list() throws RemoteException {
       List<PublicProcessData> list = new ArrayList<>();
-      for (String node : cm.list()) {
-        try {
-          IPM pm = (IPM) fact.lookup(node, RPC_NAME);
-          for (PublicProcessData pd : pm.list()) {
-            list.add(pd);
-          }
-        } catch (Exception e) {}
-      }
+      meof.each((i, node, pm) -> {
+        for (PublicProcessData pd : pm.list()) {
+          list.add(pd);
+        }
+        return true;
+      });
       return list.toArray(new PublicProcessData[list.size()]);
     }
 
 
     public int kill(String nodeID, long processId) throws RemoteException {
-      IPM pm = (IPM) fact.lookup(nodeID, RPC_NAME);
+      IPM pm = (IPM) meof.getRpc().lookup(nodeID, RPC_NAME);
       return pm.kill(processId);
     }
 
@@ -119,10 +127,10 @@ public class PmImpl implements IAResource {
 
 
   /**
-   * 导出到集群中
+   * 所有节点导出到集群中
    */
   private static class ExportRemote implements IPM {
-    private AppContext.ProcessManager pm;
+    private ProcessManager pm;
 
 
     private ExportRemote() {

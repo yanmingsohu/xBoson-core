@@ -19,6 +19,7 @@ package com.xboson.app;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.db.SqlResult;
+import com.xboson.script.NotFoundModuleMaySkip;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,7 +51,7 @@ public class XjModule extends XjPool<XjApi> implements IDict {
         }
         name = rs.getString("modulenm");
       } else {
-        throw new XBosonException.NotFound("Module:" + id);
+        throw new NotFoundModuleMaySkip(id);
       }
     } catch (SQLException e) {
       throw new XBosonException.XSqlException(e);

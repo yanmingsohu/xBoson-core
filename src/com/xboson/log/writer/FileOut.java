@@ -33,7 +33,7 @@ import com.xboson.util.Tool;
 public class FileOut extends OutBase implements ILogWriter {
 
   private static final String line = "\r\n";
-  private static final String logFileNameFormat = "yyyy-MM-dd HH";
+  private static final String logFileNameFormat = "yyyy-MM-dd_HH";
   private static final long checkPeriod = 1 * 60 * 1000;
   private static final long resetSize = 10 * 1024 * 1024;
 

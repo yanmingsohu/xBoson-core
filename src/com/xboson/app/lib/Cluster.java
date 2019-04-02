@@ -22,7 +22,10 @@ import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.ComputeNodeInfo;
 import com.xboson.been.XBosonException;
 import com.xboson.rpc.ClusterManager;
+import com.xboson.rpc.IPing;
+import com.xboson.rpc.RpcFactory;
 
+import java.rmi.RemoteException;
 import java.util.Set;
 
 
@@ -51,17 +54,41 @@ public class Cluster implements IAResource {
   public class Local {
     private ClusterManager cm;
 
+    public final int RUNNING = 1;
+    public final int DOWN    = -1;
+    public final int UNKNOW  = 0;
+
+
     private Local() {
       cm = ClusterManager.me();
     }
+
 
     public String[] list() {
       Set<String> set = cm.list();
       return set.toArray(new String[set.size()]);
     }
 
+
     public ComputeNodeInfo info(String id) {
       return cm.info(id);
+    }
+
+
+    public int state(String id) {
+      int s;
+      try {
+        IPing p = (IPing) RpcFactory.me().lookup(id, RpcFactory.PING);
+        p.ping();
+        s = RUNNING;
+      } catch (RemoteException e) {
+        e.printStackTrace();
+        s = UNKNOW;
+      } catch (Exception e) {
+        e.printStackTrace();
+        s = DOWN;
+      }
+      return s;
     }
   }
 }

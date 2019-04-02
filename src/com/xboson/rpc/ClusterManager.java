@@ -48,7 +48,7 @@ public final class ClusterManager extends OnExitHandle {
     Config cf   = SysConfig.me().readConfig();
     this.log    = LogFactory.create();
     this.nodeID = Short.toString(cf.clusterNodeID);
-    this.info   = new ComputeNodeInfo(nodeID, 0);
+    this.info   = new ComputeNodeInfo(nodeID, cf.rpcPort);
     registerSelf();
     NodeUpdate.emit(nodeID);
   }
@@ -63,6 +63,7 @@ public final class ClusterManager extends OnExitHandle {
 
 
   public void updateRpcPort(int rpcPort) {
+    if (info.rpcPort == rpcPort) return;
     info.rpcPort = rpcPort;
     registerSelf();
   }
@@ -103,6 +104,14 @@ public final class ClusterManager extends OnExitHandle {
     } catch (IOException e) {
       throw new XBosonException.IOError(e);
     }
+  }
+
+
+  /**
+   * 返回本机节点描述对象, 返回的对象是克隆体可以任意处理.
+   */
+  public ComputeNodeInfo localInfo() {
+    return info.clone();
   }
 
 

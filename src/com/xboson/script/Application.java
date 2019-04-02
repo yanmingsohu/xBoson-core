@@ -96,8 +96,11 @@ public class Application implements
       mod.loaderid = IModuleProvider.LOADER_ID_APPLICATION;
       return mod;
 
+    } catch (NotFoundModuleMaySkip e) {
+      // 不做任何处理
+      return null;
     } catch (IOException | XBosonException.IOError e) {
-      log.warn("Read script file", e);
+      log.warn("Read script file", e, path);
       return null;
     }
   }
@@ -110,13 +113,14 @@ public class Application implements
     String path = ws.getFilename();
 
     ws.compile(sandbox);
-    module_cache.put(path, ws);
 
     Module mod    = ws.getModule();
     mod.filename  = path;
     mod.id        = '/'+ vfs.getID() +'/'+ path;
     ws.initModule(this);
 
+    // 在初始化成功之后才缓存模块
+    module_cache.put(path, ws);
     return mod;
   }
 

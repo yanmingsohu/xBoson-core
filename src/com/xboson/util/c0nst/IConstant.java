@@ -55,6 +55,11 @@ public interface IConstant extends IDict {
   String SYS_MOD_PREFIX = "ZYMODULE_";
 
   /**
+   * 匿名用户名
+   */
+  String Anonymous = "anonymous";
+
+  /**
    * 平台表前缀, 不会被 sql 替换
    */
   String SYS_TABLE_NOT_REPLACE = "sys_pl_";
@@ -64,11 +69,13 @@ public interface IConstant extends IDict {
    */
   short DEFAULT_NODE_ID_SHORT = 0;
   String DEFAULT_NODE_ID = DEFAULT_NODE_ID_SHORT +"";
+  short MASTER_NODE = 0;
+  String MASTER_NODE_STR = MASTER_NODE +"";
 
   /**
    * 默认超时 (秒), session 和 redis 使用.
    */
-  int DEFAULT_TIMEOUT = 24 * 60 * 60;
+  int DEFAULT_TIMEOUT = 3 * 60 * 60;
 
   /**
    * 常用加密/摘要算法名字
@@ -95,6 +102,8 @@ public interface IConstant extends IDict {
   /** 空字符串 */
   String NULL_STR = "";
   String ZERO_STR = "0";
+  /** 允许用户多点登录标志 */
+  String MULTI_LOGIN = "1";
 
   /** "初始化" */
   String INITIALIZATION = "Initialization";
@@ -102,6 +111,8 @@ public interface IConstant extends IDict {
   String DESTORYED = "Destoryed";
   /** 生成的请求 ID */
   String REQUEST_ID = "requestid";
+  /** 多点用户登录在 redis 使用的 key */
+  String REDIS_KEY_MULTI_LOGIN = "XB.UserPID.SessionID";
 
   /** 区块链签名提供商, 必须有默认构造函数 */
   Class<? extends ISignerProvider>

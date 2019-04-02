@@ -31,6 +31,7 @@ import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.RpcFactory;
 import com.xboson.script.SandboxFactory;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.ChineseDictionary;
 import com.xboson.util.SysConfig;
 
 import javax.servlet.ServletContextEvent;
@@ -46,6 +47,7 @@ public final class Touch {
 
 /****************************************************************************
  * 初始化对象列表
+ * @see com.xboson.rpc.RpcGlobalInitList RPC 对象注册初始化列表
  ***************************************************************************/
   private static void __init__process() {
     GlobalEventBus.me();
@@ -63,13 +65,14 @@ public final class Touch {
     ClusterManager.me();
     RpcFactory.me();
     PeerFactory.me();
+    ChineseDictionary.init();
   }
 
 
 
   private static final int S_ZERO   = 0;
-  private static final int S_INITED = 0;
-  private static final int S_EXIT   = 0;
+  private static final int S_INITED = 1;
+  private static final int S_EXIT   = 2;
   private static int state = S_ZERO;
 
 
@@ -91,6 +94,7 @@ public final class Touch {
 
 
   public synchronized static void exit() {
+    if (state == S_EXIT) return;
     if (state != S_INITED)
       throw new RuntimeException("cannot exit system");
 

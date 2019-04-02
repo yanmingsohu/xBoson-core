@@ -23,6 +23,7 @@ import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.SysConfig;
+import com.xboson.util.c0nst.IConstant;
 
 import java.sql.SQLException;
 import java.util.Set;
@@ -38,7 +39,7 @@ public class OpenApp extends XService {
 
   private static final String BAN_AM    = "Anonymous users are prohibited";
   private static final String BAN_APP   = "Application is forbidden";
-  private static final String Anonymous = "anonymous";
+  private static final String Anonymous = IConstant.Anonymous;
 
   /**
    * 这些模块禁止访问, 对于信息安全敏感的接口模块都需要放在这里.
@@ -97,6 +98,11 @@ public class OpenApp extends XService {
    * 如果是匿名用户返回 true, d 不能空
    */
   protected static boolean isAnonymousUser(CallData d) {
+    if (d.sess == null ||
+            d.sess.login_user == null ||
+            d.sess.login_user.userid == null)
+      return false;
+
     return Anonymous.equals(d.sess.login_user.userid);
   }
 

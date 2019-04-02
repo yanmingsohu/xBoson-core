@@ -92,4 +92,10 @@ public final class NodeFileFactory extends AbsFactory {
 
 
   private NodeFileFactory() {}
+
+
+  @Override
+  protected String providerType(Config cf) {
+    return cf.nodeProviderClass;
+  }
 }

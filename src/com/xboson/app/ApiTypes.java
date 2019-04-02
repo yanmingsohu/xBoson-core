@@ -26,12 +26,25 @@ public enum ApiTypes {
   Development("/API/dev", "d");
 
 
+  /**
+   * 与 full 相同 (!拼写错误)
+   */
   public final String eventPrifix;
+
+  /**
+   * 一个字符的短描述
+   */
   public final String flag;
 
+  /**
+   * 应用类型完整描述
+   */
+  public final String full;
 
-  ApiTypes(String eventPrifix, String flag) {
-    this.eventPrifix = eventPrifix;
+
+  ApiTypes(String eventPrefix, String flag) {
+    this.full = eventPrefix;
+    this.eventPrifix = eventPrefix;
     this.flag = flag;
   }
 
@@ -46,5 +59,10 @@ public enum ApiTypes {
       return Development;
     }
     return Production;
+  }
+
+
+  public String toString() {
+    return full;
   }
 }

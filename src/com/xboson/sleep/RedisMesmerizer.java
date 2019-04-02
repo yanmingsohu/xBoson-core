@@ -48,7 +48,10 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
   public final static String KEY = "RedisMesmerizer.IMesmerizer";
   public final static String BEGIN_OVER_CURSOR = "0";
+  public final static String BINARY = "BIN";
+  public final static String JSON = "JSON";
   public final static int TIMEOUT = 3000;
+
   private static RedisMesmerizer instance;
 
   private Log log = LogFactory.create();
@@ -113,13 +116,13 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   /**
    * 计算持久化时使用的 ID
    */
-  String genid(ISleepwalker sw, String type) {
+  static String genid(ISleepwalker sw, String type) {
     String id = sw.getid();
     return "/" + type + "/" + sw.getClass().getName() + "/" + id;
   }
 
 
-  String genid(Class clazz, String id, String type) {
+  public static String genid(Class clazz, String id, String type) {
     return "/" + type + "/" + clazz.getName() + "/" + id;
   }
 
@@ -127,10 +130,10 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   @Override
   public void sleep(ISleepwalker data) {
     if (data instanceof IBinData) {
-      bin.sleep(genid(data, "BIN"), data);
+      bin.sleep(genid(data, BINARY), data);
     }
     else {
-      json.sleep(genid(data, "JSON"), data);
+      json.sleep(genid(data, JSON), data);
     }
   }
 
@@ -138,10 +141,10 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   @Override
   public ISleepwalker wake(Class<? extends ISleepwalker> c, String id) {
     if (IBinData.class.isAssignableFrom(c)) {
-      return bin.wake(c, genid(c, id, "BIN"));
+      return bin.wake(c, genid(c, id, BINARY));
     }
     else {
-      return json.wake(c, genid(c, id, "JSON"));
+      return json.wake(c, genid(c, id, JSON));
     }
   }
 
@@ -159,10 +162,10 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   public void removeAll(ISleepwalker data) {
     String id;
     if (data instanceof IBinData) {
-      id = genid(data.getClass(), "*", "BIN");
+      id = genid(data.getClass(), "*", BINARY);
     }
     else {
-      id = genid(data.getClass(), "*", "JSON");
+      id = genid(data.getClass(), "*", JSON);
     }
 
     try (Jedis client = jpool.getResource()) {
@@ -238,7 +241,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
     public void remove(ISleepwalker data) {
       try (Jedis client = jpool.getResource()) {
-        String id = genid(data, "JSON");
+        String id = genid(data, JSON);
         client.hdel(KEY, id);
       }
     }
@@ -311,7 +314,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
     public void remove(ISleepwalker data) {
       try (Jedis client = jpool.getResource()) {
-        String id = genid(data, "BIN");
+        String id = genid(data, BINARY);
         client.hdel(KEY_BYTE, id.getBytes());
       }
     }

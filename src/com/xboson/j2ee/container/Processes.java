@@ -34,6 +34,7 @@ import javax.servlet.http.HttpFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URL;
 import java.nio.file.WatchEvent;
 import java.util.Base64;
 import java.util.HashSet;
@@ -42,6 +43,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.CRC32;
 
 
+/**
+ * TODO: 加入集群节点数量限制, 将授权机构与集群绑定
+ */
 public final class Processes {
 
   private static Processes instance;
@@ -86,6 +90,7 @@ public final class Processes {
   private final ReentrantLock threadLock;
   private final Log log;
   private String msg;
+  private URL publicKeyFile;
   private License license;
 
 
@@ -113,8 +118,9 @@ public final class Processes {
         return;
 
       final long PERIOD = DAY / 2;
+      publicKeyFile = License.getPublicKeyURL(sc);
       license = License.readLicense();
-      license.setPublicKeyFile(sc);
+      license.publicKeyFile = publicKeyFile;
 
       Point point = new Point();
       point.run();
@@ -136,7 +142,7 @@ public final class Processes {
     lic.appName   = Version.Name;
     lic.company   = "未知";
     lic.dns       = "unknow.com";
-    lic.email     = "unknow@unknow.com";
+    lic.email     = "unknow@mail.unknow.com";
     lic.beginTime = System.currentTimeMillis();
     lic.endTime   = System.currentTimeMillis() + DAY;
     lic.api       = new HashSet<>();
@@ -180,7 +186,7 @@ public final class Processes {
     {
       log.info(s[6], basename, filename);
       License new_license = License.readLicense();
-      new_license.publicKeyFile = license.publicKeyFile;
+      new_license.publicKeyFile = publicKeyFile;
       license = new_license;
       run();
     }
@@ -199,7 +205,7 @@ public final class Processes {
     //
     CRC32 crc = new CRC32();
     BufferedReader read = new BufferedReader(
-            new FileReader(license.getPublicKeyFile()));
+            new InputStreamReader(publicKeyFile.openStream(), IConstant.CHARSET));
     String line;
     while ((line = read.readLine()) != null) {
       crc.update(line.getBytes(IConstant.CHARSET));

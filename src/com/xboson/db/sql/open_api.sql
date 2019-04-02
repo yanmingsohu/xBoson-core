@@ -4,7 +4,8 @@ Select
        a.status,
        b.content,
        a.createdt,
-       a.updatedt
+       a.updatedt,
+       b.zip
   From
        sys_apis a,
        sys_api_content b

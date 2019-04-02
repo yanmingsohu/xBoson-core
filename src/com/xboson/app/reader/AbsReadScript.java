@@ -51,9 +51,12 @@ public abstract class AbsReadScript
   /**
    * 为代码打补丁, 返回脚本文件
    */
-  protected ScriptFile makeFile(ScriptAttr attr, String original_code) {
-    byte[] original_byte = ApiEncryption.decryptApi(original_code);
+  protected ScriptFile makeFile(ScriptAttr attr, String cipherText, int z) {
+    byte[] original_byte = ApiEncryption.decryptApi2(cipherText, z);
     byte[] content = SourceFix.autoPatch(original_byte);
-    return new ScriptFile(content, original_code, attr);
+    if (z != 0) {
+      cipherText = ApiEncryption.encryptApi(new String(original_byte, CHARSET));
+    }
+    return new ScriptFile(content, cipherText, attr);
   }
 }

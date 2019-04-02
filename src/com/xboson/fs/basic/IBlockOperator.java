@@ -18,6 +18,8 @@ package com.xboson.fs.basic;
 
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Buffer;
+import com.xboson.script.lib.Bytes;
+import com.xboson.util.c0nst.IConstant;
 
 
 public interface IBlockOperator<ATTR extends IFileAttribute>
@@ -50,5 +52,15 @@ public interface IBlockOperator<ATTR extends IFileAttribute>
    */
   default void writeFile(String path, Buffer.JsBuffer buf) {
     writeFile(path, buf._buffer().array());
+  }
+
+
+  default void writeFile(String path, Bytes buf) {
+    writeFile(path, buf.bin());
+  }
+
+
+  default void writeFile(String path, String buf) {
+    writeFile(path, buf.getBytes(IConstant.CHARSET));
   }
 }

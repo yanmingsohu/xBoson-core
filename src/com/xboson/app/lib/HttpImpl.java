@@ -407,10 +407,14 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   private OkHttpClient openClient() {
     if (hc == null) {
-      //
-      // 这个对象可能很昂贵
-      //
-      hc = new OkHttpClient();
+      synchronized (this) {
+        if (hc == null) {
+          //
+          // 这个对象可能很昂贵
+          //
+          hc = new OkHttpClient();
+        }
+      }
     }
     return hc;
   }

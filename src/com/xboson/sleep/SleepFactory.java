@@ -34,6 +34,7 @@ public class SleepFactory {
     instance = new SleepFactory();
   }
 
+
   /**
    * 需要考虑线程安全
    * @return

@@ -19,8 +19,8 @@ package com.xboson.j2ee.ui;
 import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
-import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
+import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.j2ee.container.IHttpHeader;
 import com.xboson.log.Log;
@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.NoSuchFileException;
-import java.util.Enumeration;
 import java.util.Set;
 
 
@@ -56,6 +55,14 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
 
   public static final String MY_URL = "/face";
   public static final String HTML_TYPE = CONTENT_TYPE_HTML;
+  public static final int    MAX_AGE = 30 * 60;
+  /**
+   * 缓存策略: 用户打开浏览器第一次访问的资源将被检查修改时间, 并返回内容或状态,
+   * 此后 MAX_AGE 时间内都使用浏览器缓存中的资源, 并在 MAX_AGE 之后重新访问服务器获取状态;
+   * 开发人员需要频繁修改/访问资源, 应该开启浏览器调试模式, 并启用浏览器的 'Disable-cache'.
+   */
+  public static final String CACHE_DIRECTIVE =
+          "must-revalidation, max-age="+ MAX_AGE;
 
   private IRedisFileSystemProvider file_provider;
   private TemplateEngine template;
@@ -134,6 +141,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
           return;
         }
 
+        resp.setHeader(HEAD_CACHE, CACHE_DIRECTIVE);
         file_provider.readFileContent(fs);
 
         String file_type = mime.getContentType(path);

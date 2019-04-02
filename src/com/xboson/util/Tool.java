@@ -56,15 +56,30 @@ public final class Tool extends StaticLogProvider {
 
   private Tool() {}
 
-
-  /**
-   * 提供 uuid 转换
-   */
+  /** 提供 uuid 转换 */
   public static final Uuid uuid = new Uuid();
-
+  /** 默认的日期/时间格式 */
   public static final String COMM_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
   public static final String FILE_SYS_PREFIX = "file:";
+  /** 如果当前程序在 jar 中启动为 true */
+  public static final boolean isInJar;
+
+
+  static {
+    boolean _in = false;
+    try {
+      /**
+       * getClass().getResource("") 返回
+       * 1. 文件系统上运行: /D:/xBoson/WebRoot/WEB-INF/classes/
+       * 2. 在 jar 里运行: file:/D:/xBoson/bin/xboson.jar!/com/xboson/init/
+       */
+      _in = Tool.class.getResource("").getPath()
+              .toLowerCase().indexOf(".jar!/") > 0;
+    } catch(Exception e) {
+    } finally {
+      isInJar = _in;
+    }
+  }
 
 
   /**
@@ -146,20 +161,25 @@ public final class Tool extends StaticLogProvider {
    */
   public static void pl(Object...o) {
     StringBuilder out = new StringBuilder(o.length * 10);
-    for (int i=0; i<o.length; ++i) {
-      out.append(o[i]);
-      out.append(' ');
-    }
-    System.out.println(out.toString());
+    System.out.println(join(out, o).toString());
   }
 
 
   public static void println(byte[] a) {
     for (int i=0; i<a.length; ++i) {
-      System.out.print(Integer.toString(a[i], 16) + " " );
-      if (i % 16 == 0) System.out.println();
+      System.out.print("0x"+ Integer.toString(255 & a[i], 16) + " " );
+      if (i % 16 == 15) System.out.println();
     }
     System.out.println();
+  }
+
+
+  public static StringBuilder join(StringBuilder out, Object ...o) {
+    for (int i=0; i<o.length; ++i) {
+      out.append(o[i]);
+      out.append(' ');
+    }
+    return out;
   }
 
 
@@ -311,11 +331,12 @@ public final class Tool extends StaticLogProvider {
   }
 
 
-  public static void waitOver(ExecutorService s) {
+  public static void shutdown(ExecutorService s) {
     Log log = openLog(Tool.class);
     try {
-      while (! s.awaitTermination(2, TimeUnit.SECONDS)) {
-        log.debug("Wait Executor Termination:", s);
+      s.shutdown();
+      while (! s.awaitTermination(5, TimeUnit.SECONDS)) {
+        log.debug("Wait Executor Termination:", s.shutdownNow());
       }
     } catch (InterruptedException e) {
       log.debug(e);
@@ -614,12 +635,13 @@ public final class Tool extends StaticLogProvider {
 
 
   /**
-   * 利用类加载器加载 class 中的文件, 并返回缓冲区
+   * 利用类加载器加载 class 路径中的文件, 并返回缓冲区, 返回的缓冲区已经被填满数据;<br/>
+   * <b>filepath 避免使用相对路径, 否则在混淆后会找不到文件.</b>
    */
   public static StringBufferOutputStream readFileFromResource(
           Class<?> base, String filepath) {
 
-    try (InputStream r = base.getResourceAsStream(filepath)) {
+    try (InputStream r = getResource(base, filepath).openStream()) {
       if (r == null) {
         throw new XBosonException.NotExist(
                 "File not found:" + filepath);
@@ -630,6 +652,27 @@ public final class Tool extends StaticLogProvider {
     } catch (Exception e) {
       throw new XBosonException(e);
     }
+  }
+
+
+  /**
+   * 利用类加载器加载 class 路径中的文件, 该方法可以在 jar 包中工作的很好
+   * <b>filepath 避免使用相对路径, 否则在混淆后会找不到文件.</b>
+   */
+  public static URL getResource(Class<?> base, String path) {
+    URL u = base.getResource(path);
+    if (u == null) {
+      //
+      // 当路径正确, 进入这里可能是应用在 jar 中
+      //
+      String packageName = base.getPackage().getName();
+      String packagePath = packageName.replaceAll("\\.", "/");
+      //
+      // 这里要求类路径不能有多余的 '/' 和 '.' 符号
+      //
+      u = base.getResource(p.join("/", packagePath, path));
+    }
+    return u;
   }
 
 
@@ -667,5 +710,29 @@ public final class Tool extends StaticLogProvider {
     StringBufferOutputStream o = new StringBufferOutputStream();
     o.write(i);
     return o.toBytes();
+  }
+
+
+  /**
+   * 去掉 url 末尾的 '/' 符号.
+   */
+  public static String urlNoSuffix(String url) {
+    if (url == null) return null;
+    int i = url.length()-1;
+    while (url.charAt(i) == '/') --i;
+    return url.substring(0, i+1);
+  }
+
+
+  /**
+   * 如果 s 为 null 返回 null
+   */
+  public static String[] copy(String[] s) {
+    if (s == null) return null;
+    String[] o = new String[s.length];
+    for (int i=s.length-1; i>=0; --i) {
+      o[i] = s[i];
+    }
+    return o;
   }
 }

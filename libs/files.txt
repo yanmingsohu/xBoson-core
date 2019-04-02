@@ -4,3 +4,20 @@ servlet-api.jar
 ----------------------------------------
 [from Tomcat 9]
 开发用到的接口库, 运行时不需要.
+
+
+
+
+
+
+
+
+
+jetty-all-9.4.14.v20181114-editor.jar
+org.eclipse.jdt.ecj-3.14.0.jar
+org.eclipse.jetty.apache-jsp-9.4.14.v20181114.jar
+org.mortbay.jasper.apache-el-8.5.33.1.jar
+org.mortbay.jasper.apache-jsp-8.5.33.1.jar
+
+----------------------------------------
+打包成独立应用程序时使用

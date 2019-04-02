@@ -74,6 +74,7 @@ public class SessionCluster extends HttpFilter {
       throw new XBosonException.XSqlException(e);
     } finally {
       if (sd != null) {
+        sd.prolong();
         RedisMesmerizer.me().sleep(sd);
       }
     }
@@ -110,10 +111,7 @@ public class SessionCluster extends HttpFilter {
     user.bindUserRoles(db);
     user.password = null;
 
-    sess = new SessionData();
-    sess.login_user  = user;
-    sess.id          = token;
-    sess.loginTime   = user.loginTime;
+    sess = new SessionData(at, user);
     log.debug("Token ID:", token);
     return sess;
   }

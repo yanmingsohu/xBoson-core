@@ -79,7 +79,7 @@ public final class ServiceScriptWrapper implements IConstant, IConfigSandbox {
     for (String filepath : ScriptEnvConfiguration.environment_script()) {
       box.setFilename(filepath);
       Object ret = box.eval(Tool.readFileFromResource(
-              getClass(), filepath).openInputStream());
+              SysImpl.class, filepath).openInputStream());
 
       if (ret instanceof ScriptObjectMirror) {
         ScriptObjectMirror o = (ScriptObjectMirror) ret;

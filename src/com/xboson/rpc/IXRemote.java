@@ -28,4 +28,13 @@ import java.rmi.RemoteException;
  * @see RemoteException
  */
 public interface IXRemote extends Remote, Serializable {
+
+  /**
+   * 返回 rpc 名称用于在 rpc 注册表中注册自身实例, 仅在未提供定义名称时被调用
+   * @return 默认返回类名
+   */
+  default String getRpcName() throws RemoteException {
+    return getClass().getName();
+  }
+
 }

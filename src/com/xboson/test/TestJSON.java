@@ -18,6 +18,8 @@ package com.xboson.test;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.Moshi;
@@ -25,15 +27,19 @@ import com.xboson.been.ResponseRoot;
 import com.xboson.j2ee.container.XResponse;
 import com.xboson.util.OutputStreamSinkWarp;
 import com.xboson.util.StringBufferOutputStream;
+import com.xboson.util.Tool;
+
 
 public class TestJSON extends Test {
 
 
-	public void test() throws IOException {
+	public void test() throws Exception {
+		test_arr();
 		been_to_json();
 		outputstream_warp();
 		speed();
 		thread_safe();
+		map();
 	}
 
 
@@ -45,7 +51,30 @@ public class TestJSON extends Test {
 	}
 
 
+	private void test_arr() throws Exception {
+	  sub("Array JSON to List");
+    JsonAdapter<Object[]> ja = Tool.getAdapter(Object[].class);
+    Object[] r = ja.fromJson("[1,null,true,\"abc\"]");
+    msg(_string(r), r[0].getClass());
+    eq(((Double)r[0]).intValue(), 1, "index 1");
+    eq(r[1], null, "index 2");
+    eq(r[2], true, "index 3");
+    eq(r[3], "abc", "index 4");
+  }
+
+
+	public void map() {
+	  sub("LinkedHashMap");
+    LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+    map.put("a", 1);
+    JsonAdapter ja = Tool.getAdapter(map.getClass());
+    msg(ja.toJson(map));
+    success("LinkedHashMap Worked !");
+  }
+
+
 	public void speed() {
+	  sub("Speed Test");
 		int count = 100000;
 		TestData data = new TestData();
 
@@ -84,6 +113,7 @@ public class TestJSON extends Test {
 
 
 	public void thread_safe() {
+	  sub("Thread SAFE");
 		final TestData data = new TestData();
 		data.change();
 		final Moshi moshi = new Moshi.Builder().build();
@@ -123,6 +153,7 @@ public class TestJSON extends Test {
 
 
 	public void been_to_json() throws IOException {
+	  sub("Been to JSON");
 		XResponse ret = new XResponse();
 
 		TestData src = new TestData();
@@ -136,6 +167,7 @@ public class TestJSON extends Test {
 
 
 	public void outputstream_warp() throws IOException {
+	  sub("OutputStream wrap");
 		TestData data = new TestData();
 		data.change();
 

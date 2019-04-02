@@ -49,7 +49,8 @@ public abstract class AbsFactory {
 
 
   private IRedisFileSystemProvider create() {
-    switch (cf.uiProviderClass) {
+    String type = providerType(cf);
+    switch (type) {
       case "local":
         return createLocal(cf, config);
 
@@ -58,7 +59,7 @@ public abstract class AbsFactory {
 
       default:
         throw new XBosonException.NotImplements(
-                "File system type: " + cf.uiProviderClass);
+                "File system type: " + type);
     }
   }
 
@@ -69,6 +70,12 @@ public abstract class AbsFactory {
     }
     return config;
   }
+
+
+  /**
+   * 返回提供文件系统的底层类型
+   */
+  protected abstract String providerType(Config cf);
 
 
   /**

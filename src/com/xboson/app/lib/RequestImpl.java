@@ -24,12 +24,11 @@ import com.xboson.script.JSObject;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Checker;
 import com.xboson.util.Tool;
-import jdk.nashorn.api.scripting.AbstractJSObject;
-import okhttp3.MultipartBody;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 
 /**
@@ -40,17 +39,17 @@ import java.util.concurrent.Executors;
  */
 public class RequestImpl extends JSObject.Helper implements IJson {
 
-  public final static int MAX_BODY_LENGTH = 5 * 1024 * 1024;
-
   private CallData cd;
   private Map<String, Object> extendParameter;
   private Checker ck;
+  private SysImpl sys;
 
 
-  public RequestImpl(CallData cd) {
+  public RequestImpl(CallData cd, SysImpl sys) {
     this.cd = cd;
     this.extendParameter = AppContext.me().getExtendParameter();
     this.ck = new Checker();
+    this.sys = sys;
 
     //
     // 类中的方法会导出, 供 js 调用
@@ -307,7 +306,7 @@ public class RequestImpl extends JSObject.Helper implements IJson {
 
 
   public Buffer.JsBuffer body() throws IOException {
-    return body(MAX_BODY_LENGTH);
+    return body(sys.maxPostBody);
   }
 
 
@@ -317,20 +316,14 @@ public class RequestImpl extends JSObject.Helper implements IJson {
    * 如果没有 body 数据返回 null;
    */
   public Buffer.JsBuffer body(int limit) throws IOException {
-    if (limit <= 0) {
-      limit = MAX_BODY_LENGTH;
-    }
-    final int clen = cd.req.getContentLength();
-    if (clen > limit) {
-      throw new XBosonException(
-              "Http Body too bigher, max: "+ limit +" bytes.");
-    } else if (clen <= 0) {
-      return null;
-    }
+    final int clen = sys.checkBodySize(limit);
+    if (clen <= 0) return null;
+
     byte[] buf = new byte[clen];
-    int rlen = cd.req.getInputStream().read(buf);
-    Buffer.JsBuffer buffer = new Buffer().from(buf, 0, rlen);
-    return buffer;
+    InputStream i = cd.req.getInputStream();
+    int rlen = i.read(buf);
+    i.close();
+    return new Buffer().from(buf, 0, rlen);
   }
 
 
@@ -344,10 +337,10 @@ public class RequestImpl extends JSObject.Helper implements IJson {
   }
 
 
-  public Object multipart() throws IOException {
-    Multipart mp = new Multipart(cd.req);
-    mp.checkLimit(MAX_BODY_LENGTH);
-    return mp.parse();
+  public Object multipart(ScriptObjectMirror callback) throws IOException {
+    sys.checkBodySize(sys.maxPostBody);
+    Multipart mp = new Multipart(cd.req, sys.maxPostBody);
+    return mp.parse(callback);
   }
 
 

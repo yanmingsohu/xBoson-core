@@ -18,10 +18,7 @@ package com.xboson.util;
 
 import com.xboson.been.XBosonException;
 
-import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -53,9 +50,25 @@ public final class Network {
     String[] names = new String[list.size()];
     int i = 0;
     for (InetAddress aa : list) {
-      names[i] = aa.getHostAddress();
+      names[i++] = aa.getHostAddress();
     }
     return names;
+  }
+
+
+  public static InetAddress parseIpv4(String ip) {
+    try {
+      if (Tool.isNulStr(ip)) return null;
+      byte[] addr = new byte[4];
+      String [] s = ip.split("\\.");
+      for (int i = 0; i < 4; ++i) {
+        addr[i] = Byte.parseByte(s[i]);
+      }
+      return InetAddress.getByAddress(addr);
+    } catch (Exception e) {
+      Tool.pl("Parse IP fail", e);
+    }
+    return null;
   }
 
 
