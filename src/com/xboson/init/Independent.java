@@ -77,6 +77,8 @@ public class Independent extends OnExitHandle {
 
     h_servlet.addEventListener(new Startup());
     h_servlet.setClassLoader(getClass().getClassLoader()); // 不安全?
+    h_servlet.setMaxFormContentSize(Integer.MAX_VALUE);
+    h_servlet.setMaxFormKeys(Integer.MAX_VALUE);
 
     if (Tool.isInJar) {
       //
