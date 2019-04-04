@@ -38,7 +38,7 @@ function transformTreeData(list, primary_key, parent_ref_key, child_list_key) {
     if (ref) {
       var parent = mapping[ref];
 
-      if (parent) {
+      if (parent && (parent !== item)) {
         var child_list = parent[child_list_key];
         if (!child_list) {
           child_list = parent[child_list_key] = [];
@@ -46,7 +46,7 @@ function transformTreeData(list, primary_key, parent_ref_key, child_list_key) {
         child_list.push(item);
       } else {
         //
-        // 指向的父节点并不存在, 则认为是根对象
+        // 指向的父节点并不存在, 或指向自身, 则认为是根对象
         //
         root.push(item);
       }
