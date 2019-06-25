@@ -137,7 +137,7 @@ public class SysConfig {
 
 		if (configNeedUpdate(run)) {
 		  log.warn("Configuration files need to be upgraded",
-              run.configVersion, "<", config.configVersion);
+              run.configVersion, "->", config.configVersion);
 
 		  String configFile = run.configFile;
 		  run.configFile    = Path.me.join(run.configPath, UPDATE);
@@ -159,9 +159,7 @@ public class SysConfig {
 	private boolean configNeedUpdate(Config nowcfg) {
 	  try {
 	    // 这里会抛出一大坨错误
-      int a = Integer.parseInt(config.configVersion.split(".")[2]);
-      int b = Integer.parseInt(nowcfg.configVersion.split(".")[2]);
-      return b < a;
+      return config.configVersion.compareTo(nowcfg.configVersion) !=0;
     } catch (Exception e) {
 	    return true;
     }
