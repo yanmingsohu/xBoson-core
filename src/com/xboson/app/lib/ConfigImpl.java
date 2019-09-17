@@ -96,7 +96,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
 
 
   /**
-   * 返回配置文件, 只能操作已经创建的配置文件, 当没有配置过该配置文件返回空对象
+   * 返回配置文件, 只能操作已经创建的配置文件, 当没有配置过该配置文件返回空
    */
   public Object get(final String name) {
     Document meta = meta(name);
@@ -113,7 +113,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
       FindIterable<Document> fi = dataColl.find(find);
       configFile = fi.first();
       if (configFile == null) {
-        return createJSObject();
+        return null;
       }
 
       configFile.remove(ATTR_D_KEY);

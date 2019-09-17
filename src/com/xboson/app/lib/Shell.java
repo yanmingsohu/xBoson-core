@@ -20,6 +20,7 @@ import com.xboson.app.AppContext;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
+import com.xboson.been.Config;
 import com.xboson.been.XBosonException;
 import com.xboson.db.IDict;
 import com.xboson.log.Log;
@@ -31,6 +32,7 @@ import com.xboson.script.lib.Path;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
+import jdk.nashorn.internal.runtime.Version;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,8 +88,11 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
     if (!AppContext.me().who().isRoot()) {
       SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
 
-      if (IDict.ADMIN_FLAG_ADMIN.equals(sys.getUserAdminFlag())) {
-        throw new XBosonException.NotImplements("只有平台管理员可以调用");
+      Object admin_flag = sys.getUserAdminFlag();
+      if ((! IDict.ADMIN_FLAG_ADMIN.equals(admin_flag)) &&
+          (! IDict.ADMIN_FLAG_TENANT_ADMIN.equals(admin_flag)) ) {
+        throw new XBosonException.NotImplements(
+                "只有平台/机构管理员可以调用");
       }
     }
 
@@ -99,6 +104,7 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
   public interface IShell extends IXRemote {
     Object execute(String fileName)  throws IOException;
     Object execute(String fileName, String[] args) throws IOException;
+    Object execute(String fileName, String pwd, String[] args) throws IOException;
     void putEnv(String name, String val) throws RemoteException;
     String getEnv(String name) throws RemoteException;
     void clearEnv() throws RemoteException;
@@ -114,20 +120,42 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
     }
 
 
+    private void defaultEnv(Map<String, String> env) {
+      Config c = SysConfig.me().readConfig();
+      env.put("UI_URL",             c.uiUrl);
+      env.put("VERSION",            Version.version());
+      env.put("HTTP_PORT",          c.appSelf.httpPort +"");
+      env.put("NODE_URL",           c.nodeUrl);
+      env.put("SHELL_URL",          c.shellUrl);
+      env.put("CLUSTER_NODE_ID",    c.clusterNodeID +"");
+      env.put("CONFIG_FILE",        c.configFile);
+    }
+
+
     @Override
     public Object execute(String fileName)  throws IOException {
-      return execute(fileName, null);
+      return execute(fileName, null, null);
     }
 
 
     @Override
     public Object execute(String fileName, String[] args) throws IOException {
+      return execute(fileName, null, args);
+    }
+
+
+    @Override
+    public Object execute(String fileName, String pwd, String[] args) throws IOException {
       long begin = System.currentTimeMillis();
       fileName = Path.me.normalize(fileName);
       File fullPath = findExeFile(fileName);
 
       List<String> command = new ArrayList<>();
-      command.add(fullPath.getPath());
+      if (fullPath != null) {
+        command.add(fullPath.getPath());
+      } else {
+        command.add(fileName);
+      }
 
       if (args != null && args.length > 0) {
         for (int i=0; i<args.length; ++i) {
@@ -139,12 +167,20 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
       // ProcessBuilder 内部也将数组转换为 List
       //
       ProcessBuilder build = new ProcessBuilder(command);
-      build.directory(new File(fullPath.getParent()));
+      if (pwd != null) {
+        build.directory(new File(pwd));
+      } else if (fullPath != null) {
+        build.directory(new File(fullPath.getParent()));
+      } else {
+        build.directory(new File(basePath));
+      }
+
       build.redirectErrorStream(true);
       Map<String, String> env = envVar.get();
       if (env != null) {
         build.environment().putAll(env);
       }
+      defaultEnv(build.environment());
 
       Process process = build.start();
       try {
@@ -160,7 +196,7 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
       Map<String, Object> ret = new HashMap<>();
       ret.put("output", toString(process.getInputStream()));
       ret.put("code",   process.exitValue());
-      ret.put("path",   fullPath.getPath());
+      ret.put("path",   build.directory().getPath());
       ret.put("elapsed",System.currentTimeMillis() - begin);
       return ret;
     }
@@ -201,8 +237,8 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
 
 
     private File findExeFile(String fileName) throws IOException {
-      File full = new File(basePath, fileName);
       if (! fileName.contains(".")) {
+        File full = new File(basePath, fileName);
         if (! full.exists()) {
           if (isWindows) {
             full = new File(basePath, fileName + ".cmd");
@@ -215,11 +251,14 @@ public class Shell extends RuntimeUnitImpl implements IAResource {
           }
 
           if (! full.exists()) {
-            throw new IOException("not found "+ fileName);
+            // 抛出异常, 限制命令必须在指定目录中
+            // throw new IOException("not found "+ fileName);
+            return null;
           }
         }
+        return full;
       }
-      return full;
+      return null;
     }
   }
 
