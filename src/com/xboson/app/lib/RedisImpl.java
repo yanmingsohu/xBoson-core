@@ -50,6 +50,11 @@ public class RedisImpl implements IApiConstant {
   }
 
 
+  interface IEach {
+    void val(int num, String value);
+  }
+
+
   public void set(String region, String key, String value, int exp) {
     try (Jedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
@@ -105,21 +110,34 @@ public class RedisImpl implements IApiConstant {
 
 
   public Object keys(ScriptObjectMirror list, String region) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
-      String tkey = key_prefix + region;
-      SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
-      Iterator<String> it = client.hkeys(tkey).iterator();
-      int i = list.size() - 1;
-
-      while (it.hasNext()) {
-        list.setSlot(++i, enc.decodeKey(it.next()));
-      }
-    }
+    int size = list.size();
+    keys(region, (i, val)->{
+      list.setSlot(size + i, val);
+    });
     return list;
   }
 
 
-  public Object keys(ScriptObjectMirror list, String region, String pattern) {
+  public int keys(String region, IEach call) {
+    int i = 0;
+    try (Jedis client = RedisMesmerizer.me().open()) {
+      String tkey = key_prefix + region;
+      SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
+      Iterator<String> it = client.hkeys(tkey).iterator();
+
+      while (it.hasNext()) {
+        call.val(i, enc.decodeKey(it.next()));
+        ++i;
+      }
+    }
+    return i;
+  }
+
+
+  /**
+   * 模糊查询不支持key加密
+   */
+  public int keys(String region, String pattern, IEach call) {
     String tkey = key_prefix + region;
 
     SafeDataFactory.IEncryptionStrategy s = SafeDataFactory.getMaybeNull(tkey);
@@ -129,7 +147,7 @@ public class RedisImpl implements IApiConstant {
     String cursor = RedisMesmerizer.BEGIN_OVER_CURSOR;
     ScanParams sp = new ScanParams();
     sp.match(pattern);
-    int i = list.size() - 1;
+    int i = 0;
 
     try (Jedis client = RedisMesmerizer.me().open()) {
       for (;;) {
@@ -138,7 +156,8 @@ public class RedisImpl implements IApiConstant {
 
         while (it.hasNext()) {
           Map.Entry<String, String> item = it.next();
-          list.setSlot(++i, item.getKey());
+          call.val(i, item.getKey());
+          ++i;
         }
 
         cursor = sr.getStringCursor();
@@ -146,6 +165,15 @@ public class RedisImpl implements IApiConstant {
           break;
       }
     }
+    return i;
+  }
+
+
+  public Object keys(ScriptObjectMirror list, String region, String pattern) {
+    int count = list.size();
+    keys(region, pattern, (i, v)-> {
+      list.setSlot(count + i, v);
+    });
     return list;
   }
 

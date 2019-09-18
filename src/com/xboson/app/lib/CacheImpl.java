@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -67,5 +68,16 @@ public class CacheImpl extends RuntimeUnitImpl {
 
   public Object keys(String region) {
     return redis.keys(createJSList(), region);
+  }
+
+
+  public int keys(String region, ScriptObjectMirror callback) {
+    if (! callback.isFunction()) {
+      throw new XBosonException.BadParameter("callback",
+              "must be Function(index, key)");
+    }
+    return redis.keys(region, (i, k)->{
+      callback.call(null, i, k);
+    });
   }
 }

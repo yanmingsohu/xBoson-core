@@ -21,6 +21,7 @@ import com.xboson.app.fix.SourceFix;
 import com.xboson.auth.impl.ResourceRoleTypes;
 import com.xboson.been.AppToken;
 import com.xboson.been.CallData;
+import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DbmsFactory;
 import com.xboson.db.IDriver;
@@ -131,6 +132,17 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   public Object cacheKeys(String region, String pattern) {
     return redis.keys(createJSList(), region, pattern);
+  }
+
+
+  public int cacheKeys(String region, String pattern, ScriptObjectMirror callback) {
+    if (! callback.isFunction()) {
+      throw new XBosonException.BadParameter("callback",
+              "must be Function(index, key)");
+    }
+    return redis.keys(region, pattern, (i, k)->{
+      callback.call(null, i, k);
+    });
   }
 
 
