@@ -22,6 +22,7 @@ import com.xboson.db.IDict;
 import com.xboson.j2ee.container.XPath;
 import com.xboson.j2ee.container.XService;
 import com.xboson.log.slow.AccessLog;
+import com.xboson.log.slow.LoginLog;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Firewall;
 import com.xboson.util.JavaConverter;
@@ -55,11 +56,13 @@ public class UserService extends XService implements IDict, IConstant {
 
   private Config cf;
   private AccessLog access;
+  private LoginLog sign;
 
 
   public UserService() {
     cf = SysConfig.me().readConfig();
     access = new AccessLog();
+    sign = new LoginLog();
   }
 
 
@@ -156,6 +159,7 @@ public class UserService extends XService implements IDict, IConstant {
     lu.bindUserRoles(cf.db);
     lu.bindTo(data.sess);
     data.xres.bindResponse("openid", lu.userid);
+    sign.login(lu, data);
     msg(data, "成功登录系统", 0);
 	}
 
