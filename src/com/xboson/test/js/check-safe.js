@@ -140,14 +140,35 @@ assert.throws(function() {
 
 
 //
-// 因为默认上下文禁止创建变量, 而 name 定义在默认上下文导致错误.
+// 因为默认上下文禁止创建变量, 而 name 定义在默认上下文导致错误.??
 //
-assert.throws(function() {
+//assert.throws(function() {
   var arr = {a:1, b:2, c:3};
   for (name in arr) {
     console.log(name, arr[name], "is working !!!!!!!!!!!!!!!!!!");
   }
-}, /ReferenceError.*name/);
+//}, /ReferenceError.*name/);
 
 
-console.log('ok');
+//
+// https://github.com/javadelight/delight-nashorn-sandbox/issues/73
+// 禁止访问 engine, 否则可以执行任意代码.
+//
+assert.eq(undefined, this.engine);
+assert.throws(function() {
+  var file = engine.factory.scriptEngine.eval('Java.type(\"java.io.File\")');
+  assert.eq(undefined, file);
+}, /TypeError.*factory/);
+assert.eq(undefined, engine);
+// 没有 caller
+//assert.eq(undefined, this.caller.engine);
+
+
+console.log('pass');
+
+//
+// js 非严格模式替换 for 语句兼容.
+//
+function __createKVString(i, m) {
+  return i;
+}

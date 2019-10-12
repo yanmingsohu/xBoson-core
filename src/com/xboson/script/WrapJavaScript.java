@@ -32,8 +32,12 @@ import java.nio.ByteBuffer;
  */
 public class WrapJavaScript extends AbsWrapScript {
 
+  /**
+   * engine 的安全问题:
+   * https://github.com/javadelight/delight-nashorn-sandbox/issues/73
+   */
   private static final String S_WRAP0 = "__warp_main(function(" +
-          "require, module, __dirname , __filename, exports, console) {";
+          "require, module, __dirname , __filename, exports, console, engine) {";
   private static final String S_WRAP1 = "\n})";
 
   private ReaderSet code_reader;

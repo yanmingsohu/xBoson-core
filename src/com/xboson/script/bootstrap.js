@@ -34,7 +34,7 @@ var MODULE_NAME  = '/node_modules';
 
 // 删除所有全局危险对象, 并绑定到内部对象上.
 [
-  'exit',     'quit',
+  'exit',     'quit',   'engine',
   'Java',     'JavaImporter',
   'Packages', 'eval',   'print',
   'loadWithNewGlobal',  'load',
@@ -103,7 +103,7 @@ function __warp_main(fn) { // 主函数包装器
     try {
       app.sendScriptEvent(eflag.SCRIPT_RUN, currmodule);
       return fn.call(fncontext, requireSync, module,
-           dirname, module.filename, module.exports, console);
+           dirname, module.filename, module.exports, console, undefined);
     } finally {
       app.sendScriptEvent(eflag.SCRIPT_OUT, currmodule);
     }
