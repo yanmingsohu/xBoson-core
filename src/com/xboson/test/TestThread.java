@@ -16,14 +16,42 @@
 
 package com.xboson.test;
 
+import com.xboson.util.Ref;
+import com.xboson.util.ThreadMonitor;
 import com.xboson.util.Tool;
 
 
-public class TestThread extends Test implements Runnable {
+public class TestThread extends Test {
+
+
+  public static void main(String[] a) {
+    new TestThread();
+  }
+
 
   @Override
   public void test() throws Throwable {
-    Thread dead = new Thread(this);
+    test_stop();
+    monitor();
+  }
+
+
+  private void test_stop() throws InterruptedException {
+    sub("Thread stop()");
+    Thread dead = new Thread(()->{
+      boolean t = true;
+      try {
+        while (t) {
+          // 死循环
+        }
+      } catch (ThreadDeath e) {
+        success("dead", e);
+      } finally {
+        msg("dead finally");
+      }
+      msg("dead exit");
+    });
+
     dead.setName("Dead loop threads, needed stop()");
     msg("start");
     dead.start();
@@ -34,26 +62,63 @@ public class TestThread extends Test implements Runnable {
     msg("stop");
     dead.stop();
     msg("main exit");
+    dead.join();
   }
 
 
-  @Override
-  public void run() {
-    boolean t = true;
-    try {
-      while (t) {
-        // 死循环
+  private void monitor() throws InterruptedException {
+    sub("Thread monitor");
+    final ThreadMonitor m = new ThreadMonitor();
+    final Ref<Integer> stop_flag = new Ref<Integer>(0);
+
+    m.setStopMethod(new ThreadMonitor.IStopper() {
+      @Override
+      public void stop(Thread thread) {
+        thread.stop();
+        stop_flag.x++;
+        msg(thread.getName(), "stop");
       }
-    } catch (Throwable e) {
-      msg("dead", e);
-    } finally {
-      msg("dead finally");
-    }
-    msg("dead exit");
+    });
+
+    Thread t1 = new Thread("Thread-1") {
+      public void run() {
+        try {
+          Thread.sleep(100);
+          success("Thread 1 run end");
+        } catch (ThreadDeath td) {
+          fail("Should not terminate the thread 1", td);
+        } catch (InterruptedException e) {
+          fail("Thread 1", e);
+        } finally {
+          m.purge();
+          msg("Thread 1 exit");
+        }
+      }
+    };
+    t1.start();
+    m.look(t1, 1000);
+    t1.join();
+
+    Thread t2 = new Thread("Thread-2") {
+      public void run() {
+        try {
+          Thread.sleep(1000);
+          fail("Should terminate the thread 2");
+        } catch(ThreadDeath td) {
+          success("Thread 2 Received a termination signal");
+        } catch (InterruptedException e) {
+          fail("Thread 2", e);
+        } finally {
+          m.purge();
+          msg("Thread 2 exit");
+        }
+      }
+    };
+    t2.start();
+    m.look(t2, 100);
+    t2.join();
+
+    eq(stop_flag.x, 1, "Defined stop method");
   }
 
-
-  public static void main(String[] a) {
-    new TestThread();
-  }
 }

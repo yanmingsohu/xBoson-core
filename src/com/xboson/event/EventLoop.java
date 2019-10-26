@@ -19,6 +19,7 @@ package com.xboson.event;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.util.ThreadMonitor;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
 
@@ -41,14 +42,14 @@ public class EventLoop implements ThreadFactory, IConstant {
   private Log log;
   private int inQueue;
   private int printWarn;
-  private TaskMonitor taskMonitor;
+  private ThreadMonitor taskMonitor;
 
 
   private EventLoop() {
     this.worker = Executors.newSingleThreadExecutor(this);
     this.log = LogFactory.create("event-loop");
     this.printWarn = WARN_COUNT;
-    this.taskMonitor = new TaskMonitor();
+    this.taskMonitor = new ThreadMonitor();
     log.info(INITIALIZATION);
   }
 
@@ -143,69 +144,4 @@ public class EventLoop implements ThreadFactory, IConstant {
     }
   }
 
-
-  /**
-   * 每时刻监视一个线程, 当线程超时, 终止被监视线程并进入休眠.
-   * 可以在多个监视线程间切换
-   */
-  private class TaskMonitor extends Thread {
-    private final static int CHECK_WAIT = 1000;
-    private Thread who;
-    private long delay;
-    private Log log;
-
-    private TaskMonitor() {
-      this.delay = -1;
-      this.log = LogFactory.create("Task-Monitor");
-      this.setDaemon(true);
-      this.setName("Task-Monitor");
-      this.start();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public void run() {
-      for (;;) {
-        try {
-          synchronized (this) {
-            if (delay <= 0) {
-              this.wait();
-              continue;
-            }
-
-            this.wait(delay);
-
-            if (who != null && who.getState() != State.TERMINATED) {
-              log.warn("Task timeout and interrupt:",
-                      who.getName(), who.getState());
-              who.stop();
-            }
-            clear();
-          }
-        } catch (InterruptedException e) {
-          // nothing.
-        }
-      }
-    }
-
-    public void look(Thread who, long delay) {
-      synchronized (this) {
-        this.who = who;
-        this.delay = delay;
-        this.interrupt();
-      }
-    }
-
-    public void purge() {
-      synchronized (this) {
-        clear();
-        this.interrupt();
-      }
-    }
-
-    private void clear() {
-      this.who = null;
-      this.delay = -1;
-    }
-  }
 }
