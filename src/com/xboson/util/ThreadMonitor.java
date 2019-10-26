@@ -28,6 +28,7 @@ import com.xboson.log.LogFactory;
 public class ThreadMonitor {
 
   private final static String NAME = "Thread-Monitor";
+  private final Object lock = new Object();
 
   private Thread who;
   private long delay;
@@ -66,7 +67,7 @@ public class ThreadMonitor {
    * @param delay 毫秒
    */
   public void look(Thread who, long delay) {
-    synchronized (this) {
+    synchronized (lock) {
       this.who = who;
       this.delay = delay;
       monitor.interrupt();
@@ -78,7 +79,7 @@ public class ThreadMonitor {
    * 如果监视线程在超时前完成, 调用该方法通知监视器停止监视行为.
    */
   public void purge() {
-    synchronized (this) {
+    synchronized (lock) {
       clear();
       monitor.interrupt();
     }
@@ -103,13 +104,13 @@ public class ThreadMonitor {
     public void run() {
       for (;;) {
         try {
-          synchronized (this) {
+          synchronized (lock) {
             if (delay <= 0) {
-              this.wait();
+              lock.wait();
               continue;
             }
 
-            this.wait(delay);
+            lock.wait(delay);
 
             if (who != null && who.getState() != State.TERMINATED) {
               log.warn("Task timeout and interrupt:",

@@ -68,7 +68,8 @@ public class EventLoop implements ThreadFactory, IConstant {
 
   /**
    * 在线程上添加一个任务, 如果任务队列为空可以立即执行,
-   * 否则等到队列中之前的任务执行完成.
+   * 否则等到队列中之前的任务执行完成, 任务一旦开始执行必须等到自行退出,
+   * 下一个任务才能开始.
    */
   public void add(Runnable task) {
     add(task, -1);
