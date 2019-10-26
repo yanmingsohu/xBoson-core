@@ -34,15 +34,21 @@ import java.util.concurrent.ThreadFactory;
 public class EventLoop implements ThreadFactory, IConstant {
 
   private final static String THREAD_NAME = "EventLoopThread";
+  private final static int WARN_COUNT = 50;
 
   private static EventLoop instance;
   private ExecutorService worker;
   private Log log;
+  private int inQueue;
+  private int printWarn;
+  private TaskMonitor taskMonitor;
 
 
   private EventLoop() {
     this.worker = Executors.newSingleThreadExecutor(this);
     this.log = LogFactory.create("event-loop");
+    this.printWarn = WARN_COUNT;
+    this.taskMonitor = new TaskMonitor();
     log.info(INITIALIZATION);
   }
 
@@ -64,8 +70,23 @@ public class EventLoop implements ThreadFactory, IConstant {
    * 否则等到队列中之前的任务执行完成.
    */
   public void add(Runnable task) {
-    log.debug("Add task:", task);
-    worker.execute(new Wrap(task));
+    add(task, -1);
+  }
+
+
+  /**
+   * 在线程上添加一个任务, 如果任务队列为空可以立即执行,
+   * 否则等到队列中之前的任务执行完成. 如果运行时间超过 maxRuntime(毫秒) 则停止任务.
+   */
+  public void add(Runnable task, long maxRuntime) {
+    log.debug("Add task:", task, maxRuntime > 0 ? maxRuntime : "");
+    worker.execute(new Wrap(task, maxRuntime));
+    ++inQueue;
+
+    if (inQueue > printWarn) {
+      printWarn += WARN_COUNT;
+      log.warn("Queued tasks", inQueue);
+    }
   }
 
 
@@ -91,19 +112,100 @@ public class EventLoop implements ThreadFactory, IConstant {
 
   private class Wrap implements Runnable {
     private Runnable r;
+    private long maxRuntime;
 
-    private Wrap(Runnable r) {
+    private Wrap(Runnable r, long maxRuntime) {
       this.r = r;
+      this.maxRuntime = maxRuntime;
     }
 
     public void run() {
       try {
+        if (maxRuntime > 0) {
+          taskMonitor.look(Thread.currentThread(), maxRuntime);
+        }
         r.run();
-      } catch (XBosonException.Shutdown e) {
-        log.warn("Run Task ["+ r +"],", e);
-      } catch (Throwable t) {
-        log.error("Run Task ["+ r +"],", Tool.allStack(t));
       }
+      catch (XBosonException.Shutdown e) {
+        log.warn("Shutdown Task ["+ r +"],", e);
+      }
+      catch (ThreadDeath d) {
+        log.error("Kill Task ["+ r +"],", d);
+      }
+      catch (Throwable t) {
+        log.error("Fail Task ["+ r +"],", Tool.allStack(t));
+      }
+      finally {
+        --inQueue;
+        if (printWarn > WARN_COUNT) --printWarn;
+        taskMonitor.purge();
+      }
+    }
+  }
+
+
+  /**
+   * 每时刻监视一个线程, 当线程超时, 终止被监视线程并进入休眠.
+   * 可以在多个监视线程间切换
+   */
+  private class TaskMonitor extends Thread {
+    private final static int CHECK_WAIT = 1000;
+    private Thread who;
+    private long delay;
+    private Log log;
+
+    private TaskMonitor() {
+      this.delay = -1;
+      this.log = LogFactory.create("Task-Monitor");
+      this.setDaemon(true);
+      this.setName("Task-Monitor");
+      this.start();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public void run() {
+      for (;;) {
+        try {
+          synchronized (this) {
+            if (delay <= 0) {
+              this.wait();
+              continue;
+            }
+
+            this.wait(delay);
+
+            if (who != null && who.getState() != State.TERMINATED) {
+              log.warn("Task timeout and interrupt:",
+                      who.getName(), who.getState());
+              who.stop();
+            }
+            clear();
+          }
+        } catch (InterruptedException e) {
+          // nothing.
+        }
+      }
+    }
+
+    public void look(Thread who, long delay) {
+      synchronized (this) {
+        this.who = who;
+        this.delay = delay;
+        this.interrupt();
+      }
+    }
+
+    public void purge() {
+      synchronized (this) {
+        clear();
+        this.interrupt();
+      }
+    }
+
+    private void clear() {
+      this.who = null;
+      this.delay = -1;
     }
   }
 }

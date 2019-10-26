@@ -44,6 +44,9 @@ import java.util.Queue;
  */
 public abstract class AbsSlowLog extends OnExitHandle implements ILogName {
 
+  /** 日志线程最长执行时间, 单位: 分钟 */
+  private final static int MAX_RUN_TIME_MINUTE = 15;
+
   private Queue<Object[]> queue;
   private Runnable insert;
   private boolean hasWorker;
@@ -97,7 +100,7 @@ public abstract class AbsSlowLog extends OnExitHandle implements ILogName {
       queue.add(param);
       if (!hasWorker) {
         hasWorker = true;
-        EventLoop.me().add(insert);
+        EventLoop.me().add(insert, MAX_RUN_TIME_MINUTE*60*1000);
       }
     }
   }
@@ -134,6 +137,8 @@ public abstract class AbsSlowLog extends OnExitHandle implements ILogName {
         }
       } catch (SQLException e) {
         log.error("Insert log fail", Tool.allStack(e));
+      } finally {
+        hasWorker = false;
       }
 
       log.debug("Save", count, "logs");
