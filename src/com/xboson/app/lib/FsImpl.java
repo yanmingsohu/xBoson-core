@@ -17,6 +17,8 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
+import com.xboson.fs.basic.IFileAttribute;
+import com.xboson.fs.basic.IStreamOperator;
 import com.xboson.fs.mongo.IMongoFileSystem;
 import com.xboson.fs.mongo.MongoFileAttr;
 import com.xboson.fs.mongo.SysMongoFactory;
@@ -60,7 +62,7 @@ public class FsImpl {
         return new Wrap(NodeFileFactory.open());
 
       case "share":
-        return new Wrap2(SysMongoFactory.me().openFS());
+        return new Wrap2<MongoFileAttr>(SysMongoFactory.me().openFS());
 
       default:
         throw new XBosonException.NotFound(
@@ -84,10 +86,11 @@ public class FsImpl {
   }
 
 
-  private class Wrap2 implements IMongoFileSystem {
-    private IMongoFileSystem real;
+  private class Wrap2<Attr extends IFileAttribute>
+          implements IStreamOperator<Attr> {
+    private IStreamOperator<Attr> real;
 
-    private Wrap2(IMongoFileSystem real) {
+    private Wrap2(IStreamOperator<Attr> real) {
       this.real = real;
     }
 
@@ -109,13 +112,13 @@ public class FsImpl {
 
 
     @Override
-    public MongoFileAttr readAttribute(String path) {
+    public Attr readAttribute(String path) {
       return real.readAttribute(path);
     }
 
 
     @Override
-    public Set<MongoFileAttr> readDir(String path) {
+    public Set<Attr> readDir(String path) {
       return real.readDir(path);
     }
 

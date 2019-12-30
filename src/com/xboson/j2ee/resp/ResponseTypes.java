@@ -37,9 +37,10 @@ public final class ResponseTypes {
    * 支持列表
    */
   static {
-    types.put("json",  new JsonResponse());
-    types.put("xml",   new XmlResponse());
-    types.put("jsonp", new JsonPaddingResp());
+    types.put("json",   new JsonResponse());
+    types.put("xml",    new XmlResponse());
+    types.put("jsonp",  new JsonPaddingResp());
+    types.put("stream", new StreamResponse());
   }
 
 

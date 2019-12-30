@@ -17,6 +17,7 @@
 package com.xboson.j2ee.container;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +30,7 @@ import com.xboson.been.NameCache;
 import com.xboson.been.ResponseRoot;
 import com.xboson.been.XBosonException;
 import com.xboson.j2ee.resp.ResponseTypes;
+import com.xboson.j2ee.resp.StreamResponse;
 import com.xboson.util.Tool;
 
 
@@ -63,12 +65,17 @@ public class XResponse implements IHttpHeader {
 		this.response = response;
 
 		String format = request.getParameter(attrformat);
-		if (format != null) {
+    bindResponseType(format);
+	}
+
+
+	private void bindResponseType(String format) {
+    if (format != null) {
       this.res_impl = ResponseTypes.get(format);
     } else {
       this.res_impl = ResponseTypes.get();
     }
-	}
+  }
 
 
   /**
@@ -240,6 +247,24 @@ public class XResponse implements IHttpHeader {
     setMessage(msg, code);
 		response();
 	}
+
+
+  /**
+   * 调用该方法使返回类型切换为 stream 并读取 i 中的数据输出到客户端, 忽略 $format 参数.
+   * @param i 从输入流中读取数据
+   * @param filename 为应答数据提供文件名, 必须提供一个文件名否则抛出 null 异常
+   * @throws IOException 任何错误都会抛出异常
+   */
+	public void responseStream(InputStream i, String filename) throws IOException {
+    if (filename == null || filename.equals("")) {
+      throw new XBosonException.NullParamException("filename");
+    }
+    ret_root.put(StreamResponse.MAP_KEY_STREAM, i);
+    ret_root.put(StreamResponse.MAP_KEY_FILENAME, filename);
+    bindResponseType("stream");
+    setDatatype(i.getClass());
+    response();
+  }
 
 
   /**

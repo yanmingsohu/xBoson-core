@@ -35,6 +35,7 @@ import com.xboson.j2ee.files.PrimitiveOperation;
 import com.xboson.j2ee.resp.XmlResponse;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Checker;
+import com.xboson.script.lib.JsInputStream;
 import com.xboson.util.*;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
@@ -238,6 +239,11 @@ public class SysImpl extends DateImpl {
       }
     }
     cd.xres.response();
+  }
+
+
+  public void setStream(InputStream i, String filename) throws IOException {
+    cd.xres.responseStream(i, filename);
   }
 
 
