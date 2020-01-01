@@ -167,9 +167,12 @@ Java JDK, Tomcat 9, Servlet 4.0.
   1. [docker 原生 API](https://docs.docker.com/engine/api/v1.39/)
   1. [生成安全连接](https://docs.docker.com/engine/security/https/)
       
-    
-    
-		
+## Hadoop
+
+  1. [hadoop-common-3.1.3-with-dependencies.jar] 合并了 
+      hadoop-3.1.3\share\hadoop\common 目录中的 jar 文件 和其下 lib 中的文件.
+
+
 # URL 映射约定
 
 get 请求使用标准的 http url 参数.

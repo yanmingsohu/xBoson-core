@@ -97,6 +97,16 @@ public class JsInputStream extends InputStream {
   }
 
 
+  public int read(Buffer.JsBuffer tar, int begin) throws IOException {
+    return read(tar, begin, tar.getLength());
+  }
+
+
+  public int read(Buffer.JsBuffer tar) throws IOException {
+    return read(tar, 0, tar.getLength());
+  }
+
+
   @Override
   public long skip(long l) throws IOException {
     return ori.skip(l);

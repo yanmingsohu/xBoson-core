@@ -63,6 +63,11 @@ public class Hash {
   }
 
 
+  public void update(byte[] b, int begin, int len) {
+    md.update(b, begin, len);
+  }
+
+
   public void update(Date d) {
     update(d.getTime());
   }

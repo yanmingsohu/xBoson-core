@@ -186,6 +186,10 @@ public final class Processes {
     {
       log.info(s[6], basename, filename);
       License new_license = License.readLicense();
+      if (new_license == null) {
+        log.error("Cannot read license");
+        return;
+      }
       new_license.publicKeyFile = publicKeyFile;
       license = new_license;
       run();

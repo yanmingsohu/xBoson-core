@@ -16,9 +16,16 @@
 
 package com.xboson.app.lib;
 
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
+import com.xboson.script.lib.JsInputStream;
+import com.xboson.script.lib.JsOutputStream;
 import com.xboson.util.Hash;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 
 /**
@@ -67,7 +74,7 @@ public class Digest extends RuntimeUnitImpl {
   }
 
 
-  public static class HashWarp {
+  public static class HashWarp implements IVisitByScript {
     private Hash h;
 
     public HashWarp(String algorithm) {
@@ -97,6 +104,68 @@ public class Digest extends RuntimeUnitImpl {
 
     public Bytes digest() {
       return new Bytes(h.digest());
+    }
+
+
+    public JsInputStream bind(InputStream i) {
+      return new JsInputStream(new Input(i, h));
+    }
+
+
+    public JsOutputStream bind(OutputStream o) {
+      return new JsOutputStream(new Output(o, h));
+    }
+  }
+
+
+  private static class Input extends InputStream implements IVisitByScript {
+    private InputStream org;
+    private Hash hash;
+
+    public Input(InputStream o, Hash h) {
+      org = o;
+      hash = h;
+    }
+
+    public int read() throws IOException {
+      int r = org.read();
+      hash.update(r);
+      return r;
+    }
+
+    public int read(byte[] buf, int begin, int len) throws IOException {
+      int r = org.read(buf, begin, len);
+      hash.update(buf, begin, r);
+      return r;
+    }
+
+    public void close() throws IOException {
+      org.close();
+    }
+  }
+
+
+  public static class Output extends OutputStream implements IVisitByScript {
+    private OutputStream org;
+    private Hash hash;
+
+    public Output(OutputStream o, Hash h) {
+      org = o;
+      hash = h;
+    }
+
+    public void write(int i) throws IOException {
+      hash.update(i);
+      org.write(i);
+    }
+
+    public void write(byte[] buf, int begin, int len) throws IOException {
+      hash.update(buf, begin, len);
+      org.write(buf, begin, len);
+    }
+
+    public void close() throws IOException {
+      org.close();
     }
   }
 }

@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
+import com.xboson.script.lib.JsInputStream;
 import com.xboson.util.LimitInputStream;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.c0nst.IConstant;

@@ -16,57 +16,138 @@
 
 package com.xboson.fs.hadoop;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashSet;
 import java.util.Set;
+
+import com.xboson.been.XBosonException;
+import com.xboson.fs.basic.IFileAttribute;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
 
 
 public class HadoopFileSystem implements IHadoopFileSystem {
 
+  private FileSystem hfs;
+
+
+  public HadoopFileSystem(String hdfsUri) throws IOException {
+    Configuration conf = new Configuration(false);
+    conf.set("fs.defaultFS", hdfsUri);
+    hfs = FileSystem.get(conf);
+  }
+
+
   @Override
   public InputStream openInputStream(String file) {
-    return null;
+    try {
+      return hfs.open(new Path(file));
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 
 
   @Override
   public OutputStream openOutputStream(String file) {
-    return null;
+    try {
+      return hfs.create(new Path(file), false);
+    } catch(IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 
 
   @Override
   public HadoopFileAttr readAttribute(String path) {
-    return null;
+    try {
+      Path p = new Path(path);
+      if (!hfs.exists(p)) {
+        return null;
+      }
+
+      FileStatus st = hfs.getFileStatus(p);
+      HadoopFileAttr attr = new HadoopFileAttr(toPathString(p),
+              st.isFile() ? IFileAttribute.T_FILE : IFileAttribute.T_DIR,
+              st.getModificationTime());
+
+      if (st.isDirectory()) {
+        for (FileStatus s : hfs.listStatus(p)) {
+          attr.addChildStruct(toPathString(s.getPath()));
+        }
+      }
+      return attr;
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 
 
   @Override
   public Set<HadoopFileAttr> readDir(String path) {
-    return null;
+    Set<HadoopFileAttr> ret = new HashSet<>();
+    try {
+      for (FileStatus s : hfs.listStatus(new Path(path))) {
+        HadoopFileAttr attr = new HadoopFileAttr(toPathString(s.getPath()),
+                s.isFile() ? IFileAttribute.T_FILE : IFileAttribute.T_DIR,
+                s.getModificationTime());
+        ret.add(attr);
+      }
+    } catch(IOException e) {
+      throw new XBosonException.IOError(e);
+    }
+    return ret;
   }
 
 
   @Override
   public void move(String src, String to) {
-
+    try {
+      hfs.rename(new Path(src), new Path(to));
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 
 
   @Override
   public void delete(String file) {
-
+    try {
+      hfs.delete(new Path(file), false);
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 
 
   @Override
   public long modifyTime(String path) {
-    return 0;
+    try {
+      FileStatus st = hfs.getFileStatus(new Path(path));
+      return st.getModificationTime();
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
 
 
   @Override
   public void makeDir(String path) {
-
+    try {
+      hfs.mkdirs(new Path(path));
+    } catch (IOException e) {
+      throw new XBosonException.IOError(e);
+    }
   }
+
+
+  /**
+   * 该方法只返回路径的字符串表达, 忽略 uri 中的其他部分
+   */
+  static String toPathString(Path p) {
+    return p.toUri().getPath();
+  }
+
 }

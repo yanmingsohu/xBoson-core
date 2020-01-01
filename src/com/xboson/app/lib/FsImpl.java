@@ -18,8 +18,9 @@ package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
 import com.xboson.fs.basic.IFileAttribute;
+import com.xboson.fs.basic.IFileOperatorBase;
 import com.xboson.fs.basic.IStreamOperator;
-import com.xboson.fs.mongo.IMongoFileSystem;
+import com.xboson.fs.hadoop.HadoopFileSystem;
 import com.xboson.fs.mongo.MongoFileAttr;
 import com.xboson.fs.mongo.SysMongoFactory;
 import com.xboson.fs.node.NodeFileFactory;
@@ -28,6 +29,9 @@ import com.xboson.fs.redis.FinderResult;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
 import com.xboson.script.lib.Checker;
+import com.xboson.script.lib.JsInputStream;
+import com.xboson.script.lib.JsOutputStream;
+import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.Tool;
 
 import java.io.IOException;
@@ -37,6 +41,30 @@ import java.util.Set;
 
 
 public class FsImpl {
+
+  public interface URLTypes {
+    /** hdfs://10.0.0.9:9000 */
+    String HDFS = "hdfs";
+
+    /** share://diskName */
+    String SHARE = "share";
+  }
+
+
+  private CreatorFromUrl<IFileOperatorBase> fsCreater;
+
+
+  public FsImpl() {
+    fsCreater = new CreatorFromUrl<>();
+
+    fsCreater.reg(URLTypes.HDFS, (v, p, url, data)->{
+      return new WrapStream<>(new HadoopFileSystem(url));
+    });
+
+    fsCreater.reg(URLTypes.SHARE, (v, p, url, data)->{
+      return openShare(v);
+    });
+  }
 
 
   public Object open() {
@@ -62,7 +90,7 @@ public class FsImpl {
         return new Wrap(NodeFileFactory.open());
 
       case "share":
-        return new Wrap2<MongoFileAttr>(SysMongoFactory.me().openFS());
+        return new WrapStream<MongoFileAttr>(SysMongoFactory.me().openFS());
 
       default:
         throw new XBosonException.NotFound(
@@ -71,13 +99,18 @@ public class FsImpl {
   }
 
 
-  public Object openShare(String diskName) {
+  public IFileOperatorBase openURI(String uri) {
+    return fsCreater.create(uri);
+  }
+
+
+  public IFileOperatorBase openShare(String diskName) {
     if (Tool.isNulStr(diskName))
       throw new XBosonException.NullParamException("String diskName");
 
     Checker.me.symbol(diskName, "无效的磁盘名称格式");
 
-    return new Wrap2(SysMongoFactory.me().openFS(diskName));
+    return new WrapStream(SysMongoFactory.me().openFS(diskName));
   }
 
 
@@ -86,11 +119,16 @@ public class FsImpl {
   }
 
 
-  private class Wrap2<Attr extends IFileAttribute>
+  /**
+   * 在接口退出时关闭打开的流, 必须返回包装器
+   */
+  private class WrapStream<Attr extends IFileAttribute>
           implements IStreamOperator<Attr> {
+
     private IStreamOperator<Attr> real;
 
-    private Wrap2(IStreamOperator<Attr> real) {
+
+    private WrapStream(IStreamOperator<Attr> real) {
       this.real = real;
     }
 
@@ -99,7 +137,7 @@ public class FsImpl {
     public InputStream openInputStream(String file) {
       InputStream i = real.openInputStream(file);
       ModuleHandleContext.autoClose(i);
-      return i;
+      return new JsInputStream(i);
     }
 
 
@@ -107,7 +145,7 @@ public class FsImpl {
     public OutputStream openOutputStream(String file) {
       OutputStream o = real.openOutputStream(file);
       ModuleHandleContext.autoClose(o);
-      return o;
+      return new JsOutputStream(o);
     }
 
 
