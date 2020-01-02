@@ -247,6 +247,11 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public void setHeader(String name, Object value) {
+    cd.resp.setHeader(name, String.valueOf(value));
+  }
+
+
   public String getUserPID() {
     return cd.sess.login_user.pid;
   }

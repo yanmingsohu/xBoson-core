@@ -28,6 +28,7 @@ import com.xboson.fs.redis.RedisFileAttr;
 import com.xboson.fs.redis.FinderResult;
 import com.xboson.fs.redis.IRedisFileSystemProvider;
 import com.xboson.fs.ui.UIFileFactory;
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Checker;
 import com.xboson.script.lib.JsInputStream;
 import com.xboson.script.lib.JsOutputStream;
@@ -40,7 +41,7 @@ import java.io.OutputStream;
 import java.util.Set;
 
 
-public class FsImpl {
+public class FsImpl implements IVisitByScript {
 
   public interface URLTypes {
     /** hdfs://10.0.0.9:9000 */
@@ -123,7 +124,7 @@ public class FsImpl {
    * 在接口退出时关闭打开的流, 必须返回包装器
    */
   private class WrapStream<Attr extends IFileAttribute>
-          implements IStreamOperator<Attr> {
+          implements IStreamOperator<Attr>, IVisitByScript {
 
     private IStreamOperator<Attr> real;
 
@@ -189,7 +190,7 @@ public class FsImpl {
   /**
    * 包装器防止调用不在接口中的方法
    */
-  private class Wrap implements IRedisFileSystemProvider {
+  private class Wrap implements IRedisFileSystemProvider, IVisitByScript {
     private final IRedisFileSystemProvider o;
 
     private Wrap(IRedisFileSystemProvider o ) {

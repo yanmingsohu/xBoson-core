@@ -115,6 +115,22 @@ public class Digest extends RuntimeUnitImpl {
     public JsOutputStream bind(OutputStream o) {
       return new JsOutputStream(new Output(o, h));
     }
+
+
+    public JsOutputStream getOutput() {
+      return new JsOutputStream(new _output());
+    }
+
+
+    private class _output extends OutputStream {
+      public void write(int i) throws IOException {
+        h.update(i);
+      }
+
+      public void write(byte[] buf, int begin, int len) throws IOException {
+        h.update(buf, begin, len);
+      }
+    }
   }
 
 

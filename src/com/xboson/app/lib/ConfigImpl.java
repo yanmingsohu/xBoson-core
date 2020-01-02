@@ -34,10 +34,7 @@ import org.bson.BsonString;
 import org.bson.Document;
 
 import javax.naming.event.NamingEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -99,7 +96,9 @@ public class ConfigImpl extends RuntimeUnitImpl {
    * 返回配置文件, 只能操作已经创建的配置文件, 当没有配置过该配置文件返回空
    */
   public Object get(final String name) {
-    Document meta = meta(name);
+    Document meta = meta(name, true);
+    if (meta == null) return null;
+
     BsonString dataKeyS = dataKey(name, meta);
     Document configFile = cache.getData(dataKeyS);
     if (configFile != null)
@@ -130,7 +129,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
    * 设置配置文件, 只能操作已经创建的配置文件, 否则抛出异常.
    */
   public void set(String name, Map<String, Object> val) {
-    Document meta = meta(name);
+    Document meta = meta(name, false);
     try {
       cache.wr.lock();
       BsonString dataKeyS = dataKey(name, meta);
@@ -158,13 +157,10 @@ public class ConfigImpl extends RuntimeUnitImpl {
     if (name == null) {
       throw new XBosonException.BadParameter(ATTR_NAME, "null");
     }
-    long mode = (Long) config.get(ATTR_MODE);
+    int mode = ((Number) config.get(ATTR_MODE)).intValue();
     if (mode <= 0 || mode > MODE__MAX) {
       throw new XBosonException.BadParameter(ATTR_MODE, "bad");
     }
-
-    SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
-    config.put(ATTR_OWNER, sys.getUserIdByOpenId());
 
     MongoCollection<Document> metaColl = open(COLL_META);
     BsonDocument find = new BsonDocument();
@@ -173,7 +169,15 @@ public class ConfigImpl extends RuntimeUnitImpl {
       throw new XBosonException("Config is exists:"+ name);
     }
 
-    metaColl.insertOne(new Document(config));
+    SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
+    Document doc = new Document();
+    doc.put(ATTR_NAME, config.get(ATTR_NAME));
+    doc.put(ATTR_MODE, mustNumber(config.get(ATTR_MODE)));
+    doc.put(ATTR_OWNER, sys.getUserIdByOpenId());
+    doc.put("desc", config.get("desc"));
+    doc.put("create_time", mustDate(config.get("create_time")));
+
+    metaColl.insertOne(doc);
   }
 
 
@@ -207,7 +211,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
    * 设置配置文件模板, 配置文件 key: 属性名, value: 参数类型
    */
   public void putTemplate(String name, Map<String, Object> tplMap) {
-    meta(name);
+    meta(name, false);
     MongoCollection<Document> tpl = open(COLL_TPL);
     BsonDocument del = new BsonDocument();
     del.put(ATTR_D_KEY, new BsonString(name));
@@ -221,7 +225,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
    * 返回配置文件模板, 只能操作已经创建的配置文件, 否则抛出异常.
    */
   public Object getTemplate(String name) {
-    meta(name);
+    meta(name, false);
     MongoCollection<Document> tpl = open(COLL_TPL);
     Document where = new Document();
     where.put(ATTR_D_KEY, name);
@@ -290,7 +294,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
 
   private BsonString dataKey(String name, Document meta) {
     String id;
-    int mode = meta.getLong(ATTR_MODE).intValue();
+    int mode = ((Number) meta.get(ATTR_MODE)).intValue();
     switch (mode) {
 
       case MODE_USER:
@@ -332,7 +336,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
   /**
    * 获取元数据, 带本地缓存, 如果元数据不存在抛出异常
    */
-  private Document meta(String name) {
+  private Document meta(String name, boolean returnNullNotExists) {
     Document meta = cache.getMeta(name);
     if (meta != null)
       return meta;
@@ -346,6 +350,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
       FindIterable<Document> ret = metaColl.find(find);
       meta = ret.first();
       if (meta == null) {
+        if (returnNullNotExists) return null;
         throw new XBosonException("配置文件不存在: "+ name);
       }
 
@@ -397,6 +402,25 @@ public class ConfigImpl extends RuntimeUnitImpl {
       }
     }
     return __db.getCollection(collection);
+  }
+
+
+  private int mustNumber(Object n) {
+    if (n instanceof Number) {
+      return ((Number) n).intValue();
+    }
+    throw new IllegalArgumentException("not number");
+  }
+
+
+  private String mustDate(Object n) {
+    if (n instanceof String) {
+      return (String) n;
+    }
+    if (n instanceof ScriptObjectMirror) {
+      return (String) ((ScriptObjectMirror) n).callMember("toLocaleString");
+    }
+    throw new IllegalArgumentException("not date");
   }
 
 

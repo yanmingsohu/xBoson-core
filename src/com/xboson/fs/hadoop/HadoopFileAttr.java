@@ -21,13 +21,11 @@ import com.xboson.fs.basic.AbsFileAttr;
 
 public class HadoopFileAttr extends AbsFileAttr {
 
-
-  protected HadoopFileAttr(AbsFileAttr other) {
-    super(other);
-  }
+  public final long size;
 
 
-  protected HadoopFileAttr(String path, int type, long lastModify) {
+  protected HadoopFileAttr(String path, int type, long lastModify, long size) {
     super(path, type, lastModify);
+    this.size = size;
   }
 }

@@ -58,6 +58,11 @@ public class RequestImpl extends JSObject.Helper implements IJson {
   }
 
 
+  public String getHeader(String name) {
+    return cd.req.getHeader(name);
+  }
+
+
   @Override
   public boolean hasMember(String name) {
     return extendParameter.containsKey(name)

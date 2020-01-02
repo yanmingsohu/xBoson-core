@@ -18,6 +18,7 @@ package com.xboson.script.lib;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 
 /**
@@ -37,7 +38,7 @@ public class JsInputStream extends InputStream {
   /**
    * 将读入的数据写到 out 流中, 返回输出的字节
    */
-  public int pipe(JsOutputStream out) throws IOException {
+  public int pipe(OutputStream out) throws IOException {
     byte[] buf = new byte[BUFSIZE];
     int total = 0;
     for (;;) {
