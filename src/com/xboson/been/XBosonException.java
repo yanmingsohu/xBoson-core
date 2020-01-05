@@ -300,6 +300,11 @@ public class XBosonException extends RuntimeException
       this.path = path;
     }
 
+    public IOError(IOException e, String path) {
+      super(e);
+      this.path = path;
+    }
+
     public String getPath() {
       return path;
     }

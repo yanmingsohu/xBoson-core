@@ -34,6 +34,7 @@ public class Hash {
 
   private final MessageDigest md;
   private byte[] digest;
+  private long byteCount = 0;
 
 
   /**
@@ -53,18 +54,30 @@ public class Hash {
   }
 
 
+  /**
+   * 返回经过签名数据的字节数
+   */
+  public long updatedBytes() {
+    return byteCount;
+  }
+
+
   public void update(String s) {
-    md.update(s.getBytes(IConstant.CHARSET));
+    byte[] b = s.getBytes(IConstant.CHARSET);
+    md.update(b);
+    byteCount += b.length;
   }
 
 
   public void update(byte[] b) {
     md.update(b);
+    byteCount += b.length;
   }
 
 
   public void update(byte[] b, int begin, int len) {
     md.update(b, begin, len);
+    byteCount += len;
   }
 
 
@@ -83,6 +96,7 @@ public class Hash {
     md.update((byte) ((l>>40) & 0xFF));
     md.update((byte) ((l>>48) & 0xFF));
     md.update((byte) ((l>>56) & 0xFF));
+    byteCount += 8;
   }
 
 
@@ -91,6 +105,7 @@ public class Hash {
     md.update((byte) ((l>>8 ) & 0xFF));
     md.update((byte) ((l>>16) & 0xFF));
     md.update((byte) ((l>>24) & 0xFF));
+    byteCount += 4;
   }
 
 

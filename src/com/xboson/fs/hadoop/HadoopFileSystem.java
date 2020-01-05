@@ -45,7 +45,7 @@ public class HadoopFileSystem implements IHadoopFileSystem {
     try {
       return hfs.open(new Path(file));
     } catch (IOException e) {
-      throw new XBosonException.IOError(e);
+      throw new XBosonException.IOError(e, file);
     }
   }
 
@@ -55,7 +55,7 @@ public class HadoopFileSystem implements IHadoopFileSystem {
     try {
       return hfs.create(new Path(file), false);
     } catch(IOException e) {
-      throw new XBosonException.IOError(e);
+      throw new XBosonException.IOError(e, file);
     }
   }
 
@@ -71,16 +71,16 @@ public class HadoopFileSystem implements IHadoopFileSystem {
       FileStatus st = hfs.getFileStatus(p);
       HadoopFileAttr attr = new HadoopFileAttr(toPathString(p),
               st.isFile() ? IFileAttribute.T_FILE : IFileAttribute.T_DIR,
-              st.getModificationTime());
+              st.getModificationTime(), st.getLen());
 
       if (st.isDirectory()) {
         for (FileStatus s : hfs.listStatus(p)) {
-          attr.addChildStruct(toPathString(s.getPath()));
+          attr.dir_contain.add(toPathString(s.getPath()));
         }
       }
       return attr;
     } catch (IOException e) {
-      throw new XBosonException.IOError(e);
+      throw new XBosonException.IOError(e, path);
     }
   }
 
@@ -92,11 +92,11 @@ public class HadoopFileSystem implements IHadoopFileSystem {
       for (FileStatus s : hfs.listStatus(new Path(path))) {
         HadoopFileAttr attr = new HadoopFileAttr(toPathString(s.getPath()),
                 s.isFile() ? IFileAttribute.T_FILE : IFileAttribute.T_DIR,
-                s.getModificationTime());
+                s.getModificationTime(), s.getLen());
         ret.add(attr);
       }
     } catch(IOException e) {
-      throw new XBosonException.IOError(e);
+      throw new XBosonException.IOError(e, path);
     }
     return ret;
   }
@@ -117,7 +117,7 @@ public class HadoopFileSystem implements IHadoopFileSystem {
     try {
       hfs.delete(new Path(file), false);
     } catch (IOException e) {
-      throw new XBosonException.IOError(e);
+      throw new XBosonException.IOError(e, file);
     }
   }
 
@@ -128,7 +128,7 @@ public class HadoopFileSystem implements IHadoopFileSystem {
       FileStatus st = hfs.getFileStatus(new Path(path));
       return st.getModificationTime();
     } catch (IOException e) {
-      throw new XBosonException.IOError(e);
+      throw new XBosonException.IOError(e, path);
     }
   }
 
@@ -138,7 +138,7 @@ public class HadoopFileSystem implements IHadoopFileSystem {
     try {
       hfs.mkdirs(new Path(path));
     } catch (IOException e) {
-      throw new XBosonException.IOError(e);
+      throw new XBosonException.IOError(e, path);
     }
   }
 

@@ -23,6 +23,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.script.JSObject;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Checker;
+import com.xboson.script.lib.JsInputStream;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
@@ -38,6 +39,8 @@ import java.util.Map;
  * 自定义参数优先级高于 http 参数.
  */
 public class RequestImpl extends JSObject.Helper implements IJson {
+
+  private static final String Cookie = "cookie";
 
   private CallData cd;
   private Map<String, Object> extendParameter;
@@ -59,6 +62,9 @@ public class RequestImpl extends JSObject.Helper implements IJson {
 
 
   public String getHeader(String name) {
+    if (Cookie.equalsIgnoreCase(name)) {
+      return null;
+    }
     return cd.req.getHeader(name);
   }
 
@@ -312,6 +318,11 @@ public class RequestImpl extends JSObject.Helper implements IJson {
 
   public Buffer.JsBuffer body() throws IOException {
     return body(sys.maxPostBody);
+  }
+
+
+  public JsInputStream openStream() throws IOException {
+    return new JsInputStream(cd.req.getInputStream());
   }
 
 

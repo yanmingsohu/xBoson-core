@@ -18,6 +18,7 @@ package com.xboson.fs.basic;
 
 import com.xboson.been.XBosonException;
 import com.xboson.fs.redis.RedisFileAttr;
+import com.xboson.script.lib.Path;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -42,6 +43,9 @@ public abstract class AbsFileAttr implements Serializable, IFileAttribute {
   /** 若是目录, 则存储目录中的元素 */
   public final Set<String> dir_contain;
 
+  /** 不包含路径, 只有文件名 */
+  public final String name;
+
 
   protected AbsFileAttr(String path, int type, long lastModify) {
     if (path == null)
@@ -50,6 +54,7 @@ public abstract class AbsFileAttr implements Serializable, IFileAttribute {
     this.path = path;
     this.type = type;
     this.lastModify = lastModify;
+    this.name = Path.me.basename(path);
 
     if (type == T_DIR) {
       dir_contain = new HashSet<>();
@@ -110,7 +115,7 @@ public abstract class AbsFileAttr implements Serializable, IFileAttribute {
       throw new BadPath("Is not directory");
     }
     if (! full.startsWith(path)) {
-      throw new BadPath("Is not child: '" + full + "'");
+      throw new BadPath("Is not child in: '" + full + "'");
     }
     return full.substring(path.length());
   }

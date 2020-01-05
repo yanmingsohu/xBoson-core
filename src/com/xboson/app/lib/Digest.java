@@ -107,6 +107,11 @@ public class Digest extends RuntimeUnitImpl {
     }
 
 
+    public long updatedBytes() {
+      return h.updatedBytes();
+    }
+
+
     public JsInputStream bind(InputStream i) {
       return new JsInputStream(new Input(i, h));
     }

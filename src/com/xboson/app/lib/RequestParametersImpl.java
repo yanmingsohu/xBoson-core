@@ -18,6 +18,8 @@ package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
 import jdk.nashorn.api.scripting.AbstractJSObject;
+import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.runtime.Context;
 
 
 /**
