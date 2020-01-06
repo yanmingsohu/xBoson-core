@@ -70,6 +70,9 @@ public class XResponse implements IHttpHeader {
 
 
 	private void bindResponseType(String format) {
+	  if (is_responsed) {
+	    throw new XBosonException.IOError("Is responsed, cannot switch response type.");
+    }
     if (format != null) {
       this.res_impl = ResponseTypes.get(format);
     } else {
@@ -263,6 +266,12 @@ public class XResponse implements IHttpHeader {
     ret_root.put(StreamResponse.MAP_KEY_FILENAME, filename);
     bindResponseType("stream");
     setDatatype(i.getClass());
+    response();
+  }
+
+
+  public void responseNull() throws IOException {
+    bindResponseType("null");
     response();
   }
 

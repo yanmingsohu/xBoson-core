@@ -31,7 +31,7 @@ public class Bytes implements IJson {
 
 
   /**
-   * @param base64url - base64 编码字符串
+   * @param base64url - base64url 编码字符串
    */
   public Bytes(String base64url) {
     this.s_key = base64url;

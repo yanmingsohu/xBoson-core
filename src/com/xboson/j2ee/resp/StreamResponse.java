@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Map;
 
@@ -43,14 +44,21 @@ public class StreamResponse implements IXResponse {
   public void response(HttpServletRequest request, HttpServletResponse response,
                        Map<String, Object> ret_root) throws IOException {
     String file = (String) ret_root.get(MAP_KEY_FILENAME);
-    file = URLEncoder.encode(file, "UTF-8");
-
-    response.setHeader("content-type", MIME_BIN);
-    response.setHeader("Content-Disposition",
-            "attachment; filename=\""+ file +"\"");
+    setFileName(response, file);
 
     OutputStream out = response.getOutputStream();
     InputStream _in = (InputStream) ret_root.get(MAP_KEY_STREAM);
     Streams.copy(_in, out, true);
+  }
+
+
+  public static void setFileName(HttpServletResponse resp, String filename)
+          throws UnsupportedEncodingException {
+    filename = URLEncoder.encode(filename, "UTF-8");
+    filename = filename.replaceAll("\\+", "%20");
+
+    resp.setHeader("content-type", MIME_BIN);
+    resp.setHeader("Content-Disposition",
+            "attachment; filename=\""+ filename +"\"");
   }
 }

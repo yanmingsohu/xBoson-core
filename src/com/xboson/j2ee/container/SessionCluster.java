@@ -131,7 +131,7 @@ public class SessionCluster extends HttpFilter {
       //
       // 第一次访问, 创建 cookie
       //
-      ck = createCookie(response);
+      ck = createCookie(request, response);
     } else {
       //
       // 验证 cookie 的值是否是平台生成
@@ -141,7 +141,7 @@ public class SessionCluster extends HttpFilter {
         // 错误的 cookie 加密, 则生成全新的 cookie
         //
         log.debug("Bad Session id:", ck.getValue());
-        ck = createCookie(response);
+        ck = createCookie(request, response);
       } else {
         //
         // 尝试从 redis 还原数据
@@ -151,7 +151,7 @@ public class SessionCluster extends HttpFilter {
         // 超时则重建数据
         //
         if (sd != null && sd.isTimeout()) {
-          ck = createCookie(response);
+          ck = createCookie(request, response);
           sd = null;
         }
       }
@@ -183,14 +183,16 @@ public class SessionCluster extends HttpFilter {
   }
 
 
-  private Cookie createCookie(HttpServletResponse response)
+  private Cookie createCookie(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException {
     Cookie ck = new Cookie(COOKIE_NAME,
             SessionID.generateSessionId(sessionPassword));
     ck.setHttpOnly(true);
     ck.setMaxAge(sessionTimeout * 60);
     ck.setPath(contextPath);
-    response.addCookie(ck);
+    // 如果未设置cookie的domain属性，则该cookie仅适用于其原始域。
+    // ck.setDomain(req.getServerName());
+    resp.addCookie(ck);
     return ck;
   }
 

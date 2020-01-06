@@ -139,11 +139,11 @@ public class Digest extends RuntimeUnitImpl {
   }
 
 
-  private static class Input extends InputStream implements IVisitByScript {
+  public static class Input extends InputStream implements IVisitByScript {
     private InputStream org;
     private Hash hash;
 
-    public Input(InputStream o, Hash h) {
+    private Input(InputStream o, Hash h) {
       org = o;
       hash = h;
     }
@@ -170,7 +170,7 @@ public class Digest extends RuntimeUnitImpl {
     private OutputStream org;
     private Hash hash;
 
-    public Output(OutputStream o, Hash h) {
+    private Output(OutputStream o, Hash h) {
       org = o;
       hash = h;
     }

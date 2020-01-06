@@ -41,6 +41,7 @@ public final class ResponseTypes {
     types.put("xml",    new XmlResponse());
     types.put("jsonp",  new JsonPaddingResp());
     types.put("stream", new StreamResponse());
+    types.put("null",   new NullResponse());
   }
 
 
