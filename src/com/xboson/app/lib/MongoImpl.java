@@ -30,7 +30,9 @@ import com.xboson.been.LoginUser;
 import com.xboson.db.ConnectConfig;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import jdk.nashorn.internal.runtime.Context;
 import jdk.nashorn.internal.runtime.ScriptObject;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWriter;
@@ -299,16 +301,6 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  protected boolean isArray(Object jsobj) {
-    if (jsobj instanceof ScriptObject) {
-      return ((ScriptObject) jsobj).isArray();
-    } else if (jsobj instanceof ScriptObjectMirror) {
-      return ((ScriptObjectMirror) jsobj).isArray();
-    }
-    return false;
-  }
-
-
   /**
    * js 对象转换为 Mongo 文档对象
    */
@@ -330,13 +322,25 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
   /**
    * js 对象转换为多文档格式.
    */
-  protected List<Document> toManyDoc(Object jsobj) {
+  protected List toManyDoc(Object jsobj) {
     ScriptObjectMirror js = wrap(jsobj);
     final int size = js.size();
-    List<Document> docs = new ArrayList<>(size);
+    List docs = new ArrayList<>(size);
+
     for (int i=0; i<size; ++i) {
       Object o = js.getSlot(i);
-      docs.add(toDoc(o));
+      if (o == null) {
+        docs.add(null);
+      }
+      else if (isArray(o)) {
+        docs.add(toManyDoc(o));
+      }
+      else if (o instanceof Map) {
+        docs.add(toDoc(o));
+      }
+      else {
+        docs.add(o);
+      }
     }
     return docs;
   }
