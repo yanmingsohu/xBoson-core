@@ -29,6 +29,7 @@ import jdk.nashorn.internal.objects.NativeArray;
 import jdk.nashorn.internal.objects.NativeJSON;
 import jdk.nashorn.internal.objects.NativeRegExp;
 import jdk.nashorn.internal.runtime.Context;
+import jdk.nashorn.internal.runtime.ScriptObject;
 
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
@@ -245,8 +246,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       return o.toString();
     }
     if (o instanceof ScriptObjectMirror) {
-      o = ScriptUtils.unwrap(o);
-      return o +"";
+      return ScriptUtils.unwrap(o);
     }
     return o;
   }
@@ -306,6 +306,16 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       return ((int) o) != 0;
     if (o instanceof String)
       return Tool.notNulStr((String)o);
+    return false;
+  }
+
+
+  protected boolean isArray(Object jsobj) {
+    if (jsobj instanceof ScriptObject) {
+      return ((ScriptObject) jsobj).isArray();
+    } else if (jsobj instanceof ScriptObjectMirror) {
+      return ((ScriptObjectMirror) jsobj).isArray();
+    }
     return false;
   }
 
