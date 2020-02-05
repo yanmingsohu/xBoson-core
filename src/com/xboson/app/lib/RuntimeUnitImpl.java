@@ -253,12 +253,12 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
 
 
   /**
-   * 获取正则表达式的原始字符串
+   * 获取正则表达式
    * @see #isRegexp(Object) 判断是否是正则表达式对象
    * @param exp 必须是正则表达式对象
    */
-  public static String getRegExp(Object exp) {
-    return (String) NativeRegExp.source(exp);
+  public static JsRegExp getRegExp(Object exp) {
+    return new JsRegExp(exp);
   }
 
 
@@ -492,5 +492,34 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
       begin += read.length;
     }
     return new Bytes(base);
+  }
+
+
+  public static class JsRegExp {
+    public final String source;
+    public final boolean global;
+    public final boolean ignoreCase;
+    public final boolean multiline;
+
+    public JsRegExp(Object jsexp) {
+      this.source     = (String) NativeRegExp.source(jsexp);
+      this.global     = (boolean) NativeRegExp.global(jsexp);
+      this.ignoreCase = (boolean) NativeRegExp.ignoreCase(jsexp);
+      this.multiline  = (boolean) NativeRegExp.multiline(jsexp);
+    }
+
+    public String options() {
+      String o = "";
+      if (global) {
+        o += 'g';
+      }
+      if (ignoreCase) {
+        o += 'i';
+      }
+      if (multiline) {
+        o += 'm';
+      }
+      return o;
+    }
   }
 }

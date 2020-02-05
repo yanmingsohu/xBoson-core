@@ -30,14 +30,11 @@ import com.xboson.been.LoginUser;
 import com.xboson.db.ConnectConfig;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
-import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.internal.runtime.Context;
-import jdk.nashorn.internal.runtime.ScriptObject;
-import org.bson.BsonDocument;
-import org.bson.BsonDocumentWriter;
-import org.bson.BsonRegularExpression;
-import org.bson.Document;
+import org.bson.*;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
 
@@ -621,7 +618,7 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     Object jsval = unwrap(val);
     if (isRegexp(jsval)) {
       writer.writeRegularExpression(
-              new BsonRegularExpression(getRegExp(jsval)) );
+              new BsonRegularExpression(getRegExp(jsval).source) );
       return;
     }
 
@@ -651,5 +648,171 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
       writeValue(writer, s.getSlot(i));
     }
     writer.writeEndArray();
+  }
+
+
+  /**
+   * TODO: 实现该类, 跳过对 ScriptObjectMirror 和 Document 之间的数据转换
+   *
+   * mongo 驱动使用 org.bson.Document 作为中间值传递数据, 改编码器跳过转换过程,
+   * 直接把 js 对象中的数据输出到驱动层.
+   */
+  public class JsObjectMongoDataCodec implements Codec<ScriptObjectMirror> {
+    private CodecRegistry codec;
+
+
+    /**
+     * @param defaultCodec MongoDatabase.getCodecRegistry() 可以获取默认编码器
+     *                     注册器, 用来处理默认数据结构
+     */
+    private JsObjectMongoDataCodec(CodecRegistry defaultCodec) {
+      this.codec = defaultCodec;
+    }
+
+
+    @Override
+    public ScriptObjectMirror decode(BsonReader r, DecoderContext ctx) {
+      return (ScriptObjectMirror) readObj(r, ctx);
+    }
+
+
+    private Object readArray(BsonReader r, DecoderContext ctx) {
+      ScriptObjectMirror obj = createJSList();
+      int i = 0;
+      do {
+        obj.setSlot(i++, readObj(r, ctx));
+      } while (r.readBsonType() != BsonType.END_OF_DOCUMENT);
+      return obj;
+    }
+
+
+    private Object readMap(BsonReader r, DecoderContext ctx) {
+      ScriptObjectMirror obj = createJSObject();
+      do {
+        obj.put(r.readName(), readObj(r, ctx));
+      } while (r.readBsonType() != BsonType.END_OF_DOCUMENT);
+      return obj;
+    }
+
+
+    private Object readObj(BsonReader r, DecoderContext ctx) {
+      switch (r.readBsonType()) {
+        case DOCUMENT:
+          return readMap(r, ctx);
+
+        case ARRAY:
+          return readArray(r, ctx);
+
+        case DOUBLE:
+          return r.readDouble();
+
+        case STRING:
+          return r.readString();
+
+        case UNDEFINED:
+          return nullObj();
+
+        case BOOLEAN:
+          return r.readBoolean();
+
+        case DATE_TIME:
+          return new Date(r.readDateTime());
+
+        case NULL:
+          return null;
+
+        case INT32:
+          return r.readInt32();
+
+        case INT64:
+          return r.readInt64();
+
+
+        case TIMESTAMP:
+          return new Date(r.readTimestamp().getTime()*1000);
+
+        // TODO: 针对 mongodb 的对象进行包装
+        case DECIMAL128:
+        case JAVASCRIPT_WITH_SCOPE:
+        case SYMBOL:
+        case JAVASCRIPT:
+        case DB_POINTER:
+        case REGULAR_EXPRESSION:
+        case BINARY:
+        case OBJECT_ID:
+        case MAX_KEY:
+        case MIN_KEY:
+
+        default:
+          throw new IllegalStateException(r.readBsonType().name());
+      }
+    }
+
+
+    @Override
+    public void encode(BsonWriter w, ScriptObjectMirror jobj,
+                       EncoderContext ctx) {
+      writeObj(w, jobj, ctx);
+    }
+
+
+    private void writeObj(BsonWriter w, Object obj, EncoderContext ctx) {
+      if (obj == null) {
+        w.writeNull();
+      }
+      else if (obj instanceof ScriptObjectMirror) {
+        writeObj(w, (ScriptObjectMirror)obj, ctx);
+      }
+      else {
+        Codec c = codec.get(obj.getClass());
+        ctx.encodeWithChildContext(c, w, obj);
+      }
+    }
+
+
+    private void writeObj(BsonWriter w, ScriptObjectMirror jobj,
+                          EncoderContext ctx) {
+      if (jobj.isArray()) {
+        writeArray(w, jobj, ctx);
+      }
+      else if (isNull(jobj) || jobj.isFunction()) {
+        w.writeNull();
+      }
+      else if (isRegexp(jobj)) {
+        JsRegExp jre = getRegExp(jobj);
+        BsonRegularExpression exp = new BsonRegularExpression(jre.source, jre.options());
+        w.writeRegularExpression(exp);
+      }
+      else {
+        writeMap(w, jobj, ctx);
+      }
+    }
+
+    private void writeMap(BsonWriter w, ScriptObjectMirror jobj,
+                          EncoderContext ctx) {
+      w.writeStartDocument();
+      for (Map.Entry<String, Object> et : jobj.entrySet()) {
+        w.writeName(et.getKey());
+        writeObj(w, et.getValue(), ctx);
+      }
+      w.writeEndDocument();
+    }
+
+
+    private void writeArray(BsonWriter w, ScriptObjectMirror jobj,
+                            EncoderContext ctx) {
+      w.writeStartArray();
+      final int size = jobj.size();
+      for (int i=0; i<size; ++i) {
+        writeObj(w, jobj.getSlot(i), ctx);
+      }
+      w.writeEndArray();
+    }
+
+
+    @Override
+    public Class<ScriptObjectMirror> getEncoderClass() {
+      return ScriptObjectMirror.class;
+    }
   }
 }
