@@ -72,6 +72,68 @@ public final class Network {
   }
 
 
+  /**
+   * 返回的列表中包含符合 mask 规则的地址
+   * mask: 接受 '*' 匹配
+   */
+  public static String[] filter(String mask, String[] ip) {
+    int[] pass = new int[ip.length];
+    int count = 0;
+    for (int i=0; i<ip.length; ++i) {
+      if (filter(mask, ip[i])) {
+        pass[i] = i;
+        count++;
+      } else {
+        pass[i] = -1;
+      }
+    }
+    String[] ret = new String[count];
+    for (int i=0; i<pass.length; ++i) {
+      if (pass[i] >= 0) {
+        ret[--count] = ip[ pass[i] ];
+      }
+    }
+    return ret;
+  }
+
+
+  /**
+   * 匹配返回 true
+   */
+  public static boolean filter(String mask, String ip) {
+    int pi = 0, i = 0;
+    while (i<mask.length()) {
+      char c = mask.charAt(i);
+      switch (c) {
+        case '*':
+          // 处理连续 '*' 号的情况
+          while (c == '*' && ++i < mask.length()) {
+            c = mask.charAt(i);
+          }
+          // mask 最末是 '*' 则认为之后全部匹配
+          if (i >= mask.length()) {
+            return true;
+          }
+          ++pi;
+          while (pi < ip.length() && ip.charAt(pi) != c) {
+            ++pi;
+          }
+          break;
+
+        default:
+          if (pi >= ip.length()) return false;
+          if (ip.charAt(pi) != c) {
+            return false;
+          }
+          ++i;
+          ++pi;
+          break;
+      }
+    }
+    return true;
+  }
+
+
   private static void see(List<InetAddress> list,
                           Enumeration<NetworkInterface> e)
           throws SocketException

@@ -22,10 +22,7 @@ import com.xboson.db.driver.Mysql;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
-import com.xboson.util.ChineseDictionary;
-import com.xboson.util.CreatorFromUrl;
-import com.xboson.util.StringBufferOutputStream;
-import com.xboson.util.Tool;
+import com.xboson.util.*;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -62,6 +59,23 @@ public class TestTool extends Test {
     copy_bytes();
     url_creator();
     count_impl();
+    ip_filter();
+  }
+
+
+  private void ip_filter() {
+    sub("Network IP Filter");
+    eq(Network.filter("10.3.*.*", "10.3.8.11"), true, "ip1");
+    eq(Network.filter("10.3.*.*", "10.3.8.211"), true, "ip2");
+    eq(Network.filter("10.2.*.*", "10.3.8.211"), false, "ip3");
+    eq(Network.filter("10.2.*.*", "102.1.1.1"), false, "ip4");
+    eq(Network.filter("10.2.*.*", "172.0.3.1"), false, "ip5");
+    eq(Network.filter("172.*", "172.0.3.1"), true, "ip6");
+    eq(Network.filter("10.*.1.1", "10.1.1.1"), true, "ip7");
+    eq(Network.filter("10.*.1.2", "10.2.1.2"), true, "ip8");
+
+    msg(Network.filter("10.*.1.1", new String[]{"172.3.1.1",
+            "10.1.1.1", "192.168.1.1", "10.2.1.2"}));
   }
 
 

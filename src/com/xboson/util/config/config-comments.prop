@@ -91,3 +91,5 @@ rpcIp: RPC 监听 IPv4 地址, 网络中的其他节点通过该地址可以访�
          默认为空, 且在本机ip地址集中搜索一个作为默认值.
 rpcPort: RPC 监听端口, 默认 0, 在随机端口上监听 rpc.
 rpcUpnp: RPC 利用 UPuP 自动在网关上做端口映射
+rpcIpMask: 启用 RPC IP 地址过滤, 格式: '1.2.3.*' 优先选择符合条件的ip; \
+          如果提供了 rpcIp 参数, 则过滤无效

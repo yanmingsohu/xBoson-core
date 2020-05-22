@@ -48,9 +48,14 @@ public class ComputeNodeInfo extends JsonHelper implements Cloneable {
    * 无效的 ip 将导致 rpc 无法连接或速度太慢.
    */
   public ComputeNodeInfo(String nodeid, int rpcPort) {
-    String[] ip = SysConfig.me().readConfig().rpcIp;
+    Config cfg = SysConfig.me().readConfig();
+    String[] ip = cfg.rpcIp;
     if (ip == null || ip.length < 1) {
       ip = Network.toAddressString(Network.netWorkerInterfaces());
+
+      if (cfg.rpcIpMask != null && cfg.rpcIpMask.length() > 0) {
+        ip = Network.filter(cfg.rpcIpMask, ip);
+      }
     }
 
     Properties sysattr = System.getProperties();

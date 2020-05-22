@@ -76,6 +76,7 @@ public class Config implements IBean {
 
   public short clusterNodeID;
   public String[] rpcIp;
+  public String rpcIpMask;
   public int rpcPort;
   public boolean rpcUpnp;
   public boolean enableUploadClear;
