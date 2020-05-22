@@ -23,9 +23,12 @@ import com.xboson.been.LoginUser;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.sleep.SafeDataFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import redis.clients.jedis.*;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -90,16 +93,15 @@ public class RedisImpl implements IApiConstant {
 
 
   public List<Object> delAll(String region, String[] keys) throws IOException {
-    try (Jedis client = RedisMesmerizer.me().open();
-         Transaction t = client.multi() )
-    {
+    try (Jedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
       SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
 
+      List<Object> ret = new ArrayList<>();
       for (int i=0; i<keys.length; ++i) {
-        t.hdel(tkey, enc.encodeKey(keys[i]));
+        ret.add( client.hdel(tkey, enc.encodeKey(keys[i])) );
       }
-      return t.exec();
+      return ret;
     }
   }
 

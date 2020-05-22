@@ -69,14 +69,10 @@ public class Firewall {
    * 记录一次 ip 失败登录次数
    */
   public void ipLoginFail(String ip) {
-    try (Jedis client = redis.open();
-         Transaction t = client.multi() ) {
+    try (Jedis client = redis.open()) {
       String key = "/ip-ban/" + ip;
-      t.incr(key);
-      t.expire(key, IP_WAIT_TIMEOUT * 60);
-      t.exec();
-    } catch (IOException e) {
-      throw new XBosonException(e);
+      client.incr(key);
+      client.expire(key, IP_WAIT_TIMEOUT * 60);
     }
   }
 }

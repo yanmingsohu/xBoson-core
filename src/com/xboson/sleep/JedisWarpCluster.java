@@ -49,9 +49,18 @@ public class JedisWarpCluster implements InvocationHandler {
   public Object invoke(Object proxy, Method method, Object[] args)
           throws Throwable {
     final String name = method.getName();
-    final Class[] pt =  method.getParameterTypes();
 
-    Method clu_method = cluster.getClass().getMethod(name, pt);
-    return clu_method.invoke(cluster, args);
+    switch (name) {
+      case "close":
+      case "shutdown":
+        return null;
+
+      default:
+        Class[] pt =  method.getParameterTypes();
+        Method clu_method = cluster.getClass().getMethod(name, pt);
+        return clu_method.invoke(cluster, args);
+    }
+
+
   }
 }
