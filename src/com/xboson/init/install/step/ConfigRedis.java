@@ -16,6 +16,7 @@
 
 package com.xboson.init.install.step;
 
+import com.xboson.been.RedisConfig;
 import com.xboson.db.ConnectConfig;
 import com.xboson.init.install.HttpData;
 import com.xboson.init.install.IStep;
@@ -33,7 +34,7 @@ public class ConfigRedis implements IStep {
 
   @Override
   public boolean gotoNext(HttpData data) {
-    ConnectConfig redis = data.cf.redis;
+    RedisConfig redis = data.cf.redis;
     redis.setHost(data.req.getParameter("rhost"));
     redis.setPort(data.req.getParameter("rport"));
     redis.setPassword(data.req.getParameter("rpassword"));

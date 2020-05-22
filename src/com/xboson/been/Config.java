@@ -71,7 +71,7 @@ public class Config implements IBean {
   public JedisPoolConfig jedispool;
   public DBPoolConfig dbpool;
   public ConnectConfig db;
-  public ConnectConfig redis;
+  public RedisConfig redis;
   public MongoConfig mongodb;
 
   public short clusterNodeID;

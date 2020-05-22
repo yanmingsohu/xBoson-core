@@ -36,7 +36,7 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
   public static final String CLOSE_NAME = "close";
 
   private String classname;
-  private T original;
+  protected T original;
 
 
   /**

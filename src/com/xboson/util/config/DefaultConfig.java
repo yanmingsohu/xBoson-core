@@ -16,10 +16,7 @@
 
 package com.xboson.util.config;
 
-import com.xboson.been.AppSelf;
-import com.xboson.been.Config;
-import com.xboson.been.MongoConfig;
-import com.xboson.been.XBosonException;
+import com.xboson.been.*;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.DBPoolConfig;
 import com.xboson.script.lib.Uuid;
@@ -75,6 +72,7 @@ public final class DefaultConfig {
     c.appSelf           = new AppSelf();
     c.rpcPort           = 0;
     c.rpcIp             = new String[0];
+    c.rpcIpMask         = "";
 
     c.rootPassword =
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));
@@ -108,10 +106,11 @@ public final class DefaultConfig {
     ConnectConfig db = c.db = new ConnectConfig();
     db.setHost("localhost");
 
-    ConnectConfig redis = c.redis = new ConnectConfig();
+    RedisConfig redis = c.redis = new RedisConfig();
     redis.setHost("localhost");
     redis.setPort("6379");
     redis.setPassword("");
+    redis.setCluster(false);
 
     MongoConfig mc = c.mongodb = new MongoConfig();
     mc.host = "localhost";
