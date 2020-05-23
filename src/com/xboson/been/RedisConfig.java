@@ -16,6 +16,9 @@
 
 package com.xboson.been;
 
+import com.xboson.util.Tool;
+
+
 public class RedisConfig extends JsonHelper {
 
   String dbname;
@@ -45,6 +48,14 @@ public class RedisConfig extends JsonHelper {
 
   public void setDbid(Integer dbid) {
     this.dbid = dbid;
+  }
+
+
+  public String getHost(String defaultHost) {
+    if (Tool.isNulStr(host)) {
+      return defaultHost;
+    }
+    return host;
   }
 
 
@@ -98,6 +109,14 @@ public class RedisConfig extends JsonHelper {
 
 
   public String getPassword() {
+    return password;
+  }
+
+
+  public String getPassword(String defaultPs) {
+    if (Tool.isNulStr(password)) {
+      return defaultPs;
+    }
     return password;
   }
 

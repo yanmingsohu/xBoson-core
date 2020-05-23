@@ -26,18 +26,6 @@ import redis.clients.jedis.Transaction;
 public class RedisClientCluster extends JedisCluster implements IRedis {
 
 
-  RedisClientCluster(HostAndPort node, int timeout,
-                     final GenericObjectPoolConfig pc) {
-    super(node, timeout, pc);
-  }
-
-
-  RedisClientCluster(HostAndPort node,
-                     final GenericObjectPoolConfig pc) {
-    super(node, pc);
-  }
-
-
   RedisClientCluster(HostAndPort node, int connectionTimeout, int soTimeout,
                      int maxAttempts, String password,
                      final GenericObjectPoolConfig pc) {

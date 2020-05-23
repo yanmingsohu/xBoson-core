@@ -50,12 +50,13 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   public final static int TIMEOUT = 3000;
   public final static int SoTIMEOUT = 2000;
   public final static int MaxAttempts = 5;
+  public final static int DEFAULT_DATABASE = 0;
 
   private static RedisMesmerizer instance;
 
   private Log log = LogFactory.create();
   private RedisClientCluster jcluster;
-  private JedisPool jpool;
+  private RedisSAPool jpool;
   private JSON json;
   private BIN bin;
   private final boolean cluster;
@@ -80,37 +81,17 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     Config config = SysConfig.me().readConfig();
     JedisPoolConfig pool = config.jedispool;
     RedisConfig redis = config.redis;
-    String ps = redis.getPassword();
-    int port = redis.getIntPort(6379);
     cluster = redis.isCluster();
 
-    if ((Tool.isNulStr(redis.getHost()))) {
-      if (cluster) {
-        jcluster = new RedisClientCluster(
-                new HostAndPort("localhost", port), pool);
-      } else {
-        jpool = new JedisPool(
-                pool, "localhost");
-      }
-    }
-    else if (Tool.isNulStr(ps)) {
-      if (cluster) {
-        jcluster = new RedisClientCluster(
-                new HostAndPort(redis.getHost(), port), TIMEOUT, pool);
-      } else {
-        jpool = new JedisPool(
-                pool, redis.getHost(), port, TIMEOUT);
-      }
-    }
-    else {
-      if (cluster) {
-        jcluster = new RedisClientCluster(
-                new HostAndPort(redis.getHost(), port),
+    final String ps = redis.getPassword(null);
+    final String host = redis.getHost("localhost");
+    final int port = redis.getIntPort(6379);
+
+    if (cluster) {
+      jcluster = new RedisClientCluster(new HostAndPort(host, port),
                 TIMEOUT, SoTIMEOUT, MaxAttempts, ps, pool);
-      } else {
-        jpool = new JedisPool(
-                pool, redis.getHost(), port, TIMEOUT, ps);
-      }
+    } else {
+      jpool = new RedisSAPool(pool, host, port, TIMEOUT, ps);
     }
 
     log.info("Initialization Success");
@@ -124,8 +105,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     if (cluster) {
       return jcluster;
     } else {
-      RedisClientStandAlone cli = new RedisClientStandAlone(jpool);
-      return cli.getProxy();
+      return jpool.openClient();
     }
   }
 

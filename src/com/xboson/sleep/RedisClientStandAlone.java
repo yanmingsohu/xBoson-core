@@ -17,43 +17,30 @@
 package com.xboson.sleep;
 
 import redis.clients.jedis.Jedis;
-import redis.clients.util.Pool;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 
 
-public class RedisClientStandAlone implements InvocationHandler {
+public class RedisClientStandAlone extends Jedis implements IRedis {
 
-  private final IRedis proxy;
-  private final Jedis ori;
-  private final Class c;
-
-
-  public RedisClientStandAlone(Pool<Jedis> jedisPool) {
-    ori = jedisPool.getResource();
-    c = ori.getClass();
-
-    proxy = (IRedis) Proxy.newProxyInstance(c.getClassLoader(),
-            new Class[]{IRedis.class}, this);
-  }
-
-
-  public IRedis getProxy() {
-    return proxy;
+  public RedisClientStandAlone(final String host, final int port, final int timeout) {
+    super(host, port, timeout, timeout,
+            false, null, null, null);
   }
 
 
   @Override
-  public Object invoke(Object proxy, Method method, Object[] objects) throws Throwable {
-    final String name = method.getName();
-    switch (name) {
-      case "isCluster":
-        return false;
+  public boolean isCluster() {
+    return false;
+  }
 
-      default:
-        return c.getMethod(name, method.getParameterTypes()).invoke(ori, objects);
-    }
+
+  @Override
+  public String scriptLoad(String script, String key) {
+    return scriptLoad(script);
+  }
+
+
+  @Override
+  public Boolean scriptExists(String sha1, String key) {
+    return scriptExists(sha1);
   }
 }

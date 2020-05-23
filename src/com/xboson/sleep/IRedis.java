@@ -46,15 +46,33 @@ public interface IRedis extends JedisCommands, Closeable {
 
   /**
    * 使 redis 预加载脚本, 返回脚本的 sha1 用于引用这个脚本.
-   * 当使用集群使, 脚本会因为节点与 key 不对应而抛出异常.
+   * 在集群上使用抛出异常.
    */
   String scriptLoad(String script);
 
 
   /**
-   * 脚本已经预加载返回 true
+   * 预加载脚本, 该方法可用在单机/集群模式使用.
+   * @param script 脚本文本
+   * @param key 驱动根据该值确定连接的集群节点, 单机模式忽略该参数
+   * @return 返回脚本句柄
+   */
+  String scriptLoad(final String script, final String key);
+
+
+  /**
+   * 脚本已经预加载返回 true, 在集群上会抛出异常
    */
   Boolean scriptExists(String sha1);
+
+
+  /**
+   * 该方法可用在单机/集群模式使用, 返回脚本状态
+   * @param sha1 脚本句柄
+   * @param key 驱动根据该值确定连接的集群节点, 单机模式忽略该参数
+   * @return 脚本存在返回 true
+   */
+  Boolean scriptExists(final String sha1, final String key);
 
 
   /**
