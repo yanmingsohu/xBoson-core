@@ -46,7 +46,8 @@ redis: 平台核心 redis 连接配置, 务必配置密钥字段, \
 mongodb: MongoDB 服务器连接配置, 禁用后不影响平台核心功能, 但脚本环境中无法调用 MongoDB 模块.
 
 
-cluster: 启用集群设置, 如果设置错误 redis 会停止工作.
+cluster: 启用集群设置, 如果设置错误 redis 会停止工作, \
+        !启用集群会导致平台功能丢失, 该功能处于早期测试阶段.
 enable: 启用/禁用
 blockWhenExhausted: 默认值 true ,当资源耗尽时,是否阻塞等待获取资源
 maxWaitMillis: 获取资源时的等待时间,单位毫秒.当 blockWhenExhausted 配置为 true 时,\

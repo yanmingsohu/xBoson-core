@@ -19,10 +19,10 @@ package com.xboson.fs.redis;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Hex;
 import com.xboson.util.c0nst.IConstant;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 
@@ -284,7 +284,7 @@ public class RedisBase implements IConstant {
    */
   public class JedisSession implements AutoCloseable {
     /** 不要直接关闭该对象, 而是关闭 JedisSession */
-    public final Jedis client;
+    public final IRedis client;
     private int nested;
 
     private JedisSession() {

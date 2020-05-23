@@ -17,11 +17,11 @@
 package com.xboson.app.lib;
 
 import com.xboson.auth.PermissionException;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.AES2;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Transaction;
 
 import java.text.DecimalFormat;
@@ -134,7 +134,7 @@ public class CountImpl {
 
 
   private List<Object> transaction(IDO d) throws Exception {
-    try (Jedis j = RedisMesmerizer.me().open();
+    try (IRedis j = RedisMesmerizer.me().open();
          Transaction t = j.multi()) {
       int dbn = j.getDB().intValue();
       t.select(DB_NUM);
@@ -147,7 +147,7 @@ public class CountImpl {
 
   private Object openRedis(IDO2 d) throws Exception {
     int dbn = 0;
-    Jedis j = null;
+    IRedis j = null;
     try {
       j = RedisMesmerizer.me().open();
       dbn = j.getDB().intValue();
@@ -171,7 +171,7 @@ public class CountImpl {
 
 
   interface IDO2 {
-    Object o(Jedis j) throws Exception;
+    Object o(IRedis j) throws Exception;
   }
 
 

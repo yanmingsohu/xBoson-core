@@ -40,7 +40,7 @@ public class LuaScript {
   }
 
 
-  private void _complie(Jedis client) {
+  private void _complie(IRedis client) {
     hash = client.scriptLoad(luaScript);
   }
 
@@ -81,7 +81,7 @@ public class LuaScript {
    * @return 结果集
    */
   public Object eval(int keyCount, Object... parameters) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       if (hash == null) {
         _complie(client);
       }

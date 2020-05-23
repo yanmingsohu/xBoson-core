@@ -22,10 +22,10 @@ import com.xboson.been.XBosonException;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
-import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.util.Set;
@@ -56,7 +56,7 @@ public final class ClusterManager extends OnExitHandle {
 
   @Override
   protected void exit() {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       client.hdel(HNAME, nodeID);
     }
   }
@@ -70,7 +70,7 @@ public final class ClusterManager extends OnExitHandle {
 
 
   private void registerSelf() {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String str = info.toJSON();
       client.hset(HNAME, nodeID, str);
       log.debug("Cluster Node registered:", str);
@@ -87,7 +87,7 @@ public final class ClusterManager extends OnExitHandle {
    * 返回集群中所有节点 id.
    */
   public Set<String> list() {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       return client.hkeys(HNAME);
     }
   }
@@ -97,7 +97,7 @@ public final class ClusterManager extends OnExitHandle {
    * 获取集群中节点的信息, 节点不存在返回 null.
    */
   public ComputeNodeInfo info(String id) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String str = client.hget(HNAME, id);
       if (str == null) return null;
       return Tool.getAdapter(ComputeNodeInfo.class).fromJson(str);

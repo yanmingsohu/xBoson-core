@@ -19,7 +19,6 @@ package com.xboson.sleep;
 import com.xboson.been.Config;
 import com.xboson.been.RedisConfig;
 import com.xboson.been.XBosonException;
-import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
@@ -55,7 +54,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   private static RedisMesmerizer instance;
 
   private Log log = LogFactory.create();
-  private JedisCluster jcluster;
+  private RedisClientCluster jcluster;
   private JedisPool jpool;
   private JSON json;
   private BIN bin;
@@ -85,9 +84,9 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     int port = redis.getIntPort(6379);
     cluster = redis.isCluster();
 
-    if (redis == null) {
+    if ((Tool.isNulStr(redis.getHost()))) {
       if (cluster) {
-        jcluster = new JedisCluster(
+        jcluster = new RedisClientCluster(
                 new HostAndPort("localhost", port), pool);
       } else {
         jpool = new JedisPool(
@@ -96,7 +95,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     }
     else if (Tool.isNulStr(ps)) {
       if (cluster) {
-        jcluster = new JedisCluster(
+        jcluster = new RedisClientCluster(
                 new HostAndPort(redis.getHost(), port), TIMEOUT, pool);
       } else {
         jpool = new JedisPool(
@@ -105,7 +104,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     }
     else {
       if (cluster) {
-        jcluster = new JedisCluster(
+        jcluster = new RedisClientCluster(
                 new HostAndPort(redis.getHost(), port),
                 TIMEOUT, SoTIMEOUT, MaxAttempts, ps, pool);
       } else {
@@ -121,12 +120,12 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
   /**
    * 打开 redis 客户端连接, 用完记得关闭
    */
-  public Jedis open() {
+  public IRedis open() {
     if (cluster) {
-      JedisWarpCluster warp = new JedisWarpCluster(jcluster);
-      return warp.getProxy();
+      return jcluster;
     } else {
-      return jpool.getResource();
+      RedisClientStandAlone cli = new RedisClientStandAlone(jpool);
+      return cli.getProxy();
     }
   }
 
@@ -194,7 +193,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
       id = genid(data.getClass(), "*", JSON);
     }
 
-    try (Jedis client = open()) {
+    try (IRedis client = open()) {
       ScanParams sp = new ScanParams();
       sp.match(id);
       String cursor = BEGIN_OVER_CURSOR;
@@ -238,7 +237,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
    */
   class JSON {
     public void sleep(String id, Object data) {
-      try (Jedis client = open()) {
+      try (IRedis client = open()) {
         if (check_timeout(client, data, id))
           return;
 
@@ -248,7 +247,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     }
 
     public ISleepwalker wake(Class c, String id) {
-      try (Jedis client = open()) {
+      try (IRedis client = open()) {
         String str = client.hget(KEY, id);
         if (str == null) {
           return null;
@@ -266,13 +265,13 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     }
 
     public void remove(ISleepwalker data) {
-      try (Jedis client = open()) {
+      try (IRedis client = open()) {
         String id = genid(data, JSON);
         client.hdel(KEY, id);
       }
     }
 
-    private boolean check_timeout(Jedis client, Object obj, String id) {
+    private boolean check_timeout(IRedis client, Object obj, String id) {
       if (obj instanceof ITimeout) {
         ITimeout to = (ITimeout) obj;
         if (to.isTimeout()) {
@@ -292,7 +291,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     byte [] KEY_BYTE = KEY.getBytes();
 
     public void sleep(String id, Object data) {
-      try (Jedis client = open()) {
+      try (IRedis client = open()) {
         byte[] bid = id.getBytes();
         if (check_timeout(client, data, bid))
           return;
@@ -306,7 +305,7 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     }
 
     public IBinData wake(Class c, String id) {
-      try (Jedis client = open()) {
+      try (IRedis client = open()) {
         byte[] bid  = id.getBytes();
         byte[] data = client.hget(KEY_BYTE, bid);
         if (data == null) {
@@ -339,13 +338,13 @@ public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
     }
 
     public void remove(ISleepwalker data) {
-      try (Jedis client = open()) {
+      try (IRedis client = open()) {
         String id = genid(data, BINARY);
         client.hdel(KEY_BYTE, id.getBytes());
       }
     }
 
-    private boolean check_timeout(Jedis client, Object obj, byte[] bid) {
+    private boolean check_timeout(IRedis client, Object obj, byte[] bid) {
       if (obj instanceof ITimeout) {
         ITimeout to = (ITimeout) obj;
         if (to.isTimeout()) {

@@ -114,7 +114,7 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
 
 
   /**
-   * 附加新街口给代理类, 默认实现直接返回 interfaces.
+   * 附加新接口给代理类, 默认实现直接返回 interfaces.
    */
   protected Class[] appendInterfaces(Class[] interfaces) {
     return interfaces;

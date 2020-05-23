@@ -19,6 +19,7 @@ package com.xboson.event;
 import com.xboson.fs.redis.IFileSystemConfig;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.c0nst.IConstant;
 import com.xboson.util.Tool;
@@ -65,7 +66,7 @@ public class EventQueueMigrationThread extends OnExitHandle implements Runnable 
     log.info("Start", myself);
     GlobalEventBus ge = GlobalEventBus.me();
 
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       while (running) {
         //
         // 在队列上等待 QUEUE_TIMEOUT 秒后返回

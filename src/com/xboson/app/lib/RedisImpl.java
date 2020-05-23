@@ -20,10 +20,10 @@ import com.xboson.app.AppContext;
 import com.xboson.auth.impl.ResourceRoleTypes;
 import com.xboson.auth.impl.RoleBaseAccessControl;
 import com.xboson.been.LoginUser;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.sleep.SafeDataFactory;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 
@@ -54,7 +54,7 @@ public class RedisImpl implements IApiConstant {
 
 
   public void set(String region, String key, String value, int exp) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
       SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
       client.hset(tkey, enc.encodeKey(key), enc.encodeData(value));
@@ -65,7 +65,7 @@ public class RedisImpl implements IApiConstant {
 
 
   public String get(String region, String key) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
       SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
       String sval = client.hget(tkey, enc.encodeKey(key));
@@ -76,7 +76,7 @@ public class RedisImpl implements IApiConstant {
 
 
   public void del(String region, String key) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
       SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
       client.hdel(tkey, enc.encodeKey(key));
@@ -85,7 +85,7 @@ public class RedisImpl implements IApiConstant {
 
 
   public void del(String region) {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
       client.del(tkey);
     }
@@ -93,7 +93,7 @@ public class RedisImpl implements IApiConstant {
 
 
   public List<Object> delAll(String region, String[] keys) throws IOException {
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
       SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
 
@@ -117,7 +117,7 @@ public class RedisImpl implements IApiConstant {
 
   public int keys(String region, IEach call) {
     int i = 0;
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       String tkey = key_prefix + region;
       SafeDataFactory.IEncryptionStrategy enc = SafeDataFactory.get(tkey);
       Iterator<String> it = client.hkeys(tkey).iterator();
@@ -146,7 +146,7 @@ public class RedisImpl implements IApiConstant {
     sp.match(pattern);
     int i = 0;
 
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       for (;;) {
         ScanResult<Map.Entry<String, String>> sr = client.hscan(tkey, cursor, sp);
         Iterator<Map.Entry<String, String>> it = sr.getResult().iterator();

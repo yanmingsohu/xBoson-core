@@ -22,6 +22,7 @@ import com.xboson.app.ApiPath;
 import com.xboson.app.XjOrg;
 import com.xboson.been.XBosonException;
 import com.xboson.fs.script.ScriptAttr;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
@@ -38,7 +39,7 @@ public class ForProduction extends AbsReadScript {
   public ScriptFile read(XjOrg org, String app, String mod, String api) {
     log.debug("Script From Redis", mod, api);
 
-    try (Jedis j = RedisMesmerizer.me().open()) {
+    try (IRedis j = RedisMesmerizer.me().open()) {
       String key = (app + mod + api).toLowerCase();
       String json = j.hget(REGION, key);
 

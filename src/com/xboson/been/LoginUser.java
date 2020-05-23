@@ -20,6 +20,7 @@ import com.xboson.auth.IAWho;
 import com.xboson.db.ConnectConfig;
 import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Hash;
 import com.xboson.util.Password;
@@ -176,7 +177,7 @@ public class LoginUser extends JsonHelper implements IBean, IAWho {
     sess.login_user = this;
 
     if (! multi_login) {
-      try (Jedis cli = RedisMesmerizer.me().open()) {
+      try (IRedis cli = RedisMesmerizer.me().open()) {
         String prv_sid = cli.hget(IConstant.REDIS_KEY_MULTI_LOGIN, pid);
         if (! Tool.isNulStr(prv_sid)) {
           //

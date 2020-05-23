@@ -19,10 +19,10 @@ package com.xboson.auth.impl;
 import com.xboson.app.lib.IApiConstant;
 import com.xboson.auth.IAResource;
 import com.xboson.been.LoginUser;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.sleep.SafeDataFactory;
 import com.xboson.util.Ref;
-import redis.clients.jedis.Jedis;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,7 +89,7 @@ public class RoleBaseAccessControl {
 
     String hasAuth  = NOAUTH;
 
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       for (String roleid : user.roles) {
         //
         // 角色对应的资源

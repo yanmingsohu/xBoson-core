@@ -18,9 +18,9 @@ package com.xboson.event;
 
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Tool;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
 
@@ -92,7 +92,7 @@ class SubscribeThread extends JedisPubSub implements Runnable {
   @Override
   public void run() {
     while (running) {
-      try (Jedis client = RedisMesmerizer.me().open()) {
+      try (IRedis client = RedisMesmerizer.me().open()) {
         client.psubscribe(this, SUBSCRIBE_PATTERN);
 
       } catch (Exception e) {

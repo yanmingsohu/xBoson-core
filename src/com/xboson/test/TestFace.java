@@ -25,6 +25,7 @@ import com.xboson.fs.ui.UILocalFileMapping;
 import com.xboson.fs.ui.UIRedisFileMapping;
 import com.xboson.log.Level;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.LuaScript;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.SysConfig;
@@ -112,7 +113,7 @@ public class TestFace extends Test {
     //
     // 删除脚本之后也能保证可以调用
     //
-    try (Jedis client = RedisMesmerizer.me().open()) {
+    try (IRedis client = RedisMesmerizer.me().open()) {
       client.scriptFlush();
     }
 

@@ -7,7 +7,11 @@
     <JAVADOC>
       <root url="https://docs.oracle.com/javaee/7/api/" />
     </JAVADOC>
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/jedis-2.9.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/jedis-2.9.0.jar!/redis" />
+      <root url="jar://$PROJECT_DIR$/../[opensource-lib-other]/jedis-jedis-2.9.0.zip!/jedis-jedis-2.9.0/src/main/java" />
+    </SOURCES>
     <jarDirectory url="file://$PROJECT_DIR$/libs" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/WebRoot/WEB-INF/lib" recursive="false" />
   </library>

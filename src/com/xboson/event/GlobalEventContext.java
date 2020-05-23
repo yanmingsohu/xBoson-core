@@ -19,6 +19,7 @@ package com.xboson.event;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.ReverseIterator;
 import com.xboson.util.Tool;
@@ -119,7 +120,7 @@ class GlobalEventContext extends InitialContext implements EventContext {
     emitWithoutCluster(data, type, info);
 
     if (channel_name != null) {
-      try (Jedis client = RedisMesmerizer.me().open()) {
+      try (IRedis client = RedisMesmerizer.me().open()) {
         EventPackage ep = new EventPackage(data, type, info, myselfid);
         client.publish(channel_name, ep.tojson());
       }

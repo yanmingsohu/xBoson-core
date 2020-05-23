@@ -16,12 +16,8 @@
 
 package com.xboson.util;
 
-import com.xboson.been.XBosonException;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Transaction;
-
-import java.io.IOException;
 
 
 public class Firewall {
@@ -56,7 +52,7 @@ public class Firewall {
    * ip 登录失败次数超限返回 true
    */
   public int checkIpBan(String ip) {
-    try (Jedis client = redis.open()) {
+    try (IRedis client = redis.open()) {
       String key = "/ip-ban/" + ip;
       String v = client.get(key);
       if (v == null) return 0;
@@ -69,7 +65,7 @@ public class Firewall {
    * 记录一次 ip 失败登录次数
    */
   public void ipLoginFail(String ip) {
-    try (Jedis client = redis.open()) {
+    try (IRedis client = redis.open()) {
       String key = "/ip-ban/" + ip;
       client.incr(key);
       client.expire(key, IP_WAIT_TIMEOUT * 60);

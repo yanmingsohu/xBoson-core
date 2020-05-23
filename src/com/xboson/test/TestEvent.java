@@ -22,6 +22,7 @@ import com.xboson.event.GlobalListener;
 import com.xboson.event.Names;
 import com.xboson.event.QuickSender;
 import com.xboson.event.timer.EarlyMorning;
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.Tool;
 import redis.clients.jedis.Jedis;
@@ -138,7 +139,7 @@ public class TestEvent extends Test implements GlobalListener {
 
   class SendThread extends Thread {
     public void run() {
-      try (Jedis client = RedisMesmerizer.me().open()) {
+      try (IRedis client = RedisMesmerizer.me().open()) {
         _send_cmd(send, client);
         sub("Wait to Send quit..");
         Tool.sleep(2000);
@@ -149,7 +150,7 @@ public class TestEvent extends Test implements GlobalListener {
       }
     }
 
-    void _send_cmd(String cmd, Jedis client) throws IOException {
+    void _send_cmd(String cmd, IRedis client) throws IOException {
       String[] sp = cmd.split(" ", 3);
       JsonAdapter<String> ja = Tool.getAdapter(String.class);
       String ch = ja.fromJson(sp[1]);
