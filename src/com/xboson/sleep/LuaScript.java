@@ -17,9 +17,10 @@
 package com.xboson.sleep;
 
 import com.xboson.been.XBosonException;
+import com.xboson.util.CodeFormater;
 import com.xboson.util.JavaConverter;
 import com.xboson.util.StringBufferOutputStream;
-import redis.clients.jedis.Jedis;
+import com.xboson.util.Tool;
 import redis.clients.jedis.exceptions.JedisNoScriptException;
 
 
@@ -32,34 +33,37 @@ public class LuaScript {
 
   private String luaScript;
   private String hash;
+  private String key;
 
 
-  private LuaScript(String src) {
+  private LuaScript(String src, String key) {
     this.luaScript = src;
     this.hash = null;
+    this.key = key;
   }
 
 
   private void _complie(IRedis client) {
-    hash = client.scriptLoad(luaScript);
+    hash = client.scriptLoad(luaScript, key);
   }
 
 
   /**
    * 编译一个脚本
-   * @param luaScript
+   * @param luaScript 脚本代码
+   * @param key 在集群时, 影响运行所在的节点
    * @return
    */
-  public static LuaScript compile(String luaScript) {
-    return new LuaScript(luaScript);
+  public static LuaScript compile(String luaScript, String key) {
+    return new LuaScript(luaScript, key);
   }
 
 
   /**
-   * @see #compile(String)
+   * @see #compile(String, String)
    */
-  public static LuaScript compile(StringBufferOutputStream buf) {
-    return compile(buf.toString());
+  public static LuaScript compile(StringBufferOutputStream buf, String key) {
+    return compile(buf.toString(), key);
   }
 
 
@@ -82,7 +86,7 @@ public class LuaScript {
    */
   public Object eval(int keyCount, Object... parameters) {
     try (IRedis client = RedisMesmerizer.me().open()) {
-      if (hash == null) {
+      if (hash == null || client.scriptExists(hash, key)) {
         _complie(client);
       }
 

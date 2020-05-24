@@ -16,12 +16,15 @@
 
 package com.xboson.fs.redis;
 
+import com.xboson.sleep.IRedis;
 import com.xboson.sleep.LuaScript;
+import com.xboson.sleep.RedisMesmerizer;
 import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.Tool;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -31,7 +34,7 @@ import java.util.Map;
 public class FindContentInRedisWithLua {
 
   /** lua 脚本相对本类路径 */
-  public final static String LUA_SCRIPT_PATH = "find.lua";
+  public final static String LUA_SCRIPT_PATH = "find_text.lua";
   /** 默认搜索开始路径 */
   public final static String DEF_BASE = IRedisFileSystemProvider.ROOT;
   /** 缓存最多数量, 超过则清空缓存 */
@@ -42,6 +45,7 @@ public class FindContentInRedisWithLua {
   private final LuaScript script;
   private final Map<String, FinderResult> cache;
   private final String contentName;
+  private final String structName;
 
 
   /**
@@ -51,9 +55,10 @@ public class FindContentInRedisWithLua {
     StringBufferOutputStream buf =
             Tool.readFileFromResource(RedisBase.class, LUA_SCRIPT_PATH);
 
-    this.script = LuaScript.compile(buf);
-    this.cache = new HashMap<>(MAX_CACHE_C);
+    this.script = LuaScript.compile(buf, config.configContentName());
+    this.cache = new WeakHashMap<>(MAX_CACHE_C);
     this.contentName = config.configContentName();
+    this.structName = config.configStructName();
   }
 
 
@@ -83,13 +88,41 @@ public class FindContentInRedisWithLua {
     FinderResult ret = cache.get(ckey);
 
     if (ret == null) {
-      Object data = script.eval(1, contentName,
-              content, basePath, caseSensitive, MAX_RESULT_COUNT);
+      List<String> files = new ArrayList<>();
+      String cursor = "0";
+      boolean breakOnMaxCount = false;
 
-      if (cache.size() > MAX_CACHE_C) {
-        cache.clear();
+      ScanParams sp = new ScanParams();
+      sp.count(20);
+      sp.match(basePath + "*");
+
+      try (IRedis client = RedisMesmerizer.me().open()) {
+        while (!breakOnMaxCount) {
+          ScanResult<Map.Entry<String, String>>
+                  res = client.hscan(structName, cursor, sp);
+          cursor = res.getStringCursor();
+
+          if (RedisMesmerizer.BEGIN_OVER_CURSOR.equals(cursor)) {
+            break;
+          }
+
+          for (Map.Entry<String, String> fn : res.getResult()) {
+            String filename = fn.getKey();
+            Object findRes = script.eval(1,
+                    contentName, caseSensitive, filename, content);
+
+            if (findRes != null) {
+              files.add(filename);
+              if (files.size() > MAX_RESULT_COUNT) {
+                breakOnMaxCount = true;
+                break;
+              }
+            }
+          }
+        }
       }
-      ret = new FinderResult(data);
+
+      ret = new FinderResult(files, basePath, content, caseSensitive, breakOnMaxCount);
       cache.put(ckey, ret);
     }
 

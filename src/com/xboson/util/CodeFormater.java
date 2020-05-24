@@ -49,6 +49,11 @@ public class CodeFormater {
   }
 
 
+  public CodeFormater(String code) {
+    this(new StringReader(code));
+  }
+
+
   public String readLine(int i) {
     try {
       String line = readOriginalLine(i);

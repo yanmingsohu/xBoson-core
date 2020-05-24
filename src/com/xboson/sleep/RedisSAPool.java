@@ -23,8 +23,6 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisException;
 
-import java.util.concurrent.atomic.AtomicReference;
-
 
 public class RedisSAPool extends JedisPool {
 

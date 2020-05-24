@@ -107,7 +107,7 @@ public class TestFace extends Test {
 
   public void test_lua() {
     sub("Test lua base");
-    LuaScript find = LuaScript.compile("return 'ok';");
+    LuaScript find = LuaScript.compile("return 'ok';", "");
     msg("LUA1:", find.eval());
 
     //

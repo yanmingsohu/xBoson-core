@@ -44,6 +44,7 @@ import java.util.TimerTask;
 public class RedisMesmerizer extends OnExitHandle implements IMesmerizer {
 
   public final static String KEY = "RedisMesmerizer.IMesmerizer";
+  /** 对于游标, 开始和结束值 */
   public final static String BEGIN_OVER_CURSOR = "0";
   public final static String BINARY = "BIN";
   public final static String JSON = "JSON";
