@@ -45,13 +45,16 @@ public class RedisClientCluster extends JedisCluster implements IRedis {
 
   @Override
   public String scriptLoad(String script) {
-    throw new XBosonException.NotImplements();
+    throw new XBosonException.NotImplements(
+            "MOVD scriptLoad(final String script, final String key)");
   }
 
 
   @Override
   public Boolean scriptExists(String sha1) {
-    throw new XBosonException.NotImplements();
+    throw new XBosonException.NotImplements(
+            "MOVD scriptExists(final String sha1, final String key)"
+    );
   }
 
 
