@@ -236,19 +236,38 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
     if (isNull(o)) {
       return null;
     }
-    if (o instanceof jdk.nashorn.internal.objects.NativeFunction) {
+    if (isJsFunction(o)) {
       return null;
     }
     if (o instanceof Exception) {
       return null;
     }
-    if (o instanceof jdk.nashorn.internal.runtime.ScriptObject) {
+    if (isJsObject(o)) {
       return o.toString();
     }
     if (o instanceof ScriptObjectMirror) {
-      return ScriptUtils.unwrap(o);
+      // 对象解包后, 可能是 js 内部类, 位于包 jdk.nashorn.internal.objects.*
+      // 这种类型的对象不能传递给 sql-query 函数
+      o = ScriptUtils.unwrap(o);
+      if (isJsObject(o)) {
+        return ""+ o;
+      }
+      return o;
     }
     return o;
+  }
+
+
+  /**
+   * 是 js 内部类型返回 true
+   */
+  protected static boolean isJsObject(Object o) {
+    return o instanceof jdk.nashorn.internal.runtime.ScriptObject;
+  }
+
+
+  protected static boolean isJsFunction(Object o) {
+    return o instanceof jdk.nashorn.internal.objects.NativeFunction;
   }
 
 
