@@ -19,30 +19,99 @@ package com.xboson.app.lib;
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
+import com.xboson.util.Hash;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 
 import javax.crypto.*;
-import javax.crypto.spec.DESKeySpec;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.PBEParameterSpec;
+import javax.crypto.spec.*;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class CryptoImpl extends RuntimeUnitImpl {
+
+  private static Map<String, CryptoFact> impl;
+
+  static {
+    impl = new HashMap<>();
+    put(new AES());
+    put(new DES());
+    put(new PBE());
+    put(new IDEA());
+    put(new AES_CBC_PKCS5Padding());
+  }
+
+  private static void put(CryptoFact cf) {
+    impl.put(cf.name().toLowerCase(), cf);
+  }
+
 
   public CryptoImpl() {
     super(null);
   }
 
 
+  public String[] algorithmNames() {
+    String[] n = new String[impl.size()];
+    int i = 0;
+    for (CryptoFact cf : impl.values()) {
+      n[i++] = cf.name();
+    }
+    return n;
+  }
+
+
   public CipherJs createCipher(String algorithm, String pass) throws Exception {
-    return _cipher(algorithm, pass, Cipher.ENCRYPT_MODE);
+    CryptoFact cf = get_cipher(algorithm);
+    SecretKey key = cf.getKey(pass);
+    return new CipherJs( cf.cipher(Cipher.ENCRYPT_MODE, key) );
+  }
+
+
+  public CipherJs createCipher(String algorithm, Bytes pass, Bytes iv) throws Exception {
+    CryptoFact cf = get_cipher(algorithm);
+    SecretKey key = cf.getKey(pass.bin());
+    IvParameterSpec ivSpec = new IvParameterSpec(iv.bin());
+    return new CipherJs( cf.cipher(Cipher.ENCRYPT_MODE, key, ivSpec) );
   }
 
 
   public CipherJs createDecipher(String algorithm, String pass) throws Exception {
-    return _cipher(algorithm, pass, Cipher.DECRYPT_MODE);
+    CryptoFact cf = get_cipher(algorithm);
+    SecretKey key = cf.getKey(pass);
+    return new CipherJs( cf.cipher(Cipher.DECRYPT_MODE, key) );
+  }
+
+
+  public CipherJs createDecipher(String algorithm, Bytes pass, Bytes iv) throws Exception {
+    CryptoFact cf = get_cipher(algorithm);
+    SecretKey key = cf.getKey(pass.bin());
+    IvParameterSpec ivSpec = new IvParameterSpec(iv.bin());
+    return new CipherJs( cf.cipher(Cipher.DECRYPT_MODE, key, ivSpec) );
+  }
+
+
+  public Bytes randomBytes(int len) throws NoSuchAlgorithmException {
+    byte[] b = new byte[len];
+    SecureRandom rand = SecureRandom.getInstanceStrong();
+    rand.nextBytes(b);
+    return new Bytes(b);
+  }
+
+
+  public Bytes generateAesIV() throws NoSuchAlgorithmException {
+    return randomBytes(16);
+  }
+
+
+  public Bytes generateAesPass(String pass) {
+    Hash h = new Hash();
+    h.update(pass);
+    return new Bytes(h.digest());
   }
 
 
@@ -54,68 +123,136 @@ public class CryptoImpl extends RuntimeUnitImpl {
   }
 
 
-  private CipherJs _cipher(String alg, String pass, int mode) throws Exception {
+  private CryptoFact get_cipher(String alg) throws Exception {
     alg = alg.toLowerCase();
-    Cipher cipher;
-
-    switch (alg) {
-      case "aes":
-        cipher = Cipher.getInstance("AES");
-        cipher.init(mode, getKey(alg, pass));
-        break;
-
-      case "des":
-        SecureRandom random = new SecureRandom();
-        cipher = Cipher.getInstance("DES");
-        cipher.init(mode, getKey(alg, pass), random);
-        break;
-
-      case "pbe":
-        byte[] salt = Tool.randomBytes(8);
-        PBEParameterSpec spec = new PBEParameterSpec(salt, 100);
-        cipher = Cipher.getInstance("PBEWITHMD5andDES");
-        cipher.init(mode, getKey(alg, pass), spec);
-        break;
-
-      case "idea":
-        cipher = Cipher.getInstance("IDEA/ECB/ISO10126Padding");
-        cipher.init(mode, getKey(alg, pass));
-        break;
-
-      default:
-        throw new XBosonException("Unknow algorithm "+ alg);
+    CryptoFact cf = impl.get(alg);
+    if (cf == null) {
+      throw new XBosonException("Unknow algorithm "+ alg);
     }
-    return new CipherJs(cipher);
+    return cf;
   }
 
 
-  private SecretKey getKey(String algorithm, String pass) throws Exception {
-    switch (algorithm) {
-      case "aes":
-        KeyGenerator kgen = KeyGenerator.getInstance("AES");
-        SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
-        secureRandom.setSeed(pass.getBytes(IConstant.CHARSET));
-        kgen.init(128, secureRandom);
-        return kgen.generateKey();
+  //
+  // 加密工厂抽象基类
+  //
+  private static abstract class CryptoFact {
+    abstract Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec ps) throws Exception;
+    abstract SecretKey getKey(byte[] password) throws Exception;
+    abstract String name();
 
-      case "des":
-        DESKeySpec desKey = new DESKeySpec(pass.getBytes());
-        SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");
-        return keyFactory.generateSecret(desKey);
+    // 使用字符串的字节表示密码
+    SecretKey getKey(String password) throws Exception {
+      return getKey(password.getBytes(IConstant.CHARSET));
+    }
 
-      case "pbe":
-        PBEKeySpec pbeKeySpec = new PBEKeySpec(pass.toCharArray());
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBEWITHMD5andDES");
-        return factory.generateSecret(pbeKeySpec);
+    // AlgorithmParameterSpec 参数为 null
+    Cipher cipher(int mode, SecretKey key) throws Exception {
+      return cipher(mode, key, null);
+    }
+  }
 
-      case "idea":
-        KeyGenerator keyGenerator = KeyGenerator.getInstance("IDEA");
-        keyGenerator.init(128);
-        SecretKey secretKey = keyGenerator.generateKey();
-        return secretKey;
 
-      default:
-        throw new XBosonException("Cannot gen key "+ algorithm);
+  private static class AES extends CryptoFact {
+    String name() {
+      return "aes";
+    }
+
+    SecretKey getKey(byte[] pass) throws Exception {
+      KeyGenerator kgen = KeyGenerator.getInstance("AES");
+      SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG");
+      secureRandom.setSeed(pass);
+      kgen.init(128, secureRandom);
+      return kgen.generateKey();
+    }
+
+    Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec ps) throws Exception {
+      Cipher cipher = Cipher.getInstance("AES");
+      cipher.init(mode, key);
+      return cipher;
+    }
+  }
+
+
+  private static class DES extends CryptoFact {
+    String name() {
+      return "des";
+    }
+
+    SecretKey getKey(byte[] pass) throws Exception {
+      DESKeySpec desKey = new DESKeySpec(pass);
+      SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("DES");
+      return keyFactory.generateSecret(desKey);
+    }
+
+    Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec ps) throws Exception {
+      SecureRandom random = new SecureRandom();
+      Cipher cipher = Cipher.getInstance("DES");
+      cipher.init(mode, key, random);
+      return cipher;
+    }
+  }
+
+
+  private static class PBE extends CryptoFact {
+    String name() {
+      return "pbe";
+    }
+
+    SecretKey getKey(String pass) throws Exception {
+      PBEKeySpec pbeKeySpec = new PBEKeySpec(pass.toCharArray());
+      SecretKeyFactory factory = SecretKeyFactory.getInstance("PBEWITHMD5andDES");
+      return factory.generateSecret(pbeKeySpec);
+    }
+
+    SecretKey getKey(byte[] pass) throws Exception {
+      throw new XBosonException.NotImplements("password with byte[]");
+    }
+
+    Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec ps) throws Exception {
+      byte[] salt = Tool.randomBytes(8);
+      PBEParameterSpec spec = new PBEParameterSpec(salt, 100);
+      Cipher cipher = Cipher.getInstance("PBEWITHMD5andDES");
+      cipher.init(mode, key, spec);
+      return cipher;
+    }
+  }
+
+
+  private static class IDEA extends CryptoFact {
+    String name() {
+      return "idea";
+    }
+
+    SecretKey getKey(byte[] pass) throws Exception {
+      KeyGenerator keyGenerator = KeyGenerator.getInstance("IDEA");
+      SecureRandom idea_rand = SecureRandom.getInstanceStrong();
+      idea_rand.setSeed(pass);
+      keyGenerator.init(128, idea_rand);
+      return keyGenerator.generateKey();
+    }
+
+    Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec ps) throws Exception {
+      Cipher cipher = Cipher.getInstance("IDEA/ECB/ISO10126Padding");
+      cipher.init(mode, key);
+      return cipher;
+    }
+  }
+
+
+  private static class AES_CBC_PKCS5Padding extends CryptoFact {
+    String name() {
+      return "AES/CBC/PKCS5Padding";
+    }
+
+    Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec iv) throws Exception {
+      Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+      cipher.init(mode, key, iv);
+      return cipher;
+    }
+
+    SecretKey getKey(byte[] pass) throws Exception {
+      return new SecretKeySpec(pass, "AES");
     }
   }
 
