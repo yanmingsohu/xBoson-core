@@ -18,7 +18,10 @@ package com.xboson.script.lib;
 
 import com.xboson.been.IJson;
 import com.xboson.been.JsonHelper;
+import com.xboson.been.XBosonException;
 import com.xboson.util.Hex;
+
+import java.util.Arrays;
 
 
 /**
@@ -81,6 +84,26 @@ public class Bytes implements IJson {
       key = Hex.decode64(s_key);
     }
     return key;
+  }
+
+
+  public Bytes sub(int begin, int end) {
+    byte[] src = bin();
+    if (end <= 0) {
+      end = src.length;
+    }
+    if (begin < 0) {
+      throw new XBosonException.BadParameter("begin", "Cannot be less than zero");
+    }
+    if (begin >= end) {
+      throw new XBosonException.BadParameter("begin", "Cannot be greater than end");
+    }
+    return new Bytes(Arrays.copyOfRange(src, begin, end));
+  }
+
+
+  public Bytes sub(int begin) {
+    return sub(begin, -1);
   }
 
 
