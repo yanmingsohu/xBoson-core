@@ -178,6 +178,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
     doc.put("create_time", mustDate(config.get("create_time")));
 
     metaColl.insertOne(doc);
+    set(name, new HashMap<>());
   }
 
 
