@@ -410,7 +410,7 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     ScriptObjectMirror js = wrap(o);
     DeleteOptions opt = new DeleteOptions();
     Object collation = js.getMember("collation");
-    if (collation != null) {
+    if (!isNull(collation)) {
       opt.collation(toCollation(collation));
     }
     return opt;
@@ -424,7 +424,7 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
       opt.upsert(true);
     }
     Object collation = js.getMember("collation");
-    if (collation != null) {
+    if (!isNull(collation)) {
       opt.collation(toCollation(collation));
     }
     return opt;
