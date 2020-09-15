@@ -244,6 +244,16 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public void ret(int code) throws IOException {
+    setRetData(code);
+  }
+
+
+  public void ret(int code, String msg, String ...parm) throws IOException {
+    setRetData(code, msg, parm);
+  }
+
+
   public void setStream(InputStream i, String filename) throws IOException {
     cd.xres.responseStream(i, filename);
   }
