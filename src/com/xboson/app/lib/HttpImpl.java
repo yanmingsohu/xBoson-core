@@ -34,6 +34,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -46,10 +47,18 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   private Map<String, javax.servlet.http.Cookie> cookies;
   private OkHttpClient hc;
+  private int timeout = 10;
 
 
   public HttpImpl(CallData cd) {
     super(cd);
+  }
+
+
+  public int setTimeout(int second) {
+    int t = timeout;
+    timeout = second;
+    return t;
   }
 
 
@@ -410,9 +419,13 @@ public class HttpImpl extends RuntimeUnitImpl {
       synchronized (this) {
         if (hc == null) {
           //
-          // 这个对象可能很昂贵
+          // 这个对象很昂贵
           //
-          hc = new OkHttpClient();
+          OkHttpClient.Builder builder = new OkHttpClient.Builder();
+          builder.connectTimeout(timeout, TimeUnit.SECONDS);
+          builder.readTimeout(timeout, TimeUnit.SECONDS);
+          builder.writeTimeout(timeout, TimeUnit.SECONDS);
+          hc = builder.build();
         }
       }
     }

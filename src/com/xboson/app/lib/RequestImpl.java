@@ -334,12 +334,21 @@ public class RequestImpl extends JSObject.Helper implements IJson {
   public Buffer.JsBuffer body(int limit) throws IOException {
     final int clen = sys.checkBodySize(limit);
     if (clen <= 0) return null;
+    Tool.pl("Body size1", clen);
+    Buffer.JsBuffer buf = new Buffer().alloc(clen);
 
-    byte[] buf = new byte[clen];
     InputStream i = cd.req.getInputStream();
-    int rlen = i.read(buf);
+    int d = 0, pos = 0;
+    for (;;) {
+      d = i.read();
+      if (d < 0) {
+        break;
+      }
+      buf.writeUInt8(d, pos++);
+    }
     i.close();
-    return new Buffer().from(buf, 0, rlen);
+    Tool.pl("Body size2", clen, pos);
+    return buf;
   }
 
 
