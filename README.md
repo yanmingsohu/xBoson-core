@@ -8,7 +8,6 @@ Java JDK, Tomcat 9, Servlet 4.0.
   
 待测试测 Java 版本:
   * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经从 jdk 移除.
-  * OpenJDK 1.8
 
 
 > 该文档部分内容为商业机密
@@ -171,6 +170,10 @@ Java JDK, Tomcat 9, Servlet 4.0.
 
   1. [hadoop-common-3.1.3-with-dependencies.jar] 合并了 
       hadoop-3.1.3\share\hadoop\common 目录中的 jar 文件 和其下 lib 中的文件.
+      
+## Kafka (TODO)
+
+  1. [中文文档](https://kafka.apachecn.org/intro.html), [英文文档](http://kafka.apache.org/documentation/#topicconfigs), [API](http://kafka.apache.org/26/javadoc/index.html), [控制mianb](https://github.com/yahoo/CMAK)
 
 
 # URL 映射约定
@@ -298,6 +301,7 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 `app.module.sql.switch.org()`       连接外部数据源(停用)
 `app.module.webservice.functions()` WebService 服务
 `api.ide.code.modify.functions()`   JS-IDE / UI-IDE 授权
+  其他...
 
 
 # Mysql 默认配置文件
