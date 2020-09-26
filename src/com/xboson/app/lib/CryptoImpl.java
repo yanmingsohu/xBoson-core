@@ -97,7 +97,10 @@ public class CryptoImpl extends RuntimeUnitImpl {
 
   public Bytes randomBytes(int len) throws NoSuchAlgorithmException {
     byte[] b = new byte[len];
-    SecureRandom rand = SecureRandom.getInstanceStrong();
+    // getInstanceStrong 在 linux 上会等待 /dev/random 直到有足够得'熵'后返回,
+    // 这会导致阻塞.
+    // SecureRandom rand = SecureRandom.getInstanceStrong();
+    SecureRandom rand = SecureRandom.getInstance("SHA1PRNG");
     rand.nextBytes(b);
     return new Bytes(b);
   }
