@@ -25,10 +25,6 @@ import com.xboson.been.MongoConfig;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
-import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
-import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
 import org.bson.Document;
 
 import java.util.*;
@@ -42,19 +38,20 @@ public class MongoDBPool extends OnExitHandle {
 
   private static final int MONGODB_DB_TYPE = 1000;
   private static MongoDBPool instance;
-  private GenericKeyedObjectPool<MongoClientURI, MongoClient> pool;
+  private final Map<MongoClientURI, MongoClient> pool;
 
 
   private MongoDBPool() {
-    pool = new GenericKeyedObjectPool<>(new MongoClientPool(),
-            SysConfig.me().readConfig().dbpool);
+    pool = new HashMap<>();
   }
 
 
   @Override
   protected void exit() {
-    pool.close();
-    pool = null;
+    for (MongoClient cli : pool.values()) {
+      cli.close();
+    }
+    pool.clear();
   }
 
 
@@ -70,12 +67,17 @@ public class MongoDBPool extends OnExitHandle {
   }
 
 
-  public VirtualMongoClient get(String url) {
+  public VirtualMongoClient get(String _url) {
     try {
-      MongoClientURI uri = new MongoClientURI(url);
-      MongoClient client = pool.borrowObject(uri);
-      return new VirtualMongoClient(uri, client);
-
+      synchronized (pool) {
+        MongoClientURI uri = new MongoClientURI(_url);
+        MongoClient client = pool.get(uri);
+        if (client == null) {
+          client = new MongoClient(uri);
+          pool.put(uri, client);
+        }
+        return new VirtualMongoClient(uri, client);
+      }
     } catch (Exception e) {
       throw new XBosonException(e);
     }
@@ -130,21 +132,6 @@ public class MongoDBPool extends OnExitHandle {
   }
 
 
-  static private class MongoClientPool extends
-          BaseKeyedPooledObjectFactory<MongoClientURI, MongoClient> {
-
-
-    public MongoClient create(MongoClientURI url) throws Exception {
-      return new MongoClient(url);
-    }
-
-
-    public PooledObject<MongoClient> wrap(MongoClient f) {
-      return new DefaultPooledObject<>(f);
-    }
-  }
-
-
   /**
    * 由 com.mongodb.MongoClient 生成,
    * 与 MongoClient 中的函数签名一致, 只导出使用的函数.
@@ -156,8 +143,8 @@ public class MongoDBPool extends OnExitHandle {
     private MongoClient client;
 
 
+    // MongoClient 内部会管理连接池
     public void close() {
-      pool.returnObject(uri, client);
     }
 
 
