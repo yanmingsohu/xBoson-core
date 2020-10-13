@@ -23,6 +23,7 @@ import com.xboson.been.SessionData;
 import com.xboson.j2ee.container.SessionCluster;
 import com.xboson.script.EventLoop;
 import com.xboson.script.IVisitByScript;
+import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import okhttp3.*;
@@ -30,6 +31,7 @@ import okhttp3.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -39,6 +41,12 @@ public class HelperModule implements IVisitByScript {
 
   private ThreadLocal<SessionData> sessions = new ThreadLocal<>();
   private OkHttpClient hc;
+  private static AtomicLong id = new AtomicLong(0);
+
+
+  public long nextId() {
+    return id.incrementAndGet();
+  }
 
 
   /**

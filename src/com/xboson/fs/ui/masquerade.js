@@ -505,7 +505,7 @@ function comment(buf, msg) {
 
 
 function nextId() {
-  return ++__id;
+  return helper.nextId();
 }
 
 
@@ -3556,7 +3556,7 @@ module.exports = function(baseurl, _config, _debug, _fs_lib) {
     var context = {
       getHeader     : function(name) { return res.header(name) },
       setHeader     : function(n, v) { rep.setHeader(n, v) },
-      nextId        : function() { return ++__id; },
+      nextId        : function() { return helper.nextId(); },
       __end         : function(x) { rep.end(x) },
       query         : res.query,
       getVmContext  : getVmContext,
