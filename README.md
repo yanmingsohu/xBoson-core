@@ -174,6 +174,16 @@ Java JDK, Tomcat 9, Servlet 4.0.
 ## Kafka (TODO)
 
   1. [中文文档](https://kafka.apachecn.org/intro.html), [英文文档](http://kafka.apache.org/documentation/#topicconfigs), [API](http://kafka.apache.org/26/javadoc/index.html), [控制mianb](https://github.com/yahoo/CMAK)
+  
+## 线性代数 (TODO)
+
+  1. [首页](http://jblas.org/)
+  1. [源码](https://github.com/jblas-project/jblas)
+  1. [BLAS](https://www.netlib.org/blas/)
+  
+linux 需要:
+
+  `sudo yum install libgfortran.x86_64`
 
 
 # URL 映射约定
