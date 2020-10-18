@@ -18,6 +18,8 @@ package com.xboson.app.lib;
 
 import com.xboson.app.*;
 import com.xboson.app.fix.SourceFix;
+import com.xboson.auth.PermissionSystem;
+import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.auth.impl.ResourceRoleTypes;
 import com.xboson.been.AppToken;
 import com.xboson.been.CallData;
@@ -272,6 +274,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    * [原平台无该函数, 该方法隐藏文档]
    */
   public String decodeApiScript(String code) {
+    checkApiAuth();
     byte[] c = ApiEncryption.decryptApi(code);
     if (SourceFix.isDrag(c)) {
       int end = c.length - 3;
@@ -289,6 +292,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    * [原平台无该函数, 该方法隐藏文档]
    */
   public String encodeApiScript(String code) {
+    checkApiAuth();
     byte[] c = code.getBytes(IConstant.CHARSET);
     if (! SourceFix.isDrag(c)) {
       code = "<%" + code + "%>";
@@ -303,6 +307,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    */
   public String decryptApi2(String code, int zip) throws Exception {
     if (zip == 0) return decodeApiScript(code);
+    checkApiAuth();
     return new String(ApiEncryption.decryptApi2(code, zip), IConstant.CHARSET);
   }
 
@@ -313,7 +318,14 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
    */
   public String encodeApi2(String code, int zip) throws Exception {
     if (zip == 0) return encodeApiScript(code);
+    checkApiAuth();
     return ApiEncryption.encryptApi2(code, zip);
+  }
+
+
+  private void checkApiAuth() {
+    PermissionSystem.applyWithApp(LicenseAuthorizationRating.class,
+            ()-> "api.ide.code.modify.functions()");
   }
 
 
