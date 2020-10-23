@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
 import com.xboson.util.Hash;
@@ -32,7 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class CryptoImpl extends RuntimeUnitImpl {
+public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
 
   private static Map<String, CryptoFact> impl;
 

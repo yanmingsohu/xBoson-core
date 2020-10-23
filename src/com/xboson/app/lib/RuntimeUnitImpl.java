@@ -48,6 +48,9 @@ public abstract class RuntimeUnitImpl implements IApiConstant {
   protected final CallData cd;
 
 
+  /**
+   * 允许空参数
+   */
   public RuntimeUnitImpl(CallData cd) {
     this.cd = cd;
   }

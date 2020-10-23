@@ -302,19 +302,12 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
 
 这些功能需要授权后方可正式使用.
 
-`app.module.schedule.functions()`   计划任务
-`app.module.shell.functions()`      外壳脚本
-`app.module.mongodb.functions()`    MongoDB 驱动
-`app.module.fabric.functions()`     区块链驱动
-`app.module.cluster.functions()`    集群管理
-`app.module.apipm.functions()`      API 进程管理
-`app.module.sql.switch.org()`       连接外部数据源(停用)
-`app.module.webservice.functions()` WebService 服务
-`api.ide.code.modify.functions()`   JS-IDE / UI-IDE 授权
-  其他...
+详细内容见 `xBoson-license` 项目.
 
 
 # Mysql 默认配置文件
+
+该文件的完整配置在 `xboson-docker` 项目中.
 
 ```ini
 [mysqld]

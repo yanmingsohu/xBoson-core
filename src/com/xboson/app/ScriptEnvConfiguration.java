@@ -78,6 +78,7 @@ public final class ScriptEnvConfiguration {
     mod.put("config",    ConfigImpl.class);
     mod.put("docker",    DockerImpl.class);
     mod.put("pack",      PackImpl.class);
+    mod.put("blas",      BlasImpl.class);
     return mod;
   }
 }
