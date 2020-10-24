@@ -1321,4 +1321,9 @@ public class SysImpl extends DateImpl {
 
     return IConstant.Anonymous.equals(cd.sess.login_user.userid);
   }
+
+
+  public Object syncMap() {
+    return Collections.synchronizedMap(new HashMap());
+  }
 }
