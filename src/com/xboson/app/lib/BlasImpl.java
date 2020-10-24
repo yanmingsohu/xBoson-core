@@ -17,9 +17,9 @@
 package com.xboson.app.lib;
 
 import com.xboson.script.IVisitByScript;
-import org.jblas.ComplexDouble;
-import org.jblas.ComplexDoubleMatrix;
-import org.jblas.DoubleMatrix;
+import org.bouncycastle.pqc.math.linearalgebra.Matrix;
+import org.jblas.*;
+import org.jblas.ranges.*;
 
 
 /**
@@ -34,12 +34,12 @@ import org.jblas.DoubleMatrix;
  */
 public class BlasImpl extends RuntimeUnitImpl implements IVisitByScript {
 
-  public final EigenImpl eigen = new EigenImpl();
-  public final GeometryImpl geometry = new GeometryImpl();
-  public final SolveImpl solve = new SolveImpl();
-  public final SingularImpl singular = new SingularImpl();
-  public final TrigonometryImpl trigonometry = new TrigonometryImpl();
-  public final MatrixFuncImpl mf = new MatrixFuncImpl();
+  public final EigenImpl        eigen         = new EigenImpl();
+  public final GeometryImpl     geometry      = new GeometryImpl();
+  public final SolveImpl        solve         = new SolveImpl();
+  public final SingularImpl     singular      = new SingularImpl();
+  public final TrigonometryImpl trigonometry  = new TrigonometryImpl();
+  public final MatrixFuncImpl   mf            = new MatrixFuncImpl();
 
 
   public BlasImpl() {
@@ -202,11 +202,434 @@ public class BlasImpl extends RuntimeUnitImpl implements IVisitByScript {
   }
 
 
-  public class EigenImpl implements IVisitByScript {}
-  public class GeometryImpl implements IVisitByScript {}
-  public class SolveImpl implements IVisitByScript {}
-  public class SingularImpl implements IVisitByScript {}
-  public class MatrixFuncImpl implements IVisitByScript {}
+  public DoubleMatrix concatHorizontally(DoubleMatrix a, DoubleMatrix b) {
+    return DoubleMatrix.concatHorizontally(a, b);
+  }
+
+
+  public DoubleMatrix concatVertically(DoubleMatrix a, DoubleMatrix b) {
+    return DoubleMatrix.concatVertically(a, b);
+  }
+
+
+  public Range rangeAll() {
+    return new AllRange();
+  }
+
+
+  public Range rangeIndices(int[] i) {
+    return new IndicesRange(i);
+  }
+
+
+  public Range rangeIndices(DoubleMatrix i) {
+    return new IndicesRange(i);
+  }
+
+
+  public Range rangeInterval(int begin, int end) {
+    return new IntervalRange(begin, end);
+  }
+
+
+  public Range rangePoint(int i) {
+    return new PointRange(i);
+  }
+
+
+  public class EigenImpl implements IVisitByScript {
+
+    public DoubleMatrix symmetricEigenvalues(DoubleMatrix A) {
+      return Eigen.symmetricEigenvalues(A);
+    }
+
+    public DoubleMatrix[] symmetricEigenvectors(DoubleMatrix A) {
+      return Eigen.symmetricEigenvectors(A);
+    }
+
+    public ComplexDoubleMatrix eigenvalues(DoubleMatrix A) {
+      return Eigen.eigenvalues(A);
+    }
+
+    public ComplexDoubleMatrix[] eigenvectors(DoubleMatrix A) {
+      return Eigen.eigenvectors(A);
+    }
+
+    public DoubleMatrix symmetricGeneralizedEigenvalues(DoubleMatrix A,
+                                                        DoubleMatrix B) {
+      return Eigen.symmetricGeneralizedEigenvalues(A, B);
+    }
+
+    public DoubleMatrix[] symmetricGeneralizedEigenvectors(DoubleMatrix A,
+                                                           DoubleMatrix B) {
+      return Eigen.symmetricGeneralizedEigenvectors(A, B);
+    }
+
+    public DoubleMatrix symmetricGeneralizedEigenvalues(DoubleMatrix A,
+                                                        DoubleMatrix B,
+                                                        double vl,
+                                                        double vu) {
+      return Eigen.symmetricGeneralizedEigenvalues(A, B, vl, vu);
+    }
+
+    public DoubleMatrix symmetricGeneralizedEigenvalues(DoubleMatrix A,
+                                                        DoubleMatrix B,
+                                                        int il,
+                                                        int iu) {
+      return Eigen.symmetricGeneralizedEigenvalues(A, B, il, iu);
+    }
+
+    public DoubleMatrix[] symmetricGeneralizedEigenvectors(DoubleMatrix A,
+                                                           DoubleMatrix B,
+                                                           double vl,
+                                                           double vu) {
+      return Eigen.symmetricGeneralizedEigenvectors(A, B, vl, vu);
+    }
+
+    public DoubleMatrix[] symmetricGeneralizedEigenvectors(DoubleMatrix A,
+                                                           DoubleMatrix B,
+                                                           int il,
+                                                           int iu) {
+      return Eigen.symmetricGeneralizedEigenvectors(A, B, il, iu);
+    }
+  }
+
+
+  public class GeometryImpl implements IVisitByScript {
+
+    public DoubleMatrix pairwiseSquaredDistances(DoubleMatrix X,
+                                                 DoubleMatrix Y) {
+      return Geometry.pairwiseSquaredDistances(X, Y);
+    }
+
+    public DoubleMatrix center(DoubleMatrix x) {
+      return Geometry.center(x);
+    }
+
+    public DoubleMatrix centerRows(DoubleMatrix x) {
+      return Geometry.centerRows(x);
+    }
+
+    public DoubleMatrix centerColumns(DoubleMatrix x) {
+      return Geometry.centerColumns(x);
+    }
+
+    public DoubleMatrix normalize(DoubleMatrix x) {
+      return Geometry.normalize(x);
+    }
+
+    public DoubleMatrix normalizeRows(DoubleMatrix x) {
+      return Geometry.normalizeRows(x);
+    }
+
+    public DoubleMatrix normalizeColumns(DoubleMatrix x) {
+      return Geometry.normalizeColumns(x);
+    }
+  }
+
+
+  public class SolveImpl implements IVisitByScript {
+
+    public DoubleMatrix solve(DoubleMatrix A, DoubleMatrix B) {
+      return Solve.solve(A, B);
+    }
+
+    public DoubleMatrix solveSymmetric(DoubleMatrix A, DoubleMatrix B) {
+      return Solve.solveSymmetric(A, B);
+    }
+
+    public DoubleMatrix solvePositive(DoubleMatrix A, DoubleMatrix B) {
+      return Solve.solvePositive(A, B);
+    }
+
+    public DoubleMatrix solveLeastSquares(DoubleMatrix A, DoubleMatrix B) {
+      return Solve.solveLeastSquares(A, B);
+    }
+
+    public DoubleMatrix pinv(DoubleMatrix A) {
+      return Solve.pinv(A);
+    }
+  }
+
+
+  public class SingularImpl implements IVisitByScript {
+
+    public DoubleMatrix[] fullSVD(DoubleMatrix A) {
+      return Singular.fullSVD(A);
+    }
+
+    public DoubleMatrix[] sparseSVD(DoubleMatrix A) {
+      return Singular.sparseSVD(A);
+    }
+
+    public ComplexDoubleMatrix[] sparseSVD(ComplexDoubleMatrix A) {
+      return Singular.sparseSVD(A);
+    }
+
+    public ComplexDoubleMatrix[] fullSVD(ComplexDoubleMatrix A) {
+      return Singular.fullSVD(A);
+    }
+
+    public DoubleMatrix SVDValues(DoubleMatrix A) {
+      return Singular.SVDValues(A);
+    }
+
+    public DoubleMatrix SVDValues(ComplexDoubleMatrix A) {
+      return Singular.SVDValues(A);
+    }
+  }
+
+
+  public class MatrixFuncImpl implements IVisitByScript {
+
+    public DoubleMatrix absi(DoubleMatrix x) {
+      return MatrixFunctions.absi(x);
+    }
+
+    public ComplexDoubleMatrix absi(ComplexDoubleMatrix x) {
+      return MatrixFunctions.absi(x);
+    }
+
+    public double abs(double d) {
+      return MatrixFunctions.abs(d);
+    }
+
+    public DoubleMatrix abs(DoubleMatrix x) {
+      return MatrixFunctions.abs(x);
+    }
+
+    public DoubleMatrix acosi(DoubleMatrix x) {
+      return MatrixFunctions.acosi(x);
+    }
+
+    public DoubleMatrix	acos(DoubleMatrix x) {
+      return MatrixFunctions.acos(x);
+    }
+
+    public double acos(double d) {
+      return MatrixFunctions.acos(d);
+    }
+
+    public DoubleMatrix asini(DoubleMatrix x) {
+      return MatrixFunctions.asini(x);
+    }
+
+    public double asin(double x) {
+      return MatrixFunctions.asin(x);
+    }
+
+    public DoubleMatrix asin(DoubleMatrix x) {
+      return MatrixFunctions.asin(x);
+    }
+
+    public DoubleMatrix atani(DoubleMatrix x) {
+      return MatrixFunctions.atani(x);
+    }
+
+    public double atan(double x) {
+      return MatrixFunctions.atan(x);
+    }
+
+    public DoubleMatrix atan(DoubleMatrix x) {
+      return MatrixFunctions.atan(x);
+    }
+
+    public DoubleMatrix cbrti(DoubleMatrix x) {
+      return MatrixFunctions.cbrti(x);
+    }
+
+    public double cbrt(double x) {
+      return MatrixFunctions.cbrt(x);
+    }
+
+    public DoubleMatrix cbrt(DoubleMatrix x) {
+      return MatrixFunctions.cbrt(x);
+    }
+
+    public DoubleMatrix ceili(DoubleMatrix x) {
+      return MatrixFunctions.ceili(x);
+    }
+
+    public double ceil(double x) {
+      return MatrixFunctions.ceil(x);
+    }
+
+    public DoubleMatrix ceil(DoubleMatrix x) {
+      return MatrixFunctions.ceil(x);
+    }
+
+    public DoubleMatrix cosi(DoubleMatrix x) {
+      return MatrixFunctions.cosi(x);
+    }
+
+    public double cos(double x) {
+      return MatrixFunctions.cos(x);
+    }
+
+    public DoubleMatrix cos(DoubleMatrix x) {
+      return MatrixFunctions.cos(x);
+    }
+
+    public DoubleMatrix coshi(DoubleMatrix x) {
+      return MatrixFunctions.coshi(x);
+    }
+
+    public double cosh(double x) {
+      return MatrixFunctions.cosh(x);
+    }
+
+    public DoubleMatrix cosh(DoubleMatrix x) {
+      return MatrixFunctions.cosh(x);
+    }
+
+    public DoubleMatrix expi(DoubleMatrix x) {
+      return MatrixFunctions.expi(x);
+    }
+
+    public double exp(double x) {
+      return MatrixFunctions.exp(x);
+    }
+
+    public DoubleMatrix exp(DoubleMatrix x) {
+      return MatrixFunctions.exp(x);
+    }
+
+    public DoubleMatrix expm(DoubleMatrix A) {
+      return MatrixFunctions.expm(A);
+    }
+
+    public DoubleMatrix floori(DoubleMatrix x) {
+      return MatrixFunctions.floori(x);
+    }
+
+    public double floor(double x) {
+      return MatrixFunctions.floor(x);
+    }
+
+    public DoubleMatrix floor(DoubleMatrix x) {
+      return MatrixFunctions.floor(x);
+    }
+
+    public DoubleMatrix logi(DoubleMatrix x) {
+      return MatrixFunctions.logi(x);
+    }
+
+    public double log(double x) {
+      return MatrixFunctions.log(x);
+    }
+
+    public DoubleMatrix log(DoubleMatrix x) {
+      return MatrixFunctions.log(x);
+    }
+
+    public DoubleMatrix log10i(DoubleMatrix x) {
+      return MatrixFunctions.log10i(x);
+    }
+
+    public double log10(double x) {
+      return MatrixFunctions.log10(x);
+    }
+
+    public DoubleMatrix log10(DoubleMatrix x) {
+      return MatrixFunctions.log10(x);
+    }
+
+    public DoubleMatrix powi(DoubleMatrix x, DoubleMatrix e) {
+      return MatrixFunctions.powi(x, e);
+    }
+
+    public double pow(double x, double y) {
+      return MatrixFunctions.pow(x, y);
+    }
+
+    public DoubleMatrix pow(double b, DoubleMatrix x) {
+      return MatrixFunctions.pow(b, x);
+    }
+
+    public DoubleMatrix pow(DoubleMatrix x, double e) {
+      return MatrixFunctions.pow(x, e);
+    }
+
+    public DoubleMatrix powi(DoubleMatrix x, double d) {
+      return MatrixFunctions.powi(x, d);
+    }
+
+    public DoubleMatrix powi(double base, DoubleMatrix x) {
+      return MatrixFunctions.powi(base, x);
+    }
+
+    public DoubleMatrix signumi(DoubleMatrix x) {
+      return MatrixFunctions.signumi(x);
+    }
+
+    public double signum(double x) {
+      return MatrixFunctions.signum(x);
+    }
+
+    public DoubleMatrix signum(DoubleMatrix x) {
+      return MatrixFunctions.signum(x);
+    }
+
+    public DoubleMatrix sini(DoubleMatrix x) {
+      return MatrixFunctions.sini(x);
+    }
+
+    public double sin(double x) {
+      return MatrixFunctions.sin(x);
+    }
+
+    public DoubleMatrix sin(DoubleMatrix x) {
+      return MatrixFunctions.sin(x);
+    }
+
+    public DoubleMatrix sinhi(DoubleMatrix x) {
+      return MatrixFunctions.sinhi(x);
+    }
+
+    public double sinh(double x) {
+      return MatrixFunctions.sinh(x);
+    }
+
+    public DoubleMatrix sinh(DoubleMatrix x) {
+      return MatrixFunctions.sinh(x);
+    }
+
+    public DoubleMatrix sqrti(DoubleMatrix x) {
+      return MatrixFunctions.sqrti(x);
+    }
+
+    public double sqrt(double x) {
+      return MatrixFunctions.sqrt(x);
+    }
+
+    public DoubleMatrix sqrt(DoubleMatrix x) {
+      return MatrixFunctions.sqrt(x);
+    }
+
+    public DoubleMatrix tani(DoubleMatrix x) {
+      return MatrixFunctions.tani(x);
+    }
+
+    public double tan(double x) {
+      return MatrixFunctions.tan(x);
+    }
+
+    public DoubleMatrix tan(DoubleMatrix x) {
+      return MatrixFunctions.tan(x);
+    }
+
+    public DoubleMatrix tanhi(DoubleMatrix x) {
+      return MatrixFunctions.tanhi(x);
+    }
+
+    public double tanh(double x) {
+      return MatrixFunctions.tanh(x);
+    }
+
+    public DoubleMatrix tanh(DoubleMatrix x) {
+      return MatrixFunctions.tanh(x);
+    }
+  }
 
 
   /**

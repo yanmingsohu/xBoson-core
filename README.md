@@ -336,3 +336,5 @@ max_allowed_packet=100M
 * [Paxos 的共识算法](https://www.zhihu.com/question/19787937)
 * [Raft 共识算法](https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md)
 * [Raft 可视化](https://raft.github.io/)
+* [向量标量子程序](https://www.ibm.com/support/knowledgecenter/en/SSFHY8_6.1/reference/am5gr_vecsca.html)
+
