@@ -175,7 +175,7 @@ Java JDK, Tomcat 9, Servlet 4.0.
 
   1. [中文文档](https://kafka.apachecn.org/intro.html), [英文文档](http://kafka.apache.org/documentation/#topicconfigs), [API](http://kafka.apache.org/26/javadoc/index.html), [控制mianb](https://github.com/yahoo/CMAK)
   
-## 线性代数 (TODO)
+## 线性代数
 
   1. [首页](http://jblas.org/)
   1. [源码](https://github.com/jblas-project/jblas)
@@ -337,4 +337,7 @@ max_allowed_packet=100M
 * [Raft 共识算法](https://github.com/maemual/raft-zh_cn/blob/master/raft-zh_cn.md)
 * [Raft 可视化](https://raft.github.io/)
 * [向量标量子程序](https://www.ibm.com/support/knowledgecenter/en/SSFHY8_6.1/reference/am5gr_vecsca.html)
+* [MQTT 服务器文档](https://activemq.apache.org/components/artemis/documentation/latest/)
+* [K8s 文档](https://kubernetes.io/zh/docs/concepts/overview/)
+* [K8s Java 客户端](https://github.com/kubernetes-client/java)
 
