@@ -258,11 +258,11 @@ public class Chain extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public class KeyPairJs {
+  public static class KeyPairJs {
     public final String publicKey;
     public final String privateKey;
 
-    private KeyPairJs() {
+    KeyPairJs() {
       Btc b       = new Btc();
       publicKey   = b.publicKeyStr();
       privateKey  = b.privateKeyStr();

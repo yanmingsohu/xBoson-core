@@ -30,6 +30,7 @@ import java.io.OutputStream;
 
 /**
  * 摘要算法
+ * https://docs.oracle.com/en/java/javase/11/security/howtoimplaprovider.html
  */
 public class Digest extends RuntimeUnitImpl {
 
@@ -74,11 +75,21 @@ public class Digest extends RuntimeUnitImpl {
   }
 
 
+  public HashWarp sm3() {
+    return new HashWarp("sm3", "BC");
+  }
+
+
   public static class HashWarp implements IVisitByScript {
     private Hash h;
 
     public HashWarp(String algorithm) {
       h = new Hash(algorithm);
+    }
+
+
+    public HashWarp(String algorithm, String provider) {
+      h = new Hash(algorithm, provider);
     }
 
 

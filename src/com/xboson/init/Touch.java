@@ -31,6 +31,7 @@ import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.RpcFactory;
 import com.xboson.script.SandboxFactory;
 import com.xboson.sleep.RedisMesmerizer;
+import com.xboson.util.BouncyCastleProviderReg;
 import com.xboson.util.ChineseDictionary;
 import com.xboson.util.SysConfig;
 
@@ -66,6 +67,7 @@ public final class Touch {
     RpcFactory.me();
     PeerFactory.me();
     ChineseDictionary.init();
+    BouncyCastleProviderReg.me();
   }
 
 

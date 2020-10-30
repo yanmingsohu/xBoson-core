@@ -34,8 +34,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
  * ECDSA 的对称加密算法辅助类, 使用 PEM 格式.
  *
  * 该对象依赖 BouncyCastleProvider 类,
- * BouncyCastleProvider 在 bcprov-jdk15on-1.59.jar 包,
- * 该包已经集成在 fabric-sdk-java 中.
+ * BouncyCastleProvider 在 bcprov-jdk15on-1.66.jar 包,
+ * <del>该包已经集成在 fabric-sdk-java 中.</del>
  */
 public class ECDSA {
 

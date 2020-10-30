@@ -17,16 +17,21 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
+import com.xboson.chain.Btc;
 import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
 import com.xboson.util.Hash;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
+import org.bouncycastle.crypto.engines.SM2Engine;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.GMCipherSpi;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.AlgorithmParameterSpec;
 import java.util.HashMap;
@@ -43,7 +48,13 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
     put(new DES());
     put(new PBE());
     put(new IDEA());
-    put(new AES_CBC_PKCS5Padding());
+    put(new CommonImpl("AES/CBC/PKCS5Padding"));
+    put(new SM2crc123());
+    put(new SM2crc132());
+    put(new CommonImpl("SM4/ECB/PKCS5Padding"));
+    put(new CommonImpl("SM4/ECB/NoPadding"));
+    put(new CommonImpl("SM4/CBC/PKCS5Padding"));
+    put(new CommonImpl("SM4/CBC/NoPadding"));
   }
 
   private static void put(CryptoFact cf) {
@@ -69,7 +80,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
   public CipherJs createCipher(String algorithm, String pass) throws Exception {
     CryptoFact cf = get_cipher(algorithm);
     SecretKey key = cf.getKey(pass);
-    return new CipherJs( cf.cipher(Cipher.ENCRYPT_MODE, key) );
+    return new CipherJs( cf.cipher(Cipher.ENCRYPT_MODE, key, null) );
   }
 
 
@@ -84,7 +95,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
   public CipherJs createDecipher(String algorithm, String pass) throws Exception {
     CryptoFact cf = get_cipher(algorithm);
     SecretKey key = cf.getKey(pass);
-    return new CipherJs( cf.cipher(Cipher.DECRYPT_MODE, key) );
+    return new CipherJs( cf.cipher(Cipher.DECRYPT_MODE, key, null) );
   }
 
 
@@ -119,6 +130,18 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
   }
 
 
+  public Bytes generateSm4Pass(String pass) {
+    Hash h = new Hash("MD5");
+    h.update(pass);
+    return new Bytes(h.digest());
+  }
+
+
+  public Chain.KeyPairJs ECKeyPair() {
+    return new Chain.KeyPairJs();
+  }
+
+
   /**
    * @see Digest
    */
@@ -128,8 +151,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
 
 
   private CryptoFact get_cipher(String alg) throws Exception {
-    alg = alg.toLowerCase();
-    CryptoFact cf = impl.get(alg);
+    CryptoFact cf = impl.get(alg.toLowerCase());
     if (cf == null) {
       throw new XBosonException("Unknow algorithm "+ alg);
     }
@@ -138,7 +160,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
 
 
   //
-  // 加密工厂抽象基类
+  // 简易加密工厂抽象基类, 子类通常是对多个算法的组合
   //
   private static abstract class CryptoFact {
     abstract Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec ps) throws Exception;
@@ -149,17 +171,12 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
     SecretKey getKey(String password) throws Exception {
       return getKey(password.getBytes(IConstant.CHARSET));
     }
-
-    // AlgorithmParameterSpec 参数为 null
-    Cipher cipher(int mode, SecretKey key) throws Exception {
-      return cipher(mode, key, null);
-    }
   }
 
 
   private static class AES extends CryptoFact {
     String name() {
-      return "aes";
+      return "AES";
     }
 
     SecretKey getKey(byte[] pass) throws Exception {
@@ -180,7 +197,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
 
   private static class DES extends CryptoFact {
     String name() {
-      return "des";
+      return "DES";
     }
 
     SecretKey getKey(byte[] pass) throws Exception {
@@ -200,7 +217,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
 
   private static class PBE extends CryptoFact {
     String name() {
-      return "pbe";
+      return "PBE";
     }
 
     SecretKey getKey(String pass) throws Exception {
@@ -225,7 +242,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
 
   private static class IDEA extends CryptoFact {
     String name() {
-      return "idea";
+      return "IDEA";
     }
 
     SecretKey getKey(byte[] pass) throws Exception {
@@ -244,6 +261,9 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
   }
 
 
+  /**
+   * @deprecated 由 CommonImpl 替代
+   */
   private static class AES_CBC_PKCS5Padding extends CryptoFact {
     String name() {
       return "AES/CBC/PKCS5Padding";
@@ -257,6 +277,100 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
 
     SecretKey getKey(byte[] pass) throws Exception {
       return new SecretKeySpec(pass, "AES");
+    }
+  }
+
+
+  private static class SM2crc123 extends CryptoFact {
+    Cipher newSM2() throws Exception {
+      return Cipher.getInstance("SM2");
+    }
+
+    Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec ps) throws Exception {
+      Cipher cipher = newSM2();
+      GMCipherSpi.SM2 a;
+      org.bouncycastle.jcajce.provider.asymmetric.GM c;
+      if (mode == Cipher.ENCRYPT_MODE) {
+        PublicKey pkey = Btc.publicKey(key.toString());
+        cipher.init(mode, pkey);
+      } else {
+        PrivateKey pkey = Btc.privateKey(key.toString());
+        cipher.init(mode, pkey);
+      }
+      return cipher;
+    }
+
+    SecretKey getKey(byte[] password) throws Exception {
+      return null; // yes null
+    }
+
+    String name() {
+      return "SM2C1C2C3";
+    }
+
+    SecretKey getKey(String password) throws Exception {
+      return new StringKey(password);
+    }
+  }
+
+
+  private static class SM2crc132 extends SM2crc123 {
+    String name() {
+      return "SM2C1C3C2";
+    }
+
+    Cipher newSM2() throws Exception {
+      return Cipher.getInstance("SM2C132");
+    }
+  }
+
+
+  private static class StringKey implements SecretKey {
+    String val;
+
+    StringKey(String k) {
+      val = k;
+    }
+
+    public String getAlgorithm() {
+      throw new XBosonException("no algorithm");
+    }
+
+    public String getFormat() {
+      return null;
+    }
+
+    public byte[] getEncoded() {
+      return val.getBytes();
+    }
+
+    public String toString() {
+      return val;
+    }
+  }
+
+
+  private static class CommonImpl extends CryptoFact {
+    private final String algorithm;
+    private final String keyalg;
+
+    CommonImpl(String aname) {
+      algorithm = aname;
+      keyalg = aname.split("/", 2)[0];
+    }
+
+    Cipher cipher(int mode, SecretKey key, AlgorithmParameterSpec iv) throws Exception {
+      Cipher cipher = Cipher.getInstance(algorithm);
+      cipher.init(mode, key, iv);
+      return cipher;
+    }
+
+    SecretKey getKey(byte[] password) throws Exception {
+      return new SecretKeySpec(password, keyalg);
+    }
+
+    String name() {
+      return algorithm;
     }
   }
 

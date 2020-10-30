@@ -18,6 +18,7 @@ package com.xboson.app.lib;
 
 import com.xboson.been.CallData;
 import com.xboson.been.XBosonException;
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Bytes;
 import com.xboson.util.Hex;
 import com.xboson.util.Tool;
@@ -40,7 +41,7 @@ import java.util.*;
 /**
  * js 运行时抽象基类, 该类中定义的公共方法将被导出到 js 环境中.
  */
-public abstract class RuntimeUnitImpl implements IApiConstant {
+public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
 
   /**
    * 请求数据包装对象, 子类直接使用

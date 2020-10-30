@@ -54,6 +54,15 @@ public class Hash {
   }
 
 
+  public Hash(String algorithm, String provider) {
+    try {
+      md = MessageDigest.getInstance(algorithm, provider);
+    } catch (Exception e) {
+      throw new XBosonException(e);
+    }
+  }
+
+
   /**
    * 返回经过签名数据的字节数
    */
