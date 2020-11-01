@@ -16,6 +16,7 @@
 
 package com.xboson.app;
 
+import com.xboson.app.lib.QueryFactory;
 import com.xboson.app.reader.AbsReadScript;
 import com.xboson.been.SysPlDrmDs001;
 import com.xboson.been.XBosonException;
@@ -40,7 +41,7 @@ import java.sql.Statement;
 public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
 
   /** sys_pl_drm_ds001.flg 必须是 9 才可以打开数据库. */
-  public static final String XBOSON_TYPE = "9";
+  public static final String XBOSON_TYPE = QueryFactory.FLG_SYS +"";
 
   private String orgid;
   private String name;
@@ -137,6 +138,7 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
     orgdb.setDatabase(dbconf.en);
     orgdb.setUsername(dbconf.user_name);
     orgdb.setPassword(dbconf.pass);
+    orgdb.flg = Integer.parseInt(dbconf.flg);
   }
 
 

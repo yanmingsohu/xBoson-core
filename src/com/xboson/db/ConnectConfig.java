@@ -63,6 +63,9 @@ public final class ConnectConfig extends JsonHelper {
   String username;
   String password;
 
+  /** 只存储, 不参与任何运算 */
+  public int flg;
+
 
   public String getDbname() {
     return dbname;

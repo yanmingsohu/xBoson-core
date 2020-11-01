@@ -47,7 +47,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     super(cd);
     this.orgdb = orgdb;
     this.__currdb = orgdb;
-    this.query_impl = QueryFactory.create(() -> getConnection(), this);
+    reset();
   }
 
 
@@ -56,9 +56,22 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
    */
   private Connection getConnection() throws Exception {
     if (__conn == null || __conn.isClosed()) {
-      connection();
+      // SqlImpl 创建时没有立即连接数据库, 直到首次执行 sql 查询时, 连接到默认 db.
+      connect_orgdb();
     }
     return __conn;
+  }
+
+
+  /**
+   * 必须保证 __currdb 是当前连接的配置.
+   */
+  private void reset() {
+    if (__currdb != null) {
+      this.query_impl = QueryFactory.create(() -> getConnection(), this, __currdb);
+    } else {
+      this.query_impl = new QueryImpl(() -> getConnection(), this);
+    }
   }
 
 
@@ -267,12 +280,18 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   }
 
 
-  public void connection() throws Exception {
-    close();
-    this.__conn = DbmsFactory.me().open(orgdb);
+  private void connect_orgdb() throws Exception {
+    __currdb = orgdb;
+    __conn = DbmsFactory.me().open(orgdb);
     IDriver d = DbmsFactory.me().getDriver(orgdb);
     setDBType(d.id());
-    __currdb = orgdb;
+  }
+
+
+  public void connection() throws Exception {
+    close();
+    connect_orgdb();
+    reset();
   }
 
 
@@ -284,6 +303,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     __conn = newconn;
     __currdb = connsetting;
     setDBType(connsetting.getDbid());
+    reset();
   }
 
 
@@ -298,7 +318,9 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     }
     close();
     __conn = newconn;
+    __currdb = null;
     _dbType = "x";
+    reset();
   }
 
 
@@ -352,6 +374,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
       conf.setUsername(rs.getString("username"));
       conf.setPassword(rs.getString("password"));
       conf.setDatabase(rs.getString("database"));
+      conf.flg = rs.getInt("flg");
       return conf;
     }
   }

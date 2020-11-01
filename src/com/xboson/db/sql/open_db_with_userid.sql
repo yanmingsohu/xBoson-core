@@ -8,7 +8,8 @@ select
        s.dport `port`,
        s.user_name `username`,
        s.pass  `password`,
-       s.en    `database`
+       s.en    `database`,
+       CAST(s.flg AS UNSIGNED) `flg`,
   from
        sys_pl_drm_ds001 s
   join

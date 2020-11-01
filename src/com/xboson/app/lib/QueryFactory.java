@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
+import com.xboson.db.ConnectConfig;
 
 
 /**
@@ -24,6 +25,11 @@ import com.xboson.app.AppContext;
  * @see QueryImpl
  */
 public class QueryFactory {
+
+  public final static int FLG_OLD_SYS = 0;
+  public final static int FLG_SYS = 9;
+  public final static int FLG_THIRD_PART = 1;
+
 
   /**
    * 在必要时会创建 org 替换的查询对象
@@ -33,9 +39,11 @@ public class QueryFactory {
    * @return QueryImpl
    * @see QueryImpl
    */
-  public static QueryImpl create(QueryImpl.SqlConnect sc, RuntimeUnitImpl runtime) {
+  public static QueryImpl create(QueryImpl.SqlConnect sc,
+                                 RuntimeUnitImpl runtime,
+                                 ConnectConfig cc) {
     AppContext ac = AppContext.me();
-    if (ac.isReplaceOrg()) {
+    if (ac.isReplaceOrg() && (cc.flg != FLG_THIRD_PART)) {
       return new ReplaceOrgQueryImpl(sc, runtime, ac.originalOrg());
     } else {
       return new QueryImpl(sc, runtime);

@@ -64,7 +64,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg) {
     super(cd);
     this.redis = new RedisImpl(IApiConstant._R_KEY_PREFIX_);
-    this.query = QueryFactory.create(() -> getConnection(), this);
+    this.query = QueryFactory.create(() -> getConnection(), this, getConfig());
     this.sys   = sys;
     this.orgid = currentOrg.id();
   }
