@@ -13,13 +13,14 @@ defaultTasks 'war'
 
 buildscript {
     repositories {
-        flatDir dirs: [ 
-            "${System.env.PROGUARD6}/lib",
-            "${System.env.JAVA_HOME}/../proguard6.0.1/lib",
+        flatDir dirs: [
             "${System.env.JAVA_HOME}/jre/lib" ]
+        jcenter()
+        gradlePluginPortal()
+        google()
     }
     dependencies {
-        classpath ':proguard'
+        classpath 'com.guardsquare:proguard-gradle:7.0.0'
     }
     dependencies {
         classpath files("./WebRoot/WEB-INF/classes")
