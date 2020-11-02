@@ -18,7 +18,7 @@ package com.xboson.util;
 
 public class Version {
 
-  public final static String xBoson = "2.52";
+  public final static String xBoson = "2.61";
   public final static String Name = "智慧大数据开放平台";
 
   /**

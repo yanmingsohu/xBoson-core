@@ -41,7 +41,7 @@ import java.sql.Statement;
 public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
 
   /** sys_pl_drm_ds001.flg 必须是 9 才可以打开数据库. */
-  public static final String XBOSON_TYPE = QueryFactory.FLG_SYS +"";
+  static final String XBOSON_TYPE = FLG_SYS +"";
 
   private String orgid;
   private String name;

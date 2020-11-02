@@ -118,4 +118,11 @@ public interface IConstant extends IDict {
   Class<? extends ISignerProvider>
           CHAIN_SIGNER_PROVIDER = ChainSignerProvider.class;
 
+
+  /** 数据源配置表 sys_pl_drm_ds001, flg 枚举字段, 旧系统的系统数据源 */
+  int FLG_OLD_SYS = 0;
+  /** 数据源配置表 sys_pl_drm_ds001, flg 枚举字段, 2.0 系统的系统数据源 */
+  int FLG_SYS = 9;
+  /** 数据源配置表 sys_pl_drm_ds001, flg 枚举字段, 第三方数据源 */
+  int FLG_THIRD_PART = 1;
 }

@@ -34,8 +34,11 @@ import java.sql.*;
  */
 public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResource {
 
+  private final static String NO_CONNECTION = "not connection";
+  private final static String NO_POOL_CONNECTION = "connection without pool";
+
   private Connection __conn;
-  private ConnectConfig orgdb;
+  private final ConnectConfig orgdb;
   private ConnectConfig __currdb;
   private QueryImpl query_impl;
   private SysImpl sys;
@@ -46,8 +49,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   public SqlImpl(CallData cd, ConnectConfig orgdb) throws SQLException {
     super(cd);
     this.orgdb = orgdb;
-    this.__currdb = orgdb;
-    reset();
+    reset(orgdb, null, NO_CONNECTION);
   }
 
 
@@ -63,15 +65,34 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   }
 
 
+  private void connect_orgdb() throws Exception {
+    IDriver d = DbmsFactory.me().getDriver(orgdb);
+    reset_info(orgdb, DbmsFactory.me().open(orgdb), dbType(d.id()));
+  }
+
+
   /**
-   * 必须保证 __currdb 是当前连接的配置.
+   * 重制连接信息, 重新绑定 sql 替换器
    */
-  private void reset() {
-    if (__currdb != null) {
-      this.query_impl = QueryFactory.create(() -> getConnection(), this, __currdb);
+  private void reset(ConnectConfig conf, Connection conn, String type) {
+    reset_info(conf, conn, type);
+    reset_query_repl(conf);
+  }
+
+
+  private void reset_query_repl(ConnectConfig conf) {
+    if (conf != null) {
+      this.query_impl = QueryFactory.create(() -> getConnection(), this, conf);
     } else {
       this.query_impl = new QueryImpl(() -> getConnection(), this);
     }
+  }
+
+
+  private void reset_info(ConnectConfig conf, Connection conn, String type) {
+    __currdb = conf;
+    __conn   = conn;
+    _dbType  = type;
   }
 
 
@@ -268,7 +289,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public String currentDBTimeString() throws Exception {
-    IDialect dialect = DbmsFactory.me().getDriver(orgdb);
+    IDialect dialect = DbmsFactory.me().getDriver(__currdb);
     try (Statement stat = getConnection().createStatement()) {
       ResultSet rs = stat.executeQuery(dialect.nowSql());
       if (rs.next()) {
@@ -280,18 +301,10 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   }
 
 
-  private void connect_orgdb() throws Exception {
-    __currdb = orgdb;
-    __conn = DbmsFactory.me().open(orgdb);
-    IDriver d = DbmsFactory.me().getDriver(orgdb);
-    setDBType(d.id());
-  }
-
-
   public void connection() throws Exception {
     close();
     connect_orgdb();
-    reset();
+    reset_query_repl(orgdb);
   }
 
 
@@ -299,11 +312,12 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     //PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     ConnectConfig connsetting = sourceConfig(key, cd.sess.login_user.userid);
     Connection newconn = DbmsFactory.me().open(connsetting);
-    close();
-    __conn = newconn;
-    __currdb = connsetting;
-    setDBType(connsetting.getDbid());
-    reset();
+    try {
+      close();
+      reset(connsetting, newconn, dbType(connsetting.getDbid()));
+    } catch(Exception e) {
+      newconn.close();
+    }
   }
 
 
@@ -313,14 +327,15 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   public void connection(String url, String user, String ps) throws Exception {
     //PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
     Connection newconn = DriverManager.getConnection(url, user, ps);
-    if (!newconn.isValid(1000)) {
-      throw new XBosonException("Cannot connect to url");
+    try {
+      if (!newconn.isValid(1000)) {
+        throw new XBosonException("Cannot connect to url");
+      }
+      close();
+      reset(null, newconn, NO_POOL_CONNECTION);
+    } catch(Exception e) {
+      newconn.close();
     }
-    close();
-    __conn = newconn;
-    __currdb = null;
-    _dbType = "x";
-    reset();
   }
 
 
@@ -385,11 +400,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   }
 
 
-  private void setDBType(int id) {
+  private String dbType(int id) {
     if (id < 10) {
-      _dbType = "0" + id;
+      return "0" + id;
     } else if (id < 100) {
-      _dbType = Integer.toString(id);
+      return Integer.toString(id);
     } else {
       throw new XBosonException("db type id > 100");
     }

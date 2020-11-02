@@ -18,17 +18,14 @@ package com.xboson.app.lib;
 
 import com.xboson.app.AppContext;
 import com.xboson.db.ConnectConfig;
+import com.xboson.util.c0nst.IConstant;
 
 
 /**
  * QueryImpl 工厂
  * @see QueryImpl
  */
-public class QueryFactory {
-
-  public final static int FLG_OLD_SYS = 0;
-  public final static int FLG_SYS = 9;
-  public final static int FLG_THIRD_PART = 1;
+public class QueryFactory implements IConstant {
 
 
   /**
