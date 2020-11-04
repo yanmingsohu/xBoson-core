@@ -320,6 +320,8 @@ max_connect_errors=1000
 
 # 若上传大文件报错, 则增大这个设置 
 max_allowed_packet=100M
+# 账户永不过期
+default_password_lifetime=0
 ```
 
 登录帐户过期, 在 sql 控制台登录后执行 `SET GLOBAL default_password_lifetime = 0;`
@@ -340,4 +342,6 @@ max_allowed_packet=100M
 * [MQTT 服务器文档](https://activemq.apache.org/components/artemis/documentation/latest/)
 * [K8s 文档](https://kubernetes.io/zh/docs/concepts/overview/)
 * [K8s Java 客户端](https://github.com/kubernetes-client/java)
+* [延迟和容错库, 用于 api 代理](https://github.com/Netflix/Hystrix)
+* [api网关](https://github.com/Kong/kong)
 

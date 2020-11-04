@@ -53,32 +53,27 @@ import java.util.Arrays;
  */
 public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
+  private final static String HIDE_PASS = "********";
+
   private ConnectConfig __sysdb;
-  private Connection __conn;
   private RedisImpl redis;
   private QueryImpl query;
   private SysImpl sys;
   private String orgid;
+  private SqlImpl sql;
 
 
-  public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg) {
+  public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg, SqlImpl sql) {
     super(cd);
     this.redis = new RedisImpl(IApiConstant._R_KEY_PREFIX_);
-    this.query = QueryFactory.create(() -> getConnection(), this, getConfig());
+    this.query = new QueryImpl(() -> sql.getConnection(), this);
     this.sys   = sys;
     this.orgid = currentOrg.id();
+    this.sql   = sql;
   }
 
 
-  private Connection getConnection() throws Exception {
-    if (__conn == null) {
-      __conn = DbmsFactory.me().open(getConfig());
-    }
-    return __conn;
-  }
-
-
-  public ConnectConfig getConfig() {
+  ConnectConfig getSysOrgConfig() {
     if (__sysdb == null) {
       __sysdb = SysConfig.me().readConfig().db;
     }
@@ -149,7 +144,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public String dbType() {
-    return dbType(getConfig().getDbid());
+    return sql.dbType();
   }
 
 
@@ -170,7 +165,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public Object localDb() {
-    ConnectConfig db = getConfig();
+    ConnectConfig db = getSysOrgConfig();
     IDriver drv = DbmsFactory.me().getDriver(db);
     String url = drv.getUrl(db);
 
@@ -262,10 +257,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    if (__conn != null) {
-      __conn.close();
-      __conn = null;
-    }
+    sql.close();
   }
 
 
@@ -348,7 +340,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   public boolean sendApiChange(String content_id) throws Exception {
     Object[] bind = { AppContext.me().originalOrg() };
     try (SqlResult sr = SqlReader.query(
-            "api_info.sql", bind, getConfig(), content_id);
+            "api_info.sql", bind, getSysOrgConfig(), content_id);
          ResultSet rs = sr.getResult() )
     {
       if (!rs.next()) {

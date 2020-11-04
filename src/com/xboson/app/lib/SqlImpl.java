@@ -49,14 +49,14 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   public SqlImpl(CallData cd, ConnectConfig orgdb) throws SQLException {
     super(cd);
     this.orgdb = orgdb;
-    reset(orgdb, null, NO_CONNECTION);
+    reset(orgdb, null, dbType(orgdb.getDbid()));
   }
 
 
   /**
    * 返回的对象不要关闭
    */
-  private Connection getConnection() throws Exception {
+  Connection getConnection() throws Exception {
     if (__conn == null || __conn.isClosed()) {
       // SqlImpl 创建时没有立即连接数据库, 直到首次执行 sql 查询时, 连接到默认 db.
       connect_orgdb();
