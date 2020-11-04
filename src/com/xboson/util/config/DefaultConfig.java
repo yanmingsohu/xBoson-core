@@ -111,6 +111,7 @@ public final class DefaultConfig {
     redis.setPort("6379");
     redis.setPassword("");
     redis.setCluster(false);
+    redis.setDbid(0);
 
     MongoConfig mc = c.mongodb = new MongoConfig();
     mc.host = "localhost";
