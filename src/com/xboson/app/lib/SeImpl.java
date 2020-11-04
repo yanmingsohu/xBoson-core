@@ -60,16 +60,16 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   private QueryImpl query;
   private SysImpl sys;
   private String orgid;
-  private SqlImpl sql;
+  private ConnectionState state;
 
 
-  public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg, SqlImpl sql) {
+  public SeImpl(CallData cd, SysImpl sys, XjOrg currentOrg, ConnectionState cs) {
     super(cd);
     this.redis = new RedisImpl(IApiConstant._R_KEY_PREFIX_);
-    this.query = new QueryImpl(() -> sql.getConnection(), this);
+    this.query = new QueryImpl(cs, this);
     this.sys   = sys;
     this.orgid = currentOrg.id();
-    this.sql   = sql;
+    this.state = cs;
   }
 
 
@@ -144,13 +144,12 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
 
   public String dbType() {
-    return sql.dbType();
+    return state.dbType();
   }
 
 
   public String dbType(int t) {
-    if (t < 10) return "0" + t;
-    return String.valueOf(t);
+    return ConnectionState.dbType(t);
   }
 
 
@@ -257,7 +256,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
 
   @Override
   public void close() throws Exception {
-    sql.close();
+    state.close();
   }
 
 

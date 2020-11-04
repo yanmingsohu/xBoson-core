@@ -37,62 +37,19 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   private final static String NO_CONNECTION = "not connection";
   private final static String NO_POOL_CONNECTION = "connection without pool";
 
-  private Connection __conn;
   private final ConnectConfig orgdb;
-  private ConnectConfig __currdb;
   private QueryImpl query_impl;
   private SysImpl sys;
+  private ConnectionState state;
 
-  public String _dbType;
 
-
-  public SqlImpl(CallData cd, ConnectConfig orgdb) throws SQLException {
+  public SqlImpl(CallData cd, ConnectConfig orgdb, ConnectionState cs) throws SQLException {
     super(cd);
     this.orgdb = orgdb;
-    reset(orgdb, null, dbType(orgdb.getDbid()));
-  }
+    this.state = cs;
 
-
-  /**
-   * 返回的对象不要关闭
-   */
-  Connection getConnection() throws Exception {
-    if (__conn == null || __conn.isClosed()) {
-      // SqlImpl 创建时没有立即连接数据库, 直到首次执行 sql 查询时, 连接到默认 db.
-      connect_orgdb();
-    }
-    return __conn;
-  }
-
-
-  private void connect_orgdb() throws Exception {
-    IDriver d = DbmsFactory.me().getDriver(orgdb);
-    reset_info(orgdb, DbmsFactory.me().open(orgdb), dbType(d.id()));
-  }
-
-
-  /**
-   * 重制连接信息, 重新绑定 sql 替换器
-   */
-  private void reset(ConnectConfig conf, Connection conn, String type) {
-    reset_info(conf, conn, type);
-    reset_query_repl(conf);
-  }
-
-
-  private void reset_query_repl(ConnectConfig conf) {
-    if (conf != null) {
-      this.query_impl = QueryFactory.create(() -> getConnection(), this, conf);
-    } else {
-      this.query_impl = new QueryImpl(() -> getConnection(), this);
-    }
-  }
-
-
-  private void reset_info(ConnectConfig conf, Connection conn, String type) {
-    __currdb = conf;
-    __conn   = conn;
-    _dbType  = type;
+    state.setQueryImplEventListener((qi)-> this.query_impl = qi);
+    state.reset(orgdb, null, dbType(orgdb.getDbid()));
   }
 
 
@@ -133,7 +90,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     ScriptObjectMirror arr = createJSList();
     sys.addRetData(arr, save_to);
     Page page = new Page(pageNum, pageSize, totalCount);
-    int total = query_impl.queryPaging(arr, sql, param, page, __currdb);
+    int total = query_impl.queryPaging(arr, sql, param, page, state.config());
     sys.addRetData(total, save_to + _COUNT_SUFFIX_);
     sys.bindResult(_COUNT_NAME_, total);
     return total;
@@ -188,7 +145,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
   public int update(String sql, Object[] param, boolean manualCommit)
           throws Exception {
-    Connection conn = getConnection();
+    Connection conn = state.open();
     conn.setAutoCommit(!manualCommit);
 
     sql = query_impl.replaceSql(sql);
@@ -224,7 +181,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   public int updateBatch(String sql, Object _param_grp, boolean manualCommit)
           throws Exception {
     ScriptObjectMirror param_grp = wrap(_param_grp);
-    Connection conn = getConnection();
+    Connection conn = state.open();
     conn.setAutoCommit(! manualCommit);
 
     sql = query_impl.replaceSql(sql);
@@ -251,7 +208,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   public Object metaData(String sql) throws Exception {
     sql = query_impl.replaceSql(sql);
 
-    try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+    try (PreparedStatement ps = state.open().prepareStatement(sql)) {
       ResultSetMetaData meta = ps.getMetaData();
       int column_count = meta.getColumnCount();
       ScriptObjectMirror attr_list = createJSList(column_count);
@@ -276,12 +233,12 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public void commit() throws Exception {
-    getConnection().commit();
+    state.open().commit();
   }
 
 
   public void rollback() throws Exception {
-    Connection conn = getConnection();
+    Connection conn = state.open();
     if (! conn.getAutoCommit()) {
       conn.rollback();
     }
@@ -289,8 +246,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public String currentDBTimeString() throws Exception {
-    IDialect dialect = DbmsFactory.me().getDriver(__currdb);
-    try (Statement stat = getConnection().createStatement()) {
+    IDialect dialect = DbmsFactory.me().getDriver(state.config());
+    try (Statement stat = state.open().createStatement()) {
       ResultSet rs = stat.executeQuery(dialect.nowSql());
       if (rs.next()) {
         Timestamp d = rs.getTimestamp(IDialect.NOW_TIME_COLUMN);
@@ -302,9 +259,9 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public void connection() throws Exception {
-    close();
-    connect_orgdb();
-    reset_query_repl(orgdb);
+    state.close();
+    state.connect_orgdb();
+    state.reset_query_repl(orgdb);
   }
 
 
@@ -313,8 +270,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     ConnectConfig connsetting = sourceConfig(key, cd.sess.login_user.userid);
     Connection newconn = DbmsFactory.me().open(connsetting);
     try {
-      close();
-      reset(connsetting, newconn, dbType(connsetting.getDbid()));
+      state.close();
+      state.reset(connsetting, newconn, dbType(connsetting.getDbid()));
     } catch(Exception e) {
       newconn.close();
     }
@@ -331,8 +288,8 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
       if (!newconn.isValid(1000)) {
         throw new XBosonException("Cannot connect to url");
       }
-      close();
-      reset(null, newconn, NO_POOL_CONNECTION);
+      state.close();
+      state.reset(null, newconn, NO_POOL_CONNECTION);
     } catch(Exception e) {
       newconn.close();
     }
@@ -396,18 +353,12 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public String dbType() {
-    return _dbType;
+    return state.dbType();
   }
 
 
   private String dbType(int id) {
-    if (id < 10) {
-      return "0" + id;
-    } else if (id < 100) {
-      return Integer.toString(id);
-    } else {
-      throw new XBosonException("db type id > 100");
-    }
+    return ConnectionState.dbType(id);
   }
 
 
@@ -418,10 +369,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
   @Override
   public void close() throws Exception {
-    if (__conn != null) {
-      __conn.close();
-      __conn = null;
-    }
+    state.close();
   }
 
 
