@@ -77,6 +77,10 @@ function __createKVString(key, value) {
   var ret;
   if (typeof value == 'string') {
     ret = new String(value);
+    // 正确处理 ret 作为对象的索引参数
+    ret.toString = function() {
+      return value;
+    };
   } else if (value !== null && value !== undefined) {
     ret = value;
   } else {
