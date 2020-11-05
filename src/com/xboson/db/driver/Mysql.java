@@ -48,7 +48,8 @@ public class Mysql extends NullDriver implements IDriver {
             + config.getHost() + ":"
             + config.getPort() + "/"
             + config.getDatabase()
-            + "?zeroDateTimeBehavior=convertToNull";
+            + "?zeroDateTimeBehavior=convertToNull"
+            + "&characterEncoding=UTF-8";
   }
 
 
