@@ -60,6 +60,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -626,12 +627,14 @@ public class SysImpl extends DateImpl {
 
 
   public boolean regexFind(String regex, String str) {
-    return Pattern.matches(regex, str);
+    Pattern p = Pattern.compile(regex);
+    Matcher m = p.matcher(str);
+    return m.find();
   }
 
 
   public boolean regexMatches(String regex, String str) {
-    return regexFind(regex, str);
+    return Pattern.matches(regex, str);
   }
 
 
