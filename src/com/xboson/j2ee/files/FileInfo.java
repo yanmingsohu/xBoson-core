@@ -21,9 +21,13 @@ import com.xboson.util.Tool;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 
 
-public class FileInfo implements AutoCloseable {
+/**
+ * 继承 Serializable 防止属性被混淆
+ */
+public class FileInfo implements AutoCloseable, Serializable {
 
   public String file_name;
   public String dir_name;

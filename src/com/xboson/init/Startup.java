@@ -118,6 +118,7 @@ public class Startup implements ServletContextListener {
 
     files.addMapping("/files/*");
     files.setLoadOnStartup(2);
+    files.setMultipartConfig(new MultipartConfigElement(""));
 
     main.addMapping("/*");
     main.setLoadOnStartup(1);

@@ -159,13 +159,6 @@ task proguard(type: proguard.gradle.ProGuardTask) {
     keep 'public class com.xboson.been.AppToken { public *; }'
     keepclassmembers 'public class com.xboson.been.License { public *; }'
 
-// 已经优化了类的文件加载器路径, 在测试完成后删除下面注释的规则定义
-//    keeppackagenames 'com.xboson.util.config'
-//    keeppackagenames 'com.xboson.test.js'
-//    keeppackagenames 'com.xboson.app.lib'
-//    keeppackagenames 'com.xboson.script.lib'
-//    keeppackagenames 'com.xboson.db.sql'
-
     keepattributes '*Annotation*'
     renamesourcefileattribute 'SourceFile'
     keepattributes 'SourceFile, LineNumberTable, Exceptions, Signature'

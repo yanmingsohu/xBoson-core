@@ -17,7 +17,6 @@
 package com.xboson.j2ee.resp;
 
 import com.squareup.moshi.JsonAdapter;
-import com.xboson.been.ResponseRoot;
 import com.xboson.j2ee.container.IXResponse;
 import com.xboson.util.OutputStreamSinkWarp;
 import com.xboson.util.Tool;

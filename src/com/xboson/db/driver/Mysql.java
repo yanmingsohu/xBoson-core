@@ -50,6 +50,7 @@ public class Mysql extends NullDriver implements IDriver {
             + config.getDatabase()
             + "?zeroDateTimeBehavior=convertToNull"
             + "&characterEncoding=UTF-8";
+            // + "&useUnicode=true"; // 不确定
   }
 
 
