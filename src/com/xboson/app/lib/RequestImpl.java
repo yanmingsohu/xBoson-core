@@ -29,6 +29,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.Map;
 
 
@@ -90,6 +91,18 @@ public class RequestImpl extends JSObject.Helper implements IJson {
       return null;
     }
     return ret;
+  }
+
+
+  public int forEach(ScriptObjectMirror callback) {
+    int count = 0;
+    Enumeration<String> i = cd.req.getParameterNames();
+    while (i.hasMoreElements()) {
+      String k = i.nextElement();
+      callback.call(null, k, cd.req.getParameter(k));
+      ++count;
+    }
+    return count;
   }
 
 
