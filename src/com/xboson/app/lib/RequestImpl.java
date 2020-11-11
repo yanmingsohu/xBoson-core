@@ -30,6 +30,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -394,5 +395,16 @@ public class RequestImpl extends JSObject.Helper implements IJson {
 
   public String toString() {
     return toJSON();
+  }
+
+
+  public Object toObject() {
+    Map<String, String> ret = new HashMap<>();
+    Enumeration<String> i = cd.req.getParameterNames();
+    while (i.hasMoreElements()) {
+      String k = i.nextElement();
+      ret.put(k, cd.req.getParameter(k));
+    }
+    return ret;
   }
 }
