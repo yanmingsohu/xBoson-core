@@ -30,6 +30,7 @@ import com.xboson.been.LoginUser;
 import com.xboson.db.ConnectConfig;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
+import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import org.bson.*;
 import org.bson.codecs.Codec;
@@ -306,9 +307,14 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     Document doc = new Document();
     for (Map.Entry<String, Object> en : js.entrySet()) {
       Object val = en.getValue();
+
       if (isArray(val)) {
         doc.put(en.getKey(), toManyDoc(val));
-      } else {
+      }
+      else if (isDate(val)) {
+        doc.put(en.getKey(), toDate(val));
+      }
+      else {
         doc.put(en.getKey(), val);
       }
     }
@@ -612,6 +618,11 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
     if (val instanceof Boolean) {
       writer.writeBoolean((boolean) val);
+      return;
+    }
+
+    if (isDate(val)) {
+      writer.writeDateTime(toDate(val).getTime());
       return;
     }
 

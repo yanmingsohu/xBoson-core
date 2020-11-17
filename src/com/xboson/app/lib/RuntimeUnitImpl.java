@@ -27,6 +27,7 @@ import com.xboson.util.converter.ScriptObjectMirrorJsonConverter;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
 import jdk.nashorn.internal.objects.NativeArray;
+import jdk.nashorn.internal.objects.NativeDate;
 import jdk.nashorn.internal.objects.NativeJSON;
 import jdk.nashorn.internal.objects.NativeRegExp;
 import jdk.nashorn.internal.runtime.Context;
@@ -84,6 +85,10 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
    * @return
    */
   protected ScriptObjectMirror wrap(Object obj) {
+    if (obj instanceof ScriptObjectMirror) {
+      return (ScriptObjectMirror) obj;
+    }
+
     Object ret = ScriptObjectMirror.wrap(obj, Context.getGlobal());
     if (ret instanceof ScriptObjectMirror) {
       return (ScriptObjectMirror) ret;
@@ -340,6 +345,20 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
       return ((ScriptObjectMirror) jsobj).isArray();
     }
     return false;
+  }
+
+
+  protected boolean isDate(Object o) {
+    if (o instanceof ScriptObjectMirror) {
+      return unwrap(o).getClass() == NativeDate.class;
+    }
+    return false;
+  }
+
+
+  protected Date toDate(Object o) {
+    NativeDate nd = (NativeDate) unwrap(o);
+    return new Date((long) NativeDate.getTime(nd));
   }
 
 
