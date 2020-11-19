@@ -20,7 +20,6 @@ import com.xboson.script.JSObject;
 import com.xboson.util.Hex;
 
 import java.nio.ByteBuffer;
-import java.util.Base64;
 import java.util.UUID;
 
 
@@ -82,7 +81,7 @@ public class Uuid extends JSObject {
    * 生成原先 DS 平台的 UUID 字符串
    */
   public String ds(UUID id) {
-    byte[] bytes = getBytes(id);
+    byte[] bytes = toBytes(id);
     return Hex.lowerHex(bytes);
   }
 
@@ -104,7 +103,7 @@ public class Uuid extends JSObject {
   /**
    * 转换为 16 字节
    */
-  public byte[] getBytes(UUID id) {
+  public byte[] toBytes(UUID id) {
     ByteBuffer buf = ByteBuffer.allocate(16);
     buf.putLong(0, id.getMostSignificantBits());
     buf.putLong(8, id.getLeastSignificantBits());
@@ -112,11 +111,16 @@ public class Uuid extends JSObject {
   }
 
 
+  public Bytes getBytes(UUID id) {
+    return new Bytes(toBytes(id));
+  }
+
+
   /**
    * 生成压缩的 UUID 字符串
    */
   public String zip(UUID id) {
-    byte[] b = getBytes(id);
+    byte[] b = toBytes(id);
     return Hex.encode64(b);
   }
 

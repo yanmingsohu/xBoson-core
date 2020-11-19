@@ -344,4 +344,5 @@ default_password_lifetime=0
 * [K8s Java 客户端](https://github.com/kubernetes-client/java)
 * [延迟和容错库, 用于 api 代理](https://github.com/Netflix/Hystrix)
 * [api网关](https://github.com/Kong/kong)
+* [MQTT 客户端](https://github.com/eclipse/paho.mqtt.java), [文档](https://www.eclipse.org/paho/files/javadoc/index.html)
 

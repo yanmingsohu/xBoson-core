@@ -71,7 +71,7 @@ public class Block extends BlockBasic implements ITypes, Serializable {
 
 
   public byte[] generateKey() {
-    return key = Tool.uuid.getBytes(Tool.uuid.v4obj());
+    return key = Tool.uuid.toBytes(Tool.uuid.v4obj());
   }
 
 

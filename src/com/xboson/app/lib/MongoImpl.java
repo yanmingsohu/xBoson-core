@@ -217,18 +217,17 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
       return toObject(find.skip(begin).limit(pageSize));
     }
 
-    public Object find(Object query, Map projection) {
-      if (!projection.containsKey("_id"))
-        projection.put("_id", true);
-      return toObject(coll.find(new JSObjectToBson(query)), projection);
+    public Object find(Object query, Object projection) {
+      FindIterable<Document> res = coll.find(new JSObjectToBson(query));
+      res.projection(new JSObjectToBson(projection));
+      return toObject(res, null);
     }
 
-    public Object find(Object query, Map projection, int pageNum, int pageSize) {
-      if (!projection.containsKey("_id"))
-        projection.put("_id", true);
+    public Object find(Object query, Object projection, int pageNum, int pageSize) {
       int begin = (pageNum -1) *pageSize;
       FindIterable<Document> find = coll.find(new JSObjectToBson(query));
-      return toObject(find.skip(begin).limit(pageSize), projection);
+      find.projection(new JSObjectToBson(projection));
+      return toObject(find.skip(begin).limit(pageSize), null);
     }
 
     public Object find() {
