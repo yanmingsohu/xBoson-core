@@ -16,6 +16,7 @@
 
 package com.xboson.rpc;
 
+import com.xboson.app.lib.IOTImpl;
 import com.xboson.app.lib.PmImpl;
 import com.xboson.distributed.XLock;
 
@@ -30,7 +31,8 @@ public class RpcGlobalInitList {
    * RPC 注册列表, 包外禁止访问
    */
   static final void init(RpcFactory rpc) {
-    PmImpl.init(rpc);
+    PmImpl.regTo(rpc);
+    IOTImpl.regTo(rpc);
     XLock.me();
   }
 

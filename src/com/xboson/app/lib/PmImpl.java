@@ -50,7 +50,7 @@ public class PmImpl implements IAResource {
   }
 
 
-  public static void init(RpcFactory rpc) {
+  public static void regTo(RpcFactory rpc) {
     rpc.bindOnce(new ExportRemote(), RPC_NAME);
   }
 

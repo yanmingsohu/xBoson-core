@@ -61,7 +61,7 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
 
   public Schedule() {
     super(null);
-    this.log    = LogFactory.create();
+    this.log    = LogFactory.create("Schedule");
     this.nodeID = ClusterManager.me().localNodeID();
     this.db     = SysConfig.me().readConfig().db;
   }

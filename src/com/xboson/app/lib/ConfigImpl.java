@@ -95,7 +95,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
   /**
    * 返回配置文件, 只能操作已经创建的配置文件, 当没有配置过该配置文件返回空
    */
-  public Object get(final String name) {
+  public Document get(final String name) {
     Document meta = meta(name, true);
     if (meta == null) return null;
 

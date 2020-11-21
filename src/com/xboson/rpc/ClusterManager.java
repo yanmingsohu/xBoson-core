@@ -41,12 +41,14 @@ public final class ClusterManager extends OnExitHandle {
   private static ClusterManager instance;
   private final Log log;
   private final String nodeID;
+  private final Short nodeid;
   private ComputeNodeInfo info;
 
 
   private ClusterManager() {
     Config cf   = SysConfig.me().readConfig();
     this.log    = LogFactory.create();
+    this.nodeid = cf.clusterNodeID;
     this.nodeID = Short.toString(cf.clusterNodeID);
     this.info   = new ComputeNodeInfo(nodeID, cf.rpcPort);
     registerSelf();
@@ -80,6 +82,11 @@ public final class ClusterManager extends OnExitHandle {
 
   public String localNodeID() {
     return nodeID;
+  }
+
+
+  public short localNodeIDs() {
+    return nodeid;
   }
 
 

@@ -41,7 +41,7 @@ public class MultipleExportOneReference<T extends IXRemote> {
 
     /**
      * 每个节点上的服务调用该方法
-     * @param index 索引
+     * @param index 数量索引
      * @param nodeid 节点索引
      * @param service 节点上的服务
      * @return 如果返回 false, 则不再迭代更多节点
@@ -86,6 +86,11 @@ public class MultipleExportOneReference<T extends IXRemote> {
         log.error("Connect node", node, "fail,", Tool.allStack(e));
       }
     }
+  }
+
+
+  public T get(String node) {
+    return (T) rpc.lookup(node, name);
   }
 
 
