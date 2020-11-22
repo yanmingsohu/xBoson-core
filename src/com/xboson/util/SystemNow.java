@@ -20,7 +20,6 @@ import com.xboson.been.XBosonException;
 import com.xboson.event.timer.TimeFactory;
 
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -72,5 +71,11 @@ public class SystemNow implements AutoCloseable {
   @Override
   public void close() throws Exception {
     task.cancel();
+  }
+
+
+  @Override
+  protected void finalize() throws Throwable {
+    close();
   }
 }

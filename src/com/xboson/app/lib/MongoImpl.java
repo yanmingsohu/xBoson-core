@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoDriverInformation;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -28,6 +29,7 @@ import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.LoginUser;
 import com.xboson.db.ConnectConfig;
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
 import com.xboson.util.Tool;
@@ -38,6 +40,7 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -84,9 +87,107 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
+  public ObjectId newObjectId(String s) {
+    return new ObjectId(s);
+  }
+
+
   @Override
   public String description() {
     return "app.module.mongodb.functions()";
+  }
+
+
+  public class Cursor implements IVisitByScript {
+    private FindIterable<Document> fi;
+
+    private Cursor(FindIterable<Document> fi) {
+      this.fi = fi;
+    }
+
+    public Cursor projection(Object projection) {
+      fi.projection(new JSObjectToBson(projection));
+      return this;
+    }
+
+    public Cursor filter(Object filter) {
+      fi.filter(new JSObjectToBson(filter));
+      return this;
+    }
+
+    public Cursor limit(int i) {
+      fi.limit(i);
+      return this;
+    }
+
+    public Cursor skip(int i) {
+      fi.skip(i);
+      return this;
+    }
+
+    public Cursor maxTimeMS(long ms) {
+      fi.maxTime(ms, TimeUnit.MILLISECONDS);
+      return this;
+    }
+
+    public Cursor maxAwaitTimeMS(long ms) {
+      fi.maxAwaitTime(ms, TimeUnit.MILLISECONDS);
+      return this;
+    }
+
+    public Cursor sort(Object sort) {
+      fi.sort(new JSObjectToBson(sort));
+      return this;
+    }
+
+    public Cursor partial(boolean partial) {
+      fi.partial(partial);
+      return this;
+    }
+
+    public Cursor hint(Object o) {
+      fi.hint(new JSObjectToBson(o));
+      return this;
+    }
+
+    public Cursor max(Object o) {
+      fi.max(new JSObjectToBson(o));
+      return this;
+    }
+
+    public Cursor min(Object o) {
+      fi.min(new JSObjectToBson(o));
+      return this;
+    }
+
+    public Cursor returnKey(boolean key) {
+      fi.returnKey(key);
+      return this;
+    }
+
+    public Cursor showRecordId(boolean key) {
+      fi.showRecordId(key);
+      return this;
+    }
+
+    public Cursor snapshot(boolean key) {
+      fi.snapshot(key);
+      return this;
+    }
+
+    public Cursor page(SysImpl sys) {
+      RequestImpl req = (RequestImpl) sys.request;
+      long pageNum  = req.getInteger("pagenum", false, 1);
+      long pageSize = req.getInteger("pagesize", false, 1);
+
+      long begin = (pageNum -1) *pageSize;
+      fi.skip((int) begin).limit((int) pageSize);
+      return this;
+    }
+
+    public Object toArray() {
+      return toObject(fi);
+    }
   }
 
 
@@ -239,6 +340,11 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
       return toObject(coll.find().skip(begin).limit(pageSize));
     }
 
+    public Cursor find2(Object query) {
+      FindIterable<Document> find = coll.find(new JSObjectToBson(query));
+      return new Cursor(find);
+    }
+
     public String createIndex(Object key, Object options) {
       return coll.createIndex(new JSObjectToBson(key), toIndexOptions(options));
     }
@@ -283,7 +389,7 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     }
 
     private JSObjectToBson(Object o) {
-      this(wrap(o));
+      this.js = wrap(o);
     }
 
     @Override
@@ -327,7 +433,7 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
   protected List toManyDoc(Object jsobj) {
     ScriptObjectMirror js = wrap(jsobj);
     final int size = js.size();
-    List docs = new ArrayList<>(size);
+    List<Object> docs = new ArrayList<>(size);
 
     for (int i=0; i<size; ++i) {
       Object o = js.getSlot(i);
@@ -617,6 +723,11 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
 
     if (val instanceof Boolean) {
       writer.writeBoolean((boolean) val);
+      return;
+    }
+
+    if (val instanceof ObjectId) {
+      writer.writeObjectId((ObjectId) val);
       return;
     }
 

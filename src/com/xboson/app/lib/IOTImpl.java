@@ -19,23 +19,25 @@ package com.xboson.app.lib;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
+import com.xboson.been.XBosonException;
 import com.xboson.distributed.MultipleExportOneReference;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
 import com.xboson.rpc.IXRemote;
 import com.xboson.rpc.RpcFactory;
-import com.xboson.util.MongoDBPool;
-import com.xboson.util.SysConfig;
-import com.xboson.util.SystemNow;
+import com.xboson.script.IVisitByScript;
+import com.xboson.util.*;
 import com.xboson.util.c0nst.IConstant;
 import org.bson.Document;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -45,21 +47,31 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class IOTImpl extends RuntimeUnitImpl implements IAResource {
 
-  private static final String XBOSON_WORKER = "(xboson-worker)";
-  private static final String RPC_NAME = "XB.rpc.IOT.Runtime";
-  private static final String CONF_NAME = "iot-manager";
-  private static final int MAX_THREAD = 30;
-  private static final int CONN_TIMEOUT_SEC = 10;
+  interface IotConst {
+    String XBOSON_WORKER = "(xboson-worker)";
+    String RPC_NAME      = "XB.rpc.IOT.Runtime";
+    String CONF_NAME     = "iot-manager";
+    String TABLE_DEVICE  = "device";
+    String TABLE_PRODUCT = "product";
+    String TABLE_SCENES  = "scenes";
+    String TABLE_ADDRESS = "address";
+    String TABLE_EVENT   = "event_his";
 
-  public static final int TYPE_DATA  = 1;
-  public static final int TYPE_EVENT = 2;
-  public static final int TYPE_STATE = 3;
-  public static final int TYPE_CMD   = 4;
-  public static final int TYPE_SAVE  = 5;
+    int EVENT_CODE_MESSAGE_FAIL = 2001;
+    int EVENT_LEVEL_MESSAGE_FAIL = 3;
+    int MAX_THREAD = 30;
+    int CONN_TIMEOUT_SEC = 10;
 
-  public static final int QOS_0 = 0;
-  public static final int QOS_1 = 1;
-  public static final int QOS_2 = 2;
+    int TYPE_DATA  = 1;
+    int TYPE_EVENT = 2;
+    int TYPE_STATE = 3;
+    int TYPE_CMD   = 4;
+    int TYPE_SAVE  = 5;
+
+    int QOS_0 = 0;
+    int QOS_1 = 1;
+    int QOS_2 = 2;
+  }
 
   private static final Log log = LogFactory.create("IOT.runtimes");
   private static final Map<String, Integer> typeInt;
@@ -82,7 +94,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
 
 
   public static void regTo(RpcFactory rpc) {
-    rpc.bindOnce(new StubService(), RPC_NAME);
+    rpc.bindOnce(new StubService(), IotConst.RPC_NAME);
   }
 
 
@@ -112,7 +124,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public static class WorkerInfo {
+  public static class WorkerInfo implements IVisitByScript {
     public String name;
     // mqtt 主题字符串
     public String topic;
@@ -132,7 +144,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public interface IWorkThread {
+  public interface IWorkThread extends IotConst {
 
     /**
      * 启动线程
@@ -174,27 +186,70 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  private static abstract class AbsWorker implements IWorkThread {
-    WorkerInfo info;
+  /**
+   * event_his 表数据结构
+   */
+  public static class EventDoc implements Serializable {
+    public Integer code;
+    public String msg;
+    public Long cd;
+    public Integer level;
+    public Object data;
+
+    public EventDoc() {}
+
+    public EventDoc(int code, String msg, int level, long cd) {
+      this.code  = code;
+      this.msg   = msg;
+      this.level = level;
+      this.cd    = cd;
+    }
+  }
+
+
+  /**
+   * 事件处理器基类, 子类必须是 public 否则 rpc 报错
+   */
+  private static abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
+
+    final Object placeholder;
+    final Map<String, Object> deviceCache;
+    final WorkerInfo info;
+    final String name;
+    MongoCollection<Document> deviceTable;
+    MongoCollection<Document> productTable;
+    MongoCollection<Document> eventTable;
+    IMqttAsyncClient mq;
     Util util;
     String pid;
-    int qos;
     String user;
     String script;
-    boolean running;
-    IMqttAsyncClient mq;
     String clientid;
+    // 运行中不表示连接正常, 不表示没有错误
+    boolean running;
+    int reconnectCnt;
+    int qos;
 
 
     private AbsWorker() {
       this.info = new WorkerInfo();
+      this.deviceCache = Collections.synchronizedMap(new WeakHashMap<>());
+      this.placeholder = new Object();
+      this.name = name();
+      info.time = -1;
     }
 
 
     /**
-     * 启动线程, 该方法返回意味着一切正常, 否则应该抛出异常
+     * 在订阅主题前进行一些初始化, 该方法返回意味着一切正常, 否则应该抛出异常
      */
-    abstract void start() throws RemoteException, MqttException;
+    abstract void beforeSubscribe(boolean reconnect) throws RemoteException, MqttException;
+
+
+    /**
+     * 重写该方法以接收数据, 该函数成功返回数据计数器+1, 抛出异常则错误计数器+1
+     */
+    abstract void onMessage(String topic, MqttMessage msg) throws Exception;
 
 
     @Override
@@ -206,55 +261,68 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
       this.qos    = qos;
       this.user   = user;
       this.script = script;
+      // 这个属性不输出到任何地方
+      this.clientid = XBOSON_WORKER + name + pid +'.'+ util.node +'.'+ idx;
 
-      info.name     = name();
-      info.topic    = toTopic(pid) +"/+/"+ name();
+      info.name     = name;
+      info.topic    = toTopic(pid) +"/+/"+ name;
       info.node     = util.node;
       info.tid      = idx;
       info.qos      = "QoS"+ qos;
       info.stateMsg = "正在启动";
 
-      // 这个属性不输出到任何地方
-      this.clientid = XBOSON_WORKER + name() + pid +'.'+ util.node +'.'+ idx;
-
       try {
-        mq = util.openMqtt(clientid, user, idx);
-        start();
+        deviceTable  = util.openDb(TABLE_DEVICE);
+        productTable = util.openDb(TABLE_PRODUCT);
+        eventTable   = util.openDb(TABLE_EVENT);
+        mq = util.openMqtt(clientid, user, idx, this);
         running = true;
-        info.stateMsg = "运行中";
       } catch(Exception err) {
-        info.error++;
-        info.stateMsg = "启动错误 "+ err.getMessage();
-        log.error("Start work", err);
-        err.printStackTrace();
+        pushError("启动错误", err, false);
         stop();
       }
     }
 
 
-    private IMqttActionListener statusListener() {
-      return new IMqttActionListener() {
-        public void onSuccess(IMqttToken iMqttToken) {
-        }
+    @Override
+    public void connectionLost(Throwable t) {
+      pushError("连接异常", t, false);
+      try {
+        Tool.sleep(2000);
+        info.stateMsg = "正在重新连接";
+        mq.reconnect();
+      } catch (MqttException e) {
+        pushError("重新连接失败", e, false);
 
-        public void onFailure(IMqttToken iMqttToken, Throwable t) {
-          info.error++;
-          info.stateMsg = "异常, 重新连接, " + t.getMessage();
-          log.error("On Failure", t);
-          try {
-            mq.reconnect();
-          } catch (MqttException e) {
-            info.error++;
-            info.stateMsg = "重新连接失败, "+ e.getMessage();
-
-            try {
-              stop();
-            } catch (RemoteException e1) {
-              e1.printStackTrace();
-            }
-          }
+        try {
+          stop();
+        } catch (RemoteException e1) {
+          e1.printStackTrace();
         }
-      };
+      }
+    }
+
+
+    @Override
+    public void connectComplete(boolean reconnect, java.lang.String serverURI) {
+      try {
+        beforeSubscribe(reconnect);
+        mq.subscribe(info.topic, qos);
+
+        if (reconnect) {
+          ++reconnectCnt;
+          info.stateMsg = "运行中(恢复"+ reconnectCnt +")";
+        } else {
+          info.stateMsg = "运行中";
+        }
+      } catch (Exception e) {
+        pushError("订阅错误", e, false);
+      }
+    }
+
+
+    @Override
+    public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
     }
 
 
@@ -274,10 +342,23 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
         }
         mq.close();
         info.stateMsg = "停止";
+        mq = null;
         running = false;
       } catch (MqttException e) {
-        info.error++;
-        throw new RemoteException(e.getMessage());
+        pushError("停止失败", e, true);
+      }
+    }
+
+
+    private void pushError(String why, Throwable e, boolean _throw) {
+      info.error++;
+      info.stateMsg = why +','+ e.getMessage();
+      log.error(this.getClass(), why, e);
+      if (e instanceof NullPointerException) {
+        e.printStackTrace();
+      }
+      if (_throw) {
+        throw new XBosonException(e);
       }
     }
 
@@ -292,14 +373,117 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
       info.count++;
       info.time = util.now.now;
     }
+
+
+    @Override
+    public final void messageArrived(String topic, MqttMessage msg) throws Exception {
+      log.debug("msg", name, info.node, info.tid, topic, msg);
+      try {
+        onMessage(topic, msg);
+        addCounter();
+      } catch(Exception e) {
+        String name = "处理消息时异常";
+        pushError(name, e, false);
+
+        EventDoc event = new EventDoc(EVENT_CODE_MESSAGE_FAIL,
+                name, EVENT_LEVEL_MESSAGE_FAIL, util.now.now);
+        Map<String, Object> data = new HashMap<>();
+        event.data = data;
+        data.put("payload", Hex.upperHex(msg.getPayload()));
+        data.put("message", e.getMessage());
+        data.put("stack",   Tool.miniStack(e, 3));
+        TopicInf inf = new TopicInf(topic);
+        pushEvent(inf, event);
+      }
+    }
+
+
+    /**
+     * 创建不存在的设备, 创建了返回 true, 设备已经存在返回 false
+     * state 可以为 null
+     */
+    boolean createNoExistsDevice(TopicInf inf, String state) throws RemoteException {
+      String devid = inf.genDeviceID();
+      if (deviceCache.containsKey(devid))
+        return false;
+
+      Document devdoc = new Document("_id", devid);
+      if (deviceTable.count(devdoc) > 0) {
+        deviceCache.put(devid, placeholder);
+        return false;
+      }
+
+      Document meta = new Document();
+      Document product = productTable
+              .find(new Document("_id", inf.genProductID())).first();
+
+      for (Object odoc : product.get("meta", List.class)) {
+        Document mdoc = (Document) odoc;
+        meta.put(mdoc.getString("name"), mdoc.get("defval"));
+      }
+
+      if (state == null) {
+        state = "自动创建";
+      }
+
+      Date now = new Date();
+      devdoc.put("devid",   inf.device);
+      devdoc.put("product", inf.product);
+      devdoc.put("scenes",  inf.scenes);
+      devdoc.put("state",   state);
+      devdoc.put("dc",      0);
+      devdoc.put("dd",      0);
+      devdoc.put("cd",      now);
+      devdoc.put("md",      now);
+      devdoc.put("meta",    meta);
+
+      deviceTable.insertOne(devdoc);
+      return true;
+    }
+
+
+    /**
+     * 推送消息到 mongo 持久化保存
+     */
+    void pushEvent(TopicInf inf, EventDoc event) throws RemoteException {
+      if (event == null) {
+        throw new XBosonException("Message not JSON format");
+      }
+      if (event.msg == null) {
+        throw new XBosonException.NullParamException("msg");
+      }
+      if (event.cd == null) {
+        event.cd = util.now.now;
+      }
+      if (event.code == null) {
+        event.code = 0;
+      }
+      if (event.level == null) {
+        event.level = 1;
+      }
+
+      Document edoc = new Document();
+      edoc.put("code",    event.code);
+      edoc.put("msg",     event.msg);
+      edoc.put("level",   event.level);
+      edoc.put("devid",   inf.genDeviceID());
+      edoc.put("product", inf.product);
+      edoc.put("scenes",  inf.scenes);
+      edoc.put("cd",      new Date(event.cd));
+      edoc.put("repwho",  null);
+      edoc.put("repmsg",  null);
+      edoc.put("reptime", null);
+      edoc.put("data",    event.data);
+
+      eventTable.insertOne(edoc);
+    }
   }
 
 
-  public static class StateTopicProcess extends AbsWorker implements IMqttMessageListener {
+  public static class StateTopicProcess extends AbsWorker {
 
     @Override
-    void start() throws RemoteException, MqttException {
-      mq.subscribe(info.topic, qos, this);
+    void beforeSubscribe(boolean reconnect) throws RemoteException, MqttException {
     }
 
     @Override
@@ -308,9 +492,40 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
     }
 
     @Override
-    public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
-      log.warn("MSG", clientid, topic, mqttMessage);
+    void onMessage(String topic, MqttMessage msg) throws Exception {
+      TopicInf inf = new TopicInf(topic);
+      String state = msg.toString();
+      if (! createNoExistsDevice(inf, state)) {
+        deviceTable.updateOne(new Document("_id", inf.genDeviceID()),
+                new Document("$set", new Document("state", state)));
+      }
       addCounter();
+    }
+  }
+
+
+  public static class EventTopicProcess extends AbsWorker {
+    private JsonAdapter<EventDoc> jadapter;
+
+    @Override
+    void beforeSubscribe(boolean reconnect) throws RemoteException {
+      if (!reconnect) {
+        jadapter = Tool.getAdapter(EventDoc.class);
+      }
+    }
+
+    @Override
+    public String name() {
+      return "event";
+    }
+
+    @Override
+    public void onMessage(String topic, MqttMessage msg) throws Exception {
+      TopicInf inf = new TopicInf(topic);
+      createNoExistsDevice(inf, null);
+
+      EventDoc event = jadapter.fromJson(msg.toString());
+      pushEvent(inf, event);
     }
   }
 
@@ -318,25 +533,16 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   public static class SaveTopicProcess extends AbsWorker {
 
     @Override
-    void start() throws RemoteException {
+    void beforeSubscribe(boolean reconnect) throws RemoteException {
     }
 
     @Override
     public String name() {
       return "save";
     }
-  }
-
-
-  public static class EventTopicProcess extends AbsWorker {
 
     @Override
-    void start() throws RemoteException {
-    }
-
-    @Override
-    public String name() {
-      return "event";
+    public void onMessage(String topic, MqttMessage msg) throws Exception {
     }
   }
 
@@ -344,17 +550,21 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   public static class DataTopicProcess extends AbsWorker {
 
     @Override
-    void start() throws RemoteException {
+    void beforeSubscribe(boolean reconnect) throws RemoteException {
     }
 
     @Override
     public String name() {
       return "data";
     }
+
+    @Override
+    public void onMessage(String topic, MqttMessage msg) throws Exception {
+    }
   }
 
 
-  public interface IRPC extends IXRemote {
+  public interface IRPC extends IXRemote, IotConst {
 
     /**
      * 恢复所有处理器线程
@@ -432,7 +642,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  private static class Util {
+  private static class Util implements IotConst {
     private ConfigImpl conf;
     private short node;
     private SecureRandom rand;
@@ -463,7 +673,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
     private Document openProduct(String pid)
             throws RemoteException {
       Document pwhere = new Document("_id", pid);
-      Document p = openDb("product").find(pwhere).first();
+      Document p = openDb(TABLE_PRODUCT).find(pwhere).first();
       if (p == null) {
         throw new RemoteException("Product no exists");
       }
@@ -476,7 +686,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
       String id = id(scenesid, productid);
       MongoDatabase db = checkAuth(scenesid);
       Document pwhere = new Document("_id", id);
-      if (db.getCollection("product").count(pwhere) != 1) {
+      if (db.getCollection(TABLE_PRODUCT).count(pwhere) != 1) {
         throw new RemoteException("Product not exists");
       }
       return id;
@@ -492,7 +702,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
       Document swhere = new Document("$or", or);
       MongoDatabase db = openDb();
 
-      if (db.getCollection("scenes").count(swhere) < 1) {
+      if (db.getCollection(TABLE_SCENES).count(swhere) < 1) {
         throw new RemoteException("无权操作场景 "+ scenesid);
       }
       return db;
@@ -501,7 +711,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
 
     private Document openAddress(String _id) throws RemoteException {
       Document where = new Document("_id", _id);
-      FindIterable<Document> res = openDb("address").find(where);
+      FindIterable<Document> res = openDb(TABLE_ADDRESS).find(where);
       Document addr = res.first();
       if (addr == null) {
         throw new RemoteException("Address not exists");
@@ -539,23 +749,23 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
     }
 
 
-    private MqttAsyncClient openMqtt(String clientId, String username, int idx)
+    private MqttAsyncClient openMqtt(String clientId, String username, int idx,
+                                     MqttCallback mc)
             throws RemoteException, MqttException
     {
-      Document conf = openConf();
-      int port = (int)(double) conf.getDouble("mqport");
-      String broker = "tcp://"+ conf.getString("mqhost") +":"+ port;
-
+      String broker = getBrokerURL();
       Document user = getUser(username);
       String pass = genPassword(username, user.getString("password"));
 
       MqttDefaultFilePersistence persistence = new MqttDefaultFilePersistence(saveDataPath);
       MqttConnectOptions opt = new MqttConnectOptions();
       MqttAsyncClient cli = new MqttAsyncClient(broker, clientId, persistence);
+      cli.setCallback(mc);
 
       opt.setUserName(username);
       opt.setPassword(pass.toCharArray());
       opt.setConnectionTimeout(CONN_TIMEOUT_SEC);
+      opt.setAutomaticReconnect(true);
 
       // 只有 0 节点上的 0 线程持久保留数据, 其他线程在断开后清除数据
       if (node == 0 && idx == 0) {
@@ -564,10 +774,16 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
         opt.setCleanSession(true);
       }
 
-      log.debug("Connect to", broker, "Wait...");
-      cli.connect(opt).waitForCompletion();
+      cli.connect(opt);
       log.debug("Connected to", broker, "client ID:", clientId, username);
       return cli;
+    }
+
+
+    private String getBrokerURL() throws RemoteException {
+      Document conf = openConf();
+      int port = (int)(double) conf.getDouble("mqport");
+      return "tcp://"+ conf.getString("mqhost") +":"+ port;
     }
 
 
@@ -668,7 +884,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
-  public static class Procuct {
+  private static class Procuct implements IotConst {
 
     private Map<Integer, Deque<IWorkThread>> workers;
     private Util util;
@@ -870,8 +1086,70 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
   }
 
 
+  public static class TopicInf {
+    public String scenes;
+    public String product;
+    public String device;
+
+    public TopicInf(String topic) {
+      if (topic.charAt(0) != '/') {
+        throw new XBosonException.BadParameter(
+                "Topic name", "not begin '/'");
+      }
+      int st = 0;
+      int a = 1;
+
+      for (int i=a; i<topic.length(); ++i) {
+        char c = topic.charAt(i);
+        if (c == '/') {
+          if (a == i) {
+            throw new XBosonException.BadParameter(
+                    "Topic name", "no char in '/'");
+          }
+          switch (st) {
+            case 0:
+              scenes = topic.substring(a, i);
+              break;
+            case 1:
+              product = topic.substring(a, i);
+              break;
+            case 2:
+              device = topic.substring(a, i);
+              return;
+          }
+          a = i+1;
+          ++st;
+        }
+      }
+      if (st == 2) {
+        device = topic.substring(a);
+      } else {
+        throw new XBosonException.BadParameter(
+                "Topic name", "bad ending");
+      }
+    }
+
+    public String genDeviceID() {
+      return id(scenes, product, device);
+    }
+
+    public String genProductID() {
+      return id(scenes, product);
+    }
+
+    public String toString() {
+      return "scenes="+ scenes +", product="+ product +", device="+ device;
+    }
+  }
+
+
   private static String id(String scenesid, String productid) {
-    return "."+ scenesid +"."+  productid;
+    return '.'+ scenesid +'.'+  productid;
+  }
+
+
+  private static String id(String scenesid, String productid, String devid) {
+    return '.'+ scenesid +'.'+  productid +'.'+ devid;
   }
 
 

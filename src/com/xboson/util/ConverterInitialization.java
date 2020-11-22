@@ -72,6 +72,7 @@ public final class ConverterInitialization {
     TimestampJsonConverter.registerAdapter(jsbuilded);
     new ExceptionConverter().register(jsbuilded);
     new MongoJsonConverter().register(jsbuilded);
+    new MongoObjectIDConverter().register(jsbuilded);
     new BigDecimalConverter().register(jsbuilded);
     new BigIntegerConverter().register(jsbuilded);
     new StringBuilderJsonConverter().register(jsbuilded);

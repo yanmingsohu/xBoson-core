@@ -17,6 +17,7 @@
 package com.xboson.test;
 
 import com.xboson.app.lib.CountImpl;
+import com.xboson.app.lib.IOTImpl;
 import com.xboson.been.XBosonException;
 import com.xboson.db.driver.Mysql;
 import com.xboson.fs.watcher.INotify;
@@ -60,6 +61,29 @@ public class TestTool extends Test {
     url_creator();
     count_impl();
     ip_filter();
+    topic_tool();
+  }
+
+
+  private void topic_tool() {
+    sub("Topic Parser");
+    IOTImpl.TopicInf inf = new IOTImpl.TopicInf("/a/b/c/state");
+    eq(inf.scenes, "a", "scenes");
+    eq(inf.product, "b", "product");
+    eq(inf.device, "c", "device");
+    eq(inf.genDeviceID(), ".a.b.c", "gen device ID");
+
+    inf = new IOTImpl.TopicInf("/a123/b123/c123/state");
+    eq(inf.scenes, "a123", "scenes");
+    eq(inf.product, "b123", "product");
+    eq(inf.device, "c123", "device");
+    eq(inf.genDeviceID(), ".a123.b123.c123", "gen device ID");
+
+    inf = new IOTImpl.TopicInf("/a123/b123/c123");
+    eq(inf.scenes, "a123", "scenes");
+    eq(inf.product, "b123", "product");
+    eq(inf.device, "c123", "device");
+    eq(inf.genDeviceID(), ".a123.b123.c123", "gen device ID");
   }
 
 
