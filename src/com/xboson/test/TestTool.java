@@ -17,12 +17,12 @@
 package com.xboson.test;
 
 import com.xboson.app.lib.CountImpl;
-import com.xboson.app.lib.IOTImpl;
 import com.xboson.been.XBosonException;
 import com.xboson.db.driver.Mysql;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.IWatcher;
 import com.xboson.fs.watcher.LocalDirWatcher;
+import com.xboson.iot.TopicInf;
 import com.xboson.util.*;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -67,19 +67,19 @@ public class TestTool extends Test {
 
   private void topic_tool() {
     sub("Topic Parser");
-    IOTImpl.TopicInf inf = new IOTImpl.TopicInf("/a/b/c/state");
+    TopicInf inf = new TopicInf("/a/b/c/state");
     eq(inf.scenes, "a", "scenes");
     eq(inf.product, "b", "product");
     eq(inf.device, "c", "device");
     eq(inf.genDeviceID(), ".a.b.c", "gen device ID");
 
-    inf = new IOTImpl.TopicInf("/a123/b123/c123/state");
+    inf = new TopicInf("/a123/b123/c123/state");
     eq(inf.scenes, "a123", "scenes");
     eq(inf.product, "b123", "product");
     eq(inf.device, "c123", "device");
     eq(inf.genDeviceID(), ".a123.b123.c123", "gen device ID");
 
-    inf = new IOTImpl.TopicInf("/a123/b123/c123");
+    inf = new TopicInf("/a123/b123/c123");
     eq(inf.scenes, "a123", "scenes");
     eq(inf.product, "b123", "product");
     eq(inf.device, "c123", "device");
