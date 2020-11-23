@@ -67,6 +67,13 @@ public interface IotConst {
   String TABLE_EVENT   = "event_his";
   String TABLE_SCRIPT  = "script";
   String TABLE_CMD     = "cmd_his";
+  String TABLE_DATA    = "dev-data";
+
+  String TOPIC_SAVE    = "save";
+  String TOPIC_DATA    = "data";
+  String TOPIC_CMD     = "cmd";
+  String TOPIC_STATE   = "state";
+  String TOPIC_EVENT   = "event";
 
   // Function on_data(payload, dev)
   String FUNCTION_DATA = "on_data";

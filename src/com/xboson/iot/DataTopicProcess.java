@@ -17,6 +17,7 @@
 package com.xboson.iot;
 
 import com.mongodb.client.MongoCollection;
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.script.lib.Bytes;
@@ -32,21 +33,27 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.rmi.RemoteException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
-public class DataTopicProcess extends AbsWorker {
+public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcessor {
 
+  private Map<String, DevDataType.ITransform> tcmd;
   private MongoCollection<Document> cmdTable;
   private ScriptObjectMirror ondata;
   private ScriptObjectMirror oncmd;
   private Module mod;
+  private JsonAdapter<Map> json;
 
 
+  /**
+   * 导出到 js 环境中
+   */
   public class JsDevice {
 
     private TopicInf inf;
-    private String cmd_topic;
 
 
     private JsDevice(TopicInf inf) {
@@ -58,8 +65,9 @@ public class DataTopicProcess extends AbsWorker {
      * 保存设备数据
      * @param data K 是变量名, V 是变量值
      */
-    public void saveData(Map<String, Object> data) {
-      Tool.pl("save data", data);
+    public void saveData(Map<String, Object> data) throws MqttException {
+      byte[] payload = json.toJson(data).getBytes(IConstant.CHARSET);
+      mq.publish(inf.genTopic(TOPIC_SAVE), payload, qos, true);
     }
 
 
@@ -68,13 +76,31 @@ public class DataTopicProcess extends AbsWorker {
      * @param cmd K 是命令名, V 是命令值
      */
     public void sendCmd(Map<String, Object> cmd) throws MqttException {
+      checkCmd(cmd);
       Object o = oncmd.call(null, cmd, this);
       byte[] bytes = getBytes(o);
-      if (cmd_topic == null) {
-        cmd_topic = inf.genTopic("cmd");
-      }
-      mq.publish(cmd_topic, bytes, qos, true);
+      mq.publish(inf.genTopic(TOPIC_CMD), bytes, qos, true);
       saveCmd(cmd, inf, bytes);
+    }
+  }
+
+
+  public DataTopicProcess() {
+    tcmd = new HashMap<>();
+    json = Tool.getAdapter(Map.class);
+  }
+
+
+  /**
+   * 检查命令数据是否符合定义, 并做数据转换
+   */
+  private void checkCmd(Map<String, Object> cmd) {
+    for (String k : cmd.keySet()) {
+      DevDataType.ITransform t = tcmd.get(k);
+      if (t == null) {
+        throw new XBosonException(k +" is not defined in the product command list");
+      }
+      cmd.put(k, t.t(cmd.get(k)));
     }
   }
 
@@ -126,6 +152,7 @@ public class DataTopicProcess extends AbsWorker {
       cmdTable = util.openDb(TABLE_CMD);
     }
     reloadScript();
+    updateProductInfo();
   }
 
 
@@ -137,9 +164,23 @@ public class DataTopicProcess extends AbsWorker {
   }
 
 
+  private void updateProductInfo() throws RemoteException {
+    Document p = util.openProduct(pid);
+    tcmd.clear();
+
+    for (Object cmd : p.get("cmd", List.class)) {
+      Document c = (Document) cmd;
+      String name = c.getString("name");
+      String type = c.getString("type");
+      DevDataType.ITransform t = DevDataType.getTransform(type);
+      tcmd.put(name, t);
+    }
+  }
+
+
   @Override
   public String name() {
-    return "data";
+    return TOPIC_DATA;
   }
 
 

@@ -85,6 +85,6 @@ public class TopicInf {
 
 
   public String genTopic(String type) {
-    return '/'+ scenes +'/'+ product +'/'+ device +'/'+ type;
+    return Util.toTopic(scenes, product, device, type);
   }
 }

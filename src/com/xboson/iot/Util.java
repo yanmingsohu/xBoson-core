@@ -260,4 +260,9 @@ public final class Util implements IotConst {
     }
     return r.toString();
   }
+
+
+  static String toTopic(String scenes, String product, String device, String type) {
+    return '/'+ scenes +'/'+ product +'/'+ device +'/'+ type;
+  }
 }

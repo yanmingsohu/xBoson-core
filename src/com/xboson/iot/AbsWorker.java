@@ -46,9 +46,9 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
   protected String script;
   protected IMqttAsyncClient mq;
   protected int qos;
+  protected String pid;
 
   private final CpuUsage cu;
-  private String pid;
   private String user;
   private String clientid;
   // 运行中不表示连接正常, 不表示没有错误
@@ -187,7 +187,7 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
 
   private void pushError(String why, Throwable e, boolean _throw) {
     info.error++;
-    info.stateMsg = why +','+ e.getMessage();
+    info.stateMsg = (running ? "运行中, " : "停止, ")+ why +','+ e.getMessage();
     Util.log.error(this.getClass(), why, e);
     if (e instanceof NullPointerException) {
       e.printStackTrace();
@@ -252,8 +252,7 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
     }
 
     Document meta = new Document();
-    Document product = productTable
-            .find(new Document("_id", inf.genProductID())).first();
+    Document product = util.openProduct(inf.genProductID());
 
     for (Object odoc : product.get("meta", List.class)) {
       Document mdoc = (Document) odoc;

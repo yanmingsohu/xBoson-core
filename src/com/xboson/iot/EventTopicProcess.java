@@ -38,7 +38,7 @@ public class EventTopicProcess extends AbsWorker {
 
   @Override
   public String name() {
-    return "event";
+    return TOPIC_EVENT;
   }
 
 

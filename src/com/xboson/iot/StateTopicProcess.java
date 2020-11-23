@@ -33,7 +33,7 @@ public class StateTopicProcess extends AbsWorker {
 
   @Override
   public String name() {
-    return "state";
+    return TOPIC_STATE;
   }
 
 
