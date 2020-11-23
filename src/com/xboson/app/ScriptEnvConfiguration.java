@@ -58,7 +58,7 @@ public final class ScriptEnvConfiguration {
   /**
    * 脚本动态库, 在脚本中通过 require(..) 来引入
    */
-  static Map<String, Class> dynamic_library() {
+  public static Map<String, Class> dynamic_library() {
     Map<String, Class> mod = new HashMap<>();
     mod.put("fs",        FsImpl.class);
     mod.put("mongodb",   MongoImpl.class);

@@ -19,6 +19,7 @@ package com.xboson.app.lib;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
+import com.xboson.been.XBosonException;
 import com.xboson.distributed.MultipleExportOneReference;
 import com.xboson.iot.IIoTRpc;
 import com.xboson.iot.WorkerInfo;
@@ -27,6 +28,7 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 
 public class IOTImpl extends RuntimeUnitImpl implements IAResource {
@@ -96,6 +98,45 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
         throw new RemoteException("Get node fail");
       }
       remote.stop(sid, pid, node, type, index);
+    }
+
+
+    @Override
+    public String encrypt(String code, int z) {
+      throw new XBosonException("BadParameter: (Document, code)");
+    }
+
+
+    @Override
+    public String decrypt(String dcode, int z) {
+      throw new XBosonException("BadParameter: (Document)");
+    }
+
+
+    @Override
+    public void changed(String id) throws RemoteException {
+      mr.each((i, node, remote) -> {
+        remote.changed(id);
+        return true;
+      });
+    }
+
+
+    public void encrypt(Map<String, Object> scriptDoc, String code)
+            throws RemoteException
+    {
+      int z = (int) (Math.random() * Integer.MAX_VALUE);
+      String scode = mr.random().encrypt(code, z);
+      scriptDoc.put("z", z);
+      scriptDoc.put("code", scode);
+    }
+
+
+    public void decrypt(Map<String, Object> scriptDoc) throws RemoteException {
+      int z = (int) scriptDoc.get("z");
+      String scode = (String) scriptDoc.get("code");
+      String code = mr.random().decrypt(scode, z);
+      scriptDoc.put("code", code);
     }
   }
 }

@@ -299,7 +299,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   public String decryptApi2(String code, int zip) throws Exception {
     if (zip == 0) return decodeApiScript(code);
     checkApiAuth();
-    return new String(ApiEncryption.decryptApi2(code, zip), IConstant.CHARSET);
+    return new String(ApiEncryption.me.decryptApi2(code, zip), IConstant.CHARSET);
   }
 
 
@@ -310,7 +310,7 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   public String encodeApi2(String code, int zip) throws Exception {
     if (zip == 0) return encodeApiScript(code);
     checkApiAuth();
-    return ApiEncryption.encryptApi2(code, zip);
+    return ApiEncryption.me.encryptApi2(code, zip);
   }
 
 

@@ -24,6 +24,7 @@ import com.xboson.rpc.RpcFactory;
 import com.xboson.util.Tool;
 
 import java.rmi.RemoteException;
+import java.util.Set;
 
 
 /**
@@ -86,6 +87,17 @@ public class MultipleExportOneReference<T extends IXRemote> {
         log.error("Connect node", node, "fail,", Tool.allStack(e));
       }
     }
+  }
+
+
+  /**
+   * 随机返回一个节点上的服务
+   */
+  public T random() throws RemoteException {
+    for (String node : cm.list()) {
+      return (T) rpc.lookup(node, name);
+    }
+    throw new RemoteException("Cannot find any node");
   }
 
 

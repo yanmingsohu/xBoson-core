@@ -35,5 +35,8 @@ public class WorkerInfo implements IVisitByScript {
   public String stateMsg;
   // 出错数量
   public long error;
+  // 数据质量
   public String qos;
+  // cpu 占用率
+  public int cpu;
 }

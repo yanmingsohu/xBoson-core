@@ -23,6 +23,7 @@ import java.rmi.RemoteException;
 
 public interface IIoTRpc extends IXRemote, IotConst {
 
+
   /**
    * 恢复所有处理器线程
    * @param scenesid 场景
@@ -31,19 +32,49 @@ public interface IIoTRpc extends IXRemote, IotConst {
    */
   void restore(String scenesid, String productid) throws RemoteException;
 
+
   /**
    * 返回所有线程状态
    */
   WorkerInfo[] info(String scenesid, String productid) throws RemoteException;
+
 
   /**
    * 停止所有线程
    */
   void stopAll(String scenesid, String productid) throws RemoteException;
 
+
   /**
    * 停止指定节点上的指定线程
    */
   void stop(String sid, String pid, String node, String type, int index)
           throws RemoteException;
+
+
+  /**
+   * 加密代码
+   * @param code 代码
+   * @param z 密钥索引
+   * @return 加密的代码
+   */
+  String encrypt(String code, int z) throws RemoteException;
+
+
+  /**
+   * 解密代码
+   * @param dcode 已经加密的代码
+   * @param z 密码索引
+   * @return 代码原文
+   */
+  String decrypt(String dcode, int z) throws RemoteException;
+
+
+  /**
+   * 通知线程, 脚本更改
+   * @param id 脚本id
+   * @throws RemoteException
+   */
+  void changed(String id) throws RemoteException;
+
 }

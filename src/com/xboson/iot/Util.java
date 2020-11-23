@@ -19,10 +19,12 @@ package com.xboson.iot;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.xboson.app.ApiEncryption;
 import com.xboson.app.lib.ConfigImpl;
 import com.xboson.app.lib.IOTImpl;
 import com.xboson.app.lib.ModuleHandleContext;
 import com.xboson.app.lib.SysImpl;
+import com.xboson.been.Module;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
@@ -37,6 +39,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
+import javax.script.ScriptException;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -48,6 +52,7 @@ import java.util.List;
 public final class Util implements IotConst {
 
   static final Log log = LogFactory.create("IOT.runtimes");
+  static final ApiEncryption secr = new ApiEncryption(z);
 
   final short node;
   final SystemNow now;
@@ -56,6 +61,7 @@ public final class Util implements IotConst {
   private SecureRandom rand;
   private Base64.Encoder b64e;
   private String saveDataPath;
+  private ScriptEnv scriptEnv;
 
 
   public Util() {
@@ -64,7 +70,18 @@ public final class Util implements IotConst {
     this.rand = new SecureRandom();
     this.b64e = Base64.getEncoder();
     this.saveDataPath = SysConfig.me().readConfig().configPath +"/paho-mq";
+    this.scriptEnv = new ScriptEnv(this);
     now = new SystemNow(2000);
+  }
+
+
+  Module run(String path) {
+    return scriptEnv.run(path);
+  }
+
+
+  void changed(String id) {
+    scriptEnv.changed(id);
   }
 
 
@@ -136,6 +153,21 @@ public final class Util implements IotConst {
       throw new RemoteException("User not exists");
     }
     return r;
+  }
+
+
+  Document getScript(String id) throws IOException {
+    Document where = new Document("_id", id);
+
+    try {
+      Document r = openDb(TABLE_SCRIPT).find(where).first();
+      if (r == null) {
+        throw new IOException("Cannot open script "+ id);
+      }
+      return r;
+    } catch (RemoteException e) {
+      throw new IOException(e);
+    }
   }
 
 

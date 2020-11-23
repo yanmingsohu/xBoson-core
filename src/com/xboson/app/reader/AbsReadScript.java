@@ -33,6 +33,7 @@ import com.xboson.util.c0nst.IConstant;
 public abstract class AbsReadScript
         implements IConstant, IApiConstant, ILogName {
 
+
   protected final Log log;
 
 
@@ -52,7 +53,7 @@ public abstract class AbsReadScript
    * 为代码打补丁, 返回脚本文件
    */
   protected ScriptFile makeFile(ScriptAttr attr, String cipherText, int z) {
-    byte[] original_byte = ApiEncryption.decryptApi2(cipherText, z);
+    byte[] original_byte = ApiEncryption.me.decryptApi2(cipherText, z);
     byte[] content = SourceFix.autoPatch(original_byte);
     if (z != 0) {
       cipherText = ApiEncryption.encryptApi(new String(original_byte, CHARSET));

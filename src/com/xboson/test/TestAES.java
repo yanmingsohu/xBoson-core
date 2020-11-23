@@ -34,8 +34,8 @@ public class TestAES extends Test {
 	private void testApi() throws Exception {
 		sub("Test ApiEncryption.encryptApi2");
 		String a = "function test() { console.log('ok'); }";
-		String b = ApiEncryption.encryptApi2(a, 1);
-		String c = new String(ApiEncryption.decryptApi2(b, 1), IConstant.CHARSET);
+		String b = ApiEncryption.me.encryptApi2(a, 1);
+		String c = new String(ApiEncryption.me.decryptApi2(b, 1), IConstant.CHARSET);
 		eq(a, c, "encrypt api 2");
 		msg("2:", b);
 		msg("1:", ApiEncryption.encryptApi(a));

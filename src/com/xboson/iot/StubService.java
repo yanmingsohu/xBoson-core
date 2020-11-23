@@ -104,4 +104,22 @@ public class StubService implements IIoTRpc {
     }
     return p;
   }
+
+
+  @Override
+  public String encrypt(String code, int z) throws RemoteException {
+    return Util.secr.encryptApi2(code, z);
+  }
+
+
+  @Override
+  public String decrypt(String dcode, int z) throws RemoteException {
+    return new String(Util.secr.decryptApi2(dcode, z));
+  }
+
+
+  @Override
+  public void changed(String id) throws RemoteException {
+    util.changed(id);
+  }
 }

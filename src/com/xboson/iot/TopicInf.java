@@ -21,9 +21,11 @@ import com.xboson.been.XBosonException;
 
 
 public class TopicInf {
+
   public String scenes;
   public String product;
   public String device;
+
 
   public TopicInf(String topic) {
     if (topic.charAt(0) != '/') {
@@ -63,15 +65,26 @@ public class TopicInf {
     }
   }
 
+
+  /**
+   * 生成完整设备 id, 包括场景/产品前缀
+   */
   public String genDeviceID() {
     return Util.id(scenes, product, device);
   }
+
 
   public String genProductID() {
     return Util.id(scenes, product);
   }
 
+
   public String toString() {
     return "scenes="+ scenes +", product="+ product +", device="+ device;
+  }
+
+
+  public String genTopic(String type) {
+    return '/'+ scenes +'/'+ product +'/'+ device +'/'+ type;
   }
 }

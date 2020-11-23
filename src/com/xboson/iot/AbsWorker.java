@@ -37,19 +37,23 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
   protected final Map<String, Object> deviceCache;
   protected final WorkerInfo info;
   protected final String name;
+
   protected MongoCollection<Document> deviceTable;
   protected MongoCollection<Document> productTable;
   protected MongoCollection<Document> eventTable;
-  private IMqttAsyncClient mq;
-  private Util util;
+
+  protected Util util;
+  protected String script;
+  protected IMqttAsyncClient mq;
+  protected int qos;
+
+  private final CpuUsage cu;
   private String pid;
   private String user;
-  private String script;
   private String clientid;
   // 运行中不表示连接正常, 不表示没有错误
   private boolean running;
   private int reconnectCnt;
-  private int qos;
 
 
   AbsWorker() {
@@ -57,6 +61,7 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
     this.deviceCache = Collections.synchronizedMap(new WeakHashMap<>());
     this.placeholder = new Object();
     this.name = name();
+    this.cu = new CpuUsage(30);
     info.time = -1;
   }
 
@@ -94,15 +99,20 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
     info.stateMsg = "正在启动";
 
     try {
-      deviceTable  = util.openDb(TABLE_DEVICE);
-      productTable = util.openDb(TABLE_PRODUCT);
-      eventTable   = util.openDb(TABLE_EVENT);
+      openTables();
       mq = util.openMqtt(clientid, user, idx, this);
       running = true;
     } catch(Exception err) {
       pushError("启动错误", err, false);
       stop();
     }
+  }
+
+
+  private void openTables() throws RemoteException {
+    deviceTable  = util.openDb(TABLE_DEVICE);
+    productTable = util.openDb(TABLE_PRODUCT);
+    eventTable   = util.openDb(TABLE_EVENT);
   }
 
 
@@ -150,6 +160,9 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
 
   @Override
   public WorkerInfo info() {
+    cu.reset();
+    cu.waitTest();
+    info.cpu = cu.cpu();
     return info;
   }
 
@@ -199,6 +212,7 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
 
   @Override
   public final void messageArrived(String topic, MqttMessage msg) throws Exception {
+    cu.begin();
     Util.log.debug("msg", name, info.node, info.tid, topic, msg);
     try {
       onMessage(topic, msg);
@@ -213,9 +227,11 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
       event.data = data;
       data.put("payload", Hex.upperHex(msg.getPayload()));
       data.put("message", e.getMessage());
-      data.put("stack",   Tool.miniStack(e, 3));
+      data.put("stack",   Tool.xbosonStack(e));
       TopicInf inf = new TopicInf(topic);
       pushEvent(inf, event);
+    } finally {
+      cu.end();
     }
   }
 

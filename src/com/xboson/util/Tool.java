@@ -528,9 +528,9 @@ public final class Tool extends StaticLogProvider {
   /**
    * @see java.lang.Thread#sleep(long)
    */
-  public static void sleep(long time) {
+  public static void sleep(long time_ms) {
     try {
-      Thread.sleep(time);
+      Thread.sleep(time_ms);
     } catch(Exception e) {
       openLog(Tool.class).debug(e);
     }

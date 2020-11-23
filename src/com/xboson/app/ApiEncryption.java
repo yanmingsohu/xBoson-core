@@ -37,39 +37,57 @@ import java.util.zip.InflaterInputStream;
 /**
  * API 脚本加密/解密
  */
-public class ApiEncryption implements IConstant {
+public final class ApiEncryption implements IConstant {
 
   /**
    * 分组加密, 不可增减, 否则脚本将不可解密
    */
-  private final static String[] zipp = {
-        "U+vynW58DN6me+A2bzSc", "wKR9+F4Qr8t9caFHG0iS", "WCF7CErNJoQ6vCGdx62w",
-        "mtCqVaqfmAQacsdIToxH", "k32bsUDqjO6virGvbUeq", "LiU38osNLhWV256aS5Qc",
-        "in6vgWitlIn05D5gDlZd", "ZZXaGxkx1WOF6LAQjcsk", "egAMM+qHfOpI1ZTZ8kCu",
-        "egAMM+qHfOpI1ZTZ8kCu", "tp+6PrEA5Bf7m3v9TCMi", "/jMBnB16ZZ5zodxqPtGQ",
-        "MdA5Zuvq83lymwbTadT/", "yM4S8cKIcf5ZEEc7WV8C", "QZDVnPHOtN4dBrMida+s",
+  private final static String[] z = {
+          "U+vynW58DN6me+A2bzSc", "wKR9+F4Qr8t9caFHG0iS", "WCF7CErNJoQ6vCGdx62w",
+          "mtCqVaqfmAQacsdIToxH", "k32bsUDqjO6virGvbUeq", "LiU38osNLhWV256aS5Qc",
+          "in6vgWitlIn05D5gDlZd", "ZZXaGxkx1WOF6LAQjcsk", "egAMM+qHfOpI1ZTZ8kCu",
+          "egAMM+qHfOpI1ZTZ8kCu", "tp+6PrEA5Bf7m3v9TCMi", "/jMBnB16ZZ5zodxqPtGQ",
+          "MdA5Zuvq83lymwbTadT/", "yM4S8cKIcf5ZEEc7WV8C", "QZDVnPHOtN4dBrMida+s",
   };
 
-  private final static int ZLEN = zipp.length;
-  private final static SecretKeySpec[] zipkey = new SecretKeySpec[ZLEN];
+
+  private final int ZLEN;
+  private final SecretKeySpec[] zipkey;
+
   private final static int BUF_SIZE = 1024;
   private static AES2 ekey;
+  public final static ApiEncryption me;
 
 
   static {
+    me = new ApiEncryption();
     try {
       String code = "1200"; // 从配置文件读取
       String encode = Password.encodeSha256(code, "zr_zy秘");
       ekey = new AES2(code + encode);
 
-      for (int i=0; i<ZLEN; ++i) {
-        zipkey[i] = AES2.genKey(zipp[i].getBytes(CHARSET));
-        zipp[i] = null;
-      }
     } catch(Exception e) {
       e.printStackTrace();
       System.exit(2);
     }
+  }
+
+
+  /**
+   * 用密钥组, 构建加密算法
+   */
+  public ApiEncryption(String[] zipp) {
+    ZLEN = zipp.length;
+    zipkey = new SecretKeySpec[ZLEN];
+    for (int i=0; i<ZLEN; ++i) {
+      zipkey[i] = AES2.genKey(zipp[i].getBytes(CHARSET));
+      zipp[i] = null;
+    }
+  }
+
+
+  private ApiEncryption() {
+    this(z);
   }
 
 
@@ -88,7 +106,7 @@ public class ApiEncryption implements IConstant {
    * @param code 源代码
    * @param zipi 压缩值可以是任意整数
    */
-  public static String encryptApi2(String code, int zipi) {
+  public String encryptApi2(String code, int zipi) {
     if (zipi == 0) return encryptApi(code);
     try {
       Cipher cipher = Cipher.getInstance(AES_NAME);
@@ -113,7 +131,7 @@ public class ApiEncryption implements IConstant {
    * @param code 已经加密的代码
    * @param zipi 压缩值可以是任意整数
    */
-  public static byte[] decryptApi2(String code, int zipi) {
+  public byte[] decryptApi2(String code, int zipi) {
     if (zipi == 0) return decryptApi(code);
     try {
       Cipher cipher = Cipher.getInstance(AES_NAME);
