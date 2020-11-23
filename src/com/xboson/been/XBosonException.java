@@ -109,11 +109,10 @@ public class XBosonException extends RuntimeException
     StackTraceElement[] st = e.getStackTrace();
     out.append(e.toString());
 
-    if (e instanceof CodeFormater.JSSource
-            || e instanceof JScriptException) {
+    if (e instanceof CodeFormater.JSSource || e instanceof JScriptException) {
       for (int i = 0; i < st.length; ++i) {
         out.append(PREFIX);
-        out.append(st[i].toString());
+        print(st[i], out);
       }
     } else {
       filterStack(st, out);
@@ -127,17 +126,40 @@ public class XBosonException extends RuntimeException
   }
 
 
+  private static void print(StackTraceElement st, StringBuilder out) {
+    String cl = st.getClassName();
+    int li = cl.lastIndexOf('.');
+    if (li >= 0) cl = cl.substring(li);
+    out.append(cl).append("->");
+
+    out.append(st.getMethodName());
+    if (st.isNativeMethod()) {
+      out.append("(Native)");
+    } else {
+      String fn = st.getFileName();
+      out.append('(');
+      if (fn != null) {
+        out.append(fn);
+      } else {
+        out.append('?');
+      }
+      int ln = st.getLineNumber();
+      if (ln >= 0) out.append(':').append(ln);
+      out.append(')');
+    }
+  }
+
+
   public static void filterStack(StackTraceElement[] st, StringBuilder out) {
     boolean bypass = false;
 
     for (int i = 0; i < st.length; ++i) {
       StackTraceElement t = st[i];
 
-      if (t.getClassName().startsWith("com.xboson") ||
-              ECMAErrors.isScriptFrame(t))
+      if (t.getClassName().startsWith("com.xboson") || ECMAErrors.isScriptFrame(t))
       {
         out.append(PREFIX);
-        out.append(t.toString());
+        print(t, out);
         bypass = false;
       }
       else if (!bypass) {
