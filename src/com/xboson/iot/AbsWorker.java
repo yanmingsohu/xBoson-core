@@ -26,6 +26,7 @@ import org.eclipse.paho.client.mqttv3.*;
 
 import java.rmi.RemoteException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 
 /**
@@ -245,6 +246,7 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
     if (deviceCache.containsKey(devid))
       return false;
 
+    Util.testId(inf.device);
     Document devdoc = new Document("_id", devid);
     if (deviceTable.count(devdoc) > 0) {
       deviceCache.put(devid, placeholder);
@@ -313,5 +315,11 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
     edoc.put("data",    event.data);
 
     eventTable.insertOne(edoc);
+  }
+
+
+  void changeState(String deviceFullId, String state) {
+    deviceTable.updateOne(new Document("_id", deviceFullId),
+            new Document("$set", new Document("state", state)));
   }
 }

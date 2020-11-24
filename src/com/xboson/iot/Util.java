@@ -25,6 +25,7 @@ import com.xboson.app.lib.IOTImpl;
 import com.xboson.app.lib.ModuleHandleContext;
 import com.xboson.app.lib.SysImpl;
 import com.xboson.been.Module;
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.rpc.ClusterManager;
@@ -44,15 +45,15 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Pattern;
 
 
 public final class Util implements IotConst {
 
   static final Log log = LogFactory.create("IOT.runtimes");
   static final ApiEncryption secr = new ApiEncryption(z);
+  static final Pattern idTest = Pattern.compile(ID_TEST_P);
 
   final short node;
   final SystemNow now;
@@ -69,9 +70,9 @@ public final class Util implements IotConst {
     this.node = ClusterManager.me().localNodeIDs();
     this.rand = new SecureRandom();
     this.b64e = Base64.getEncoder();
-    this.saveDataPath = SysConfig.me().readConfig().configPath +"/paho-mq";
+    this.saveDataPath = SysConfig.me().readConfig().configPath + MQ_WORK_PATH;
     this.scriptEnv = new ScriptEnv(this);
-    now = new SystemNow(2000);
+    now = new SystemNow(1000);
   }
 
 
@@ -82,6 +83,17 @@ public final class Util implements IotConst {
 
   void changed(String id) {
     scriptEnv.changed(id);
+  }
+
+
+  /**
+   *
+   * @param deviceId 设备 id 部分
+   */
+  public static void testId(String deviceId) {
+    if (! idTest.matcher(deviceId).matches()) {
+      throw new XBosonException("Device ID format fail "+ deviceId);
+    }
   }
 
 
@@ -264,5 +276,44 @@ public final class Util implements IotConst {
 
   static String toTopic(String scenes, String product, String device, String type) {
     return '/'+ scenes +'/'+ product +'/'+ device +'/'+ type;
+  }
+
+
+  public static String dataId(String dev, String name, int dt, Calendar d) {
+    switch (dt) {
+      case DT_YEAR:
+        return "!yr~"+ dev +"$"+ name;
+
+      case DT_MONTH:
+        return "!mo~"+ dev +'$'+ name
+                +'@'+ d.get(Calendar.YEAR);
+
+      case DT_DAY:
+        return "!dy~"+ dev +'$'+ name
+                +'@'+ d.get(Calendar.YEAR)
+                +"-"+ d.get(Calendar.MONTH);
+
+      case DT_HOUR:
+        return "!hr~"+ dev +'$'+ name
+                +'@'+ d.get(Calendar.YEAR)
+                +"-"+ d.get(Calendar.MONTH)
+                +"-"+ d.get(Calendar.DAY_OF_MONTH);
+
+      case DT_MINUTE:
+        return "!mi~"+ dev +'$'+ name
+                +'@'+ d.get(Calendar.YEAR)
+                +"-"+ d.get(Calendar.MONTH)
+                +"-"+ d.get(Calendar.DAY_OF_MONTH)
+                +"_"+ d.get(Calendar.HOUR_OF_DAY);
+
+      case DT_SECOND:
+        return "!se~"+ dev +'$'+ name
+                +'@'+ d.get(Calendar.YEAR)
+                +"-"+ d.get(Calendar.MONTH)
+                +"-"+ d.get(Calendar.DAY_OF_MONTH)
+                +"_"+ d.get(Calendar.HOUR_OF_DAY)
+                +":"+ d.get(Calendar.MINUTE);
+    }
+    throw new XBosonException("Invalid data type "+ dt);
   }
 }

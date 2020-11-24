@@ -42,8 +42,7 @@ public class StateTopicProcess extends AbsWorker {
     TopicInf inf = new TopicInf(topic);
     String state = msg.toString();
     if (! createNoExistsDevice(inf, state)) {
-      deviceTable.updateOne(new Document("_id", inf.genDeviceID()),
-              new Document("$set", new Document("state", state)));
+      changeState(inf.genDeviceID(), state);
     }
     addCounter();
   }

@@ -59,6 +59,8 @@ public interface IotConst {
   String RPC_NAME      = "XB.rpc.IOT.Runtime";
   String CONF_NAME     = "iot-manager";
   String SCRIPT_PATH_P = "./";
+  String MQ_WORK_PATH  = "/paho-mq";
+  String ID_TEST_P     = "^[a-zA-Z0-9]+$";
 
   String TABLE_DEVICE  = "device";
   String TABLE_PRODUCT = "product";
@@ -74,6 +76,13 @@ public interface IotConst {
   String TOPIC_CMD     = "cmd";
   String TOPIC_STATE   = "state";
   String TOPIC_EVENT   = "event";
+
+  int DT_YEAR   = 1;
+  int DT_MONTH  = 2;
+  int DT_DAY    = 3;
+  int DT_HOUR   = 4;
+  int DT_MINUTE = 5;
+  int DT_SECOND = 6;
 
   // Function on_data(payload, dev)
   String FUNCTION_DATA = "on_data";

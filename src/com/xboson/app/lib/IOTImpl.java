@@ -22,13 +22,11 @@ import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.XBosonException;
 import com.xboson.distributed.MultipleExportOneReference;
 import com.xboson.iot.IIoTRpc;
+import com.xboson.iot.Util;
 import com.xboson.iot.WorkerInfo;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class IOTImpl extends RuntimeUnitImpl implements IAResource {
@@ -137,6 +135,13 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
       String scode = (String) scriptDoc.get("code");
       String code = mr.random().decrypt(scode, z);
       scriptDoc.put("code", code);
+    }
+
+
+    public String dataId(String dev, String name, int dt, long d) {
+      Calendar c = Calendar.getInstance();
+      c.setTimeInMillis(d);
+      return Util.dataId(dev, name, dt, c);
     }
   }
 }

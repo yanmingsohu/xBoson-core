@@ -31,6 +31,7 @@ public class WorkTypeRegister {
           DataTopicProcess.class,
           EventTopicProcess.class,
           StateTopicProcess.class,
+          null, // cmd not use
           SaveTopicProcess.class,
   };
 
@@ -44,8 +45,11 @@ public class WorkTypeRegister {
     Map<String, Integer> map = new HashMap<>();
     for (int i=1; i<work_type.length; ++i) {
       try {
-        String name = work_type[i].newInstance().name();
-        map.put(name, i);
+        Class<IWorkThread> cl = work_type[i];
+        if (cl != null) {
+          String name = cl.newInstance().name();
+          map.put(name, i);
+        }
       } catch(Exception e) {
         e.printStackTrace();
       }
@@ -62,7 +66,7 @@ public class WorkTypeRegister {
   static int get(String name) throws RemoteException {
     Integer type = typeInt.get(name);
     if (type == null) {
-      throw new RemoteException("Invaild type");
+      throw new RemoteException("Invaild type "+ name);
     }
     return type;
   }
@@ -74,8 +78,8 @@ public class WorkTypeRegister {
    * @throws RemoteException 找不到抛出异常
    */
   static Class<IWorkThread> get(int type) throws RemoteException {
-    if ((type < 1) || (type >= work_type.length)) {
-      throw new RemoteException("Work type invalid");
+    if ((type < 1) || (type >= work_type.length) || (work_type[type] == null)) {
+      throw new RemoteException("Invalid type "+ type);
     }
     return work_type[type];
   }

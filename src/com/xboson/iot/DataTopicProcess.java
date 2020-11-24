@@ -66,7 +66,10 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
      * @param data K 是变量名, V 是变量值
      */
     public void saveData(Map<String, Object> data) throws MqttException {
-      byte[] payload = json.toJson(data).getBytes(IConstant.CHARSET);
+      Map<String, Object> send = new HashMap<>();
+      send.put("time", util.now.now);
+      send.put("data", data);
+      byte[] payload = json.toJson(send).getBytes(IConstant.CHARSET);
       mq.publish(inf.genTopic(TOPIC_SAVE), payload, qos, true);
     }
 
@@ -81,6 +84,24 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
       byte[] bytes = getBytes(o);
       mq.publish(inf.genTopic(TOPIC_CMD), bytes, qos, true);
       saveCmd(cmd, inf, bytes);
+    }
+
+
+    /**
+     * 修改设备的状态
+     */
+    public void changeState(String s) {
+      DataTopicProcess.this.changeState(inf.genDeviceID(), s);
+    }
+
+
+    /**
+     * 推送事件
+     */
+    public void sendEvent(int code, int level, String msg, Map data) throws RemoteException {
+      EventDoc doc = new EventDoc(code, msg, level, util.now.now);
+      doc.data = data;
+      pushEvent(inf, doc);
     }
   }
 
