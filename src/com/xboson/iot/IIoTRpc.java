@@ -19,6 +19,7 @@ package com.xboson.iot;
 import com.xboson.rpc.IXRemote;
 
 import java.rmi.RemoteException;
+import java.util.Map;
 
 
 public interface IIoTRpc extends IXRemote, IotConst {
@@ -76,5 +77,15 @@ public interface IIoTRpc extends IXRemote, IotConst {
    * @throws RemoteException
    */
   void changed(String id) throws RemoteException;
+
+
+  /**
+   * 向设备发送命令, 必须在 http 上下文中调用
+   * @param devFullId 设备完整 id
+   * @param cmd 命令列表
+   * @throws RemoteException 执行时出现异常, 如果节点没有找到可执行命令的线程不会抛出异常
+   * @return 如果命令被成功发送返回 true, 否则返回 false
+   */
+  boolean sendCommand(String devFullId, Map<String, Object> cmd) throws RemoteException;
 
 }

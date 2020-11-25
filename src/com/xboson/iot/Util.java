@@ -21,7 +21,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.xboson.app.ApiEncryption;
 import com.xboson.app.lib.ConfigImpl;
-import com.xboson.app.lib.IOTImpl;
 import com.xboson.app.lib.ModuleHandleContext;
 import com.xboson.app.lib.SysImpl;
 import com.xboson.been.Module;
@@ -40,12 +39,14 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
 
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Calendar;
+import java.util.List;
 import java.util.regex.Pattern;
 
 
@@ -76,27 +77,39 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 从脚本表中选中并启动一个脚本
+   * @param path 脚本路径, 即脚本id
+   * @return 导出模块, (可能缓存)
+   */
   Module run(String path) {
     return scriptEnv.run(path);
   }
 
 
+  /**
+   * 通知脚本被修改, 更新缓存
+   * @param id 脚本id
+   */
   void changed(String id) {
     scriptEnv.changed(id);
   }
 
 
   /**
-   *
-   * @param deviceId 设备 id 部分
+   * 测试 id 有效性, 非法格式抛出异常, 只能是字母和数字
+   * @param id 不能是组合id
    */
-  public static void testId(String deviceId) {
-    if (! idTest.matcher(deviceId).matches()) {
-      throw new XBosonException("Device ID format fail "+ deviceId);
+  public static void testId(String id) {
+    if (! idTest.matcher(id).matches()) {
+      throw new XBosonException("ID format fail "+ id);
     }
   }
 
 
+  /**
+   * 打开配置文件, 必须在 http 服务上下文中调用
+   */
   Document openConf() throws RemoteException {
     Document c = conf.get(CONF_NAME);
     if (c == null) {
@@ -106,8 +119,10 @@ public final class Util implements IotConst {
   }
 
 
-  Document openProduct(String pid)
-          throws RemoteException {
+  /**
+   * 打开 product 并返回, 没有权限检查, product 不存在抛出异常
+   */
+  Document openProduct(String pid) throws RemoteException {
     Document pwhere = new Document("_id", pid);
     Document p = openDb(TABLE_PRODUCT).find(pwhere).first();
     if (p == null) {
@@ -117,6 +132,9 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 在打开 product 之前进行权限检查, 产品存在返回产品完整 id
+   */
   String hasProduct(String scenesid, String productid)
           throws RemoteException {
     String id = id(scenesid, productid);
@@ -129,6 +147,12 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 检查当前用户对 scenes 操作权限, 必须在 http 服务上下文中调用
+   * @param scenesid 场景id
+   * @return 数据库对象
+   * @throws RemoteException 无权操作或数据库错误
+   */
   MongoDatabase checkAuth(String scenesid) throws RemoteException  {
     SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
 
@@ -145,6 +169,9 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 打开并返回 address, 不存在抛出异常
+   */
   Document openAddress(String _id) throws RemoteException {
     Document where = new Document("_id", _id);
     FindIterable<Document> res = openDb(TABLE_ADDRESS).find(where);
@@ -156,6 +183,9 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 返回设备账户, 不存在炮捶异常, 只能在 http 服务上下文线程中调用
+   */
   Document getUser(String user) throws RemoteException {
     SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
     Document where = new Document("_id", user);
@@ -168,6 +198,9 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 返回脚本对象, 找不到抛出异常
+   */
   Document getScript(String id) throws IOException {
     Document where = new Document("_id", id);
 
@@ -183,6 +216,9 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 生成 mq 登录密码
+   */
   String genPassword(String name, String pass) throws RemoteException {
     try {
       byte[] b = new byte[16 + 16];
@@ -200,6 +236,16 @@ public final class Util implements IotConst {
   }
 
 
+  /**
+   * 打开到 mqtt 服务器的连接
+   * @param clientId 客户端id, 不能重复
+   * @param username 用户名
+   * @param idx 线程索引, 0线程会持久化服务器事务数据
+   * @param mc
+   * @return 客户端对象
+   * @throws RemoteException
+   * @throws MqttException
+   */
   MqttAsyncClient openMqtt(String clientId, String username, int idx, MqttCallback mc)
           throws RemoteException, MqttException
   {
@@ -230,13 +276,19 @@ public final class Util implements IotConst {
   }
 
 
-  String getBrokerURL() throws RemoteException {
+  private String getBrokerURL() throws RemoteException {
     Document conf = openConf();
     int port = (int)(double) conf.getDouble("mqport");
     return "tcp://"+ conf.getString("mqhost") +":"+ port;
   }
 
 
+  /**
+   * 打开数据库文档集
+   * @param collname
+   * @return
+   * @throws RemoteException
+   */
   MongoCollection<Document> openDb(String collname) throws RemoteException {
     return openDb().getCollection(collname);
   }

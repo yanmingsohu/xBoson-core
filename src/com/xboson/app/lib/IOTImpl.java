@@ -24,6 +24,7 @@ import com.xboson.distributed.MultipleExportOneReference;
 import com.xboson.iot.IIoTRpc;
 import com.xboson.iot.Util;
 import com.xboson.iot.WorkerInfo;
+import com.xboson.util.Ref;
 
 import java.rmi.RemoteException;
 import java.util.*;
@@ -117,6 +118,19 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
         remote.changed(id);
         return true;
       });
+    }
+
+
+    @Override
+    public boolean sendCommand(String devFullId, Map<String, Object> cmd)
+            throws RemoteException
+    {
+      final Ref<Boolean> finded = new Ref<>(false);
+      mr.each((i, node, remote) -> {
+        finded.x = remote.sendCommand(devFullId, cmd);
+        return !finded.x;
+      });
+      return finded.x;
     }
 
 

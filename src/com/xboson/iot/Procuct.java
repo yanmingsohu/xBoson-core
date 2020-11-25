@@ -168,6 +168,25 @@ public class Procuct implements IotConst {
   }
 
 
+  IDeviceCommandProcessor findCmdProcessor() throws RemoteException {
+    for (int type : workers.keySet()) {
+      Class<IWorkThread> tc = WorkTypeRegister.get(type);
+
+      if (IDeviceCommandProcessor.class.isAssignableFrom(tc)) {
+        Deque<IWorkThread> stack = workers.get(type);
+        if (stack == null) break;
+
+        for (IWorkThread work : stack) {
+          if (work.isRunning()) {
+            return (IDeviceCommandProcessor) work;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+
   /**
    * 返回所有线程的状态
    */

@@ -24,6 +24,7 @@ import java.util.Map;
 
 /**
  * 本机实现
+ *TODO 自动重启线程
  */
 public class StubService implements IIoTRpc {
 
@@ -93,6 +94,14 @@ public class StubService implements IIoTRpc {
   }
 
 
+  /**
+   * 返回产品线程集对象
+   * @param sid 场景, 做权限检查
+   * @param pid 产品
+   * @param checknull 如果产品不存在是否抛出异常
+   * @return
+   * @throws RemoteException
+   */
   private Procuct getProcuct(String sid, String pid, boolean checknull)
           throws RemoteException
   {
@@ -121,5 +130,21 @@ public class StubService implements IIoTRpc {
   @Override
   public void changed(String id) throws RemoteException {
     util.changed(id);
+  }
+
+
+  @Override
+  public boolean sendCommand(String devFullId, Map<String, Object> cmd)
+          throws RemoteException {
+    TopicInf inf = TopicInf.parseID(devFullId);
+    Procuct p = getProcuct(inf.scenes, inf.product, false);
+    if (p != null) {
+      IDeviceCommandProcessor cp = p.findCmdProcessor();
+      if (cp != null) {
+        cp.sendCommand(inf, cmd);
+        return true;
+      }
+    }
+    return false;
   }
 }

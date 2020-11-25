@@ -85,14 +85,14 @@ public class SaveTopicProcess extends AbsWorker {
     if (!(o instanceof Map)) {
       throw new XBosonException("`data` Field is not a Map");
     }
-    Date d = new Date((long)(double) recv.get("time"));
+    Date d = new Date( ((Number) recv.get("time")).longValue() );
     Saver saver = new Saver(ti, d);
 
     Map<String, Object> data = (Map<String, Object>)o;
     for (String k : data.keySet()) {
       DevDataType.ITransform t = tdata.get(k);
       if (t == null) {
-        throw new XBosonException(k +" is not defined in the product data list");
+        throw new XBosonException("'"+ k +"' is not defined in the product data list");
       }
       saver.pushData(k, t.t(data.get(k)));
     }

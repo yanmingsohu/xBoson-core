@@ -16,41 +16,52 @@
 
 package com.xboson.iot;
 
-import com.xboson.app.lib.IOTImpl;
 import com.xboson.been.XBosonException;
 
 
 public class TopicInf {
 
+  /** 场景 id 片段 */
   public String scenes;
+  /** 产品 id 片段 */
   public String product;
+  /** 设备 id 片段 */
   public String device;
 
 
+  private TopicInf() {
+  }
+
+
   public TopicInf(String topic) {
-    if (topic.charAt(0) != '/') {
+    parse(this, topic, '/');
+  }
+
+
+  private static void parse(TopicInf inf, final String topic, final char delimiter) {
+    if (topic.charAt(0) != delimiter) {
       throw new XBosonException.BadParameter(
-              "Topic name", "not begin '/'");
+              "Topic name", "Not begin '"+ delimiter +"'");
     }
     int st = 0;
     int a = 1;
 
     for (int i=a; i<topic.length(); ++i) {
       char c = topic.charAt(i);
-      if (c == '/') {
+      if (c == delimiter) {
         if (a == i) {
           throw new XBosonException.BadParameter(
-                  "Topic name", "no char in '/'");
+                  "Topic name", "No character between '"+ delimiter +"'");
         }
         switch (st) {
           case 0:
-            scenes = topic.substring(a, i);
+            inf.scenes = topic.substring(a, i);
             break;
           case 1:
-            product = topic.substring(a, i);
+            inf.product = topic.substring(a, i);
             break;
           case 2:
-            device = topic.substring(a, i);
+            inf.device = topic.substring(a, i);
             return;
         }
         a = i+1;
@@ -58,11 +69,21 @@ public class TopicInf {
       }
     }
     if (st == 2) {
-      device = topic.substring(a);
+      inf.device = topic.substring(a);
     } else {
       throw new XBosonException.BadParameter(
               "Topic name", "bad ending");
     }
+  }
+
+
+  /**
+   * 解析完整 id
+   */
+  public static TopicInf parseID(String id) {
+    TopicInf inf = new TopicInf();
+    parse(inf, id, '.');
+    return inf;
   }
 
 
@@ -74,6 +95,9 @@ public class TopicInf {
   }
 
 
+  /**
+   * 生成完整产品 id, 包括场景前缀
+   */
   public String genProductID() {
     return Util.id(scenes, product);
   }
@@ -84,6 +108,9 @@ public class TopicInf {
   }
 
 
+  /**
+   * 生成 mqtt 主题格式字符串
+   */
   public String genTopic(String type) {
     return Util.toTopic(scenes, product, device, type);
   }

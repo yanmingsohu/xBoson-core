@@ -25,8 +25,6 @@ import com.xboson.util.Hex;
 import com.xboson.util.Tool;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
-import jdk.nashorn.api.scripting.ScriptUtils;
-import jdk.nashorn.internal.objects.NativeInt8Array;
 import org.bson.Document;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -41,6 +39,7 @@ import java.util.Map;
 public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcessor {
 
   private Map<String, DevDataType.ITransform> tcmd;
+  private Map<String, Boolean> tmeta;
   private MongoCollection<Document> cmdTable;
   private ScriptObjectMirror ondata;
   private ScriptObjectMirror oncmd;
@@ -78,12 +77,8 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
      * 发送结构化命令, 该命令经过设备脚本 'on_cmd' 转换后发送到设备
      * @param cmd K 是命令名, V 是命令值
      */
-    public void sendCmd(Map<String, Object> cmd) throws MqttException {
-      checkCmd(cmd);
-      Object o = oncmd.call(null, cmd, this);
-      byte[] bytes = getBytes(o);
-      mq.publish(inf.genTopic(TOPIC_CMD), bytes, qos, true);
-      saveCmd(cmd, inf, bytes);
+    public void sendCmd(Map<String, Object> cmd) throws RemoteException {
+      processCommand(inf, cmd);
     }
 
 
@@ -103,12 +98,58 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
       doc.data = data;
       pushEvent(inf, doc);
     }
+
+
+    /**
+     * 更新设备 meta
+     */
+    public void setMeta(Map<String, Object> meta) throws RemoteException {
+      for (String key : meta.keySet()) {
+        if (! tmeta.containsKey(key)) {
+          throw new RemoteException("'"+ key +"' is not defined in the product meta list");
+        }
+        if ((meta.get(key) == null) && tmeta.get(key)) {
+          throw new RemoteException("'"+ key +"' meta value be not null");
+        }
+      }
+      deviceTable.updateOne(
+              new Document("_id", inf.genDeviceID()),
+              new Document("meta", meta));
+    }
   }
 
 
   public DataTopicProcess() {
-    tcmd = new HashMap<>();
-    json = Tool.getAdapter(Map.class);
+    tcmd  = new HashMap<>();
+    tmeta = new HashMap<>();
+    json  = Tool.getAdapter(Map.class);
+  }
+
+
+  @Override
+  public void sendCommand(TopicInf inf, Map<String, Object> cmd) throws RemoteException {
+    if (!mod.loaded) reloadScript();
+    processCommand(inf, cmd);
+  }
+
+
+  /**
+   * 发送命令基础函数
+   * @param inf 地址
+   * @param cmd 命令数据
+   * @throws RemoteException
+   */
+  private void processCommand(TopicInf inf, Map<String, Object> cmd) throws RemoteException {
+    try {
+      checkCmd(cmd);
+      Object o = oncmd.call(null, cmd, this);
+      byte[] bytes = getBytes(o);
+      mq.publish(inf.genTopic(TOPIC_CMD), bytes, qos, true);
+      saveCmd(cmd, inf, bytes);
+
+    } catch (MqttException e) {
+      throw new RemoteException(e.getMessage());
+    }
   }
 
 
@@ -119,7 +160,7 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
     for (String k : cmd.keySet()) {
       DevDataType.ITransform t = tcmd.get(k);
       if (t == null) {
-        throw new XBosonException(k +" is not defined in the product command list");
+        throw new XBosonException("'"+ k +"' is not defined in the product command list");
       }
       cmd.put(k, t.t(cmd.get(k)));
     }
@@ -196,6 +237,13 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
       DevDataType.ITransform t = DevDataType.getTransform(type);
       tcmd.put(name, t);
     }
+
+    for (Object meta : p.get("meta", List.class)) {
+      Document m = (Document) meta;
+      String name = m.getString("name");
+      Number notnull = (Number) m.get("notnull");
+      tmeta.put(name, notnull.intValue() != 0);
+    }
   }
 
 
@@ -208,6 +256,7 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
   @Override
   public void onMessage(String topic, MqttMessage msg) throws Exception {
     if (!mod.loaded) reloadScript();
+
     TopicInf inf = new TopicInf(topic);
     createNoExistsDevice(inf, null);
     Bytes payload = new Bytes(msg.getPayload());

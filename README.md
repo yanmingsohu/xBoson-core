@@ -31,7 +31,6 @@ Java JDK, Tomcat 9, Servlet 4.0.
 # 需要做:
 
 * 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)(https://raft.github.io/)
-* 云盘系统(api已经完成)
 * 多语言
 * js 字典模块
 * org 参数只作为 mysql schema 选择条件, 并从 api 加载流程中分离; app 直接作为根选择条件,
