@@ -401,7 +401,8 @@ public class ConfigImpl extends RuntimeUnitImpl {
         if (__db == null) {
           MongoDBPool.VirtualMongoClient cli =
                   MongoDBPool.me().get(SysConfig.me().readConfig().mongodb);
-          ModuleHandleContext.autoClose(cli);
+          // mongo 不需要关闭连接
+          //ModuleHandleContext.autoClose(cli);
           __db = cli.getDatabase(DB_NAME);
         }
       }
