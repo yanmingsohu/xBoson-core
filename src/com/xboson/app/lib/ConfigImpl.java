@@ -73,6 +73,10 @@ public class ConfigImpl extends RuntimeUnitImpl {
   public final int TYPE_BOOL    = 2;
   public final int TYPE_REMOVE  = -1;
 
+  public final static int META = 1;
+  public final static int DATA = 2;
+  public final static int DATA_REMOVE = 3;
+
   private static final Cache cache = new Cache();
   public MongoDatabase __db;
 
@@ -425,10 +429,16 @@ public class ConfigImpl extends RuntimeUnitImpl {
   }
 
 
+  /**
+   * 注册全局配置文件消息回调
+   */
+  public static void regEventOnBus(GLHandle h) {
+    GlobalEventBus bus = GlobalEventBus.me();
+    bus.on(Names.iconfig_update, h);
+  }
+
+
   private static class Cache extends GLHandle {
-    private final static int META = 1;
-    private final static int DATA = 2;
-    private final static int DATA_REMOVE = 3;
 
     /** meta 缓存 */
     private Map<String, Document> _mc;
@@ -449,7 +459,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
       rd   = lock.readLock();
       wr   = lock.writeLock();
       bus  = GlobalEventBus.me();
-      bus.on(Names.iconfig_update, this);
+      regEventOnBus(this);
     }
 
     void sendMetaModify(String name) {

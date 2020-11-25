@@ -108,12 +108,8 @@ public final class Util implements IotConst {
   /**
    * 打开配置文件, 必须在 http 服务上下文中调用
    */
-  Document openConf() throws RemoteException {
-    Document c = conf.get(CONF_NAME);
-    if (c == null) {
-      throw new RemoteException("Cannot open config: "+ CONF_NAME);
-    }
-    return c;
+  IotConfig openConf() throws RemoteException {
+    return ConfigHolder.me().getConfig();
   }
 
 
@@ -245,7 +241,7 @@ public final class Util implements IotConst {
   MqttAsyncClient openMqtt(String clientId, DeviceUser user, int idx, MqttCallback mc)
           throws RemoteException, MqttException
   {
-    String broker = getBrokerURL();
+    String broker = openConf().getBrokerURL();
     String pass = genPassword(user);
 
     MqttDefaultFilePersistence persistence = new MqttDefaultFilePersistence(saveDataPath);
@@ -271,13 +267,6 @@ public final class Util implements IotConst {
   }
 
 
-  private String getBrokerURL() throws RemoteException {
-    Document conf = openConf();
-    int port = (int)(double) conf.getDouble("mqport");
-    return "tcp://"+ conf.getString("mqhost") +":"+ port;
-  }
-
-
   /**
    * 打开数据库文档集
    * @param collname
@@ -290,10 +279,9 @@ public final class Util implements IotConst {
 
 
   MongoDatabase openDb() throws RemoteException {
-    Document conf = openConf();
-    String mongodb = conf.getString("mongodb");
-    MongoDBPool.VirtualMongoClient cli = MongoDBPool.me().get(mongodb);
-    return cli.getDatabase(conf.getString("dbname"));
+    IotConfig conf = openConf();
+    MongoDBPool.VirtualMongoClient cli = MongoDBPool.me().get(conf.mongodb);
+    return cli.getDatabase(conf.dbname);
   }
 
 

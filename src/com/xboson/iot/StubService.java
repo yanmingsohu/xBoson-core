@@ -148,7 +148,8 @@ public class StubService implements IIoTRpc {
 
 
   @Override
-  public boolean sendCommand(String paasUser, String devFullId, Map<String, Object> cmd)
+  public synchronized boolean sendCommand(String paasUser, String devFullId,
+                                          Map<String, Object> cmd)
           throws RemoteException
   {
     TopicInf inf = TopicInf.parseID(devFullId);
