@@ -20,10 +20,7 @@ import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.distributed.MultipleExportOneReference;
-import com.xboson.iot.IIoTRpc;
-import com.xboson.iot.IotConst;
-import com.xboson.iot.Util;
-import com.xboson.iot.WorkerInfo;
+import com.xboson.iot.*;
 import com.xboson.util.Ref;
 
 import java.rmi.RemoteException;
@@ -60,6 +57,11 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
       mr = new MultipleExportOneReference<>(RPC_NAME);
       SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
       paasUser = sys.getUserIdByOpenId();
+
+      ConfigHolder ch = ConfigHolder.me();
+      if (ch.needInitConfig()) {
+        ch.updateConfig();
+      }
     }
 
 

@@ -68,7 +68,10 @@ public class TopicInf {
         ++st;
       }
     }
-    if (st == 2) {
+
+    if (st == 1) {
+      inf.product = topic.substring(a);
+    } else if (st == 2) {
       inf.device = topic.substring(a);
     } else {
       throw new XBosonException.BadParameter(

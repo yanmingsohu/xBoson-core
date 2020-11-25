@@ -109,7 +109,11 @@ public final class Util implements IotConst {
    * 打开配置文件, 必须在 http 服务上下文中调用
    */
   IotConfig openConf() throws RemoteException {
-    return ConfigHolder.me().getConfig();
+    ConfigHolder ch = ConfigHolder.me();
+    if (ch.needInitConfig()) {
+      ch.updateConfig();
+    }
+    return ch.getConfig();
   }
 
 

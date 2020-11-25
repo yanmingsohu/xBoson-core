@@ -28,6 +28,7 @@ public final class ConfigHolder extends GLHandle implements IotConst {
 
   private static ConfigHolder me;
   private IotConfig config;
+  private boolean nullConfig;
 
 
   public static ConfigHolder me() {
@@ -35,7 +36,6 @@ public final class ConfigHolder extends GLHandle implements IotConst {
       synchronized (ConfigHolder.class) {
         if (me == null) {
           me = new ConfigHolder();
-          me.updateConfig();
         }
       }
     }
@@ -46,6 +46,7 @@ public final class ConfigHolder extends GLHandle implements IotConst {
   private ConfigHolder() {
     ConfigImpl.regEventOnBus(this);
     config = new IotConfig();
+    nullConfig = true;
   }
 
 
@@ -61,14 +62,31 @@ public final class ConfigHolder extends GLHandle implements IotConst {
   }
 
 
-  private void updateConfig() {
+  /**
+   * 在不同的上下文中, 配置文件可能不同, 配置文件模式默认全局配置,
+   * 否则可能导致 IOT 无法正确随系统启动,
+   *
+   * 如果读取配置文件失败, 会抛出异常.
+   */
+  public void updateConfig() {
     Document c = new ConfigImpl().get(CONF_NAME);
     if (c == null) {
-      throw new XBosonException("Cannot iot open config: "+ CONF_NAME);
+      throw new XBosonException("Cannot open IoT config: "+ CONF_NAME);
     }
+    updateConfig(c);
+  }
+
+
+  public void updateConfig(Document c) {
     synchronized (config) {
       config = new IotConfig(c);
+      nullConfig = false;
     }
+  }
+
+
+  public boolean needInitConfig() {
+    return nullConfig;
   }
 
 

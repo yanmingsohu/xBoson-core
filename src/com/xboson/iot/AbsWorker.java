@@ -17,7 +17,6 @@
 package com.xboson.iot;
 
 import com.mongodb.client.MongoCollection;
-import com.xboson.app.lib.IOTImpl;
 import com.xboson.been.XBosonException;
 import com.xboson.util.Hex;
 import com.xboson.util.Tool;
@@ -26,7 +25,6 @@ import org.eclipse.paho.client.mqttv3.*;
 
 import java.rmi.RemoteException;
 import java.util.*;
-import java.util.regex.Pattern;
 
 
 /**
@@ -63,6 +61,7 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
     this.placeholder = new Object();
     this.name = name();
     this.cu = new CpuUsage(30);
+
     info.time = -1;
   }
 

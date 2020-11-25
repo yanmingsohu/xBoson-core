@@ -93,6 +93,7 @@ public interface IotConst {
   int EVENT_LEVEL_MESSAGE_FAIL = 3;
   int MAX_THREAD = 30;
   int CONN_TIMEOUT_SEC = 10;
+  int AUTO_START_DELAY = 3000;
 
   int TYPE_DATA  = 1;
   int TYPE_EVENT = 2;

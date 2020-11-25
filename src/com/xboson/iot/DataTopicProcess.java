@@ -116,6 +116,19 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
               new Document("_id", inf.genDeviceID()),
               new Document("meta", meta));
     }
+
+
+    public String deviceId() {
+      return inf.device;
+    }
+
+    public String productId() {
+      return inf.product;
+    }
+
+    public String scenesId() {
+      return inf.scenes;
+    }
   }
 
 

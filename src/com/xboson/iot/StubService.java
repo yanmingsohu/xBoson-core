@@ -16,6 +16,10 @@
 
 package com.xboson.iot;
 
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCursor;
+import com.xboson.event.EventLoop;
+import com.xboson.event.OnExitHandle;
 import org.bson.Document;
 
 import java.rmi.RemoteException;
@@ -27,10 +31,10 @@ import java.util.Map;
 
 /**
  * 本机实现
- *TODO 自动重启线程
  */
 public class StubService implements IIoTRpc {
 
+  private final OnExitHandle systemExit;
   private Map<String, Procuct> prods;
   private Util util;
 
@@ -38,6 +42,38 @@ public class StubService implements IIoTRpc {
   StubService() {
     this.prods = new HashMap<>();
     this.util = new Util();
+    this.systemExit = new Exit();
+    beginAutoRestart();
+  }
+
+
+  private void beginAutoRestart() {
+    EventLoop.me().add(()->{
+      try {
+        autoRestart();
+        util.log.info("Auto restart all topic threads success");
+      } catch(Exception e) {
+        util.log.error("Cannot start topic thread", e);
+        e.printStackTrace();
+      }
+    });
+  }
+
+
+  private void autoRestart() throws RemoteException {
+    FindIterable<Document> it = util.openDb(TABLE_ADDRESS)
+            .find(new Document("auto_restart", true));
+    MongoCursor<Document> cursor = it.iterator();
+
+    while (cursor.hasNext()) {
+      Document doc = cursor.next();
+      String fmt = doc.getString("fmt");
+      String user = doc.getString("auto_auth");
+      TopicInf inf = new TopicInf(fmt);
+
+      util.log.debug("Preparation start", fmt);
+      restore(user, inf.scenes, inf.product);
+    }
   }
 
 
@@ -162,5 +198,27 @@ public class StubService implements IIoTRpc {
       }
     }
     return false;
+  }
+
+
+  private void stopAllAndRelease() {
+    for (Procuct p : prods.values()) {
+      try {
+        p.stopAll();
+      } catch (RemoteException e) {
+        e.printStackTrace();
+      }
+    }
+    prods = null;
+    util = null;
+  }
+
+
+  private class Exit extends OnExitHandle {
+
+    @Override
+    protected void exit() {
+      stopAllAndRelease();
+    }
   }
 }

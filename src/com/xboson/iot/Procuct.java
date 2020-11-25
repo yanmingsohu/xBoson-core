@@ -16,7 +16,6 @@
 
 package com.xboson.iot;
 
-import com.xboson.app.lib.IOTImpl;
 import com.xboson.rpc.ClusterManager;
 import org.bson.Document;
 
