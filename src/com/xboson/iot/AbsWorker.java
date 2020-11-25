@@ -81,13 +81,13 @@ public abstract class AbsWorker implements IWorkThread, MqttCallbackExtended {
 
 
   @Override
-  public final void start(Util util, String pid, int qos, String user,
+  public final void start(Util util, String pid, int qos, DeviceUser user,
                           String script, int idx) throws RemoteException
   {
     this.util   = util;
     this.pid    = pid;
     this.qos    = qos;
-    this.user   = user;
+    this.user   = user.username;
     this.script = script;
     // 这个属性不输出到任何地方
     this.clientid = XBOSON_WORKER + name + pid +'.'+ util.node +'.'+ idx;

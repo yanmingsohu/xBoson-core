@@ -27,29 +27,33 @@ public interface IIoTRpc extends IXRemote, IotConst {
 
   /**
    * 恢复所有处理器线程
+   * @param paasUser 平台用户
    * @param scenesid 场景
    * @param productid 产品
    * @throws RemoteException
    */
-  void restore(String scenesid, String productid) throws RemoteException;
+  void restore(String paasUser, String scenesid, String productid)
+          throws RemoteException;
 
 
   /**
    * 返回所有线程状态
    */
-  WorkerInfo[] info(String scenesid, String productid) throws RemoteException;
+  WorkerInfo[] info(String paasUser, String scenesid, String productid)
+          throws RemoteException;
 
 
   /**
    * 停止所有线程
    */
-  void stopAll(String scenesid, String productid) throws RemoteException;
+  void stopAll(String paasUser, String scenesid, String productid)
+          throws RemoteException;
 
 
   /**
    * 停止指定节点上的指定线程
    */
-  void stop(String sid, String pid, String node, String type, int index)
+  void stop(String paasUser, String sid, String pid, String node, String type, int index)
           throws RemoteException;
 
 
@@ -73,19 +77,22 @@ public interface IIoTRpc extends IXRemote, IotConst {
 
   /**
    * 通知线程, 脚本更改
+   * @param paasUser 平台用户
    * @param id 脚本id
    * @throws RemoteException
    */
-  void changed(String id) throws RemoteException;
+  void changed(String paasUser, String id) throws RemoteException;
 
 
   /**
    * 向设备发送命令, 必须在 http 上下文中调用
+   * @param paasUser 平台用户
    * @param devFullId 设备完整 id
    * @param cmd 命令列表
    * @throws RemoteException 执行时出现异常, 如果节点没有找到可执行命令的线程不会抛出异常
    * @return 如果命令被成功发送返回 true, 否则返回 false
    */
-  boolean sendCommand(String devFullId, Map<String, Object> cmd) throws RemoteException;
+  boolean sendCommand(String paasUser, String devFullId, Map<String, Object> cmd)
+          throws RemoteException;
 
 }

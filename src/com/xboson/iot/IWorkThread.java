@@ -27,12 +27,12 @@ public interface IWorkThread extends IotConst {
    * 启动线程
    * @param pid    产品id
    * @param qos    数据质量
-   * @param user   mq用户
+   * @param user   mq用户信息
    * @param script 脚本, 可以空
    * @param index  线程索引, 从0开始, 作为 WorkerInfo.tid
    * @throws RemoteException
    */
-  void start(Util util, String pid, int qos, String user, String script, int index)
+  void start(Util util, String pid, int qos, DeviceUser user, String script, int index)
           throws RemoteException;
 
 

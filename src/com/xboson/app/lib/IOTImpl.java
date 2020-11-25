@@ -19,9 +19,9 @@ package com.xboson.app.lib;
 import com.xboson.auth.IAResource;
 import com.xboson.auth.PermissionSystem;
 import com.xboson.auth.impl.LicenseAuthorizationRating;
-import com.xboson.been.XBosonException;
 import com.xboson.distributed.MultipleExportOneReference;
 import com.xboson.iot.IIoTRpc;
+import com.xboson.iot.IotConst;
 import com.xboson.iot.Util;
 import com.xboson.iot.WorkerInfo;
 import com.xboson.util.Ref;
@@ -46,49 +46,51 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
 
   public Object open() {
     PermissionSystem.applyWithApp(LicenseAuthorizationRating.class, this);
-    return new ClusterService();
+    return new RpcProxy();
   }
 
 
-  public class ClusterService implements IIoTRpc {
-    private MultipleExportOneReference<IIoTRpc> mr;
+  public class RpcProxy implements IotConst {
+
+    private final MultipleExportOneReference<IIoTRpc> mr;
+    private final String paasUser;
 
 
-    private ClusterService() {
+    private RpcProxy() {
       mr = new MultipleExportOneReference<>(RPC_NAME);
+      SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
+      paasUser = sys.getUserIdByOpenId();
     }
 
 
-    @Override
     public void restore(String sid, String pid) throws RemoteException {
       mr.each((i, node, remote) -> {
-        remote.restore(sid, pid);
+        remote.restore(paasUser, sid, pid);
         return true;
       });
     }
 
 
-    @Override
-    public WorkerInfo[] info(String scenesid, String productid) throws RemoteException {
+    public WorkerInfo[] info(String scenesid, String productid)
+            throws RemoteException
+    {
       final List<WorkerInfo> list = new ArrayList<>();
       mr.each((i, node, remote) -> {
-        Collections.addAll(list, remote.info(scenesid, productid));
+        Collections.addAll(list, remote.info(paasUser, scenesid, productid));
         return true;
       });
       return list.toArray(new WorkerInfo[0]);
     }
 
 
-    @Override
     public void stopAll(String scenesid, String productid) throws RemoteException {
       mr.each((i, node, remote) -> {
-        remote.stopAll(scenesid, productid);
+        remote.stopAll(paasUser, scenesid, productid);
         return true;
       });
     }
 
 
-    @Override
     public void stop(String sid, String pid, String node, String type, int index)
             throws RemoteException
     {
@@ -96,41 +98,27 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
       if (remote == null) {
         throw new RemoteException("Get node fail");
       }
-      remote.stop(sid, pid, node, type, index);
+      remote.stop(paasUser, sid, pid, node, type, index);
     }
 
 
-    @Override
-    public String encrypt(String code, int z) {
-      throw new XBosonException("BadParameter: (Document, code)");
-    }
-
-
-    @Override
-    public String decrypt(String dcode, int z) {
-      throw new XBosonException("BadParameter: (Document)");
-    }
-
-
-    @Override
     public void changed(String id) throws RemoteException {
       mr.each((i, node, remote) -> {
-        remote.changed(id);
+        remote.changed(paasUser, id);
         return true;
       });
     }
 
 
-    @Override
     public boolean sendCommand(String devFullId, Map<String, Object> cmd)
             throws RemoteException
     {
-      final Ref<Boolean> finded = new Ref<>(false);
+      final Ref<Boolean> found = new Ref<>(false);
       mr.each((i, node, remote) -> {
-        finded.x = remote.sendCommand(devFullId, cmd);
-        return !finded.x;
+        found.x = remote.sendCommand(paasUser, devFullId, cmd);
+        return !found.x;
       });
-      return finded.x;
+      return found.x;
     }
 
 

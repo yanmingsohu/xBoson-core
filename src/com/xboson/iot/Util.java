@@ -21,8 +21,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.xboson.app.ApiEncryption;
 import com.xboson.app.lib.ConfigImpl;
-import com.xboson.app.lib.ModuleHandleContext;
-import com.xboson.app.lib.SysImpl;
 import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
@@ -66,7 +64,7 @@ public final class Util implements IotConst {
   private ScriptEnv scriptEnv;
 
 
-  public Util() {
+  Util() {
     this.conf = new ConfigImpl();
     this.node = ClusterManager.me().localNodeIDs();
     this.rand = new SecureRandom();
@@ -123,8 +121,8 @@ public final class Util implements IotConst {
    * 打开 product 并返回, 没有权限检查, product 不存在抛出异常
    */
   Document openProduct(String pid) throws RemoteException {
-    Document pwhere = new Document("_id", pid);
-    Document p = openDb(TABLE_PRODUCT).find(pwhere).first();
+    Document filter = new Document("_id", pid);
+    Document p = openDb(TABLE_PRODUCT).find(filter).first();
     if (p == null) {
       throw new RemoteException("Product no exists");
     }
@@ -135,12 +133,12 @@ public final class Util implements IotConst {
   /**
    * 在打开 product 之前进行权限检查, 产品存在返回产品完整 id
    */
-  String hasProduct(String scenesid, String productid)
+  String hasProduct(String paasUser, String scenesid, String productid)
           throws RemoteException {
     String id = id(scenesid, productid);
-    MongoDatabase db = checkAuth(scenesid);
-    Document pwhere = new Document("_id", id);
-    if (db.getCollection(TABLE_PRODUCT).count(pwhere) != 1) {
+    MongoDatabase db = checkAuth(paasUser, scenesid);
+    Document filter = new Document("_id", id);
+    if (db.getCollection(TABLE_PRODUCT).count(filter) != 1) {
       throw new RemoteException("Product not exists");
     }
     return id;
@@ -149,20 +147,19 @@ public final class Util implements IotConst {
 
   /**
    * 检查当前用户对 scenes 操作权限, 必须在 http 服务上下文中调用
+   * @param paasUser 平台用户名
    * @param scenesid 场景id
    * @return 数据库对象
    * @throws RemoteException 无权操作或数据库错误
    */
-  MongoDatabase checkAuth(String scenesid) throws RemoteException  {
-    SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
-
-    List or = new ArrayList<>();
-    or.add(new Document("owner", sys.getUserIdByOpenId()));
-    or.add(new Document("share", sys.getUserIdByOpenId()));
-    Document swhere = new Document("$or", or);
+  MongoDatabase checkAuth(String paasUser, String scenesid) throws RemoteException  {
+    List<Document> or = new ArrayList<>();
+    or.add(new Document("owner", paasUser));
+    or.add(new Document("share", paasUser));
+    Document where = new Document("$or", or);
     MongoDatabase db = openDb();
 
-    if (db.getCollection(TABLE_SCENES).count(swhere) < 1) {
+    if (db.getCollection(TABLE_SCENES).count(where) < 1) {
       throw new RemoteException("无权操作场景 "+ scenesid);
     }
     return db;
@@ -184,17 +181,16 @@ public final class Util implements IotConst {
 
 
   /**
-   * 返回设备账户, 不存在炮捶异常, 只能在 http 服务上下文线程中调用
+   * 返回设备账户, 不存在抛出异常, 只能在 http 服务上下文线程中调用
    */
-  Document getUser(String user) throws RemoteException {
-    SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
-    Document where = new Document("_id", user);
-    where.put("owner", sys.getUserIdByOpenId());
+  DeviceUser getUser(String paasUser, String deviceUser) throws RemoteException {
+    Document where = new Document("_id", deviceUser);
+    where.put("owner", paasUser);
     Document r = openDb("user").find(where).first();
     if (r == null) {
       throw new RemoteException("User not exists");
     }
-    return r;
+    return new DeviceUser(deviceUser, r.getString("password"));
   }
 
 
@@ -219,14 +215,14 @@ public final class Util implements IotConst {
   /**
    * 生成 mq 登录密码
    */
-  String genPassword(String name, String pass) throws RemoteException {
+  String genPassword(DeviceUser du) throws RemoteException {
     try {
       byte[] b = new byte[16 + 16];
       rand.nextBytes(b);
       MessageDigest md = MessageDigest.getInstance("md5");
       md.update(b, 0, 16);
-      md.update(name.getBytes(IConstant.CHARSET));
-      md.update(pass.getBytes(IConstant.CHARSET));
+      md.update(du.username.getBytes(IConstant.CHARSET));
+      md.update(du.password.getBytes(IConstant.CHARSET));
       md.digest(b, 16, 16);
       return b64e.encodeToString(b);
 
@@ -246,19 +242,18 @@ public final class Util implements IotConst {
    * @throws RemoteException
    * @throws MqttException
    */
-  MqttAsyncClient openMqtt(String clientId, String username, int idx, MqttCallback mc)
+  MqttAsyncClient openMqtt(String clientId, DeviceUser user, int idx, MqttCallback mc)
           throws RemoteException, MqttException
   {
     String broker = getBrokerURL();
-    Document user = getUser(username);
-    String pass = genPassword(username, user.getString("password"));
+    String pass = genPassword(user);
 
     MqttDefaultFilePersistence persistence = new MqttDefaultFilePersistence(saveDataPath);
     MqttConnectOptions opt = new MqttConnectOptions();
     MqttAsyncClient cli = new MqttAsyncClient(broker, clientId, persistence);
     cli.setCallback(mc);
 
-    opt.setUserName(username);
+    opt.setUserName(user.username);
     opt.setPassword(pass.toCharArray());
     opt.setConnectionTimeout(CONN_TIMEOUT_SEC);
     opt.setAutomaticReconnect(true);
@@ -271,7 +266,7 @@ public final class Util implements IotConst {
     }
 
     cli.connect(opt);
-    log.debug("Connected to", broker, "client ID:", clientId, username);
+    log.debug("Connected to", broker, "client ID:", clientId, user.username);
     return cli;
   }
 

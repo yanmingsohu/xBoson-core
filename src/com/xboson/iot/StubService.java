@@ -16,9 +16,12 @@
 
 package com.xboson.iot;
 
+import org.bson.Document;
+
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -32,33 +35,34 @@ public class StubService implements IIoTRpc {
   private Util util;
 
 
-  public StubService() {
+  StubService() {
     this.prods = new HashMap<>();
     this.util = new Util();
   }
 
 
-  public synchronized void restore(String scenesid, String productid)
+  @Override
+  public synchronized void restore(String paasUser, String scenesid, String productid)
           throws RemoteException
   {
-    Procuct p = getProcuct(scenesid, productid, false);
+    Procuct p = getProcuct(paasUser, scenesid, productid, false);
     if (p == null) {
       String pid = Util.id(scenesid, productid);
-      util.hasProduct(scenesid, productid);
+      util.hasProduct(paasUser, scenesid, productid);
       p = new Procuct(pid, util);
       prods.put(pid, p);
     }
 
-    p.restore();
+    p.restore(paasUser);
   }
 
 
   @Override
-  public synchronized WorkerInfo[] info(String sid, String pid)
+  public synchronized WorkerInfo[] info(String paasUser, String sid, String pid)
           throws RemoteException
   {
     ArrayList<WorkerInfo> list = new ArrayList<>();
-    Procuct p = getProcuct(sid, pid, false);
+    Procuct p = getProcuct(paasUser, sid, pid, false);
     if (p != null) {
       p.info(list);
     }
@@ -67,22 +71,22 @@ public class StubService implements IIoTRpc {
 
 
   @Override
-  public synchronized void stopAll(String scenesid, String productid)
+  public synchronized void stopAll(String paasUser, String scenesid, String productid)
           throws RemoteException
   {
-    Procuct p = getProcuct(scenesid, productid, true);
+    Procuct p = getProcuct(paasUser, scenesid, productid, true);
     p.stopAll();
   }
 
 
   @Override
-  public synchronized void stop(String sid, String pid, String _node,
-                                String type, int index)
+  public synchronized void stop(String paasUser, String sid, String pid,
+                                String _node, String type, int index)
                                 throws RemoteException
   {
-    int itype = WorkTypeRegister.get(type);
-    Procuct p = getProcuct(sid, pid, true);
-    IWorkThread w = p.find(itype, index);
+    int workType = WorkTypeRegister.get(type);
+    Procuct p = getProcuct(paasUser, sid, pid, true);
+    IWorkThread w = p.find(workType, index);
     if (w == null) {
       throw new RemoteException("Could not find thread.");
     }
@@ -98,17 +102,17 @@ public class StubService implements IIoTRpc {
    * 返回产品线程集对象
    * @param sid 场景, 做权限检查
    * @param pid 产品
-   * @param checknull 如果产品不存在是否抛出异常
+   * @param checkNull 如果产品不存在是否抛出异常
    * @return
    * @throws RemoteException
    */
-  private Procuct getProcuct(String sid, String pid, boolean checknull)
+  private Procuct getProcuct(String paasUser, String sid, String pid, boolean checkNull)
           throws RemoteException
   {
-    util.checkAuth(sid);
+    util.checkAuth(paasUser, sid);
     String id = Util.id(sid, pid);
     Procuct p = prods.get(id);
-    if (checknull && p == null) {
+    if (checkNull && p == null) {
       throw new RemoteException("Product not exists "+ id);
     }
     return p;
@@ -128,16 +132,27 @@ public class StubService implements IIoTRpc {
 
 
   @Override
-  public void changed(String id) throws RemoteException {
+  public void changed(String paasUser, String id) throws RemoteException {
+    List<Document> or = new ArrayList<>();
+    or.add(new Document("owner", paasUser));
+    or.add(new Document("share", paasUser));
+
+    Document filter = new Document("_id", id);
+    filter.put("$or", or);
+
+    if (util.openDb("script").count(filter) < 1) {
+      throw new RemoteException("No auth changed script");
+    }
     util.changed(id);
   }
 
 
   @Override
-  public boolean sendCommand(String devFullId, Map<String, Object> cmd)
-          throws RemoteException {
+  public boolean sendCommand(String paasUser, String devFullId, Map<String, Object> cmd)
+          throws RemoteException
+  {
     TopicInf inf = TopicInf.parseID(devFullId);
-    Procuct p = getProcuct(inf.scenes, inf.product, false);
+    Procuct p = getProcuct(paasUser, inf.scenes, inf.product, false);
     if (p != null) {
       IDeviceCommandProcessor cp = p.findCmdProcessor();
       if (cp != null) {

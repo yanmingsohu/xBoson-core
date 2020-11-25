@@ -35,20 +35,20 @@ public class Procuct implements IotConst {
   private String id;
 
 
-  public Procuct(String id, Util util) {
+  Procuct(String id, Util util) {
     this.workers = new HashMap<>();
     this.util = util;
     this.id = id;
   }
 
 
-  void restore() throws RemoteException {
+  void restore(String paasUser) throws RemoteException {
     clearDead();
     Document addr = util.openAddress(id);
-    restore(TYPE_DATA,  (Document) addr.get("data"));
-    restore(TYPE_EVENT, (Document) addr.get("event"));
-    restore(TYPE_STATE, (Document) addr.get("state"));
-    restore(TYPE_SAVE,  (Document) addr.get("save"));
+    restore(paasUser, TYPE_DATA,  (Document) addr.get("data"));
+    restore(paasUser, TYPE_EVENT, (Document) addr.get("event"));
+    restore(paasUser, TYPE_STATE, (Document) addr.get("state"));
+    restore(paasUser, TYPE_SAVE,  (Document) addr.get("save"));
   }
 
 
@@ -60,18 +60,19 @@ public class Procuct implements IotConst {
   }
 
 
-  private void restore(int type, Document topicConf) throws RemoteException {
+  private void restore(String paasUser, int type, Document topicConf) throws RemoteException {
     int count = 0;
     if (topicConf != null) {
       count = targetCount( topicConf.getLong("count") );
     }
 
     if (count(type) < count) {
-      String user = topicConf.getString("user");
+      String deviceUser = topicConf.getString("user");
       String script = topicConf.getString("script");
-      long qos = topicConf.getLong("qos");
+      Number qos = (Number) topicConf.get("qos");
+      DeviceUser user = util.getUser(paasUser, deviceUser);
 
-      start(type, count, (int)qos, user, script);
+      start(type, count, qos.intValue(), user, script);
     } else {
       stop(type, count);
     }
@@ -113,7 +114,7 @@ public class Procuct implements IotConst {
   /**
    * 启动 type 类型的任务直到 count 个
    */
-  private void start(int type, int count, int qos, String user, String script)
+  private void start(int type, int count, int qos, DeviceUser user, String script)
           throws RemoteException
   {
     for (int i=0; i<count; ++i) {
