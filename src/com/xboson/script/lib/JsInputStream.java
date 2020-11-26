@@ -16,6 +16,8 @@
 
 package com.xboson.script.lib;
 
+import com.xboson.util.c0nst.IConstant;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -105,6 +107,43 @@ public class JsInputStream extends InputStream {
 
   public int read(Buffer.JsBuffer tar) throws IOException {
     return read(tar, 0, tar.getLength());
+  }
+
+
+  public Bytes readBytes(int len) throws IOException {
+    byte[] bs = new byte[len];
+    int rlen = read(bs, 0, len);
+    if (rlen < 0) return null;
+    if (rlen != len) {
+      byte[] x = new byte[rlen];
+      System.arraycopy(bs, 0, x, 0, rlen);
+      bs = x;
+    }
+    return new Bytes(bs);
+  }
+
+
+  public Bytes readBytes() throws IOException {
+    return readBytes(ori.available());
+  }
+
+
+  public String readString(String charsetName) throws IOException {
+    StringBuilder buf = new StringBuilder();
+    byte[] bs = new byte[128];
+    int rlen = read(bs, 0, bs.length);
+    if (rlen <= 0) return null;
+
+    do {
+      buf.append(new String(bs, 0, rlen, charsetName));
+      rlen = read(bs, 0, bs.length);
+    } while (rlen > 0);
+    return buf.toString();
+  }
+
+
+  public String readString() throws IOException {
+    return readString(IConstant.CHARSET_NAME);
   }
 
 
