@@ -66,27 +66,27 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
 
 
     public void restore(String sid, String pid) throws RemoteException {
-      mr.each((i, node, remote) -> {
+      mr.each(true, (i, node, remote) -> {
         remote.restore(paasUser, sid, pid);
         return true;
       });
     }
 
 
-    public WorkerInfo[] info(String scenesid, String productid)
+    public Object info(String scenesid, String productid)
             throws RemoteException
     {
       final List<WorkerInfo> list = new ArrayList<>();
-      mr.each((i, node, remote) -> {
+      mr.each(false, (i, node, remote) -> {
         Collections.addAll(list, remote.info(paasUser, scenesid, productid));
         return true;
       });
-      return list.toArray(new WorkerInfo[0]);
+      return list;
     }
 
 
     public void stopAll(String scenesid, String productid) throws RemoteException {
-      mr.each((i, node, remote) -> {
+      mr.each(true, (i, node, remote) -> {
         remote.stopAll(paasUser, scenesid, productid);
         return true;
       });
@@ -105,7 +105,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
 
 
     public void changed(String id) throws RemoteException {
-      mr.each((i, node, remote) -> {
+      mr.each(true, (i, node, remote) -> {
         remote.changed(paasUser, id);
         return true;
       });
@@ -116,7 +116,7 @@ public class IOTImpl extends RuntimeUnitImpl implements IAResource {
             throws RemoteException
     {
       final Ref<Boolean> found = new Ref<>(false);
-      mr.each((i, node, remote) -> {
+      mr.each(true, (i, node, remote) -> {
         found.x = remote.sendCommand(paasUser, devFullId, cmd);
         return !found.x;
       });

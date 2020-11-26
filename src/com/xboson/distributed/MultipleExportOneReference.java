@@ -74,6 +74,14 @@ public class MultipleExportOneReference<T extends IXRemote> {
    * 遍历所有服务, 异常节点被忽略
    */
   public void each(For<T> getter) throws RemoteException {
+    each(false, getter);
+  }
+
+
+  /**
+   * 遍历所有服务, 如果遇到错误且 throwErr == true 则抛出异常, 否则忽略
+   */
+  public void each(boolean throwErr, For<T> getter) throws RemoteException {
     int i = 0;
 
     for (String node : cm.list()) {
@@ -84,6 +92,7 @@ public class MultipleExportOneReference<T extends IXRemote> {
         }
         ++i;
       } catch(Exception e) {
+        if (throwErr) throw e;
         log.error("Connect node", node, "fail,", Tool.allStack(e));
       }
     }

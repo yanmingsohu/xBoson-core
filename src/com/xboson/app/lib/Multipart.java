@@ -17,6 +17,7 @@
 package com.xboson.app.lib;
 
 import com.xboson.been.XBosonException;
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
 import com.xboson.script.lib.JsInputStream;
@@ -31,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.util.Map;
 
 public class Multipart extends RuntimeUnitImpl {
@@ -62,7 +64,7 @@ public class Multipart extends RuntimeUnitImpl {
 
 
   private int parseBody(ScriptObjectMirror callback) throws IOException {
-    MultipartStream ms = new MultipartStream(
+    DiyMultipartStream ms = new DiyMultipartStream(
             LimitInputStream.wrap(req.getInputStream(), maxBody),
             boundary, bufferSize, null);
 
@@ -134,18 +136,45 @@ public class Multipart extends RuntimeUnitImpl {
   }
 
 
-  public class MultipartItem {
+  private class DiyMultipartStream extends MultipartStream {
+
+    private Method newInputStream;
+
+
+    DiyMultipartStream(InputStream wrap, byte[] boundary, int bufferSize,
+                              MultipartStream.ProgressNotifier o) {
+      super(wrap, boundary, bufferSize, o);
+    }
+
+
+    /**
+     * hack 方法, 如果 MultipartStream 内部实现改变, 该方法会持续失败
+     */
+    InputStream openInputStream() throws Exception {
+      if (newInputStream == null) {
+        newInputStream = MultipartStream.class.getMethod(
+                "newInputStream", MultipartStream.ItemInputStream.class);
+        newInputStream.setAccessible(true);
+      }
+      return (InputStream) newInputStream.invoke(this);
+    }
+  }
+
+
+  public class MultipartItem implements IVisitByScript {
 
     public final ScriptObjectMirror header;
-    private final MultipartStream ms;
+    private final DiyMultipartStream ms;
     private boolean isRead;
 
-    private MultipartItem(String headerStr, MultipartStream ms) {
+
+    private MultipartItem(String headerStr, DiyMultipartStream ms) {
       this.ms     = ms;
       this.isRead = false;
       this.header = createJSObject();
       parseHeader(this.header, headerStr);
     }
+
 
     public Object readBuffer() throws IOException {
       StringBufferOutputStream output = new StringBufferOutputStream();
@@ -153,11 +182,13 @@ public class Multipart extends RuntimeUnitImpl {
       return new Buffer().from(output.toBytes());
     }
 
+
     public Object readBytes() throws IOException {
       StringBufferOutputStream output = new StringBufferOutputStream();
       readTo(output);
       return new Bytes(output.toBytes());
     }
+
 
     public String readString(String charset) throws IOException {
       StringBufferOutputStream output = new StringBufferOutputStream();
@@ -165,9 +196,11 @@ public class Multipart extends RuntimeUnitImpl {
       return new String(output.toBytes(), charset);
     }
 
+
     public String readString() throws IOException {
       return readString(IConstant.CHARSET_NAME);
     }
+
 
     public int readTo(OutputStream out) throws IOException {
       try {
@@ -176,6 +209,11 @@ public class Multipart extends RuntimeUnitImpl {
       } finally {
         isRead = true;
       }
+    }
+
+
+    public JsInputStream openInputStream() throws Exception {
+      return new JsInputStream(ms.openInputStream());
     }
   }
 
