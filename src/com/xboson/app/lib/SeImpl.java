@@ -199,6 +199,12 @@ public class SeImpl extends RuntimeUnitImpl implements AutoCloseable {
   }
 
 
+  public QueryImpl.ResultReader queryStream(String sql, Object[] param)
+          throws Exception {
+    return query.queryStream(sql, param);
+  }
+
+
   public boolean isAuthorizedBizModel(String modelcd) {
     return redis.getRoleInfo(ResourceRoleTypes.MODEL, modelcd) != null;
   }
