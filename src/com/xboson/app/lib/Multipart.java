@@ -152,8 +152,7 @@ public class Multipart extends RuntimeUnitImpl {
      */
     InputStream openInputStream() throws Exception {
       if (newInputStream == null) {
-        newInputStream = MultipartStream.class.getMethod(
-                "newInputStream", MultipartStream.ItemInputStream.class);
+        newInputStream = MultipartStream.class.getDeclaredMethod("newInputStream");
         newInputStream.setAccessible(true);
       }
       return (InputStream) newInputStream.invoke(this);

@@ -19,6 +19,7 @@ package com.xboson.script.lib;
 import com.xboson.been.IJson;
 import com.xboson.been.JsonHelper;
 import com.xboson.been.XBosonException;
+import com.xboson.script.IVisitByScript;
 import com.xboson.util.Hex;
 
 import java.util.Arrays;
@@ -26,9 +27,10 @@ import java.util.Arrays;
 
 /**
  * 字节数组对象, 可以将字节数组和字符串互相转换.
- * 不可直接导出到 js 环境.
+ * 该对象设计为不可变类.
  */
-public class Bytes implements IJson {
+public class Bytes implements IJson, IVisitByScript {
+
   private byte[] key;
   private String s_key;
 
@@ -131,4 +133,5 @@ public class Bytes implements IJson {
   public int length() {
     return bin().length;
   }
+
 }

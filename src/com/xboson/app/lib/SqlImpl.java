@@ -134,19 +134,21 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public int update(String sql, Object[] param) throws Exception {
-    return update(sql, param, false);
+    return update(sql, param, (Boolean)null);
   }
 
 
   public int update(String sql) throws Exception {
-    return update(sql, null, false);
+    return update(sql, null, (Boolean)null);
   }
 
 
-  public int update(String sql, Object[] param, boolean manualCommit)
+  public int update(String sql, Object[] param, Boolean manualCommit)
           throws Exception {
     Connection conn = state.open();
-    conn.setAutoCommit(!manualCommit);
+    if (manualCommit != null) {
+      conn.setAutoCommit(!manualCommit);
+    }
 
     sql = query_impl.replaceSql(sql);
 
@@ -168,7 +170,7 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
 
 
   public int updateBatch(String sql, Object _param_grp) throws Exception {
-    return updateBatch(sql, _param_grp, false);
+    return updateBatch(sql, _param_grp, (Boolean)null);
   }
 
 
@@ -178,11 +180,13 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
   }
 
 
-  public int updateBatch(String sql, Object _param_grp, boolean manualCommit)
+  public int updateBatch(String sql, Object _param_grp, Boolean manualCommit)
           throws Exception {
     ScriptObjectMirror param_grp = wrap(_param_grp);
     Connection conn = state.open();
-    conn.setAutoCommit(! manualCommit);
+    if (manualCommit != null) {
+      conn.setAutoCommit(! manualCommit);
+    }
 
     sql = query_impl.replaceSql(sql);
 
@@ -242,6 +246,11 @@ public class SqlImpl extends RuntimeUnitImpl implements AutoCloseable, IAResourc
     if (! conn.getAutoCommit()) {
       conn.rollback();
     }
+  }
+
+
+  public void setAutoCommit(boolean b) throws Exception {
+    state.open().setAutoCommit(b);
   }
 
 
