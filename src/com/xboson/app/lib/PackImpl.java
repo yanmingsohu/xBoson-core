@@ -19,10 +19,13 @@ package com.xboson.app.lib;
 import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Buffer;
 import com.xboson.script.lib.Bytes;
+import com.xboson.script.lib.JsInputStream;
+import com.xboson.util.c0nst.IConstant;
 import org.apache.commons.fileupload.util.Streams;
 
 import java.io.*;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 
@@ -38,30 +41,43 @@ public class PackImpl implements IVisitByScript {
   }
 
 
+  public Object createUnZipReader(InputStream i) {
+    UnZip uz = new UnZip(i);
+    ModuleHandleContext.autoClose(uz);
+    return uz;
+  }
+
+
   /**
-   * 打包数据接口
+   * 打包数据接口, js 不支持 default 方法
    */
-  interface IPackData extends AutoCloseable {
+  interface IPack extends AutoCloseable, IVisitByScript {
     /**
      * 添加一个文件, i 是文件的输入流
      */
     void add(String filepath, InputStream i) throws IOException;
-    void add(String filepath, String data) throws IOException;
-    void add(String filepath, Bytes data) throws IOException;
-    void add(String filepath, Buffer.JsBuffer buf) throws IOException;
 
-    /**
-     * 关闭流
-     * @throws IOException
-     */
-    void close() throws IOException;
+    void add(String filepath, String data) throws IOException;
+
+    void add(String filepath, Bytes data) throws IOException;
+
+    void add(String filepath, Buffer.JsBuffer buf) throws IOException;
   }
 
 
-  static public abstract class PackBase implements IPackData {
+  interface IUnPack extends AutoCloseable, IVisitByScript {
+    boolean hasNext() throws IOException;
+    String path() throws IOException;
+    boolean isDirectory() throws IOException;
+    long size() throws IOException;
+    long getTime() throws IOException;
+    JsInputStream openInput() throws IOException;
+  }
 
+
+  public static abstract class AbsPack implements IPack {
     public void add(String filepath, String data) throws IOException {
-      add(filepath, new ByteArrayInputStream(data.getBytes("utf-8")));
+      add(filepath, new ByteArrayInputStream(data.getBytes(IConstant.CHARSET)));
     }
 
     public void add(String filepath, Bytes data) throws IOException {
@@ -74,12 +90,15 @@ public class PackImpl implements IVisitByScript {
   }
 
 
-  static public class Zip extends PackBase implements IPackData {
+  public static class Zip extends AbsPack implements IPack {
+
     private ZipOutputStream zout;
+
 
     private Zip(OutputStream out) {
       zout = new ZipOutputStream(out);
     }
+
 
     public void add(String filepath, InputStream i) throws IOException {
       ZipEntry zipEntry = new ZipEntry(filepath);
@@ -88,8 +107,64 @@ public class PackImpl implements IVisitByScript {
       zout.closeEntry();
     }
 
-    public void close() throws IOException {
+
+    public void close() throws Exception {
       zout.close();
+    }
+  }
+
+
+  public static class UnZip implements IUnPack {
+
+    private ZipInputStream i;
+    private ZipEntry ze;
+
+
+    private UnZip(InputStream _i) {
+      this.i = new ZipInputStream(_i);
+    }
+
+
+    public void close() throws Exception {
+      ze = null;
+      i.close();
+    }
+
+
+    public boolean hasNext() throws IOException {
+      this.ze = i.getNextEntry();
+      return ze != null;
+    }
+
+
+    public String path() throws IOException {
+      if (ze == null) throw new IOException("No entry set");
+      return ze.getName();
+    }
+
+
+    public boolean isDirectory() throws IOException {
+      if (ze == null) throw new IOException("No entry set");
+      return ze.isDirectory();
+    }
+
+
+    public long size() throws IOException {
+      if (ze == null) throw new IOException("No entry set");
+      return ze.getSize();
+    }
+
+
+    public long getTime() throws IOException {
+      if (ze == null) throw new IOException("No entry set");
+      return ze.getTime();
+    }
+
+
+    @Override
+    public JsInputStream openInput() throws IOException {
+      if (ze == null) throw new IOException("No entry set");
+      return new JsInputStream(i);
     }
   }
 }
