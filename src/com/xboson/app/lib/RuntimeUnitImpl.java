@@ -196,7 +196,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
    * ScriptObjectMirror 不应该直接传到 js 环境, 而是传递底层 js 对象,
    * 通过该方法获取 ScriptObjectMirror 包装的底层对象.
    */
-  protected Object unwrap(Object mirror) {
+  protected static Object unwrap(Object mirror) {
     return ScriptObjectMirror.unwrap(mirror, Context.getGlobal());
   }
 
@@ -242,6 +242,9 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
    * @return jdbc 能处理的对象.
    */
   public static Object getSafeObjectForQuery(Object o) {
+    if (isDate(o)) {
+      return toDate(o);
+    }
     if (isNull(o)) {
       return null;
     }
@@ -348,7 +351,10 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
   }
 
 
-  protected boolean isDate(Object o) {
+  protected static boolean isDate(Object o) {
+    if (o instanceof NativeDate) {
+      return true;
+    }
     if (o instanceof ScriptObjectMirror) {
       return unwrap(o).getClass() == NativeDate.class;
     }
@@ -356,7 +362,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
   }
 
 
-  protected Date toDate(Object o) {
+  protected static Date toDate(Object o) {
     NativeDate nd = (NativeDate) unwrap(o);
     return new Date((long) NativeDate.getTime(nd));
   }
