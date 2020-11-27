@@ -90,6 +90,11 @@ public class StringBufferOutputStream extends OutputStream {
   }
 
 
+  public String toString(String charsetName) throws UnsupportedEncodingException {
+    return new String(buf, 0, pos, charsetName);
+  }
+
+
   public ByteBuffer toBuffer() {
     return ByteBuffer.wrap(toBytes());
   }

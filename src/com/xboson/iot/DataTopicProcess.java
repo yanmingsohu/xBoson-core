@@ -20,6 +20,7 @@ import com.mongodb.client.MongoCollection;
 import com.squareup.moshi.JsonAdapter;
 import com.xboson.been.Module;
 import com.xboson.been.XBosonException;
+import com.xboson.script.IVisitByScript;
 import com.xboson.script.lib.Bytes;
 import com.xboson.util.Hex;
 import com.xboson.util.Tool;
@@ -50,7 +51,7 @@ public class DataTopicProcess extends AbsWorker implements IDeviceCommandProcess
   /**
    * 导出到 js 环境中
    */
-  public class JsDevice {
+  public class JsDevice implements IVisitByScript {
 
     private TopicInf inf;
 
