@@ -19,6 +19,7 @@ package com.xboson.iot;
 import com.xboson.app.lib.ConfigImpl;
 import com.xboson.been.XBosonException;
 import com.xboson.event.GLHandle;
+import org.bson.BsonString;
 import org.bson.Document;
 
 import javax.naming.event.NamingEvent;
@@ -29,6 +30,9 @@ public final class ConfigHolder extends GLHandle implements IotConst {
   private static ConfigHolder me;
   private IotConfig config;
   private boolean nullConfig;
+
+  /** 配置文件名前面被 类ConfigImpl 加入前缀  */
+  private static final String CONF_WITH_PREFIX = ":"+ CONF_NAME;
 
 
   public static ConfigHolder me() {
@@ -44,9 +48,9 @@ public final class ConfigHolder extends GLHandle implements IotConst {
 
 
   private ConfigHolder() {
-    ConfigImpl.regEventOnBus(this);
     config = new IotConfig();
     nullConfig = true;
+    ConfigImpl.regEventOnBus(this);
   }
 
 
@@ -55,7 +59,8 @@ public final class ConfigHolder extends GLHandle implements IotConst {
     if (namingEvent.getType() != ConfigImpl.DATA) {
       return;
     }
-    if (! CONF_NAME.equals(namingEvent.getNewBinding().getObject())) {
+    BsonString name = (BsonString) namingEvent.getNewBinding().getObject();
+    if (! name.getValue().endsWith(CONF_WITH_PREFIX)) {
       return;
     }
     updateConfig();
