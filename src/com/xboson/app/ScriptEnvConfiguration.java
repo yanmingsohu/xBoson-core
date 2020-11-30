@@ -80,6 +80,7 @@ public final class ScriptEnvConfiguration {
     mod.put("pack",      PackImpl.class);
     mod.put("blas",      BlasImpl.class);
     mod.put("iot",       IOTImpl.class);
+    mod.put("graph",     GraphImpl.class);
     return mod;
   }
 }
