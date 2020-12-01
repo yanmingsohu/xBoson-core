@@ -25,6 +25,7 @@ import com.xboson.been.MongoConfig;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
+import com.xboson.util.c0nst.IConstant;
 import org.bson.Document;
 
 import java.util.*;
@@ -67,13 +68,34 @@ public class MongoDBPool extends OnExitHandle {
   }
 
 
+  private MongoClient create(MongoClientURI uri) {
+    List<ServerAddress> seedList = new ArrayList<>(uri.getHosts().size());
+    for (String host : uri.getHosts()) {
+      seedList.add(new ServerAddress(host));
+    }
+
+    MongoClientOptions opt = uri.getOptions();
+    opt = MongoClientOptions.builder(opt)
+            .connectTimeout(IConstant.RESPONSE_ACCEPTABLE_TIMEOUT)
+            .serverSelectionTimeout(IConstant.RESPONSE_ACCEPTABLE_TIMEOUT)
+            .build();
+
+    MongoCredential cert = uri.getCredentials();
+    if (cert == null) {
+      return new MongoClient(seedList, opt);
+    } else {
+      return new MongoClient(seedList, cert, opt);
+    }
+  }
+
+
   public VirtualMongoClient get(String _url) {
     try {
       synchronized (pool) {
         MongoClientURI uri = new MongoClientURI(_url);
         MongoClient client = pool.get(uri);
         if (client == null) {
-          client = new MongoClient(uri);
+          client = create(uri);
           pool.put(uri, client);
         }
         return new VirtualMongoClient(uri, client);

@@ -65,6 +65,11 @@ public interface IConstant extends IDict {
   String SYS_TABLE_NOT_REPLACE = "sys_pl_";
 
   /**
+   * HTTP 应答可接收的等待时间, 超过后应抛出异常而是不等待, 毫秒
+   */
+  int RESPONSE_ACCEPTABLE_TIMEOUT = 5000;
+
+  /**
    * 默认运算节点 ID
    */
   short DEFAULT_NODE_ID_SHORT = 0;

@@ -16,6 +16,8 @@
 
 package com.xboson.util;
 
+import com.xboson.event.OnExitHandle;
+import com.xboson.util.c0nst.IConstant;
 import org.neo4j.driver.*;
 
 import java.util.HashMap;
@@ -26,11 +28,12 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Neo4j driver 内部自行管理连接池, 该类管理 driver
+ * https://neo4j.com/docs/api/java-driver/4.2/
  */
-public class Neo4jPool {
+public class Neo4jPool extends OnExitHandle {
 
   private static Neo4jPool me;
-  private final Map<IKey, Driver> pool;
+  private final Map<IKey, Driver> pool = new HashMap<>();
   private final Config config;
 
 
@@ -47,8 +50,16 @@ public class Neo4jPool {
 
 
   private Neo4jPool() {
-    this.pool = new HashMap<>();
     this.config = defaultConfig();
+  }
+
+
+  @Override
+  protected void exit() {
+    for (Driver d : pool.values()) {
+      d.close();
+    }
+    pool.clear();
   }
 
 
@@ -56,8 +67,8 @@ public class Neo4jPool {
     return Config.builder()
             .withFetchSize(100)
             .withMaxConnectionPoolSize(20)
-            .withConnectionTimeout(10, TimeUnit.SECONDS)
-            .withConnectionAcquisitionTimeout(10, TimeUnit.SECONDS)
+            .withConnectionTimeout(IConstant.RESPONSE_ACCEPTABLE_TIMEOUT, TimeUnit.MILLISECONDS)
+            .withConnectionAcquisitionTimeout(IConstant.RESPONSE_ACCEPTABLE_TIMEOUT, TimeUnit.MILLISECONDS)
             .build();
   }
 
