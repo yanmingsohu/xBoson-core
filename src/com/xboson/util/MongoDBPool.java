@@ -25,6 +25,7 @@ import com.xboson.been.MongoConfig;
 import com.xboson.been.XBosonException;
 import com.xboson.db.ConnectConfig;
 import com.xboson.event.OnExitHandle;
+import com.xboson.event.timer.ResourceCleanup;
 import com.xboson.util.c0nst.IConstant;
 import org.bson.Document;
 
@@ -39,11 +40,14 @@ public class MongoDBPool extends OnExitHandle {
 
   private static final int MONGODB_DB_TYPE = 1000;
   private static MongoDBPool instance;
-  private final Map<MongoClientURI, MongoClient> pool;
+  private final Map<UriKey, MongoClient> pool;
+  //private final ResourceCleanup<UriKey> rc;
 
 
   private MongoDBPool() {
     pool = new HashMap<>();
+    // 需要大量工作才能让 mongo 支持资源回收, 架构需要改变
+    //rc = new ResourceCleanup<>("mongo-pool", pool);
   }
 
 
@@ -68,7 +72,7 @@ public class MongoDBPool extends OnExitHandle {
   }
 
 
-  private MongoClient create(MongoClientURI uri) {
+  private MongoClient create(UriKey uri) {
     List<ServerAddress> seedList = new ArrayList<>(uri.getHosts().size());
     for (String host : uri.getHosts()) {
       seedList.add(new ServerAddress(host));
@@ -89,10 +93,15 @@ public class MongoDBPool extends OnExitHandle {
   }
 
 
+  /**
+   * 返回的对象可以长期保存, 并始终保持打开状态
+   * @param _url
+   * @return
+   */
   public VirtualMongoClient get(String _url) {
     try {
-      synchronized (pool) {
-        MongoClientURI uri = new MongoClientURI(_url);
+      synchronized (pool /*rc.lock*/) {
+        UriKey uri = new UriKey(_url);
         MongoClient client = pool.get(uri);
         if (client == null) {
           client = create(uri);
@@ -108,6 +117,7 @@ public class MongoDBPool extends OnExitHandle {
 
   /**
    * 用 mongo 配置, 打开客户端连接.
+   * 返回的对象可以长期保存, 并始终保持打开状态
    */
   public VirtualMongoClient get(MongoConfig mc) {
     if (!mc.enable) {
@@ -128,6 +138,7 @@ public class MongoDBPool extends OnExitHandle {
 
   /**
    * 使用数据源配置打开客户端连接
+   * 返回的对象可以长期保存, 并始终保持打开状态
    */
   public VirtualMongoClient get(ConnectConfig conf) {
     if (conf.getDbid() != MONGODB_DB_TYPE) {
@@ -154,6 +165,37 @@ public class MongoDBPool extends OnExitHandle {
   }
 
 
+  private class UriKey extends MongoClientURI implements ResourceCleanup.IKeyTime {
+
+    private long last;
+
+
+    private UriKey(String uri) {
+      super(uri);
+      last = System.currentTimeMillis();
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+      last = System.currentTimeMillis();
+      return super.equals(o);
+    }
+
+
+    @Override
+    public void release(Object v) {
+      ((MongoClient)v).close();
+    }
+
+
+    @Override
+    public long freezingTime() {
+      return System.currentTimeMillis() - last;
+    }
+  }
+
+
   /**
    * 由 com.mongodb.MongoClient 生成,
    * 与 MongoClient 中的函数签名一致, 只导出使用的函数.
@@ -165,8 +207,9 @@ public class MongoDBPool extends OnExitHandle {
     private MongoClient client;
 
 
-    // MongoClient 内部会管理连接池
+    // MongoClient 内部会管理连接池, 什么都不要做
     public void close() {
+      client.close();
     }
 
 

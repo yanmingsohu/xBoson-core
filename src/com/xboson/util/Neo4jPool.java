@@ -17,6 +17,7 @@
 package com.xboson.util;
 
 import com.xboson.event.OnExitHandle;
+import com.xboson.event.timer.ResourceCleanup;
 import com.xboson.util.c0nst.IConstant;
 import org.neo4j.driver.*;
 
@@ -33,8 +34,9 @@ import java.util.concurrent.TimeUnit;
 public class Neo4jPool extends OnExitHandle {
 
   private static Neo4jPool me;
-  private final Map<IKey, Driver> pool = new HashMap<>();
+  private final Map<IKey, Driver> pool;
   private final Config config;
+  private final ResourceCleanup<IKey> rc;
 
 
   public static Neo4jPool me() {
@@ -51,6 +53,8 @@ public class Neo4jPool extends OnExitHandle {
 
   private Neo4jPool() {
     this.config = defaultConfig();
+    this.pool = new HashMap<>();
+    this.rc = new ResourceCleanup<IKey>("neo4j-pool", pool);
   }
 
 
@@ -73,8 +77,11 @@ public class Neo4jPool extends OnExitHandle {
   }
 
 
+  /**
+   * 返回的对象不保证随时可用, 当资源超时会被销毁
+   */
   public Driver open(IKey key) {
-    synchronized (pool) {
+    synchronized (rc.lock) {
       Driver d = pool.get(key);
       if (d == null) {
         d = GraphDatabase.driver(key.uri(), key.auth(), config);
@@ -95,13 +102,37 @@ public class Neo4jPool extends OnExitHandle {
   }
 
 
-  interface IKey {
+  public interface IKey extends ResourceCleanup.IKeyTime {
     AuthToken auth();
     String uri();
   }
 
 
-  private class KeyNoAuth implements IKey {
+  private abstract class AbsKey implements IKey {
+    private long last;
+
+    AbsKey() {
+      update();
+    }
+
+    void update() {
+      this.last = System.currentTimeMillis();
+    }
+
+    @Override
+    public long freezingTime() {
+      return System.currentTimeMillis() - last;
+    }
+
+
+    @Override
+    public void release(Object v) {
+      ((Driver)v).close();
+    }
+  }
+
+
+  private class KeyNoAuth extends AbsKey implements IKey {
     private String uri;
 
 
@@ -112,6 +143,7 @@ public class Neo4jPool extends OnExitHandle {
 
     @Override
     public boolean equals(Object o) {
+      super.update();
       if (this == o) return true;
       if (o == null || getClass() != o.getClass()) return false;
       return uri.equals(((KeyNoAuth) o).uri);
@@ -137,7 +169,7 @@ public class Neo4jPool extends OnExitHandle {
   }
 
 
-  private class KeyWithAuth implements IKey {
+  private class KeyWithAuth extends AbsKey implements IKey {
     private String u, p, uri;
 
 
@@ -166,6 +198,7 @@ public class Neo4jPool extends OnExitHandle {
 
     @Override
     public boolean equals(Object o) {
+      super.update();
       if (this == o) return true;
       if (o == null || KeyWithAuth.class != o.getClass()) return false;
       KeyWithAuth auth = (KeyWithAuth) o;

@@ -28,6 +28,7 @@ import java.util.TimerTask;
  */
 public class EarlyMorning extends StaticLogProvider {
 
+  private static final String logName = "early-morning";
   public static final Date first;
   public static final long hour24 = 24 * 60 * 60 * 1000;
 
@@ -53,7 +54,7 @@ public class EarlyMorning extends StaticLogProvider {
    */
   public static void add(final TimerTask task) {
     __add(task);
-    openLog(EarlyMorning.class).info("DO", task, "Tomorrow");
+    openLog(logName).info("DO", task, "Tomorrow");
   }
 
 
@@ -63,7 +64,7 @@ public class EarlyMorning extends StaticLogProvider {
    */
   public static void add(final Runnable task) {
     __add(new RunnableWrap(task));
-    openLog(EarlyMorning.class).info("DO", task, "Tomorrow");
+    openLog(logName).info("DO", task, "Tomorrow");
   }
 
 

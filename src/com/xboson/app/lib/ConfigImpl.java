@@ -78,7 +78,7 @@ public class ConfigImpl extends RuntimeUnitImpl {
   public final static int DATA_REMOVE = 3;
 
   private static final Cache cache = new Cache();
-  public MongoDatabase __db;
+  private MongoDBPool.VirtualMongoClient __cli;
 
 
   public ConfigImpl() {
@@ -396,18 +396,16 @@ public class ConfigImpl extends RuntimeUnitImpl {
 
 
   private MongoCollection<Document> open(String collection) {
-    if (__db == null) {
+    if (__cli == null) {
       synchronized (this) {
-        if (__db == null) {
-          MongoDBPool.VirtualMongoClient cli =
-                  MongoDBPool.me().get(SysConfig.me().readConfig().mongodb);
+        if (__cli == null) {
+          __cli = MongoDBPool.me().get(SysConfig.me().readConfig().mongodb);
           // mongo 不需要关闭连接
           //ModuleHandleContext.autoClose(cli);
-          __db = cli.getDatabase(DB_NAME);
         }
       }
     }
-    return __db.getCollection(collection);
+    return __cli.getDatabase(DB_NAME).getCollection(collection);
   }
 
 
