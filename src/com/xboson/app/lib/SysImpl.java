@@ -527,6 +527,33 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public Object parseLong(Object v) {
+    try {
+      return Long.parseLong(v.toString());
+    } catch(Exception e) {
+      return 0;
+    }
+  }
+
+
+  public Object parseDouble(Object v) {
+    try {
+      return Double.parseDouble(v.toString());
+    } catch(Exception e) {
+      return 0;
+    }
+  }
+
+
+  public Object parseFloat(Object v) {
+    try {
+      return Float.parseFloat(v.toString());
+    } catch(Exception e) {
+      return 0;
+    }
+  }
+
+
   public Object executeJavaScript(Object a, Object b) {
     throw new UnsupportedOperationException("executeJavaScript");
   }
