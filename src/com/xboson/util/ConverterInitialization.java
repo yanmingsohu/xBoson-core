@@ -17,6 +17,8 @@
 package com.xboson.util;
 
 
+import com.squareup.moshi.JsonAdapter;
+import com.squareup.moshi.Moshi;
 import com.thoughtworks.xstream.security.NoTypePermission;
 import com.thoughtworks.xstream.security.NullPermission;
 import com.thoughtworks.xstream.security.PrimitiveTypePermission;
@@ -25,8 +27,13 @@ import com.xboson.been.XmlDataMap;
 import com.xboson.util.converter.*;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
+import javax.annotation.Nullable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -37,6 +44,15 @@ import java.util.Map;
  * @see Tool#getAdapter(Class)
  */
 public final class ConverterInitialization {
+
+
+  public static Moshi createMoshi() {
+    Moshi.Builder jsbuilded = new Moshi.Builder();
+    JsonFactory xbosonFact = new JsonFactory();
+    ConverterInitialization.initJSON(xbosonFact);
+    jsbuilded.add(xbosonFact);
+    return jsbuilded.build();
+  }
 
 
   /**
@@ -67,21 +83,44 @@ public final class ConverterInitialization {
    *
    * @param jsbuilded Moshi.Builder 对象实例
    */
-  public static void initJSON(com.squareup.moshi.Moshi.Builder jsbuilded) {
-    ScriptObjectMirrorJsonConverter.registerAdapter(jsbuilded);
-    TimestampJsonConverter.registerAdapter(jsbuilded);
-    new ExceptionConverter().register(jsbuilded);
-    new MongoJsonConverter().register(jsbuilded);
-    new MongoObjectIDConverter().register(jsbuilded);
-    new BigDecimalConverter().register(jsbuilded);
-    new BigIntegerConverter().register(jsbuilded);
-    new StringBuilderJsonConverter().register(jsbuilded);
-    new BytesConverter().register(jsbuilded);
-    new BlockJsonConverter().registerAdapter(jsbuilded);
-    new LinkedHashMapJsonConverter().register(jsbuilded);
+  public static void initJSON(JsonFactory fact) {
+    ScriptObjectMirrorJsonConverter.registerAdapter(fact);
+    TimestampJsonConverter.registerAdapter(fact);
+    new ExceptionConverter().register(fact);
+    new MongoJsonConverter().register(fact);
+    new MongoObjectIDConverter().register(fact);
+    new BigDecimalConverter().register(fact);
+    new BigIntegerConverter().register(fact);
+    new StringBuilderJsonConverter().register(fact);
+    new BytesConverter().register(fact);
+    new BlockJsonConverter().registerAdapter(fact);
+    new LinkedHashMapJsonConverter().register(fact);
+    //new SingletonMapJsonConverter().register(fact);
+    //new NeoValueJsonConverter().register(fact);
   }
 
 
   /** 无必要 */
   private ConverterInitialization() {}
+
+
+  public static class JsonFactory implements JsonAdapter.Factory {
+
+    private Map<Type, JsonAdapter> types;
+
+
+    private JsonFactory() {
+      types = new HashMap<>();
+    }
+
+    @Nullable
+    @Override
+    public JsonAdapter<?> create(Type type, Set<? extends Annotation> set, Moshi moshi) {
+      return types.get(type);
+    }
+
+    public <T> void add(Type type, JsonAdapter<T> jsonAdapter) {
+      types.put(type, jsonAdapter);
+    }
+  }
 }

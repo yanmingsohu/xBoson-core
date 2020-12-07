@@ -21,6 +21,7 @@ import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.xboson.been.XBosonException;
+import com.xboson.util.ConverterInitialization;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -38,8 +39,13 @@ public abstract class AbsJsonConverterHelper<T> extends JsonAdapter<T> {
   /**
    * 该方法默认注册 T 类型的适配器
    */
-  public void register(Moshi.Builder builder) {
-    builder.add(classType(), this);
+//  public void register(Moshi.Builder builder) {
+//    builder.add(classType(), this);
+//  }
+
+
+  public void register(ConverterInitialization.JsonFactory f) {
+    f.add(classType(), this);
   }
 
 

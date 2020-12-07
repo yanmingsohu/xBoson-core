@@ -20,6 +20,7 @@ package com.xboson.util;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import com.xboson.util.c0nst.IConstant;
@@ -41,17 +42,25 @@ public class OutputStreamSinkWarp implements BufferedSink {
 	
 	private OutputStream writer;
 	private Charset utf8 = IConstant.CHARSET;
+	private boolean open;
 
 
 	public OutputStreamSinkWarp(OutputStream writer) {
 		this.writer = writer;
+		this.open = true;
+	}
+
+
+	@Override
+	public boolean isOpen() {
+		return open;
 	}
 
 
 	@Override
 	public void close() throws IOException {
 		writer.close();
-		System.out.println("close ");
+		open = false;
 	}
 
 
@@ -103,6 +112,24 @@ public class OutputStreamSinkWarp implements BufferedSink {
 	public BufferedSink write(ByteString b) throws IOException {
 		b.write(writer);
 		return this;
+	}
+
+
+
+	@Override
+	public int write(ByteBuffer b) throws IOException {
+		int i = b.position();
+		int end = b.remaining();
+		int c = 0;
+		byte d;
+
+		while (i < end) {
+			d = b.get(i);
+			writer.write((int)(d & 255));
+			++i;
+			++c;
+		}
+		return c;
 	}
 
 
@@ -264,5 +291,4 @@ public class OutputStreamSinkWarp implements BufferedSink {
 		
 		return this;
 	}
-
 }

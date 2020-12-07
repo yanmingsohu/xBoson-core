@@ -92,11 +92,15 @@ public final class Tool extends StaticLogProvider {
     if (moshi == null) {
       synchronized (Tool.class) {
         if (moshi == null) {
-          Builder jsbuilded = new Moshi.Builder();
-          ConverterInitialization.initJSON(jsbuilded);
-          moshi = jsbuilded.build();
+          moshi = ConverterInitialization.createMoshi();
         }
       }
+    }
+    if (Map.class.isAssignableFrom(c)) {
+      return (JsonAdapter<E>) moshi.adapter(Map.class);
+    }
+    if (List.class.isAssignableFrom(c)) {
+      return (JsonAdapter<E>) moshi.adapter(List.class);
     }
     return moshi.adapter(c);
   }

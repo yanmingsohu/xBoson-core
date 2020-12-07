@@ -22,6 +22,7 @@ import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.xboson.chain.Block;
 import com.xboson.chain.SignNode;
+import com.xboson.util.ConverterInitialization;
 import com.xboson.util.Hex;
 
 import javax.annotation.Nullable;
@@ -97,5 +98,10 @@ public class BlockJsonConverter extends JsonAdapter<Block> {
 
   public void registerAdapter(Moshi.Builder builder) {
     builder.add(Block.class, this);
+  }
+
+
+  public void registerAdapter(ConverterInitialization.JsonFactory f) {
+    f.add(Block.class, this);
   }
 }

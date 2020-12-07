@@ -20,6 +20,7 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
+import com.xboson.util.ConverterInitialization;
 import com.xboson.util.Tool;
 
 import java.io.IOException;
@@ -32,6 +33,12 @@ public class TimestampJsonConverter {
   public static void registerAdapter(Moshi.Builder builder) {
     builder.add(Timestamp.class, new TimestampAdapter());
     builder.add(Date.class, new DateAdapter());
+  }
+
+
+  public static void registerAdapter(ConverterInitialization.JsonFactory f) {
+    f.add(Timestamp.class, new TimestampAdapter());
+    f.add(Date.class, new DateAdapter());
   }
 
 

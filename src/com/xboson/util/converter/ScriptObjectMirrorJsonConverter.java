@@ -22,6 +22,7 @@ import com.squareup.moshi.JsonWriter;
 import com.squareup.moshi.Moshi;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import com.xboson.app.lib.RuntimeUnitImpl;
+import com.xboson.util.ConverterInitialization;
 import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import jdk.nashorn.api.scripting.ScriptUtils;
@@ -45,6 +46,12 @@ public class ScriptObjectMirrorJsonConverter {
   public static void registerAdapter(Moshi.Builder builder) {
     builder.add(Warp.class, warpAdapter);
     builder.add(ScriptObjectMirror.class, jsAdapter);
+  }
+
+
+  public static void registerAdapter(ConverterInitialization.JsonFactory f) {
+    f.add(Warp.class, warpAdapter);
+    f.add(ScriptObjectMirror.class, jsAdapter);
   }
 
 
