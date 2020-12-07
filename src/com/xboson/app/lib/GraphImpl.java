@@ -24,7 +24,15 @@ import com.xboson.script.IVisitByScript;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.Neo4jPool;
 import org.neo4j.driver.*;
+import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Path;
+import org.neo4j.driver.types.Point;
+import org.neo4j.driver.types.Relationship;
+import org.neo4j.driver.util.Pair;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -126,7 +134,7 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
   }
 
 
-  interface IResult extends IVisitByScript {
+  interface IResult extends IVisitByScript, AutoCloseable {
     /**
      * 如果有更多结果要返回 则返回true
      */
@@ -136,12 +144,11 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
     /**
      * 返回一条查询结果记录
      */
-    Map next();
-
+    Object next();
   }
 
 
-  private class Neo4jSession implements ISession {
+  public class Neo4jSession implements ISession {
 
     private Session sess;
     private Transaction tr;
@@ -207,12 +214,15 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
       if (tr != null) {
         tr.close();
       }
-      sess.close();
+      if (sess != null) {
+        sess.close();
+        sess = null;
+      }
     }
   }
 
 
-  private class Neo4jResult implements IResult {
+  public class Neo4jResult implements IResult {
 
     private Result r;
 
@@ -229,8 +239,123 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
 
 
     @Override
-    public Map next() {
-      return r.next().asMap();
+    public Object next() {
+      return value(r.next());
+    }
+
+
+    @Override
+    public void close() throws Exception {
+    }
+
+
+    private Object value(Record rc) {
+      Map map = new HashMap(rc.size());
+      for (Pair<String, Value> p : rc.fields()) {
+        map.put(p.key(), value(p.value()));
+      }
+      return map;
+    }
+
+
+    private Object value(Value v) {
+      if (v.isNull()) return null;
+      if (v.isFalse()) return false;
+      if (v.isTrue()) return true;
+      Object r = v.asObject();
+
+      if (r instanceof Map) {
+        return value((Map<String, Value>) r);
+      }
+      if (r instanceof List) {
+        return value((List) r);
+      }
+      if (r instanceof Node) {
+        return value((Node) r);
+      }
+      if (r instanceof Path) {
+        return value((Path) r);
+      }
+      if (r instanceof Point) {
+        return value((Point) r);
+      }
+      if (r instanceof Relationship) {
+        return value((Relationship) r);
+      }
+      return r;
+    }
+
+
+    private Object value(Map<String, Value> m) {
+      Map<String, Object> o = new HashMap<>(m.size());
+      for (Map.Entry<String, Value> en : m.entrySet()) {
+        o.put(en.getKey(), value(en.getValue()));
+      }
+      return o;
+    }
+
+
+    private Object value(List<Value> l) {
+      List<Object> o = new ArrayList<>(l.size());
+      for (Value i : l) {
+        o.add(value(i));
+      }
+      return o;
+    }
+
+
+    private Object value(Node n) {
+      Map<String, Object> prop = new HashMap<>(n.size());
+      List<Object> ls = new ArrayList<>();
+      Map<String, Object> o = new HashMap<>();
+      o.put("label", ls);
+      o.put("id", n.id());
+      o.put("propertie", prop);
+
+      for (String k : n.keys()) {
+        prop.put(k, value(n.get(k)));
+      }
+
+      for (String label : n.labels()) {
+        ls.add(label);
+      }
+      return o;
+    }
+
+
+    private Object value(Path p) {
+      List<Object> node = new ArrayList<>();
+      List<Object> rel = new ArrayList<>();
+      Map<String, Object> o = new HashMap<>(4);
+      o.put("node", node);
+      o.put("relationship", rel);
+
+      for (Relationship i : p.relationships()) {
+        rel.add(value(i));
+      }
+      for (Node i : p.nodes()) {
+        node.add(value(i));
+      }
+      return o;
+    }
+
+
+    private Object value(Point p) {
+      Map<String, Object> o = new HashMap<>(4);
+      o.put("x", p.x());
+      o.put("y", p.y());
+      o.put("z", p.z());
+      o.put("srid", p.srid());
+      return o;
+    }
+
+
+    private Object value(Relationship r) {
+      Map<String, Object> o = new HashMap<>(4);
+      o.put("start", r.startNodeId());
+      o.put("end", r.endNodeId());
+      o.put("type", r.type());
+      return o;
     }
   }
 }
