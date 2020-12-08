@@ -24,10 +24,7 @@ import com.xboson.script.IVisitByScript;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.Neo4jPool;
 import org.neo4j.driver.*;
-import org.neo4j.driver.types.Node;
-import org.neo4j.driver.types.Path;
-import org.neo4j.driver.types.Point;
-import org.neo4j.driver.types.Relationship;
+import org.neo4j.driver.types.*;
 import org.neo4j.driver.util.Pair;
 
 import java.util.ArrayList;
@@ -37,6 +34,8 @@ import java.util.Map;
 
 
 public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAResource {
+
+  public static final String NODE_TYPE_FIELD = "$type";
 
 
   /**
@@ -250,11 +249,18 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
 
 
     private Object value(Record rc) {
-      Map map = new HashMap(rc.size());
-      for (Pair<String, Value> p : rc.fields()) {
-        map.put(p.key(), value(p.value()));
+      try {
+        Map map = new HashMap(rc.size());
+        for (Pair<String, Value> p : rc.fields()) {
+          map.put(p.key(), value(p.value()));
+        }
+        return map;
+
+      } catch(RuntimeException e) {
+        // 类型转换错误可能抛出这个异常, 方便调试
+        e.printStackTrace();
+        throw e;
       }
-      return map;
     }
 
 
@@ -295,26 +301,26 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
     }
 
 
-    private Object value(List<Value> l) {
+    private Object value(List<?> l) {
       List<Object> o = new ArrayList<>(l.size());
-      for (Value i : l) {
-        o.add(value(i));
+      for (Object i : l) {
+        if (i instanceof Value) {
+          o.add(value((Value) i));
+        } else {
+          o.add(i);
+        }
       }
       return o;
     }
 
 
     private Object value(Node n) {
-      Map<String, Object> prop = new HashMap<>(n.size());
       List<Object> ls = new ArrayList<>();
       Map<String, Object> o = new HashMap<>();
+      o.put(NODE_TYPE_FIELD, "node");
       o.put("label", ls);
       o.put("id", n.id());
-      o.put("propertie", prop);
-
-      for (String k : n.keys()) {
-        prop.put(k, value(n.get(k)));
-      }
+      o.put("propertie", propertie(n));
 
       for (String label : n.labels()) {
         ls.add(label);
@@ -327,6 +333,7 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
       List<Object> node = new ArrayList<>();
       List<Object> rel = new ArrayList<>();
       Map<String, Object> o = new HashMap<>(4);
+      o.put(NODE_TYPE_FIELD, "path");
       o.put("node", node);
       o.put("relationship", rel);
 
@@ -342,6 +349,7 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
 
     private Object value(Point p) {
       Map<String, Object> o = new HashMap<>(4);
+      o.put(NODE_TYPE_FIELD, "point");
       o.put("x", p.x());
       o.put("y", p.y());
       o.put("z", p.z());
@@ -352,10 +360,23 @@ public class GraphImpl extends RuntimeUnitImpl implements IVisitByScript, IAReso
 
     private Object value(Relationship r) {
       Map<String, Object> o = new HashMap<>(4);
+      o.put(NODE_TYPE_FIELD, "rel");
       o.put("start", r.startNodeId());
       o.put("end", r.endNodeId());
       o.put("type", r.type());
+      o.put("id", r.id());
+      o.put("propertie", propertie(r));
       return o;
+    }
+
+
+    private Object propertie(MapAccessor n) {
+      Map<String, Object> prop = new HashMap<>(n.size());
+
+      for (String k : n.keys()) {
+        prop.put(k, value(n.get(k)));
+      }
+      return prop;
     }
   }
 }

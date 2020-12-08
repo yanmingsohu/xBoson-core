@@ -209,7 +209,7 @@ public class MongoDBPool extends OnExitHandle {
 
     // MongoClient 内部会管理连接池, 什么都不要做
     public void close() {
-      client.close();
+      //client.close(); // ! 禁止关闭
     }
 
 

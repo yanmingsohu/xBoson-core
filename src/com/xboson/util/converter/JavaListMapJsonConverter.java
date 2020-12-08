@@ -7,7 +7,7 @@
 // 由本项目(程序)引起的计算机软件/硬件问题, 本项目权利人不负任何责任, 切不对此做任何承诺.
 //
 // 文件创建日期: 20-12-7 上午10:29
-// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/converter/SingletonMapJsonConverter.java
+// 原始文件路径: D:/javaee-project/xBoson/src/com/xboson/util/converter/JavaListMapJsonConverter.java
 // 授权说明版本: 1.1
 //
 // [ J.yanming - Q.412475540 ]
@@ -26,10 +26,11 @@ import com.xboson.util.Tool;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 
-public class SingletonMapJsonConverter extends JsonAdapter {
+public class JavaListMapJsonConverter extends JsonAdapter {
 
 
   public void register(ConverterInitialization.JsonFactory f) {
@@ -37,6 +38,7 @@ public class SingletonMapJsonConverter extends JsonAdapter {
     f.add(o.getClass(), this);
     Map u = Collections.unmodifiableMap(o);
     f.add(u.getClass(), this);
+    f.add(HashMap.class, this);
   }
 
 

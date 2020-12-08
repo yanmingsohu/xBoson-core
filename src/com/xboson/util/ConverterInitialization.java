@@ -31,7 +31,6 @@ import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -95,7 +94,7 @@ public final class ConverterInitialization {
     new BytesConverter().register(fact);
     new BlockJsonConverter().registerAdapter(fact);
     new LinkedHashMapJsonConverter().register(fact);
-    //new SingletonMapJsonConverter().register(fact);
+    new JavaListMapJsonConverter().register(fact);
     //new NeoValueJsonConverter().register(fact);
   }
 
@@ -116,6 +115,12 @@ public final class ConverterInitialization {
     @Nullable
     @Override
     public JsonAdapter<?> create(Type type, Set<? extends Annotation> set, Moshi moshi) {
+//    if (Map.class.isAssignableFrom(c)) {
+//      return (JsonAdapter<E>) moshi.adapter(Map.class);
+//    }
+//    if (List.class.isAssignableFrom(c)) {
+//      return (JsonAdapter<E>) moshi.adapter(List.class);
+//    }
       return types.get(type);
     }
 

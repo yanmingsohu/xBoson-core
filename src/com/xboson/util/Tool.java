@@ -96,12 +96,6 @@ public final class Tool extends StaticLogProvider {
         }
       }
     }
-    if (Map.class.isAssignableFrom(c)) {
-      return (JsonAdapter<E>) moshi.adapter(Map.class);
-    }
-    if (List.class.isAssignableFrom(c)) {
-      return (JsonAdapter<E>) moshi.adapter(List.class);
-    }
     return moshi.adapter(c);
   }
 
