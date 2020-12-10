@@ -1981,7 +1981,9 @@ module.exports = function(pool, tagFactory, EXT, fs) {
   hfs.watch(fs, root, function(err, watcher) {
     if (!err) {
       watcher.on('addfile', function(f) {
-        var ns = path.dirname( f.substr(root.length) ).replace(/\\|\//g, '-');
+        var dirname = path.dirname( f.substr(root.length) );
+        var ns = dirname.replace(/\\|\//g, '-');
+        while (ns[0] == '-') ns = ns.substr(1);
         createTag(f, ns);
       });
 
