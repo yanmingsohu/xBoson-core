@@ -131,7 +131,7 @@ public class JsInputStream extends InputStream {
 
   public String readString(String charsetName) throws IOException {
     StringBufferOutputStream buf = new StringBufferOutputStream(ori.available());
-    buf.write(this);
+    buf.write(this, false);
     String ret = buf.toString(charsetName);
     if (ret.length() <= 0) {
       return null;
