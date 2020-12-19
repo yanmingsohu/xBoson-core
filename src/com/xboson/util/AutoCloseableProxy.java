@@ -20,6 +20,7 @@ import com.xboson.been.XBosonException;
 import com.xboson.log.LogFactory;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
@@ -75,7 +76,12 @@ public abstract class AutoCloseableProxy<T extends AutoCloseable>
       return null;
     }
 
-    return method.invoke(original, args);
+    try {
+      return method.invoke(original, args);
+    } catch(InvocationTargetException ite) {
+      XBosonException.throwCause(ite);
+      return null;
+    }
   }
 
 

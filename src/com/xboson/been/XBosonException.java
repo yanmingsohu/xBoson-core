@@ -22,6 +22,7 @@ import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.internal.runtime.ECMAErrors;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.HashSet;
@@ -166,6 +167,20 @@ public class XBosonException extends RuntimeException
         out.append(PASS);
         bypass = true;
       }
+    }
+  }
+
+
+  /**
+   * 取出引发 ite 异常的原因异常, 并抛出. 如 InvocationTargetException 异常, 直接抛出
+   * 通常没有意义; 该方法一定抛出异常, 如果 ite 为 null 会抛出空异常
+   */
+  public static <T extends Throwable> void throwCause(T ite) throws Throwable {
+    Throwable t = ite.getCause();
+    if (t != null) {
+      throw t;
+    } else {
+      throw ite;
     }
   }
 
