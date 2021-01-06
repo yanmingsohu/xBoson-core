@@ -49,6 +49,7 @@ public class CryptoImpl extends RuntimeUnitImpl implements IVisitByScript {
     put(new PBE());
     put(new IDEA());
     put(new CommonImpl("AES/CBC/PKCS5Padding"));
+    put(new CommonImpl("AES/CBC/NoPadding"));
     put(new SM2crc123());
     put(new SM2crc132());
     put(new CommonImpl("SM4/ECB/PKCS5Padding"));

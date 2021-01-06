@@ -21,6 +21,7 @@ import com.xboson.been.JsonHelper;
 import com.xboson.been.XBosonException;
 import com.xboson.script.IVisitByScript;
 import com.xboson.util.Hex;
+import com.xboson.util.c0nst.IConstant;
 
 import java.util.Arrays;
 
@@ -110,7 +111,7 @@ public class Bytes implements IJson, IVisitByScript {
 
 
   public String toJavaString() {
-    return new String(bin());
+    return new String(bin(), IConstant.CHARSET);
   }
 
 
