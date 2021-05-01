@@ -44,6 +44,11 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   public static final MediaType JSON
           = MediaType.parse("application/json; charset=utf-8");
+  public static final MediaType XML
+          = MediaType.parse("application/xml; charset=utf-8");
+  public static final MediaType TEXT
+          = MediaType.parse("text/plain; charset=utf-8");
+
 
   private Map<String, javax.servlet.http.Cookie> cookies;
   private OkHttpClient hc;
@@ -279,7 +284,7 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   public Object get(String url, Object param, String type, Object header)
           throws IOException {
-    return post(url, null, param, type, header);
+    return execute(url, null, param, type, header, false);
   }
 
 
@@ -307,6 +312,12 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   public Object post(String url, Object bodydata, Object param,
                      String type, Object header) throws IOException {
+    return execute(url, bodydata, param, type, header, true);
+  }
+
+
+  private Object execute(String url, Object bodydata, Object param,
+            String type, Object header, boolean usePost) throws IOException {
     HttpUrl.Builder url_build = HttpUrl.parse(url).newBuilder();
     if (param != null) {
       addParm(url_build, param);
@@ -318,7 +329,11 @@ public class HttpImpl extends RuntimeUnitImpl {
 
     if (bodydata != null) {
       String bodystr = parseBodyParm(bodydata, type);
-      RequestBody body = RequestBody.create(JSON, bodystr);
+      RequestBody body = RequestBody.create(getMediaFrom(type), bodystr);
+      build.post(body);
+    }
+    else if (usePost) {
+      RequestBody body = RequestBody.create(getMediaFrom(type), IConstant.NULL_STR);
       build.post(body);
     }
 
@@ -335,6 +350,21 @@ public class HttpImpl extends RuntimeUnitImpl {
       ret.setMember("data",   parseData(body, type));
       ret.setMember("header", parseRespHeader(resp));
       return ret;
+    }
+  }
+
+
+  private MediaType getMediaFrom(String type) {
+    switch (type.toLowerCase()) {
+      case "json":
+        return JSON;
+
+      case "xml":
+        return XML;
+
+      case "string":
+      default:
+        return TEXT;
     }
   }
 
