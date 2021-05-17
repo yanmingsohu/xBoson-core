@@ -32,7 +32,6 @@ import com.xboson.util.Tool;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 
 import javax.naming.event.NamingEvent;
-import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;

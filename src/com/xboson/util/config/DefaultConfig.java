@@ -86,6 +86,7 @@ public final class DefaultConfig {
     c.nodeProviderClass = "local";
     c.nodeUrl           = "/web4xboson/xboson-node-modules";
     c.shellUrl          = "/web4xboson/shell-script";
+    c.uiRenderServer    = new String[0];
 
     JedisPoolConfig j = c.jedispool = new JedisPoolConfig();
     j.setMaxIdle(10);

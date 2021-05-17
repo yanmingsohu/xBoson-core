@@ -19,6 +19,7 @@ uiProviderClass:  ui 获取方式, 有集群缓冲区以及本地目录, 两种�
 uiUrl: 本地目录模式的根目录
 uiListDir: 当用户请求目录时, 是否返回目录列表
 uiWelcome: 访问根路径时的跳转页面
+uiRenderServer: 前端渲染服务器地址列表 URI "ws://" websocket 协议
 
 
 nodeProviderClass: node 模块文件模式, 与 uiProviderClass 定义相同

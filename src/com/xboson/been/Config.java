@@ -56,6 +56,7 @@ public class Config implements IBean {
   public String uiUrl             = null;
   public boolean uiListDir        = false;
   public String uiWelcome         = null;
+  public String[] uiRenderServer;
 
   public String nodeProviderClass = null;
   public String nodeUrl           = null;

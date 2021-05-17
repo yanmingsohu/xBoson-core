@@ -30,6 +30,7 @@ import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import javax.activation.FileTypeMap;
+import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -65,6 +66,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
           "must-revalidation, max-age="+ MAX_AGE;
 
   private IRedisFileSystemProvider file_provider;
+  private UIExtRenderService ext_render;
   private TemplateEngine template;
   private Log log;
   private FileTypeMap mime;
@@ -85,6 +87,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
     this.list_dir = cf.uiListDir;
     this.file_provider = UIFileFactory.open();
     this.template = new TemplateEngine(file_provider);
+    this.ext_render = new UIExtRenderService(new FileLoader());
   }
 
 
@@ -141,12 +144,18 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
           return;
         }
 
-        resp.setHeader(HEAD_CACHE, CACHE_DIRECTIVE);
         file_provider.readFileContent(fs);
+        if (ext_render.canRender(path)) {
+          log.debug("Render File:", path);
+          RenderCallback rc = new RenderCallback(req, resp);
+          ext_render.render(path, fs.getFileContent(), rc, null);
+          return;
+        }
+
+        resp.setHeader(HEAD_CACHE, CACHE_DIRECTIVE);
 
         String file_type = mime.getContentType(path);
         resp.setContentType(file_type);
-
         OutputStream out = resp.getOutputStream();
         out.write(fs.getFileContent());
         out.flush();
@@ -220,6 +229,74 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
     } catch (Exception e) {
       log.error(e);
       return -1;
+    }
+  }
+
+
+  private class FileLoader implements UIExtRenderService.IFileReader {
+
+    @Override
+    public byte[] readfile(String fullpath) throws IOException {
+      RedisFileAttr fs = file_provider.readAttribute(fullpath);
+      if (fs == null) {
+        throw new IOException("file not exists: "+ fullpath);
+      }
+      file_provider.readFileContent(fs);
+      return fs.getFileContent();
+    }
+  }
+
+
+  private class RenderCallback implements UIExtRenderService.IRenderFile {
+    HttpServletRequest req;
+    HttpServletResponse resp;
+    AsyncContext ac;
+    boolean useAsync;
+
+
+    RenderCallback(HttpServletRequest req, HttpServletResponse resp) {
+      this.req = req;
+      this.resp = resp;
+      this.useAsync = false;
+    }
+
+
+    public void startAsync() {
+      if (! req.isAsyncSupported()) {
+        throw new XBosonException.NotImplements("Servlet Async mode");
+      }
+      this.ac = req.startAsync();
+      this.req = (HttpServletRequest) ac.getRequest();
+      this.resp = (HttpServletResponse) ac.getResponse();
+      useAsync = true;
+    }
+
+
+    @Override
+    public void render(byte[] content, String mime) {
+      try {
+        resp.setContentType(mime);
+        OutputStream out = resp.getOutputStream();
+        out.write(content);
+        out.flush();
+      } catch(Exception err) {
+        log.error("Render fail", err.getMessage());
+      } finally {
+        if (useAsync) ac.complete();
+      }
+    }
+
+
+    @Override
+    public void error(String message) {
+      try {
+        log.error("Render Error", message);
+        resp.sendError(500, message);
+      } catch (IOException e) {
+        log.error("Render Error Callback", e.getMessage());
+      } finally {
+        if (useAsync) ac.complete();
+      }
     }
   }
 }

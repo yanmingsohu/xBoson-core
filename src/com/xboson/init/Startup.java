@@ -112,9 +112,12 @@ public class Startup implements ServletContextListener {
 
     striker.addMappingForUrlPatterns(null, false, "/*");
     session.addMappingForUrlPatterns(null, false, "/*");
+    striker.setAsyncSupported(true);
+    session.setAsyncSupported(true);
 
     ui.addMapping("/face/*");
     ui.setLoadOnStartup(2);
+    ui.setAsyncSupported(true);
 
     files.addMapping("/files/*");
     files.setLoadOnStartup(2);
@@ -126,8 +129,9 @@ public class Startup implements ServletContextListener {
 
 
   private void print_server_info(ServletContext sc) {
-    Log log = LogFactory.create();
+    Log log = LogFactory.create("Startup");
     log.info("Server Info:", sc.getServerInfo());
+    log.info("Servlet ver."+ sc.getMajorVersion() +"."+ sc.getMinorVersion());
 
     Enumeration<String> names = sc.getAttributeNames();
     while (names.hasMoreElements()) {
