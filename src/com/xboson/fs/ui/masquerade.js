@@ -3013,9 +3013,10 @@ function getScript(code, id, filename, lineOffset,
 {
   var scid = code ? (filename +':'+ id) : filename;
 
-  if (script_cache[scid]) {
+  var cached_sc = script_cache.get(scid);
+  if (cached_sc) {
     // log.debug('is cache script', scid);
-    return cb(null, script_cache[scid]);
+    return cb(null, cached_sc);
   }
 
   try {
@@ -3037,7 +3038,7 @@ function getScript(code, id, filename, lineOffset,
   function code_success(code) {
     var script = compile(code);
     if (script) {
-      script_cache[scid] = script;
+      script_cache.put(scid, script);
       script.filename = filename;
       script.module =
         {
@@ -3053,7 +3054,7 @@ function getScript(code, id, filename, lineOffset,
 
   function del_cache() {
     log.debug('del cached script', scid);
-    delete script_cache[scid];
+    script_cache.remove(scid);
   }
 
   //
@@ -3132,8 +3133,9 @@ function getFile(filename, when_read_over, _change, _encoding) {
 // _over: function(err, fileRender)
 //
 function getRender(filename, tag_factory, _err_cb, _over_cb) {
-  if (render_cache[filename]) {
-    return _over_cb(render_cache[filename]);
+  var cached_target = render_cache.get(filename);
+  if (cached_target) {
+    return _over_cb(cached_target);
   }
   return helper.lockCall(getRenderImpl, getRenderImpl,
           filename, tag_factory, _err_cb, _over_cb);
@@ -3144,8 +3146,9 @@ function getRender(filename, tag_factory, _err_cb, _over_cb) {
 // 在该函数的调用上加锁, 防止多线程重入, 重复编译模板.
 //
 function getRenderImpl(filename, tag_factory, _err_cb, _over_cb) {
-  if (render_cache[filename]) {
-    return _over_cb(render_cache[filename]);
+  var cached_target = render_cache.get(filename);
+  if (cached_target) {
+    return _over_cb(cached_target);
   }
 
   var isTemplateFile = (path.extname(filename) == EXT_NAME);
@@ -3169,14 +3172,14 @@ function getRenderImpl(filename, tag_factory, _err_cb, _over_cb) {
       }
 
       updateGlobalTime(fileBuffer.last_modify);
-      render_cache[filename] = part;
+      render_cache.put(filename, part);
       _over_cb(part);
     } catch(e) {
       _err_cb(e);
     }
 
   }, function() {
-    render_cache[filename] = null;
+    render_cache.remove(filename);
   }, _encoding);
 }
 

@@ -28,7 +28,6 @@ import com.xboson.db.SqlResult;
 import com.xboson.db.sql.SqlReader;
 import com.xboson.script.lib.Bytes;
 import com.xboson.util.CreatorFromUrl;
-import com.xboson.util.Hex;
 import com.xboson.util.SysConfig;
 import com.xboson.util.c0nst.IConstant;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;

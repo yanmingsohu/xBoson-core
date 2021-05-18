@@ -73,8 +73,8 @@ public class TestUIExtend extends Test implements IConfigSandbox,
 
 
   @Override
-  public void render(byte[] content, String mime) {
-    msg("Render callback", mime, new String(content));
+  public void render(byte[] content, String mime, String filepath) {
+    msg("Render callback", filepath, mime, new String(content));
   }
 
 

@@ -48,7 +48,7 @@ public class UIExtRenderService extends OnExitHandle {
     //
     // 渲染回调, 调用结束后, http 应答返回, 不再接受任何调用
     //
-    void render(byte[] content, String mime);
+    void render(byte[] content, String mime, String path);
     //
     // 错误回调, 调用结束后, http 应答返回, 不再接受任何调用
     //
@@ -72,8 +72,9 @@ public class UIExtRenderService extends OnExitHandle {
   private AtomicLong idgen;
   private AtomicInteger server_idx;
   private Cli[] clients;
-  private ConcurrentHashMap<Long, WaitAsk> waitAsk;
-  private ConcurrentSkipListSet<String> extNames;
+  private Map<Long, WaitAsk> waitAsk;
+  // 优化, 统计所有远程渲染服务器扩展名
+  private Set<String> extNames;
   private ClearCache cc;
   private IFileReader fs;
   private FileCachePool cache;
@@ -112,14 +113,14 @@ public class UIExtRenderService extends OnExitHandle {
   }
 
 
-  private Cli findClient() {
-    Cli cli = null;
+  private Cli findClient(String fullpath) {
+    String ext = Path.me.extname(fullpath);
     server_idx.compareAndSet(clients.length, 0);
     int begin = server_idx.getAndIncrement();
 
     for (int i=0; i<clients.length; ++i) {
-      cli = clients[(i + begin) % clients.length];
-      if (cli.isOpen()) {
+      Cli cli = clients[(i + begin) % clients.length];
+      if (cli.isOpen() && cli.canRender(ext)) {
         return cli;
       }
     }
@@ -160,9 +161,9 @@ public class UIExtRenderService extends OnExitHandle {
       }
     }
 
-    Cli cli = findClient();
+    Cli cli = findClient(fullpath);
     if (cli == null) {
-      r.error("Render server offline");
+      r.error("All Render server offline");
       return;
     }
 
@@ -226,7 +227,7 @@ public class UIExtRenderService extends OnExitHandle {
 
     void render(IRenderFile r) {
       try {
-        r.render(content, mime);
+        r.render(content, mime, fullpath);
       } catch (Exception e) {
         log.error("Render fail", e);
       }
@@ -235,14 +236,12 @@ public class UIExtRenderService extends OnExitHandle {
 
 
   private class Ask implements UIExtProtocol.IAskListener {
-
     private Cli cli;
 
 
     Ask(Cli c) {
       cli = c;
     }
-
 
     @Override
     public void onRenderFile(long msg_id, byte[] content, String mime, String[] deps) {
@@ -257,7 +256,6 @@ public class UIExtRenderService extends OnExitHandle {
       fc.render(wa.render);
     }
 
-
     @Override
     public void onError(long msg_id, String msg) {
       WaitAsk wa = waitAsk.remove(msg_id);
@@ -271,7 +269,6 @@ public class UIExtRenderService extends OnExitHandle {
       }
       log.error("Render Server response error", msg_id, msg);
     }
-
 
     @Override
     public void onAskFile(long msg_id, String filename) {
@@ -292,17 +289,18 @@ public class UIExtRenderService extends OnExitHandle {
       }
     }
 
-
     @Override
     public void onExtNames(long msg_id, String ext) {
-      extNames.addAll(Arrays.asList(ext.split(" ")));
+      String[] names = ext.split(" ");
+      cli.setExtNames(names);
       log.debug("Render file type:", ext);
     }
   }
 
 
   private class Cli extends WebSocketClient {
-
+    // 每个服务器支持的可渲染文件类型可以不同
+    private Set<String> _extNames;
     private UIExtProtocol protocol;
     private boolean do_reconnect = true;
     private boolean on_retry = false;
@@ -310,9 +308,9 @@ public class UIExtRenderService extends OnExitHandle {
 
     Cli(URI serverUri) {
       super(serverUri);
-      protocol = new UIExtProtocol(new Ask(this));
+      this.protocol = new UIExtProtocol(new Ask(this));
+      this._extNames = new ConcurrentSkipListSet<>();
     }
-
 
     private void askExtNames() {
       try {
@@ -323,6 +321,16 @@ public class UIExtRenderService extends OnExitHandle {
       }
     }
 
+    boolean canRender(String ext) {
+      return _extNames.contains(ext);
+    }
+
+    void setExtNames(String[] names) {
+      for (String n : names) {
+        _extNames.add(n);
+        extNames.add(n);
+      }
+    }
 
     @Override
     public void onOpen(ServerHandshake h) {
@@ -331,29 +339,26 @@ public class UIExtRenderService extends OnExitHandle {
       on_retry = false;
     }
 
-
     @Override
     public void onMessage(String s) {
-      log.warn("server:", s);
+      log.warn(getRemoteSocketAddress(), "server:", s);
     }
-
 
     @Override
     public void onMessage(ByteBuffer bytes) {
       try {
         protocol.parse(bytes);
       } catch(Exception e) {
-        log.error("On message", e.getMessage());
+        log.error(getRemoteSocketAddress(), "On message", e.getMessage());
         e.printStackTrace();
       }
     }
-
 
     @Override
     public void onClose(int i, String s, boolean b) {
       if (do_reconnect) {
         if (!on_retry) {
-          log.warn("Server closed connect, reconnecting...");
+          log.warn(getRemoteSocketAddress(), "Server closed connect, reconnecting...");
         }
         Tool.sleep(RETRY_INTERVAL);
         // 必须在另外的线程中操作
@@ -364,14 +369,12 @@ public class UIExtRenderService extends OnExitHandle {
       }
     }
 
-
     @Override
     public void onError(Exception e) {
       if (!on_retry) {
-        log.error(e.getMessage());
+        log.error(getRemoteSocketAddress(), e.getMessage());
       }
     }
-
 
     void destroy() {
       do_reconnect = false;
@@ -384,7 +387,7 @@ public class UIExtRenderService extends OnExitHandle {
   }
 
 
-  class ClearCache extends TimerTask {
+  private class ClearCache extends TimerTask {
 
     ClearCache() {
       TimeFactory.me().schedule(this,
@@ -395,7 +398,6 @@ public class UIExtRenderService extends OnExitHandle {
     public void run() {
       clearAskQueue();
     }
-
 
     private void clearAskQueue() {
       long now = System.currentTimeMillis();
@@ -419,7 +421,7 @@ public class UIExtRenderService extends OnExitHandle {
    * 复用了 TemplateEngine 的文件修改消息, 该消息由 UIIDE 脚本发送.
    * 这与 OnFileChangeHandle 中的定义不同
    */
-  class FileCachePool extends GLHandle {
+  private class FileCachePool extends GLHandle {
 
     private ConcurrentHashMap<String, FileCache> cache;
     private ConcurrentHashMap<String, Set<String>> reverse;

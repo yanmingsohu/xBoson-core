@@ -131,7 +131,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
 
     try {
       RedisFileAttr fs = file_provider.readAttribute(path);
-
+      resp.setHeader("Full-Path", path);
       if (fs == null) {
         resp.sendError(400, path);
         return;
@@ -274,7 +274,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
 
 
     @Override
-    public void render(byte[] content, String mime) {
+    public void render(byte[] content, String mime, String fullpath) {
       try {
         resp.setContentType(mime);
         OutputStream out = resp.getOutputStream();
