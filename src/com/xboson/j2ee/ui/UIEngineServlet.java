@@ -148,6 +148,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
         if (ext_render.canRender(path)) {
           log.debug("Render File:", path);
           RenderCallback rc = new RenderCallback(req, resp);
+          // 传递 getParameterMap 会在缓存中失效
           ext_render.render(path, fs.getFileContent(), rc, null);
           return;
         }

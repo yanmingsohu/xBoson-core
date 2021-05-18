@@ -31,6 +31,7 @@ import okhttp3.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -124,5 +125,10 @@ public class HelperModule implements IVisitByScript {
     synchronized (locker) {
       return func.call(null, args);
     }
+  }
+
+
+  public Map<?,?> newSyncMap() {
+    return new ConcurrentHashMap<>();
   }
 }

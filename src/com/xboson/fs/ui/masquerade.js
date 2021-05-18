@@ -2975,9 +2975,9 @@ var CACHE_TIME     = cnf.cache_time    || 3 * 60; // 秒
 var DEPTH_MAX      = cnf.depth_max     || 10;
 
 // 对编译好的脚本进行缓存
-var script_cache = {};
+var script_cache = helper.newSyncMap();
 // 全局使用唯一的缓存
-var render_cache = {};
+var render_cache = helper.newSyncMap();
 
 var ret = {
   getWatcher        : getWatcher,

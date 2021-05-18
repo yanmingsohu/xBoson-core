@@ -137,11 +137,27 @@ public class UIExtRenderService extends OnExitHandle {
    * 必须首先调用 canRender 对文件进行测试
    */
   public void render(String fullpath, byte[] content, IRenderFile r, Object data) {
-    FileCache fc = cache.get(fullpath);
-    if (fc != null) {
-      fc.render(r);
-      log.debug("Render from cache", fullpath);
-      return;
+    render(fullpath, content, r, data, false);
+  }
+
+
+  /**
+   * 渲染文件
+   * @param fullpath 归一化的完整路径
+   * @param content 文件内容
+   * @param r 渲染回调
+   * @param data 渲染文件时的上下文参数
+   * @param noCache true 则强制不用缓存
+   */
+  public void render(String fullpath, byte[] content, IRenderFile r,
+                     Object data, boolean noCache) {
+    if (!noCache) {
+      FileCache fc = cache.get(fullpath);
+      if (fc != null) {
+        fc.render(r);
+        log.debug("Render from cache", fullpath);
+        return;
+      }
     }
 
     Cli cli = findClient();
@@ -289,6 +305,7 @@ public class UIExtRenderService extends OnExitHandle {
 
     private UIExtProtocol protocol;
     private boolean do_reconnect = true;
+    private boolean on_retry = false;
 
 
     Cli(URI serverUri) {
@@ -311,6 +328,7 @@ public class UIExtRenderService extends OnExitHandle {
     public void onOpen(ServerHandshake h) {
       log.info("Connected", getRemoteSocketAddress(), h.getHttpStatusMessage());
       askExtNames();
+      on_retry = false;
     }
 
 
@@ -334,10 +352,13 @@ public class UIExtRenderService extends OnExitHandle {
     @Override
     public void onClose(int i, String s, boolean b) {
       if (do_reconnect) {
+        if (!on_retry) {
+          log.warn("Server closed connect, reconnecting...");
+        }
         Tool.sleep(RETRY_INTERVAL);
         // 必须在另外的线程中操作
         EventLoop.me().add(()->{
-          log.warn("Server closed connect, reconnecting...");
+          on_retry = true;
           reconnect();
         });
       }
@@ -346,7 +367,9 @@ public class UIExtRenderService extends OnExitHandle {
 
     @Override
     public void onError(Exception e) {
-      log.error(e.getMessage());
+      if (!on_retry) {
+        log.error(e.getMessage());
+      }
     }
 
 
