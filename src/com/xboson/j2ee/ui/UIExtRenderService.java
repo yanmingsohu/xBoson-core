@@ -432,13 +432,18 @@ public class UIExtRenderService extends OnExitHandle {
    */
   private class FileCachePool extends GLHandle {
 
-    private ConcurrentHashMap<String, FileCache> cache;
-    private ConcurrentHashMap<String, Set<String>> reverse;
+    // {带参数的主文件: 缓存项}
+    private Map<String, FileCache> cache;
+    // {依赖文件: [无参数主文件]}
+    private Map<String, Set<String>> reverse;
+    // {无参数主文件: [带参数主文件]}
+    private Map<String, Set<String>> fileParam;
 
 
     FileCachePool() {
       this.cache = new ConcurrentHashMap<>();
-      this.reverse = new ConcurrentHashMap<>();
+      this.reverse = new HashMap<>();
+      this.fileParam = new HashMap<>();
       GlobalEventBus.me().on(TemplateEngine.RELOAD_TAGS, this);
     }
 
@@ -446,23 +451,54 @@ public class UIExtRenderService extends OnExitHandle {
     public void objectChanged(NamingEvent namingEvent) {
       Object path = namingEvent.getNewBinding().getObject();
       //Object type = namingEvent.getChangeInfo();
-      String fullpath = Path.me.normalize((String) path);
-
-      // 如果是主文件, 则删除该文件的缓存
-      remove(fullpath);
-
-      // 如果是被依赖文件, 则删除所有对应的主文件缓存
-      Set<String> deps = reverse.get(fullpath);
-      if (deps != null) {
-        for (String d : deps) {
-          remove(d);
-        }
-      }
-      reverse.remove(fullpath);
+      String withoutParam = Path.me.normalize((String) path);
+      removeMainWithoutParam(withoutParam);
     }
 
-    void put(FileCache fc, String parameter) {
-      cache.put(fc.fullpath + parameter, fc);
+    private synchronized void removeMainWithoutParam(String withoutParam) {
+      Set<String> files = fileParam.remove(withoutParam);
+
+      if (files != null) {
+        for (String withParamFile : files) {
+          // 如果是主文件, 则删除该文件的缓存
+          FileCache fc = cache.remove(withParamFile);
+          if (fc != null) {
+            removeDeps(fc.deps, withoutParam);
+          }
+        }
+      }
+
+      // 如果是被依赖文件, 则删除所有对应的主文件缓存
+      Set<String> deps = reverse.remove(withoutParam);
+      if (deps != null) {
+        for (String d : deps) {
+          removeMainWithoutParam(d);
+        }
+      }
+    }
+
+    private void removeDeps(String[] deps, String withoutParam) {
+      for (String file : deps) {
+        Set<String> s = reverse.get(file);
+        if (s != null) {
+          s.remove(withoutParam);
+          if (s.isEmpty()) {
+            reverse.remove(file);
+          }
+        }
+      }
+    }
+
+    synchronized void put(FileCache fc, String parameter) {
+      String fp = fc.fullpath + parameter;
+      cache.put(fp, fc);
+
+      Set<String> wp = fileParam.get(fc.fullpath);
+      if (wp == null) {
+        wp = new ConcurrentSkipListSet<>();
+        fileParam.put(fc.fullpath, wp);
+      }
+      wp.add(fp);
 
       for (String dep : fc.deps) {
         Set<String> s = reverse.get(dep);
@@ -474,7 +510,6 @@ public class UIExtRenderService extends OnExitHandle {
       }
     }
 
-
     /**
      * 获取一个缓存项, 不同的请求参数对应不同的缓存项
      * @param full_path - 文件路径
@@ -483,22 +518,6 @@ public class UIExtRenderService extends OnExitHandle {
      */
     FileCache get(String full_path, String parameter) {
       return cache.get(full_path + parameter);
-    }
-
-    void remove(String k) {
-      FileCache fc = cache.remove(k);
-      if (fc == null) return;
-
-      // 删除与主文件关联的反向引用
-      for (String file : fc.deps) {
-        Set<String> s = reverse.get(file);
-        if (s != null) {
-          s.remove(k);
-          if (s.isEmpty()) {
-            reverse.remove(file);
-          }
-        }
-      }
     }
   }
 
