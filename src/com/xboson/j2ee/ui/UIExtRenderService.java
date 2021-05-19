@@ -16,6 +16,7 @@
 
 package com.xboson.j2ee.ui;
 
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.been.Config;
 import com.xboson.event.EventLoop;
 import com.xboson.event.GLHandle;
@@ -152,8 +153,9 @@ public class UIExtRenderService extends OnExitHandle {
    */
   public void render(String fullpath, byte[] content, IRenderFile r,
                      Object data, boolean noCache) {
+    String parameters = sequenceParameters(data);
     if (!noCache) {
-      FileCache fc = cache.get(fullpath);
+      FileCache fc = cache.get(fullpath, parameters);
       if (fc != null) {
         fc.render(r);
         log.debug("Render from cache", fullpath);
@@ -167,12 +169,13 @@ public class UIExtRenderService extends OnExitHandle {
       return;
     }
 
-    WaitAsk wa = new WaitAsk();
+    WaitAsk wa = new WaitAsk(parameters);
     wa.setFullpath(fullpath);
     wa.render = r;
 
     try {
-      ByteBuffer buf = cli.protocol.makeAskRender(wa.id, wa.filename, content, data);
+      ByteBuffer buf = cli.protocol.makeAskRender(
+              wa.id, wa.filename, content, wa.parameters);
       wa._wait();
       r.startAsync();
       cli.send(buf);
@@ -187,12 +190,18 @@ public class UIExtRenderService extends OnExitHandle {
     String fullpath;
     String filename;
     String dir;
+    String parameters;
     long asktime;
     long id;
 
-    WaitAsk() {
+    WaitAsk(String parameters) {
       this.asktime = System.currentTimeMillis();
       this.id = idgen.incrementAndGet();
+      this.parameters = parameters;
+    }
+
+    WaitAsk() {
+      this("{}");
     }
 
     void setFullpath(String f) {
@@ -252,7 +261,7 @@ public class UIExtRenderService extends OnExitHandle {
       }
 
       FileCache fc = new FileCache(wa.fullpath, mime, content, deps);
-      cache.put(fc);
+      cache.put(fc, wa.parameters);
       fc.render(wa.render);
     }
 
@@ -452,8 +461,8 @@ public class UIExtRenderService extends OnExitHandle {
       reverse.remove(fullpath);
     }
 
-    void put(FileCache fc) {
-      cache.put(fc.fullpath, fc);
+    void put(FileCache fc, String parameter) {
+      cache.put(fc.fullpath + parameter, fc);
 
       for (String dep : fc.deps) {
         Set<String> s = reverse.get(dep);
@@ -465,8 +474,15 @@ public class UIExtRenderService extends OnExitHandle {
       }
     }
 
-    FileCache get(String full_path) {
-      return cache.get(full_path);
+
+    /**
+     * 获取一个缓存项, 不同的请求参数对应不同的缓存项
+     * @param full_path - 文件路径
+     * @param parameter - 请求文件的参数
+     * @return
+     */
+    FileCache get(String full_path, String parameter) {
+      return cache.get(full_path + parameter);
     }
 
     void remove(String k) {
@@ -491,6 +507,18 @@ public class UIExtRenderService extends OnExitHandle {
     return Path.me.isAbsolute(filePath)
             ? filePath
             : Path.me.join(parentPath, filePath);
+  }
+
+
+  private String sequenceParameters(Object data) {
+    String parm;
+    if (data != null) {
+      JsonAdapter json = Tool.getAdapter(data.getClass());
+      parm = json.toJson(data);
+    } else {
+      parm = "{}";
+    }
+    return parm;
   }
 
 

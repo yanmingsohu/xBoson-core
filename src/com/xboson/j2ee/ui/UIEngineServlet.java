@@ -56,6 +56,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
 
   public static final String MY_URL = "/face";
   public static final String HTML_TYPE = CONTENT_TYPE_HTML;
+  public static final String H_FULL_PATH = "Full-Path";
   public static final int    MAX_AGE = 30 * 60;
   /**
    * 缓存策略: 用户打开浏览器第一次访问的资源将被检查修改时间, 并返回内容或状态,
@@ -131,7 +132,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
 
     try {
       RedisFileAttr fs = file_provider.readAttribute(path);
-      resp.setHeader("Full-Path", path);
+      resp.setHeader(H_FULL_PATH, path);
       if (fs == null) {
         resp.sendError(400, path);
         return;
@@ -148,8 +149,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
         if (ext_render.canRender(path)) {
           log.debug("Render File:", path);
           RenderCallback rc = new RenderCallback(req, resp);
-          // 传递 getParameterMap 会在缓存中失效
-          ext_render.render(path, fs.getFileContent(), rc, null);
+          ext_render.render(path, fs.getFileContent(), rc, req.getParameterMap());
           return;
         }
 
@@ -211,6 +211,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
     String path = getReqFile(req);
     String file_type = mime.getContentType(path);
     resp.setContentType(file_type);
+    resp.setHeader(H_FULL_PATH, path);
     log.debug("Head", file_type, path);
   }
 

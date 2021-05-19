@@ -167,19 +167,11 @@ public class UIExtProtocol {
    * 构建渲染请求消息
    */
   public ByteBuffer makeAskRender(long msg_id, String filename,
-                                  byte[] content, Object data) {
-    String parm;
-    if (data != null) {
-      JsonAdapter json = Tool.getAdapter(data.getClass());
-      parm = json.toJson(data);
-    } else {
-      parm = "{}";
-    }
-
+                                  byte[] content, String parameters) {
     byte[][] pkgdata = new byte[3][];
     pkgdata[0] = filename.getBytes(IConstant.CHARSET);
     pkgdata[1] = content;
-    pkgdata[2] = parm.getBytes(IConstant.CHARSET);
+    pkgdata[2] = parameters.getBytes(IConstant.CHARSET);
 
     return make((byte) 2, msg_id, pkgdata);
   }
