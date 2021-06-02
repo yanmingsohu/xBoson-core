@@ -16,6 +16,7 @@
 
 package com.xboson.j2ee.ui;
 
+import com.squareup.moshi.JsonAdapter;
 import com.xboson.been.Config;
 import com.xboson.been.UrlSplit;
 import com.xboson.been.XBosonException;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.NoSuchFileException;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -149,7 +151,7 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
         if (ext_render.canRender(path)) {
           log.debug("Render File:", path);
           RenderCallback rc = new RenderCallback(req, resp);
-          ext_render.render(path, fs.getFileContent(), rc, req.getParameterMap());
+          ext_render.render(path, fs.getFileContent(), rc, new RenderParm(req));
           return;
         }
 
@@ -231,6 +233,30 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
     } catch (Exception e) {
       log.error(e);
       return -1;
+    }
+  }
+
+
+  private class RenderParm implements UIExtRenderService.ISequenceParameters {
+    Map<?,?> p;
+
+    private RenderParm(HttpServletRequest req) {
+      this.p = req.getParameterMap();
+    }
+
+    @Override
+    public String get() {
+      try {
+        if (p != null) {
+          // 直接用 getClass 会让 moshi 抛出 org.apache.catalina.util.ParameterMap
+          // 转换不了的错误
+          JsonAdapter json = Tool.getAdapter(Map.class);
+          return json.toJson(p);
+        }
+      } catch(Exception e) {
+        log.error(e.getMessage());
+      }
+      return "{}";
     }
   }
 

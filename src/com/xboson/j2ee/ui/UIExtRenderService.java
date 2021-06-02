@@ -66,6 +66,12 @@ public class UIExtRenderService extends OnExitHandle {
   }
 
 
+  public interface ISequenceParameters {
+    // 必须返回一个非空的 json 字符串
+    String get();
+  }
+
+
   private final long CLEAR_CACHE_INTERVAL = 15 * 1000;
   private final long RETRY_INTERVAL = 5000;
 
@@ -138,7 +144,8 @@ public class UIExtRenderService extends OnExitHandle {
   /**
    * 必须首先调用 canRender 对文件进行测试
    */
-  public void render(String fullpath, byte[] content, IRenderFile r, Object data) {
+  public void render(String fullpath, byte[] content,
+                     IRenderFile r, ISequenceParameters data) {
     render(fullpath, content, r, data, false);
   }
 
@@ -152,8 +159,8 @@ public class UIExtRenderService extends OnExitHandle {
    * @param noCache true 则强制不用缓存
    */
   public void render(String fullpath, byte[] content, IRenderFile r,
-                     Object data, boolean noCache) {
-    String parameters = sequenceParameters(data);
+                     ISequenceParameters data, boolean noCache) {
+    String parameters = data.get();
     if (!noCache) {
       FileCache fc = cache.get(fullpath, parameters);
       if (fc != null) {
