@@ -13,7 +13,7 @@ servlet-api.jar
 
 
 
-jetty-all-9.4.14.v20181114-editor.jar
+jetty-all-9.4.14.v20181114-editor.jar 		* WEB-INF 已经包含jetty, 该文件应该删除
 org.eclipse.jdt.ecj-3.14.0.jar
 org.eclipse.jetty.apache-jsp-9.4.14.v20181114.jar
 org.mortbay.jasper.apache-el-8.5.33.1.jar

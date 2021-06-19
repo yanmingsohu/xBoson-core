@@ -63,7 +63,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
    * @param length 列表初始长度
    * @return
    */
-  protected ScriptObjectMirror createJSList(int length) {
+  protected static ScriptObjectMirror createJSList(int length) {
     NativeArray na = NativeArray.construct(true, null, length);
     ScriptObjectMirror list = (ScriptObjectMirror)
             ScriptObjectMirror.wrap(na, Context.getGlobal());
@@ -74,7 +74,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
   /**
    * @see #createJSList(int)
    */
-  protected ScriptObjectMirror createJSList() {
+  protected static ScriptObjectMirror createJSList() {
     return createJSList(0);
   }
 
@@ -109,7 +109,7 @@ public abstract class RuntimeUnitImpl implements IApiConstant, IVisitByScript {
   /**
    * @see #createJSObject(Map)
    */
-  protected ScriptObjectMirror createJSObject() {
+  protected static ScriptObjectMirror createJSObject() {
     return (ScriptObjectMirror) ScriptObjectMirror.wrap(
             Context.getGlobal().newObject(), Context.getGlobal());
   }

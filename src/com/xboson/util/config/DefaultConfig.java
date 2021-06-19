@@ -72,7 +72,7 @@ public final class DefaultConfig {
     c.appSelf           = new AppSelf();
     c.rpcPort           = 0;
     c.rpcIp             = new String[0];
-    c.rpcIpMask         = "";
+    c.rpcIpMask         = "*";
 
     c.rootPassword =
             Password.v1(c.rootUserName, Password.md5lowstr(c.rootPassword));
