@@ -44,6 +44,9 @@ public class RequestParametersImpl extends AbstractJSObject {
   @Override
   public Object getMember(String name) {
     String[] arr = cd.req.getParameterValues(name);
+    if (arr == null) {
+      return null;
+    }
     ScriptObjectMirror tar = RuntimeUnitImpl.createJSList(arr.length);
     for (int i=0; i<arr.length; ++i) {
       tar.setSlot(i, arr[i]);
