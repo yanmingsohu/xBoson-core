@@ -33,6 +33,7 @@ import org.eclipse.jetty.server.session.SessionCache;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.resource.Resource;
+import sun.misc.Signal;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -115,6 +116,7 @@ public class Independent extends OnExitHandle {
     server.start();
     jsp.onStartup(null, h_servlet.getServletContext());
     log("see", "http://localhost:"+ app.httpPort + cp);
+    hookTermSignal();
     server.join();
   }
 
@@ -194,5 +196,21 @@ public class Independent extends OnExitHandle {
       StringBuilder s = new StringBuilder();
       Tool.pl("- NO LOG", "[independent-server]", Tool.join(s, o));
     }
+  }
+
+
+  private void hookTermSignal() {
+    Signal.handle(new Signal("TERM"), (name)->{
+      log.info("Got signal", name);
+      if (server != null) {
+        try {
+          server.stop();
+        } catch(Exception e) {
+          log.error(e);
+        }
+      } else {
+        log.warn("server not started");
+      }
+    });
   }
 }
