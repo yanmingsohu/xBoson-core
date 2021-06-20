@@ -18,12 +18,25 @@ package com.xboson.app.lib;
 
 import com.xboson.script.IJSObject;
 
+import java.util.Collections;
+import java.util.WeakHashMap;
+
 
 public class MapImpl extends RuntimeUnitImpl implements IJSObject {
 
 
   public MapImpl() {
     super(null);
+  }
+
+
+  public Object syncMap() {
+    return new WeakHashMap();
+  }
+
+
+  public Object weakSyncMap() {
+    return Collections.synchronizedMap(new WeakHashMap());
   }
 
 

@@ -392,6 +392,20 @@ public class SysImpl extends DateImpl {
   }
 
 
+  public Object getUserRolesList() {
+    return cd.sess.login_user.roles;
+  }
+
+
+  public Object getUserRolesMap() {
+    ScriptObjectMirror map = super.createJSObject();
+    for (String rid : cd.sess.login_user.roles) {
+      map.put(rid, true);
+    }
+    return map;
+  }
+
+
   public String uuid() {
     return Tool.uuid.ds();
   }
@@ -1354,6 +1368,6 @@ public class SysImpl extends DateImpl {
 
 
   public Object syncMap() {
-    return Collections.synchronizedMap(new HashMap());
+    return new WeakHashMap();
   }
 }
