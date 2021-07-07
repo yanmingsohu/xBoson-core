@@ -538,6 +538,11 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     if (!isNull(collation)) {
       opt.collation(toCollation(collation));
     }
+    Object arrayFilters = js.getMember("arrayFilters");
+    if (arrayFilters != null) {
+      opt.arrayFilters(toManyDoc(arrayFilters));
+    }
+    Tool.pl(arrayFilters);
     return opt;
   }
 
