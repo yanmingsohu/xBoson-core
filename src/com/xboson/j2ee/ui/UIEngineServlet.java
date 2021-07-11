@@ -211,6 +211,15 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
   protected void doHead(HttpServletRequest req, HttpServletResponse resp)
           throws ServletException, IOException {
     String path = getReqFile(req);
+    if (path == null) {
+      resp.sendError(400, path);
+      return;
+    }
+    RedisFileAttr fs = file_provider.readAttribute(path);
+    if (fs == null) {
+      resp.sendError(404, path);
+      return;
+    }
     String file_type = mime.getContentType(path);
     resp.setContentType(file_type);
     resp.setHeader(H_FULL_PATH, path);
