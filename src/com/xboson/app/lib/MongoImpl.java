@@ -550,93 +550,94 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
   protected IndexOptions toIndexOptions(Object o) {
     ScriptObjectMirror js = wrap(o);
     IndexOptions opt = new IndexOptions();
+
     Object tmp = js.getMember("collation");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.collation(toCollation(tmp));
     }
 
     tmp = js.getMember("background");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.background((boolean) tmp);
     }
 
     tmp = js.getMember("unique");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.unique((boolean) tmp);
     }
 
     tmp = js.getMember("name");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.name((String) tmp);
     }
 
     tmp = js.getMember("sparse");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.sparse((boolean) tmp);
     }
 
     tmp = js.getMember("expireAfterSeconds");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.expireAfter((Long) tmp, TimeUnit.SECONDS);
     }
 
     tmp = js.getMember("version");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.version((Integer) tmp);
     }
 
     tmp = js.getMember("weights");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.weights(new JSObjectToBson(tmp));
     }
 
     tmp = js.getMember("defaultLanguage");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.defaultLanguage((String) tmp);
     }
 
     tmp = js.getMember("languageOverride");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.languageOverride((String) tmp);
     }
 
     tmp = js.getMember("textVersion");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.textVersion((Integer) tmp);
     }
 
     tmp = js.getMember("sphereVersion");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.sphereVersion((Integer) tmp);
     }
 
     tmp = js.getMember("bits");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.bits((Integer) tmp);
     }
 
     tmp = js.getMember("min");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.min((Double) tmp);
     }
 
     tmp = js.getMember("max");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.max((Double) tmp);
     }
 
     tmp = js.getMember("bucketSize");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.bucketSize((Double) tmp);
     }
 
     tmp = js.getMember("storageEngine");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.storageEngine(new JSObjectToBson(tmp));
     }
 
     tmp = js.getMember("partialFilterExpression");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       opt.partialFilterExpression(new JSObjectToBson(tmp));
     }
     return opt;
@@ -648,47 +649,47 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     Collation.Builder b = Collation.builder();
 
     Object tmp = coll.getMember("locale");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.locale((String) tmp);
     }
 
     tmp = coll.getMember("caseLevel");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.caseLevel((boolean) tmp);
     }
 
     tmp = coll.getMember("caseFirst");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.collationCaseFirst(CollationCaseFirst.fromString((String) tmp));
     }
 
     tmp = coll.getMember("strength");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.collationStrength(CollationStrength.fromInt((int) tmp));
     }
 
     tmp = coll.getMember("numericOrdering");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.numericOrdering((boolean) tmp);
     }
 
     tmp = coll.getMember("alternate");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.numericOrdering((boolean) tmp);
     }
 
     tmp = coll.getMember("maxVariable");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.collationMaxVariable(CollationMaxVariable.fromString((String) tmp));
     }
 
     tmp = coll.getMember("normalization");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.normalization((boolean) tmp);
     }
 
     tmp = coll.getMember("backwards");
-    if (tmp != null) {
+    if (! isNull(tmp)) {
       b.backwards((boolean) tmp);
     }
     return b.build();
