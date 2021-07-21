@@ -98,18 +98,38 @@ public class S_BeginMultiLineString extends SState {
       if (size > 0) {
         String line = lines.get(0);
         out.append("\"");
-        out.append(line);
+        printLine(out, line);
         out.append("\"");
 
         for (int i = 1; i < size; ++i) {
           line = lines.get(i);
           out.append("\n + \"\\n");
-          out.append(line);
+          printLine(out, line);
           out.append("\"");
         }
       }
     } catch (IOException e) {
       throw new XBosonException(e);
+    }
+  }
+
+
+  private void printLine(Writer out, String line) throws IOException {
+    boolean inEscape = false;
+
+    for (int i=0; i<line.length(); ++i) {
+      char c = line.charAt(i);
+
+      if (c == '"' && inEscape == false) {
+        out.append('\\');
+      }
+
+      if (c == '\\' && inEscape == false) {
+        inEscape = true;
+      } else {
+        inEscape = false;
+      }
+      out.append(c);
     }
   }
 }
