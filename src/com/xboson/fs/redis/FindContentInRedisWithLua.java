@@ -63,7 +63,7 @@ public class FindContentInRedisWithLua {
 
 
   /**
-   * 大小写敏感的搜索, 基于更目录
+   * 大小写敏感的搜索, 基于根目录
    */
   public FinderResult find(String content) {
     return find(DEF_BASE, content, true);
