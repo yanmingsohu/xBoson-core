@@ -27,10 +27,14 @@ import com.xboson.j2ee.container.IHttpHeader;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Path;
+import com.xboson.util.JsonLite;
+import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import javax.activation.FileTypeMap;
+import javax.json.Json;
+import javax.json.JsonWriter;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -246,11 +250,39 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
   }
 
 
+  /**
+   * 编译参数来自 head 中的开发模式
+   */
   private class RenderParm implements UIExtRenderService.ISequenceParameters {
-    Map<?,?> p;
+    private final static String DEV_HEAD = "x-development-mode";
+    private final static String DEV_MOE = "debug";
+    private final static String ES6_HEAD = "x-es6-support";
+    private final JsonLite j;
 
     private RenderParm(HttpServletRequest req) {
-      this.p = req.getParameterMap();
+      j = JsonLite.objectRoot();
+      j.put("minified",
+        !DEV_MOE.equalsIgnoreCase(req.getHeader(DEV_HEAD)) );
+      j.put("es6",
+        Boolean.parseBoolean(req.getHeader(ES6_HEAD)));
+      j.end();
+    }
+
+    @Override
+    public String get() {
+      return j.toString();
+    }
+  }
+
+
+  /**
+   * 编译参数来自 url 请求参数
+   */
+  private class RenderParmWithReq implements UIExtRenderService.ISequenceParameters {
+    Map<?,?> p;
+
+    private RenderParmWithReq(HttpServletRequest req) {
+      p = req.getParameterMap();
     }
 
     @Override
