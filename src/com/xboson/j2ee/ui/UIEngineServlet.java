@@ -28,13 +28,10 @@ import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 import com.xboson.script.lib.Path;
 import com.xboson.util.JsonLite;
-import com.xboson.util.StringBufferOutputStream;
 import com.xboson.util.SysConfig;
 import com.xboson.util.Tool;
 
 import javax.activation.FileTypeMap;
-import javax.json.Json;
-import javax.json.JsonWriter;
 import javax.servlet.AsyncContext;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -145,7 +142,8 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
       }
 
       if (fs.isFile()) {
-        if (TemplateEngine.EXT.equalsIgnoreCase(Path.me.extname(path))) {
+        final String ext = Path.me.extname(path).toLowerCase();
+        if (TemplateEngine.EXT.equals(ext)) {
           resp.setContentType(HTML_TYPE);
           template.service(req, resp);
           return;
@@ -156,6 +154,11 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
           log.debug("Render File:", path);
           RenderCallback rc = new RenderCallback(req, resp);
           ext_render.render(path, fs.getFileContent(), rc, new RenderParm(req));
+          return;
+        }
+
+        if (isBlockFileType(ext)) {
+          resp.sendError(403, path);
           return;
         }
 
@@ -247,6 +250,22 @@ public class UIEngineServlet extends HttpServlet implements IHttpHeader {
       log.error(e);
       return -1;
     }
+  }
+
+
+  /**
+   * ext 总是小写的
+   */
+  private boolean isBlockFileType(String ext) {
+    switch (ext) {
+      case ".vue":
+      case ".ts":
+      case ".jsx":
+      case ".tsx":
+      case ".less":
+        return true;
+    }
+    return false;
   }
 
 
