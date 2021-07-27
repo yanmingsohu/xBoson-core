@@ -35,6 +35,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror;
 public class Sandbox implements IVisitByScript {
 
   private final static String BOoTjs = "./bootstrap.js";
+  private final static String eS6Pf = "./es6-polyfill.js";
 
   private ScriptEngine js;
   private Bindings bind;
@@ -203,11 +204,24 @@ public class Sandbox implements IVisitByScript {
     if (url == null) {
       throw new ScriptException("Serious error "+ BOoTjs +" cannot found");
     }
+    return eval(url);
+  }
+
+
+  void es6Polyfill() throws ScriptException {
+    setFilename(eS6Pf);
+    URL url = Tool.getResource(Sandbox.class, eS6Pf);
+    eval(url);
+  }
+
+
+  private Object eval(URL url) throws ScriptException {
     try {
       InputStream script1 = url.openStream();
       return eval(script1);
     } catch (IOException e) {
-      throw new ScriptException("Load "+ BOoTjs +" failed "+ e.getMessage());
+      throw new ScriptException("Load "+ url.getFile()
+              +" failed "+ e.getMessage());
     }
   }
 

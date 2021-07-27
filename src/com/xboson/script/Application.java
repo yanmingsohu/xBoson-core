@@ -59,6 +59,7 @@ public class Application implements
     sandbox       = SandboxFactory.create();
 
     sandbox.bootstrap();
+    sandbox.es6Polyfill();
     env.config(sandbox, this);
     sandbox.bootstrapEnvReady();
     sandbox.bootstrapEnd();
