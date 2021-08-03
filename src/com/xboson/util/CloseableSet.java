@@ -16,6 +16,7 @@
 
 package com.xboson.util;
 
+import com.xboson.been.XBosonException;
 import com.xboson.log.Log;
 import com.xboson.log.LogFactory;
 
@@ -40,6 +41,9 @@ public class CloseableSet implements AutoCloseable {
 
 
   public<T extends AutoCloseable> T add(T c) {
+    if (list == null) {
+      throw new XBosonException.Closed("Closeable set");
+    }
     list.add(c);
     return c;
   }
