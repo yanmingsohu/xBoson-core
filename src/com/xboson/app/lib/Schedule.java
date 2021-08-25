@@ -130,6 +130,12 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
   }
 
 
+  private String getUserid() {
+    SysImpl sys = (SysImpl) ModuleHandleContext._get("sys");
+    return sys.getUserIdByOpenId();
+  }
+
+
   public interface ITask extends IXRemote, IPing {
     int state() throws RemoteException;
     void stop() throws RemoteException;
@@ -202,9 +208,10 @@ public class Schedule extends RuntimeUnitImpl implements IAResource {
       task_api          = getStr(config, "task_api");
       schedule_interval = getInt(config, "schedule_interval");
       inner_api         = getInt(config, "inner_api") != 0;
-      userid            = getStr(config, "userid");
+      //userid            = getStr(config, "userid");
       run_end_time      = parseDate(config, "run_end_time");
       start_time        = parseDate(config, "start_time");
+      userid            = getUserid();
 
       this.db           = SysConfig.me().readConfig().db;
       this.state        = JOB_STATUS_INIT;
