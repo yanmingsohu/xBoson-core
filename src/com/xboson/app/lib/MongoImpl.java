@@ -30,6 +30,7 @@ import com.xboson.auth.impl.LicenseAuthorizationRating;
 import com.xboson.been.LoginUser;
 import com.xboson.db.ConnectConfig;
 import com.xboson.script.IVisitByScript;
+import com.xboson.script.JSObject;
 import com.xboson.util.CreatorFromUrl;
 import com.xboson.util.MongoDBPool;
 import com.xboson.util.Tool;
@@ -343,6 +344,14 @@ public class MongoImpl extends RuntimeUnitImpl implements IAResource {
     public Cursor find2(Object query) {
       FindIterable<Document> find = coll.find(new JSObjectToBson(query));
       return new Cursor(find);
+    }
+
+    public Object aggregate(List<Object> query) {
+      List<Bson> q = new ArrayList<>(query.size());
+      for (int i=0; i<query.size(); ++i) {
+        q.set(i, new JSObjectToBson(query.get(i)));
+      }
+      return toObject(coll.aggregate(q));
     }
 
     public String createIndex(Object key, Object options) {

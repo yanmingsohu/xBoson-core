@@ -166,8 +166,8 @@ public class XjOrg extends XjPool<XjApp> implements IDict, IConstant {
 
   private void create_org_db_user(Connection conn) throws SQLException {
     create_org_db_user(conn,
-            Tool.randomString(30),
-            Tool.randomString(10));
+            Tool.randomString2(30),
+            Tool.randomString2(30));
   }
 
 
