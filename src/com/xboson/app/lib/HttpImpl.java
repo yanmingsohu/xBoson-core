@@ -52,7 +52,7 @@ public class HttpImpl extends RuntimeUnitImpl {
 
   private Map<String, javax.servlet.http.Cookie> cookies;
   private OkHttpClient hc;
-  private int timeout = 10;
+  private int timeout = 10; // ! 线程不安全
 
 
   public HttpImpl(CallData cd) {
@@ -316,6 +316,17 @@ public class HttpImpl extends RuntimeUnitImpl {
   }
 
 
+  /**
+   *
+   * @param url
+   * @param bodydata
+   * @param param
+   * @param type - 可以是 json/xml/string 或者完整的 content-Type 字符串, 只影响发送
+   * @param header
+   * @param usePost
+   * @return
+   * @throws IOException
+   */
   private Object execute(String url, Object bodydata, Object param,
             String type, Object header, boolean usePost) throws IOException {
     HttpUrl.Builder url_build = HttpUrl.parse(url).newBuilder();
@@ -363,24 +374,44 @@ public class HttpImpl extends RuntimeUnitImpl {
         return XML;
 
       case "string":
-      default:
         return TEXT;
+
+      default:
+        return MediaType.parse(type);
     }
   }
 
 
+  /**
+   * 由 body 返回的 contentType 决定数据的解析方式
+   */
   private Object parseData(ResponseBody body, String type) throws IOException {
-    switch (type.toLowerCase()) {
-      case "json":
-        return jsonParse(body.string());
+    // 为了兼容以前的逻辑
+    if (Tool.notNulStr(type)) {
+      switch (type.toLowerCase()) {
+        case "json":
+          return jsonParse(body.string());
 
-      case "xml":
-        return Tool.createXmlStream().fromXML(body.string());
+        case "xml":
+          return Tool.createXmlStream().fromXML(body.string());
 
-      case "string":
-      default:
-        return body.string();
+        case "string":
+          return body.string();
+      }
     }
+
+    final MediaType btype = body.contentType();
+    // if (btype == null) btype = resp header ??
+
+    if (JSON.equals(btype)) {
+      return jsonParse(body.string());
+    }
+
+    if (XML.equals(btype)) {
+      return Tool.createXmlStream().fromXML(body.string());
+    }
+
+    return body.string();
   }
 
 
@@ -439,7 +470,8 @@ public class HttpImpl extends RuntimeUnitImpl {
     Iterator<String> names = js.keySet().iterator();
     while (names.hasNext()) {
       String name = names.next();
-      build.addHeader(name, String.valueOf(js.getMember(name)));
+      // build.addHeader(name, String.valueOf(js.getMember(name)));
+      build.header(name, String.valueOf(js.getMember(name)));
     }
   }
 
