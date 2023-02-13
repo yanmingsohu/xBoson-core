@@ -10,9 +10,6 @@ Java JDK, Tomcat 9, Servlet 4.0.
   * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经从 jdk 移除.
 
 
-> 该文档部分内容为商业机密
-
-
 # 注意:
 
 * java 版本 >= JDK 8u111
