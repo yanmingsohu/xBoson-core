@@ -1,4 +1,4 @@
-# 大数据平台核心 v2
+# xBoson 平台核心 v2
 
 该平台的设计目的是当软件项目进入开发阶段时, 首先部署平台, 然后业务人员进行持续开发, 
 没有更多的部署/实施步骤, 当测试完成后, 应用立即切入生产环境, 并对新需求和错误进行快速响应.   
@@ -285,13 +285,18 @@ get 请求使用标准的 http url 参数.
 
 # 配置文件 
 
+```
+Window: ${HOME} = C:\Users\[User Name]\xBoson-config
+Linux:  ${HOME} = /home/[User Name]\xBoson-config
+```
+
 系统配置文件将生成在:
 
-  `/HOME/xBoson-config/config.json`
+  `${HOME}/xBoson-config/config.json`
   
 日志级别配置文件生成在:
 
-  `/HOME/xBoson-config/log.level.properties`
+  `${HOME}/xBoson-config/log.level.properties`
   
 mysql 配置:
   
