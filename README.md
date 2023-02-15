@@ -1,42 +1,38 @@
-# 大数据平台 v2
+# 大数据平台核心 v2
 
-Java JDK, Tomcat 9, Servlet 4.0.  
+该平台的设计目的是当软件项目进入开发阶段时, 首先部署平台, 然后业务人员进行持续开发, 
+没有更多的部署/实施步骤, 当测试完成后, 应用立即切入生产环境, 并对新需求和错误进行快速响应.   
+平台使用了内置的 javascript 引擎, 并用包装器把脚本环境设置的类似 nodejs, 
+一个最简单的服务接口脚本只需要如下几行:
 
-经过测试的 JAVA 版本: 
-  * OracleJDK 1.8.0_172, 1.8.0_162, 1.8.0_111
-  * OpenJDK 1.8.0_151
-  
-待测试测 Java 版本:
-  * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经从 jdk 移除.
+```
+"use strict";
+sql.query("Select 'Hello World !' message", null, 'ret1');
+sys.setRetData(0, sys.result.ret1);
+```
 
+业务开发人员只要专注于业务, 而接口权限判定/接口日志/错误处理/DB连接/集群问题等都由平台处理.
 
-# 注意:
-
-* java 版本 >= JDK 8u111
-* JEE 容器必须以 UTF-8 模式启动 `set JAVA_OPTS=-Dfile.encoding=UTF-8`.
-* sys_mdm001.url 字段与平台服务接口绑定.
-* 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
-* SqlServer 2012 之后的版本支持分页查询.
-* 使用 `gradle` 构建/发布混淆后的 war 包.
-* 配置文件中 `rootUserName: admin-pl`, 
-  `rootPassword: 861170a039539136e605744dbbeb81e607173d1aa8e94bac1f0db9ba77ec88fc` 
-  方可启用超级用户
-* 若要启用区块链服务器, 必须有 0 号节点.
-* RPC 为动态端口.
+只有一个平台核心是做不了什么的, 所以我们开发了一系列应用, 这些应用由服务接口和Web画面组成,
+服务接口在导入DB后配置到平台, Web画面则在另一个项目中, 这些应用实现了最基础的功能: 用户登录/注册,
+动态菜单, 权限相关, 开发IDE等, 用户也可以以这些基础功能为脚手架开发自己的基础接口和画面.
 
 
-# 需要做:
+该项目由 [上海竹呗信息技术有限公司](https://xboson.net/) 提供技术支持.
 
-* 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)(https://raft.github.io/)
-* 多语言
-* js 字典模块
-* org 参数只作为 mysql schema 选择条件, 并从 api 加载流程中分离; app 直接作为根选择条件,
-  因为 app 是不会重复的 (XjOrg 和 XjApp 解绑, 表 sys_apps 没有和机构做关联).
-* 机构自己的模板目录
-* 升级 js 引擎到 [graaljs](https://github.com/graalvm/graaljs) 
-* 统计分析模块 -api完成 +wiki +画面
-* docker 管理模块.
-* 打印模块
+
+# 在平台上实现并开源的(部分)项目
+
+* 在线开发服务接口 IDE, 前端 IDE
+* 数据源/数据集/元数据管理/值域代码/多维模型, 支持多种DB同时接入
+* 用户权限/用户组/机构管理
+* 数据透视管理器, 把接口数据可视化
+* 集成 mxGraph 流程图工具.
+* 基于区块链引擎实现的区块链网盘, 和用于说明原理的波子币.
+* 基于物模型的物联网数据中心, 用 apache-artemis 实现数据中转.
+* 分布式 OPC 节点控制中心.
+* 基于 neo4j 实现的知识图谱业务开发系统.
+* 基于 Vue2 的大屏展示系统, 基于 Vue2 的前端低代码开发工具.
 
 
 # 2.0 新特性
@@ -61,6 +57,47 @@ Java JDK, Tomcat 9, Servlet 4.0.
 * 第三方使用 OAuth 2.0 接入平台.
 * 当内存不足, 内核会卸载已经编译的 api 来释放紧张的内存.
 * 与业务紧密结合的区块链系统, 0部署, 0维护, 开箱即用.
+* 可用 Hadoop 保存大数据
+
+
+# 注意:
+
+* java 版本 >= JDK 8u111
+* JEE 容器必须以 UTF-8 模式启动 `set JAVA_OPTS=-Dfile.encoding=UTF-8`.
+* sys_mdm001.url 字段与平台服务接口绑定.
+* 需要把 `crypto.dll` 文件复制到 `java.library.path` 指向的目录中 (jdk/bin 目录).
+* SqlServer 2012 之后的版本支持分页查询.
+* 使用 `gradle` 构建/发布混淆后的 war 包.
+* 配置文件中 `rootUserName: admin-pl`, 
+  `rootPassword: 861170a039539136e605744dbbeb81e607173d1aa8e94bac1f0db9ba77ec88fc` 
+  方可启用超级用户
+* 若要启用区块链服务器, 必须有 0 号节点.
+* RPC 为动态端口.
+* 本项目的 jar 依赖在另一个项目中定义.
+
+
+Java JDK, Tomcat 9, Servlet 4.0.  
+
+经过测试的 JAVA 版本: 
+  * OracleJDK 1.8.0_172, 1.8.0_162, 1.8.0_111
+  * OpenJDK 1.8.0_151
+  
+待测试测 Java 版本:
+  * OpenJDK 11.2 - 失败, javax.activation/javax.xml.bind 类已经从 jdk 移除.
+
+
+# 需要做:
+
+* 分布式投票算法 (http://www.cnblogs.com/smartloli/p/7190360.html)(https://raft.github.io/)
+* 多语言
+* js 字典模块
+* org 参数只作为 mysql schema 选择条件, 并从 api 加载流程中分离; app 直接作为根选择条件,
+  因为 app 是不会重复的 (XjOrg 和 XjApp 解绑, 表 sys_apps 没有和机构做关联).
+* 机构自己的模板目录
+* 升级 js 引擎到 [graaljs](https://github.com/graalvm/graaljs) 
+* 统计分析模块 -api完成 +wiki +画面
+* docker 管理模块.
+* 打印模块
 
 
 # JAR 依赖
@@ -294,13 +331,6 @@ com.xboson.j2ee.container.UrlMapping=DEBUG
   * FATAL   | 以下日志都启用
   
   
-## API 分级授权代码
-
-这些功能需要授权后方可正式使用.
-
-详细内容见 `xBoson-license` 项目.
-
-
 # Mysql 默认配置文件
 
 该文件的完整配置在 `xboson-docker` 项目中.
@@ -320,10 +350,22 @@ max_allowed_packet=100M
 default_password_lifetime=0
 ```
 
-登录帐户过期, 在 sql 控制台登录后执行 `SET GLOBAL default_password_lifetime = 0;`
+登录帐户过期, 在 sql 控制台登录后执行 `SET GLOBAL default_password_lifetime = 0;`, 这会使安全降级.
 
+
+# 相关项目
+
+* [xBoson前端WEB, 包含Wiki](https://github.com/yanmingsohu/xBoson-web-basic)
+* [xBoson基础数据库](https://github.com/yanmingsohu/xBoson-db-basic)
+* [xBoson前端文件渲染节点](https://github.com/yanmingsohu/xBoson-ui-ext)
+* [xBoson见证者节点](https://github.com/yanmingsohu/xBoson-witness-enterprise)
+* [xBosonIOT数据接入点](https://github.com/yanmingsohu/xBoson-artemis)
+* [xBosonJAR依赖](https://github.com/yanmingsohu/xBoson-core-library)
+* [ETL/ESB中心控制节点](https://github.com/yanmingsohu/xBoson-conductor)
+* [ETL/ESB边缘运算节点](https://github.com/yanmingsohu/xBoson-virtuoso)
   
-# 参考
+  
+# 外部参考
 
 * [JVM 垃圾收集器调优](http://www.oracle.com/technetwork/java/javase/gc-tuning-6-140523.html)
 * [Nashorn 上下文等](https://wiki.openjdk.java.net/display/Nashorn/Nashorn+jsr223+engine+notes)
