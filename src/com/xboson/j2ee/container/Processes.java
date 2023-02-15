@@ -27,7 +27,7 @@ package com.xboson.j2ee.container;
 
 import com.xboson.been.License;
 import com.xboson.been.XBosonException;
-import com.xboson.crypto.Crypto;
+//import com.xboson.crypto.Crypto;
 import com.xboson.event.timer.TimeFactory;
 import com.xboson.fs.watcher.INotify;
 import com.xboson.fs.watcher.SingleFile;
@@ -122,6 +122,8 @@ public final class Processes {
 
 
   public void init(ServletContext sc) {
+    if (true) return;
+
     try {
       if (sc == null || license != null)
         return;
@@ -237,9 +239,10 @@ public final class Processes {
       return s[1];
     }
 
-    if (! Crypto.me().verification(license)) {
-      return s[2];
-    }
+    //Crypto用本机代码写成, 去掉该依赖
+    //if (! Crypto.me().verification(license)) {
+    //  return s[2];
+    //}
 
     if (license.beginTime > System.currentTimeMillis()) {
       return s[3];
@@ -279,13 +282,15 @@ public final class Processes {
   public class Happy {
 
     public void lock() {
-      if (msg != null)
-        threadLock.lock();
+      //开源版没有任何限制
+      //if (msg != null)
+      //  threadLock.lock();
     }
 
     public void unlock() {
-      if (threadLock.getHoldCount() > 0)
-        threadLock.unlock();
+      //开源版没有任何限制
+      //if (threadLock.getHoldCount() > 0)
+      //  threadLock.unlock();
     }
   }
 

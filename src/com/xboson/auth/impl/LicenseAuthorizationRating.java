@@ -49,6 +49,13 @@ public class LicenseAuthorizationRating implements IAWhere {
 
   @Override
   public boolean apply(IAWho who, IAResource res) {
+    // 开源版没有任何限制, 注释这一行则不进行授权检查
+    // checkLicense(res);
+    return true;
+  }
+
+
+  private void checkLicense(IAResource res) {
     String msg = plc.message();
 
     if (msg != null) {
@@ -61,8 +68,6 @@ public class LicenseAuthorizationRating implements IAWhere {
     if (lic.api == null || (! lic.api.contains(api))) {
       throw new NoLicense(api);
     }
-
-    return true;
   }
 
 
